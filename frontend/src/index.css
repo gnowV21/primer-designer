@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 110%;
+  scroll-behavior: smooth;
+}
+
+*:focus-visible {
+  outline: 2px solid #0F6E56;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
