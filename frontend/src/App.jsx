@@ -1,0 +1,27 @@
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
+import ChatbotPanel from './components/ChatbotPanel.jsx';
+import HomePage from './pages/HomePage.jsx';
+import RoadmapPage from './pages/RoadmapPage.jsx';
+import SearchPage from './pages/SearchPage/index.jsx';
+
+export default function App() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <div className="flex flex-row flex-1">
+        <main className="flex-1 overflow-y-auto p-6">
+          <Routes>
+            <Route path="/" element={<Navigate to="/search" replace />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
+            <Route path="/search" element={<SearchPage />} />
+          </Routes>
+        </main>
+        <ChatbotPanel />
+      </div>
+      <Footer />
+    </div>
+  );
+}
