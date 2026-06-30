@@ -169,7 +169,7 @@ def design_primers():
             "candidates_rejected": len(rejection_log),
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
-            "algorithm_version": "2.8.1",
+            "algorithm_version": "2.8.2",
             "scoring_version": "V3 (11 criteria)",
             "sources": [
                 "Chen et al. 2005", "Kramer 2011 Unit 15.10",
