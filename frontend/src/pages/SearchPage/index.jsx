@@ -1,20 +1,18 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import axios from 'axios';
 import { DEFAULTS } from '../../constants/defaults.js';
 import { computeSeqAnalysis } from '../../utils/seqAnalysis.js';
 import SequenceGroup from './SequenceGroup.jsx';
-import DetectionMethodGroup from './DetectionMethodGroup.jsx';
-import ThermodynamicGroup from './ThermodynamicGroup.jsx';
 import PrimerConstraintsGroup from './PrimerConstraintsGroup.jsx';
 import QpcrConditionsGroup from './QpcrConditionsGroup.jsx';
 import ExperimentalContextGroup from './ExperimentalContextGroup.jsx';
+import ResultsSection from './ResultsSection/index.jsx';
 
 const NAV_SECTIONS = [
-  { id: 'seq',         label: 'Sequence'  },
-  { id: 'detection',   label: 'Detection' },
-  { id: 'thermo',      label: 'Thermo.'   },
-  { id: 'constraints', label: 'Primer'    },
-  { id: 'qpcr',        label: 'qPCR'      },
-  { id: 'context',     label: 'Context'   },
+  { id: 'seq',         label: 'Sequence' },
+  { id: 'constraints', label: 'Primer'   },
+  { id: 'qpcr',        label: 'qPCR'     },
+  { id: 'context',     label: 'Context'  },
 ];
 
 export default function SearchPage() {
@@ -35,6 +33,9 @@ export default function SearchPage() {
   const [visitedSections, setVisitedSections] = useState(new Set());
   const [resetKey, setResetKey] = useState(0);
   const [sectionOpenRequests, setSectionOpenRequests] = useState({});
+  const [results, setResults] = useState(null);
+  const [designError, setDesignError] = useState(null);
+  const resultsRef = useRef(null);
 
   const markVisited = useCallback((id) => {
     setVisitedSections((prev) => prev.has(id) ? prev : new Set([...prev, id]));
@@ -62,7 +63,7 @@ export default function SearchPage() {
     setFormData((prev) => {
       const nextMin = preset.ampliconMin !== undefined ? preset.ampliconMin : prev.qpcr.ampliconMin;
       const nextMax = preset.ampliconMax !== undefined ? preset.ampliconMax : prev.qpcr.ampliconMax;
-      if (nextMin >= nextMax) return prev; // guard: invalid range from preset data
+      if (nextMin >= nextMax) return prev;
       return {
         ...prev,
         qpcr: {
@@ -83,16 +84,24 @@ export default function SearchPage() {
     [formData.sequence.matureSequence]
   );
 
-  // Progress: section is "done" when the user has visited/interacted with it.
-  // seq requires a valid sequence; all others are visit-tracked via visitedSections.
+  const computedFields = useMemo(() => {
+    const mg   = formData.thermodynamic.magnesiumConcentration;
+    const dntp = formData.thermodynamic.dntpTotal;
+    const freeMg = Math.max(0, mg - dntp);
+    const naEq = dntp < mg
+      ? formData.thermodynamic.saltConcentration + 120 * Math.sqrt(mg - dntp)
+      : formData.thermodynamic.saltConcentration;
+    return {
+      freeMagnesium: parseFloat(freeMg.toFixed(3)),
+      naEquivalent:  parseFloat(naEq.toFixed(2)),
+    };
+  }, [formData.thermodynamic]);
+
   const configured = Object.fromEntries(
     NAV_SECTIONS.map(({ id }) => [id, id === 'seq' ? seqAnalysis !== null : visitedSections.has(id)])
   );
   const readyCount = Object.values(configured).filter(Boolean).length;
 
-
-  // Scroll listener: update active mini-nav highlight on manual scroll.
-  // Threshold 80px keeps the active item below the sticky navbar height.
   useEffect(() => {
     const sectionIds = NAV_SECTIONS.map((s) => s.id);
     const main = document.querySelector('main');
@@ -113,7 +122,7 @@ export default function SearchPage() {
 
   function scrollToSection(id) {
     setActiveSection(id);
-    markVisited(id); // clicking a nav item counts as "reviewing" that section
+    markVisited(id);
     setSectionOpenRequests((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
     setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -125,27 +134,35 @@ export default function SearchPage() {
   async function handleSubmit() {
     if (hasErrors || isSubmitting || !seqAnalysis) return;
     setIsSubmitting(true);
+    setResults(null);
+    setDesignError(null);
     try {
-      // Week 1 milestone: log full form payload to prove data flows through all 6 groups
-      console.log('[PrimerDesigner] formData:', JSON.stringify(formData, null, 2));
-    } finally {
+      const postBody = { ...formData, _computed: computedFields };
+      const response = await axios.post('/api/design', postBody, { timeout: 15000 });
+      setResults(response.data);
       setTimeout(() => {
-        // Reset everything: form data, errors, progress, open states, nav highlight
-        setFormData({
-          sequence:            { ...DEFAULTS.sequence },
-          thermodynamic:       { ...DEFAULTS.thermodynamic },
-          primerConstraints:   { ...DEFAULTS.primerConstraints },
-          qpcr:                { ...DEFAULTS.qpcr },
-          detectionMethod:     { ...DEFAULTS.detectionMethod },
-          experimentalContext: { ...DEFAULTS.experimentalContext },
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } catch (err) {
+      if (err.response?.status === 422) {
+        setDesignError({
+          type: 'no_candidates',
+          message: err.response.data?.error || 'No valid candidates found.',
+          suggestion: err.response.data?.suggestion,
+          rejection_summary: err.response.data?.rejection_summary,
         });
-        setErrors({});
-        setVisitedSections(new Set());
-        setActiveSection('seq');
-        setSectionOpenRequests({});
-        setIsSubmitting(false);
-        setResetKey((k) => k + 1); // remount sections so CollapsibleSections reset to defaultOpen
-      }, 800);
+      } else if (err.response?.data?.error) {
+        setDesignError({ type: 'validation', message: err.response.data.error });
+      } else if (err.code === 'ECONNABORTED') {
+        setDesignError({ type: 'timeout', message: 'Request timed out. The backend may be overloaded.' });
+      } else {
+        setDesignError({ type: 'network', message: 'Could not reach the backend. Is the Flask server running?' });
+      }
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -153,9 +170,10 @@ export default function SearchPage() {
   const isSeqReady = seqTrimmed.length >= 15 && /^[AUGC]+$/i.test(seqTrimmed);
 
   return (
-    <div className="flex gap-5 max-w-2xl xl:max-w-[52rem] mx-auto">
+    <div className="max-w-2xl xl:max-w-[52rem] mx-auto space-y-6">
+    <div className="flex gap-5">
 
-      {/* ── Mini nav (visible xl+, sticky) ── */}
+      {/* ── Mini nav ── */}
       <aside className="hidden xl:block w-32 shrink-0 self-start sticky top-6">
         <nav className="pt-1">
           <p className="text-xs font-bold text-slate-600 mb-3 px-3 tracking-wide uppercase">
@@ -177,11 +195,9 @@ export default function SearchPage() {
                         : 'text-gray-600 hover:text-teal-700 hover:bg-teal-50'
                       }`}
                   >
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
-                        isReady ? 'bg-teal-500 scale-100' : 'bg-gray-300 scale-75'
-                      }`}
-                    />
+                    <span className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
+                      isReady ? 'bg-teal-500 scale-100' : 'bg-gray-300 scale-75'
+                    }`} />
                     <span className="truncate">{label}</span>
                   </button>
                 </li>
@@ -202,8 +218,6 @@ export default function SearchPage() {
               Enter miRNA information and adjust technical parameters.
             </p>
           </div>
-
-          {/* Progress bar */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
@@ -217,7 +231,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* ── Sections with anchor IDs ── */}
+        {/* ── Sequence ── */}
         <section id="seq" className="scroll-mt-4">
           <SequenceGroup
             data={formData.sequence}
@@ -229,38 +243,32 @@ export default function SearchPage() {
           />
         </section>
 
-        <section id="detection" className="scroll-mt-4">
-          <DetectionMethodGroup
-            data={formData.detectionMethod}
-            onChange={(field, value) => handleChange('detectionMethod', field, value)}
-            seqAnalysis={seqAnalysis}
-            onFirstOpen={() => markVisited('detection')}
-            openRequested={sectionOpenRequests.detection || 0}
-          />
-        </section>
-
-        <section id="thermo" className="scroll-mt-4">
-          <ThermodynamicGroup
-            seqAnalysis={seqAnalysis}
-            data={formData.thermodynamic}
-            errors={errors}
-            onChange={(field, value) => handleChange('thermodynamic', field, value)}
-            onError={handleError}
-            onFirstOpen={() => markVisited('thermo')}
-            openRequested={sectionOpenRequests.thermo || 0}
-          />
-        </section>
-
+        {/* ── Primer Design Constraints (merged: primer + thermo + specificity) ── */}
         <section id="constraints" className="scroll-mt-4">
           <PrimerConstraintsGroup
             data={formData.primerConstraints}
             onChange={(field, value) => handleChange('primerConstraints', field, value)}
             seqAnalysis={seqAnalysis}
+            mirnaFamily={formData.sequence.family}
+            thermoData={formData.thermodynamic}
+            thermoErrors={{
+              saltConcentration:      errors.saltConcentration,
+              primerConcentration:    errors.primerConcentration,
+              magnesiumConcentration: errors.magnesiumConcentration,
+              dntpTotal:              errors.dntpTotal,
+              kPlusConc:              errors.kPlusConc,
+              bufferPH:               errors.bufferPH,
+            }}
+            onThermoChange={(field, value) => handleChange('thermodynamic', field, value)}
+            onThermoError={handleError}
+            specData={formData.detectionMethod}
+            onSpecChange={(field, value) => handleChange('detectionMethod', field, value)}
             onFirstOpen={() => markVisited('constraints')}
             openRequested={sectionOpenRequests.constraints || 0}
           />
         </section>
 
+        {/* ── qPCR ── */}
         <section id="qpcr" className="scroll-mt-4">
           <QpcrConditionsGroup
             data={formData.qpcr}
@@ -273,6 +281,7 @@ export default function SearchPage() {
           />
         </section>
 
+        {/* ── Experimental Context ── */}
         <section id="context" className="scroll-mt-4">
           <ExperimentalContextGroup
             data={formData.experimentalContext}
@@ -283,9 +292,8 @@ export default function SearchPage() {
           />
         </section>
 
-        {/* ── Submit — sticky at bottom of scroll container ── */}
-        <div className="sticky bottom-0 z-10 space-y-2 pt-3 pb-5
-          bg-gradient-to-t from-white from-70% via-white/90 to-transparent">
+        {/* ── Submit ── */}
+        <div className="space-y-2 pt-3 pb-5">
           <button
             type="button"
             onClick={handleSubmit}
@@ -308,7 +316,6 @@ export default function SearchPage() {
               'Design Primers →'
             )}
           </button>
-
           {isSeqReady && !hasErrors && (
             <p className="text-center text-xs text-gray-400">
               Stem-loop primer · Forward primer · Universal reverse primer
@@ -316,6 +323,14 @@ export default function SearchPage() {
           )}
         </div>
       </div>
+    </div>
+
+      {/* ── Results ── */}
+      {(results || designError) && (
+        <div ref={resultsRef} className="pb-10">
+          <ResultsSection results={results} error={designError} />
+        </div>
+      )}
     </div>
   );
 }

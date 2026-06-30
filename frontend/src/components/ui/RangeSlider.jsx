@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import Tooltip from './Tooltip.jsx';
 
-// teal-600 = #0d9488 (used inline because Tailwind cannot generate
-// arbitrary gradient color-stop values from class names alone)
-const TRACK_FILL  = '#0d9488'; // teal-600
+// CSS variable — resolves to the active theme's brand-600 at runtime
+const TRACK_FILL  = 'var(--brand-600)';
 const TRACK_EMPTY = '#E5E7EB'; // gray-200
 
 export default function RangeSlider({
@@ -98,7 +97,7 @@ export default function RangeSlider({
                 style={{
                   borderLeft: '4px solid transparent',
                   borderRight: '4px solid transparent',
-                  borderTop: '4px solid #0f766e', // teal-700
+                  borderTop: '4px solid var(--brand-700)',
                 }}
               />
             </div>

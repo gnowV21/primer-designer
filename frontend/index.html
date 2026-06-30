@@ -6,6 +6,13 @@
     <title>HG Lab | Stem-loop RT-qPCR Primer Designer</title>
     <meta name="description" content="Automated primer design tool for stem-loop RT-qPCR miRNA quantification. Generates stem-loop RT primer, forward qPCR primer, and universal reverse primer with thermodynamic validation." />
     <link rel="icon" type="image/png" href="/logo.png" />
+    <!-- Apply saved theme before first paint to prevent flash -->
+    <script>
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('hglab-theme') || 'pink'
+      );
+    </script>
   </head>
   <body>
     <div id="root"></div>

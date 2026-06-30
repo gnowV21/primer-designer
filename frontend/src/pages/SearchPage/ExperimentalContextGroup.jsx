@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
-import { SAMPLE_TYPE_PRESETS, QPCR_SYSTEM_NOTES, RT_ENZYME_NOTES } from '../../constants/defaults.js';
+import { SAMPLE_TYPE_PRESETS, QPCR_SYSTEM_NOTES } from '../../constants/defaults.js';
 
 const SAMPLE_OPTIONS = [
   { value: 'tissue', label: 'Tissue' },
@@ -20,12 +20,6 @@ const QPCR_SYSTEM_OPTIONS = [
   { value: 'other',  label: 'Other' },
 ];
 
-const RT_ENZYME_OPTIONS = [
-  { value: 'mmlv',        label: 'M-MLV' },
-  { value: 'superscript', label: 'SuperScript III/IV' },
-  { value: 'revertaid',   label: 'RevertAid' },
-  { value: 'other',       label: 'Other' },
-];
 
 const EXPORT_OPTIONS = [
   { value: 'copy', label: 'Copy to clipboard' },
@@ -35,7 +29,7 @@ const EXPORT_OPTIONS = [
 
 export default function ExperimentalContextGroup({ data, onChange, onApplyPreset, onFirstOpen, openRequested }) {
   const [presetDismissed, setPresetDismissed] = useState(false);
-  const [prevSample, setPrevSample] = useState(data.sampleType);
+  const [prevSample, setPrevSample] = useState(data.sampleType); // eslint-disable-line no-unused-vars
 
   function handleSampleChange(e) {
     const val = e.target.value;
@@ -56,7 +50,6 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
   const hasPresetChanges = !presetDismissed && (preset.ampliconMax || preset.primerConcentration);
   const sampleWarning = preset.warning || '';
 
-  const enzymeNote = RT_ENZYME_NOTES[data.rtEnzyme];
   const systemNote = QPCR_SYSTEM_NOTES[data.qpcrSystem];
 
   const hasWarning = hasPresetChanges || !!sampleWarning;
@@ -147,47 +140,24 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
         </p>
       )}
 
-      {/* RT enzyme + Export format */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">RT enzyme</label>
-            <Tooltip text="The reverse transcriptase affects the optimal RT step temperature. SuperScript IV is more thermostable — useful for difficult or low-input samples." />
-          </div>
-          <select
-            value={data.rtEnzyme}
-            onChange={(e) => onChange('rtEnzyme', e.target.value)}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
-          >
-            {RT_ENZYME_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          {enzymeNote && (
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Optimal: {enzymeNote.optimalTemp} — {enzymeNote.note}
-            </p>
-          )}
+      {/* Export format */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <label className="text-sm font-medium text-gray-700">Export format</label>
+          <Tooltip text="CSV format is suitable for submitting directly to oligo synthesis vendors. PDF is ideal for lab notebooks or sharing with collaborators." />
         </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Export format</label>
-            <Tooltip text="CSV format is suitable for submitting directly to oligo synthesis vendors. PDF is ideal for lab notebooks or sharing with collaborators." />
-          </div>
-          <div className="space-y-1.5">
-            {EXPORT_OPTIONS.map(({ value, label }) => (
-              <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={data.exportFormat.includes(value)}
-                  onChange={() => handleExportToggle(value)}
-                  className="accent-teal-600"
-                />
-                <span className="text-sm text-gray-700">{label}</span>
-              </label>
-            ))}
-          </div>
+        <div className="flex gap-4">
+          {EXPORT_OPTIONS.map(({ value, label }) => (
+            <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={data.exportFormat.includes(value)}
+                onChange={() => handleExportToggle(value)}
+                className="accent-teal-600"
+              />
+              <span className="text-sm text-gray-700">{label}</span>
+            </label>
+          ))}
         </div>
       </div>
     </CollapsibleSection>

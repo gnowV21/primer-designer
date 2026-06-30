@@ -42,6 +42,31 @@ def lookup(mirna_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def suggest(query: str, limit: int = 6) -> list[dict]:
+    """Return up to `limit` miRNA name suggestions matching a partial name query."""
+    if not exists():
+        return []
+    q = query.strip().upper()
+    # Escape SQL LIKE metacharacters so user input is treated as literals.
+    # Without this, "miR_21" matches miR-21, miRX21, etc. (_ is a wildcard),
+    # and "%" would expand into a full-table scan.
+    q_esc = q.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    prefix_key = f"%{q_esc}-%"   # e.g. "%MIR\-21-%" — prefer exact stem matches
+    broad_key  = f"%{q_esc}%"
+    with _conn() as c:
+        rows = c.execute(
+            """SELECT name, accession, species FROM mirna
+               WHERE UPPER(name) LIKE ? ESCAPE '\\'
+               ORDER BY
+                 CASE WHEN UPPER(species) LIKE 'HOMO SAPIENS%' THEN 0 ELSE 1 END,
+                 CASE WHEN UPPER(name) LIKE ? ESCAPE '\\' THEN 0 ELSE 1 END,
+                 length(name)
+               LIMIT ?""",
+            (broad_key, prefix_key, limit),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
 def upsert(data: dict):
     """Cache a result fetched from an external source into local DB."""
     if not exists():
