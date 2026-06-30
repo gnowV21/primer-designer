@@ -156,8 +156,9 @@ def design_primers():
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,
             "data_note": (
-                "Family and isoMiR data are PLACEHOLDER — verify against miRBase v22+ "
-                "before relying on these results in a production context."
+                "Family data: miRBase CURRENT, seed-based grouping (positions 2-8). "
+                "isoMiR data: curated from literature (7 entries). "
+                "Re-run scripts/build_mirbase_data.py after miRBase updates."
             ),
         },
         "metadata": {
