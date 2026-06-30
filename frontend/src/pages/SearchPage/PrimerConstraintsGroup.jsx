@@ -37,37 +37,25 @@ function Reveal({ show, children }) {
 
 // ── Binding region hint logic ─────────────────────────────────────────────────
 
-function getBindingHint(mirnaFamily, bindingNt) {
+// Family-specific suggestion: which overhangs benefit from 7 nt for discrimination
+function getFamilyHint(mirnaFamily) {
   const fam = (mirnaFamily || '').toLowerCase();
   if (fam.includes('let-7') || fam.includes('let7')) {
-    return {
-      type: 'suggest',
-      text: `let-7 family has 13 members with nearly identical 3′ sequences — 7 nt is recommended for reliable discrimination between family members.`,
-      suggestNt: 7,
-    };
+    return { text: `let-7 family has 13 members with nearly identical 3′ sequences — 7 nt may help discriminate between family members.`, suggestNt: 7 };
   }
   if (fam.includes('mir-17') || fam.includes('mir17')) {
-    return {
-      type: 'suggest',
-      text: `miR-17 family members share highly conserved seed and 3′ sequences — 7 nt improves specificity.`,
-      suggestNt: 7,
-    };
+    return { text: `miR-17 family members share highly conserved seed and 3′ sequences — 7 nt may improve specificity.`, suggestNt: 7 };
   }
   if (fam.includes('mir-29') || fam.includes('mir29') || fam.includes('mir-30') || fam.includes('mir30')) {
-    return {
-      type: 'suggest',
-      text: `${mirnaFamily} family has multiple members with similar 3′ ends — 7 nt reduces cross-reactivity risk.`,
-      suggestNt: 7,
-    };
-  }
-  if (bindingNt === 5) {
-    return {
-      type: 'warn',
-      text: '5 nt reduces specificity against related family members. Use only when template accessibility or secondary structure requires shorter overlap.',
-    };
+    return { text: `${mirnaFamily} family has multiple members with similar 3′ ends — 7 nt may reduce cross-reactivity risk.`, suggestNt: 7 };
   }
   return null;
 }
+
+const OFF_LABEL_WARNINGS = {
+  5: 'Off-label — not experimentally validated. Chen et al. 2005 only tested 6 nt. A 5-nt overhang reduces specificity against related family members and may lower RT efficiency. Use only if you have evidence that a shorter overlap is required for your specific template.',
+  7: 'Off-label — not experimentally validated. Chen et al. 2005 only tested 6 nt. A 7-nt overhang may improve discrimination in large miRNA families (e.g. let-7), but no published data exists confirming RT efficiency or sensitivity at 7 nt for stem-loop RT-qPCR.',
+};
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -165,8 +153,9 @@ export default function PrimerConstraintsGroup({
   const thermoHasWarn = !!(mgWarn || saltWarn || primerCWarn || dntpWarn ||
     kPlusWarn || phWarn || freeMgWarn || showIonicWarn || showFwdTmWarn);
 
-  // ── 3' binding region hint ────────────────────────────────────────────────
-  const bindingHint = getBindingHint(mirnaFamily, data.bindingRegion3prime);
+  // ── 3' binding region ────────────────────────────────────────────────────
+  const familyHint    = getFamilyHint(mirnaFamily);
+  const offLabelWarn  = OFF_LABEL_WARNINGS[data.bindingRegion3prime] ?? null;
 
   return (
     <CollapsibleSection
@@ -255,24 +244,33 @@ export default function PrimerConstraintsGroup({
               </button>
             ))}
           </div>
-          {/* Family-aware hint */}
-          {bindingHint && (
-            <p className={`text-xs leading-relaxed rounded-lg px-2.5 py-1.5 ${
-              bindingHint.type === 'suggest'
-                ? 'text-teal-700 bg-teal-50 border border-teal-100'
-                : 'text-amber-700 bg-amber-50 border border-amber-200'
-            }`}>
-              {bindingHint.type === 'suggest' ? '💡 ' : '⚠ '}
-              {bindingHint.text}
-              {bindingHint.type === 'suggest' && bindingHint.suggestNt !== data.bindingRegion3prime && (
-                <button
-                  type="button"
-                  onClick={() => onChange('bindingRegion3prime', bindingHint.suggestNt)}
-                  className="ml-1.5 underline font-medium hover:no-underline"
-                >
-                  Use {bindingHint.suggestNt} nt
-                </button>
-              )}
+          {/* Off-label warning — shown whenever binding length ≠ 6 nt */}
+          {offLabelWarn && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 space-y-1">
+              <p className="text-xs font-semibold text-red-700">
+                ⚠ Off-label use ({data.bindingRegion3prime} nt) — no published experimental validation
+              </p>
+              <p className="text-xs text-red-600 leading-relaxed">{offLabelWarn}</p>
+              <button
+                type="button"
+                onClick={() => onChange('bindingRegion3prime', 6)}
+                className="text-xs font-medium text-red-700 underline hover:no-underline"
+              >
+                Revert to 6 nt (Chen et al. 2005 standard)
+              </button>
+            </div>
+          )}
+          {/* Family-specific suggestion (informational, not a blocker) */}
+          {familyHint && data.bindingRegion3prime !== familyHint.suggestNt && (
+            <p className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-700 bg-teal-50 border border-teal-100">
+              💡 {familyHint.text}
+              <button
+                type="button"
+                onClick={() => onChange('bindingRegion3prime', familyHint.suggestNt)}
+                className="ml-1.5 underline font-medium hover:no-underline"
+              >
+                Use {familyHint.suggestNt} nt
+              </button>
             </p>
           )}
           {seqAnalysis && !seqAnalysis.fwdEndGC && data.gcClamp3prime && (

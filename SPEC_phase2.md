@@ -1,6 +1,33 @@
 # SPEC CHI TIẾT — Phase 2: Thuật toán thiết kế 3 Primer
 # Stem-loop RT-qPCR Primer Designer — HG Lab
-# Phiên bản 2.6 — Advanced Seq. tab: Section N, OUTPUT_BASE_INDEX, PRIMER_AVOID_T_AT_3PRIME
+# Phiên bản 2.8.2 — Specificity module: heterodimer check, cross-reactivity, isoMiR flag
+
+---
+
+## CHANGELOG
+
+### v2.8.2 — 2026-06-30 — Specificity Module
+- Thêm **Module 1**: `algorithm/structure_check/heterodimer.py` — Heterodimer check
+  forward × stemloop RT (RT buffer Kramer 2011) và forward × universal reverse (PCR buffer).
+  Two-layer risk: HIGH (dG ≤ −9 AND 3' end complementarity ≥ 3 bp) / MODERATE / LOW / PASS.
+- Thêm **Module 2**: `algorithm/specificity_check/family_crossreactivity.py` — Cross-reactivity
+  analysis dựa trên Hamming distance overhang và ΔTm ước tính. Auto-extend 7→8 nt khi có HIGH risk.
+  Data offline: `data/mirbase_family_overhangs.json` (PLACEHOLDER — cần verify với miRBase v22+).
+- Thêm **Module 3**: `algorithm/specificity_check/isomir_flag.py` — isoMiR 5'-end flag.
+  Cảnh báo informational khi forward primer 3'-end rơi vào vùng biến đổi của 5' isomiR đã biết.
+  Data offline: `data/known_5prime_isomir_mirnas.json` (PLACEHOLDER — cần verify).
+- Tích hợp vào `design.py`: `specificity_warnings` object trong API response; heterodimer
+  check chạy per candidate (Step 5); cross-reactivity chạy 1 lần globally (Step 8 mới).
+- Thêm constants Section O (RT buffer) và Section P (heterodimer thresholds) vào `constants.py`.
+- Lý do gap analysis: cross-reactivity trong let-7 family (0.1–3.7%, [Chen05] Fig.7),
+  forward×stemloop RT heterodimer chưa được check trong structure_check cũ,
+  và 5' isomiR cross-reactivity trong miR-21/miR-122.
+
+### v2.8.1 — (prior) — Scoring fixes
+- Đã ghi trong spec hiện tại.
+
+### v2.7 — (prior)
+- Đã ghi trong spec hiện tại.
 
 ---
 
@@ -4016,3 +4043,293 @@ Boundary values (ViennaRNA RNA mode: mfe_min=-35, mfe_opt=-26, mfe_max=-20):
 | -20.0 | in-range (boundary) | 60 |
 | -18.0 | too-weak | 50 |
 | -15.0 | too-weak | 35 |
+
+---
+
+## 29. Heterodimer Check (Forward × Stem-loop RT × Universal Reverse)
+
+**File:** `backend/algorithm/structure_check/heterodimer.py`
+
+### 29.1 Rationale
+
+Chen et al. 2005 design yêu cầu 3 primer cùng có mặt trong 2 phản ứng khác nhau:
+- **RT step**: forward primer + stemloop RT primer (cùng ống phản ứng RT)
+- **qPCR step**: forward primer + universal reverse primer
+
+Nếu forward primer tạo heterodimer bền vững với stemloop RT primer, hiệu quả RT giảm
+và có thể tạo primer-extension artifact. Đây là gap trong structure_check cũ (chỉ check
+forward × universal reverse, thiếu forward × stemloop RT).
+
+**Khác biệt với `structure_check.py` cũ:**
+- `structure_check.py` check `hetero_dimer` là forward × universal reverse (PCR buffer)
+- Module mới check THÊM forward × stemloop RT (RT buffer) với điều kiện ion riêng biệt
+- Thresholds mới (HIGH/MODERATE/LOW) dựa trên 3' end complementarity, không chỉ dG
+
+**Nguồn:** [IDT] OligoAnalyzer qPCR guidelines; [K11] Kramer 2011 Unit 15.10 Table 2
+
+### 29.2 Reaction-specific buffer conditions
+
+| Step | Primer pair | mv_conc | dv_conc | dntp_conc | dna_conc |
+|------|-------------|---------|---------|-----------|---------|
+| RT   | fwd × stemloop RT | 75 mM KCl [K11] | 3.0 mM MgCl2 [K11] | 2.0 mM total [K11] | 1.0 nM [K11] |
+| qPCR | fwd × universal rev | user params | user params | user params | user params |
+
+Constants: `P3_RT_MV_CONC`, `P3_RT_DV_CONC`, `P3_RT_DNTP_CONC`, `P3_RT_DNA_CONC` (Section O)
+
+### 29.3 3' End Complementarity Detection
+
+**Pairwise complement check** (NOT revcomp check):
+
+Trong mô hình 3'-3' junction (polymerase extension scenario):
+```
+seq1 (primer):    5'---A  B  C-3'
+seq2 (template):  5'---C' B' A'-3'   (read 3'→5' as template)
+```
+
+Condition: `complement(seq1[-i]) == seq2[-i]` cho i = 1, 2, ..., k
+
+→ k consecutive bp tại 3' terminal của cả 2 primer = **extension artifact risk**.
+
+**Lý do dùng pairwise thay vì revcomp:**
+Revcomp check `seq1[-k:] == revcomp(seq2[-k:])` sẽ cho kết quả sai khi hai 3' end
+có cùng orientation (ví dụ cả hai đều là GCATGC palindrome — pairwise check cho thấy
+chúng KHÔNG tạo 3' pairing ở vị trí terminal, điều đúng về vật lý).
+
+### 29.4 Risk Classification (2 lớp)
+
+| Risk Level | Condition | Interpretation |
+|-----------|-----------|----------------|
+| HIGH | dG ≤ −9 kcal/mol AND 3' end ≥ 3 bp | Polymerase CAN extend → artifact thật sự |
+| MODERATE | dG ≤ −9 kcal/mol AND no 3' end complementarity | Internal binding, extension impeded |
+| LOW | −9 < dG ≤ −6 kcal/mol | Weak interaction, acceptable |
+| PASS | dG > −6 kcal/mol | No significant interaction |
+
+### 29.5 Input / Output Schema
+
+Input: `(forward_seq, stemloop_seq, reverse_seq, params)`
+
+Output:
+```json
+{
+  "heterodimer_fwd_stemloop": {
+    "dg": -10.5,
+    "risk_level": "MODERATE",
+    "three_prime_overlap": false,
+    "three_prime_bp": 0,
+    "note": "..."
+  },
+  "heterodimer_fwd_reverse": { ... },
+  "any_high_risk": false,
+  "any_moderate_or_above": true
+}
+```
+
+### 29.6 Integration in Pipeline
+
+Chạy ở **Step 5** (sau structure checks cũ, per candidate):
+```python
+c["heterodimer_checks"] = check_all_heterodimers(
+    forward_seq=c["sequence"],
+    stemloop_seq=stemloop["sequence"],
+    reverse_seq=reverse["sequence"],
+    params=params,
+)
+```
+
+Kết quả đi vào `top_n[i]["heterodimer_checks"]` trong API response.
+
+### 29.7 Known Limitations
+
+- Không kiểm tra stemloop RT × universal reverse (chúng không cùng phản ứng qPCR theo thiết kế)
+- `dna_conc` cho RT step dùng RT_PRIMER_CONC_OPTIMAL (1 nM) — ảnh hưởng nhỏ đến ΔG nhưng
+  không ảnh hưởng risk classification vì threshold dựa trên ΔG tuyệt đối
+
+---
+
+## 30. Cross-Reactivity Analysis with miRNA Family Members
+
+**File:** `backend/algorithm/specificity_check/family_crossreactivity.py`
+**Data:** `backend/data/mirbase_family_overhangs.json` (offline, PLACEHOLDER — verify)
+
+### 30.1 Rationale
+
+Stemloop RT primer có 6 nt overhang complementary với 3' end của mature miRNA. Trong
+cùng một family, các members chỉ khác nhau 1–2 nt ở vùng này. Ví dụ: let-7a vs let-7c
+khác nhau 1 nt ở position 3 của overhang (AUAGUU vs AUGGUU). Chen 2005 Figure 7 báo
+cáo cross-reaction 0.1–3.7% giữa các let-7 family members.
+
+**Nguồn:** [Chen05] Fig.7; [K11] Unit 15.10; [SL98] SantaLucia 1998 NN model
+
+### 30.2 Algorithm
+
+1. Extract overhang = last N nt của mature miRNA (default N=6)
+2. Identify family từ miRNA name (substring match với keys trong JSON DB)
+3. Với mỗi sibling:
+   a. Hamming distance giữa target overhang và sibling overhang (cùng độ dài)
+   b. ΔTm = Tm(target overhang) − Tm(sibling overhang)
+      - Cả 2 Tm tính độc lập bằng NN model (SantaLucia 1998) trên DNA equivalent
+      - **Approximation**: đây là Tm của perfect duplex của từng overhang, không phải
+        Tm của mismatch duplex (tính exact mismatch Tm cần mismatch ΔG parameters riêng)
+      - ΔTm âm = sibling Tm > target Tm = sibling overhang GC-rich hơn → primer có thể
+        prefer sibling → kết quả đúng khi classify HIGH (delta_tm < 5.0)
+4. Risk classification (xem 30.3)
+5. Nếu có HIGH risk → auto-extend 7→8 nt và kiểm tra lại
+
+### 30.3 Risk Classification
+
+| Mismatches | ΔTm | Risk |
+|-----------|-----|------|
+| 0 | any | IDENTICAL — không thể phân biệt, cần xem xét lại mục tiêu |
+| 1 | < 5°C | HIGH — khó discriminate trong điều kiện RT |
+| 1 | ≥ 5°C | LOW — 1 mismatch nhưng discriminable |
+| 2 | any | LOW — annotate nhưng không block |
+| ≥ 3 | any | SAFE — không liệt kê trong output |
+
+**Lưu ý ΔTm âm:** Nếu ΔTm < 0 (sibling có Tm cao hơn target), đây là WORSE case
+(primer ưu tiên bind sibling). `delta_tm < 5.0` đúng cho cả trường hợp này.
+
+### 30.4 Auto-Extension Logic
+
+```
+if any sibling is HIGH:
+    for try_len in range(current_len+1, 9):  # up to 8 nt max
+        recalculate with extended overhang
+        if no HIGH risk remaining: break
+```
+
+Kết quả `recommendation.suggested_overhang_length` và `recommendation.resolved`.
+Nếu `suggested_overhang_length != 6` → thêm off-label warning (chưa có experimental validation).
+
+### 30.5 Output Schema
+
+```json
+{
+  "family": "let-7",
+  "overhang_used": 6,
+  "target_overhang": "AUAGUU",
+  "cross_reactivity": [
+    {
+      "sibling": "hsa-let-7c-5p",
+      "sibling_overhang": "AUGGUU",
+      "mismatch": 1,
+      "tm_target_overhang": -26.1,
+      "tm_sibling_overhang": -15.6,
+      "delta_tm": -10.5,
+      "risk": "HIGH"
+    }
+  ],
+  "recommendation": {
+    "suggested_overhang_length": 7,
+    "resolved": true,
+    "reason": "Extending to 7 nt resolves all HIGH risk cross-reactivity.",
+    "remaining_high_risk_siblings": [],
+    "off_label_warning": "Off-label: 7 nt binding region has not been experimentally validated..."
+  },
+  "data_warning": "PLACEHOLDER — verify against miRBase v22+ before production use."
+}
+```
+
+### 30.6 Data File
+
+`backend/data/mirbase_family_overhangs.json` — các family được include:
+`let-7`, `miR-17`, `miR-15/16`, `miR-29`, `miR-200`, `miR-30`, `miR-25/32/92`.
+
+**⚠ PLACEHOLDER**: Tất cả sequences cần được verify thủ công với miRBase v22+
+trước khi dùng trong production. File hiện tại là khung để unit test chạy được.
+
+### 30.7 Known Limitations
+
+- ΔTm là approximation (tính Tm của mỗi overhang binding perfect complement, không phải
+  Tm của mismatch duplex stemloop primer × sibling overhang)
+- Data offline: không auto-update khi miRBase release version mới
+- Chỉ cover các family phổ biến nhất — miRNA ngoài danh sách → `no_family_data`
+- **Không implement** loop-sequence cross-reactivity check (pre-miRNA vs mature miRNA):
+  cơ chế chính ngăn pre-miRNA là steric hindrance của cấu trúc stem-loop,
+  không phải sequence specificity của overhang với loop. Thêm check này sẽ tạo false signal.
+
+---
+
+## 31. isoMiR 5'-End Discrimination Flag
+
+**File:** `backend/algorithm/specificity_check/isomir_flag.py`
+**Data:** `backend/data/known_5prime_isomir_mirnas.json` (PLACEHOLDER — verify)
+
+### 31.1 Rationale
+
+5' isomiRs là variants của mature miRNA với shift ±1–2 nt tại đầu 5'. Chúng ảnh hưởng
+trực tiếp đến forward primer specificity: nếu forward primer 3' end nằm ở vùng biến đổi
+của 5' isomiR, primer có thể không phân biệt được canonical và isomiR.
+
+Ví dụ: nếu miR-21-5p có 5' isomiR (+1 nt shift), một forward primer chỉ cover 2 nt đầu
+của miRNA sẽ không discriminate.
+
+**Nguồn:** Neilsen et al. 2012 Bioinformatics; Morin et al. 2008 Genome Research
+
+### 31.2 Logic
+
+```python
+in_risk_window = (forward_3prime_position <= risk_window_nt)
+```
+
+- `forward_3prime_position` = `specific_length` của forward primer (1-based)
+  = vị trí 3' end của vùng binding trên mature miRNA
+- `risk_window_nt` = số nt từ 5' end của miRNA bị ảnh hưởng bởi isomiR shift
+  (thường = isomiR shift + 1)
+
+### 31.3 Output
+
+Đây là **informational warning only** — không block candidate generation.
+
+```json
+{
+  "isomir_discrimination_risk": true,
+  "mirna_name": "hsa-miR-21-5p",
+  "forward_3prime_position": 12,
+  "known_5prime_shift_nt": 1,
+  "risk_window_nt": 2,
+  "note": "Forward primer 3' end is at position 12 (1-based)...",
+  "data_warning": "isoMiR data is PLACEHOLDER..."
+}
+```
+
+`isomir_flag` được attach vào mỗi entry trong `top_n` trong API response.
+
+### 31.4 Data File
+
+`backend/data/known_5prime_isomir_mirnas.json` — includes:
+hsa-miR-21-5p, hsa-miR-122-5p, hsa-miR-155-5p, hsa-miR-146a-5p,
+hsa-miR-126-3p, hsa-miR-10a-5p, hsa-miR-10b-5p.
+
+**⚠ PLACEHOLDER**: Cần verify với literature trước production.
+
+### 31.5 Known Limitations
+
+- Chỉ check 5' isomiRs (shift ở đầu 5' của mature miRNA) — không check 3' isomiRs vì
+  3' end là vùng overhang binding của stemloop RT primer, đã được address bởi Module 2
+- List miRNA có isomiR đã biết rất nhỏ so với tổng số miRNA (~2500 mature sequences)
+- Absence of entry ≠ no isomiR exists — chỉ có nghĩa là không có data
+
+---
+
+## 32. Known Limitations (Specificity Module v2.8.2)
+
+1. **Loop-sequence cross-reactivity**: Không implement check xem liệu stemloop RT primer
+   có cross-react với pre-miRNA loop sequence không. Lý do: cơ chế specificity của
+   stem-loop RT-qPCR đối với mature vs pre-miRNA là **steric hindrance** của cấu trúc
+   stem-loop (Chen 2005 — RT primer chỉ accessible với đầu 3' của mature miRNA đã được
+   tách ra), không phải sequence specificity của overhang với loop. Implement check này
+   sẽ tạo false signal vì physical mechanism đã xử lý vấn đề này.
+
+2. **ΔTm approximation**: Module 2 tính ΔTm bằng cách so sánh Tm của hai overhang
+   binding perfect complement của chúng (tính độc lập qua NN model). Đây là approximation
+   — Tm chính xác của mismatch duplex cần NN mismatch parameters (không available qua
+   primer3-py). Kết quả ΔTm âm (sibling Tm > target Tm) được xử lý đúng trong
+   risk classification (`delta_tm < 5.0`).
+
+3. **Offline data**: cả `mirbase_family_overhangs.json` và `known_5prime_isomir_mirnas.json`
+   là PLACEHOLDER và cần verify thủ công với miRBase v22+ và literature trước production.
+   Không auto-update khi miRBase có version mới.
+
+4. **Family detection**: Dựa trên substring matching trong miRNA name. Nếu user nhập
+   accession (MIMAT0000062) thay vì name (hsa-let-7a-5p) → family detection fails → trả
+   về `no_family_data`. Workaround: luôn dùng miRBase standard name.

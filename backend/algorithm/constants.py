@@ -319,6 +319,30 @@ PRIMER_T_AT_3PRIME_SEVERITY = "warning"   # warn, not fail
 
 
 # ----------------------------------------------------------------
+# SECTION O: RT BUFFER CONDITIONS (heterodimer Module 1)
+# Separate from PCR buffer — Mg2+/dNTP differ between RT and PCR steps.
+# [K11] = Kramer 2011, Curr Protoc Mol Biol, Unit 15.10, Table 2
+# ----------------------------------------------------------------
+
+P3_RT_MV_CONC   = 75.0   # mM KCl  — RT reaction buffer [K11] Table 2
+P3_RT_DV_CONC   = 3.0    # mM MgCl2 — RT reaction buffer [K11] Table 2
+P3_RT_DNTP_CONC = 2.0    # mM total dNTP (4 × 0.5 mM per nt) — RT reaction [K11]
+P3_RT_DNA_CONC  = 1.0    # nM — optimal RT primer concentration [K11]
+# Note: PCR step conditions remain governed by P3_DEFAULT_* / user params
+
+
+# ----------------------------------------------------------------
+# SECTION P: HETERODIMER RISK THRESHOLDS (cross-primer dimers)
+# Two-layer classification: HIGH = dG + 3' end complementarity; MODERATE = dG only.
+# [IDT] = IDT OligoAnalyzer qPCR guidelines
+# ----------------------------------------------------------------
+
+HETERODIMER_HIGH_RISK_DG   = -9.0  # kcal/mol — strong interaction threshold [IDT]
+HETERODIMER_LOW_RISK_DG    = -6.0  # kcal/mol — weak interaction threshold [IDT]
+HETERODIMER_3PRIME_MIN_BP  = 3     # bp — min consecutive 3' end bp → extension risk
+
+
+# ----------------------------------------------------------------
 # SECTION (27): v2.7 — Literature insights
 # ----------------------------------------------------------------
 
