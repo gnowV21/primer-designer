@@ -1,4 +1,4 @@
-// ScoreBreakdown — horizontal bar chart for all 11 scoring criteria.
+// ScoreBreakdown — horizontal bar chart for all 12 scoring criteria.
 
 import { useState } from 'react';
 
@@ -7,6 +7,7 @@ const LABELS = {
   tm_binding_accuracy: 'Binding Tm',
   gc_content:          'GC content',
   gc_skew:             'GC skew',
+  gc_clamp:            'GC clamp (3\')',
   mfe_stemloop:        'Stem-loop MFE',
   hairpin_penalty:     'Hairpin',
   dimer_penalty:       'Dimers',

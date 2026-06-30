@@ -19,7 +19,7 @@ from .sequence_utils import calculate_gc_skew
 
 def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) -> dict:
     """
-    Score a complete primer set across 11 weighted criteria (SCORING_WEIGHTS_V3).
+    Score a complete primer set across 12 weighted criteria (SCORING_WEIGHTS_V3).
     """
     scores = {}
     explanations = {}

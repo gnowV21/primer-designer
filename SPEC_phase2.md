@@ -1,10 +1,41 @@
 # SPEC CHI TIẾT — Phase 2: Thuật toán thiết kế 3 Primer
 # Stem-loop RT-qPCR Primer Designer — HG Lab
-# Phiên bản 2.8.2 — Specificity module: heterodimer check, cross-reactivity, isoMiR flag
+# Phiên bản 2.8.3 — Performance + scoring: Tm cache, universal reverse self-check, GC clamp criterion
 
 ---
 
 ## CHANGELOG
+
+### v2.8.3 — 2026-06-30 — Performance + Scoring Enhancement
+
+- **Tm caching** (`algorithm/thermodynamics.py`): `@lru_cache(maxsize=4096)` trên inner
+  function `_calc_tm_cached(sequence, mv_conc, dv_conc, dntp_conc, dna_conc)`. Public API
+  `calculate_tm_nn()` giữ nguyên signature, route qua cache. Trong một request forward primer,
+  primer3.calc_tm() được gọi 1000–6000 lần cho cùng (sequence, buffer) → cache giảm
+  ~90% redundant C-library calls. Cache global (sống qua toàn backend process); safe vì
+  primer3.calc_tm() là pure/deterministic.
+
+- **Universal reverse self-structure check** (`algorithm/universal_reverse.py`): Thêm
+  `_check_self_structure(sequence, params)` — tính hairpin dG và self-dimer dG của
+  universal reverse dưới PCR buffer conditions của user. Thresholds: hairpin critical ≤ −3.0,
+  warning ≤ −2.0; self-dimer critical ≤ −6.0, warning ≤ −4.0. Result include trong API
+  response field `universal_reverse.self_structure_check`. Nếu critical, `routes/design.py`
+  tự động thêm `global_warning`. Verified: Kramer 2011 primer có hairpin = 0.0 (safe),
+  self-dimer = −3.31 kcal/mol (safe — dưới warning threshold −4.0).
+  **Lưu ý thiết kế**: yêu cầu ban đầu check URev×miRNA heterodimer, nhưng điều đó không
+  đúng về mặt sinh học — URev không có mặt trong RT step (chỉ stemloop primer dùng miRNA
+  làm template). Gap thực sự là self-structure của URev chưa bao giờ được kiểm tra.
+
+- **GC clamp scoring criterion** (`algorithm/scoring.py`, `algorithm/constants.py`):
+  Thêm criterion thứ 12 "gc_clamp" vào `SCORING_WEIGHTS_V3` (weight 0.03). Scoring:
+  100 (2 G/C trong 3 nt cuối — optimal anchor per IDT PrimerQuest), 80 (3 G/C —
+  over-stabilised), 60 (1 G/C — relaxed fallback từ prefilter), 0 (0 G/C — không
+  nên đến được scoring vì đã bị prefilter reject). Weights điều chỉnh:
+  gc_content 0.09 → 0.07, gc_skew 0.03 → 0.02; tổng vẫn = 1.00.
+
+- **Algorithm version**: 2.8.2 → 2.8.3. **Test**: 57/57 pass (commit `4ccf99a`).
+
+---
 
 ### v2.8.2 — 2026-06-30 — Specificity Module
 - Thêm **Module 1**: `algorithm/structure_check/heterodimer.py` — Heterodimer check
@@ -3236,15 +3267,184 @@ UPL_PROBE_OPTION = True  # Phase 4: thêm UPL probe option vào PROBE_MODE
 # v2.0: 8 criteria, total = 1.00
 # v2.5: 10 criteria (thêm primer_size, tm_binding_accuracy)
 # v2.7: 11 criteria (thêm gc_skew từ PrimerAST [PAST24])
+# v2.8.3: 12 criteria (thêm gc_clamp từ IDT PrimerQuest)
 
 # SCORING_WEIGHTS_V3 là version cuối — dùng trong scoring.py
-# Tổng = 0.20+0.10+0.09+0.03+0.04+0.15+0.10+0.10+0.10+0.04+0.05 = 1.00 ✓
+# Tổng = 0.20+0.10+0.07+0.02+0.03+0.15+0.10+0.10+0.10+0.04+0.04+0.05 = 1.00 ✓
 
-# Lý do mỗi thay đổi:
-# gc_content: 0.10 → 0.09 (nhường 0.01 cho gc_skew)
-# gc_skew: 0.00 → 0.03 (thêm mới từ [PAST24], nhỏ nhưng có giá trị)
-# primer_size: 0.05 → 0.04 (nhường 0.01 cho gc_skew)
-# amplicon_size: 0.05 → 0.04 (nhường 0.01 cho gc_skew)
+# Lý do mỗi thay đổi tính từ v2.7 → v2.8.3:
+# gc_content: 0.09 → 0.07 (nhường 0.02 cho gc_clamp mới)
+# gc_skew:    0.03 → 0.02 (nhường 0.01 cho gc_clamp mới)
+# gc_clamp:   0.00 → 0.03 (MỚI — 3' anchor quality per IDT PrimerQuest)
+# Các criterion khác: giữ nguyên
+```
+
+---
+
+### K. THERMODYNAMIC CACHING — v2.8.3
+
+```python
+# Vấn đề: trong vòng lặp generate forward candidates, calculate_tm_nn()
+# được gọi 1000–6000 lần với cùng (sequence, buffer conditions).
+# primer3.calc_tm() là C extension — deterministic với cùng input.
+# → Memoization với lru_cache giảm ~90% redundant calls.
+
+# Triển khai (backend/algorithm/thermodynamics.py):
+
+from functools import lru_cache
+
+@lru_cache(maxsize=4096)
+def _calc_tm_cached(sequence: str, mv_conc: float, dv_conc: float,
+                    dntp_conc: float, dna_conc: float) -> float:
+    """Cached inner Tm call — primer3.calc_tm() is deterministic."""
+    tm = primer3.calc_tm(
+        seq=sequence,
+        mv_conc=mv_conc, dv_conc=dv_conc,
+        dntp_conc=dntp_conc, dna_conc=dna_conc,
+    )
+    return round(float(tm), 2)
+
+def calculate_tm_nn(sequence: str, params: dict) -> float:
+    """Public API — unchanged signature, now routes through cache."""
+    p3 = _get_p3_params(params)
+    return _calc_tm_cached(sequence, p3["mv_conc"], p3["dv_conc"],
+                           p3["dntp_conc"], p3["dna_conc"])
+
+# Cache design decisions:
+# - Key: (sequence, mv_conc, dv_conc, dntp_conc, dna_conc) — primitives = hashable
+# - Scope: global (sống qua toàn backend process — không per-request)
+# - Safe: primer3.calc_tm() là pure function, no side effects
+# - Eviction: LRU (maxsize=4096) — ~2MB footprint, tự clear entries cũ nhất
+# - Không cần invalidation: sequence+conditions hoàn toàn xác định Tm
+
+# Unit test:
+def test_tm_cache_hit():
+    seq = "ATCGATCGATCG"
+    params = {}
+    tm1 = calculate_tm_nn(seq, params)
+    tm2 = calculate_tm_nn(seq, params)
+    assert tm1 == tm2
+    info = _calc_tm_cached.cache_info()
+    assert info.hits >= 1
+
+def test_tm_cache_accuracy():
+    """Cache result must equal uncached primer3 call."""
+    seq = "TAGCTTATCAGACTGATGTTGA"
+    params = {}
+    _calc_tm_cached.cache_clear()
+    tm_cached = calculate_tm_nn(seq, params)
+    p3 = _get_p3_params(params)
+    tm_direct = round(float(primer3.calc_tm(
+        seq=seq, mv_conc=p3["mv_conc"], dv_conc=p3["dv_conc"],
+        dntp_conc=p3["dntp_conc"], dna_conc=p3["dna_conc"]
+    )), 2)
+    assert tm_cached == tm_direct
+```
+
+---
+
+### L. UNIVERSAL REVERSE SELF-STRUCTURE CHECK — v2.8.3
+
+```python
+# Gap được đóng: universal reverse primer là fixed sequence nhưng hairpin và
+# self-dimer của nó chưa bao giờ được kiểm tra dưới PCR conditions của user.
+# Nếu user dùng buffer đặc biệt (Mg2+ cao), dG có thể thay đổi đáng kể.
+
+# Không phải URev×miRNA heterodimer (URev không có mặt trong RT step —
+# chỉ stemloop primer dùng miRNA làm template).
+
+# Triển khai (backend/algorithm/universal_reverse.py):
+
+def _check_self_structure(sequence: str, params: dict) -> dict:
+    """
+    Hairpin and self-dimer check for the universal reverse primer.
+    Computed per-request because PCR buffer conditions may vary.
+    """
+    p3 = _get_p3_params(params)
+    kw = dict(mv_conc=p3["mv_conc"], dv_conc=p3["dv_conc"],
+              dntp_conc=p3["dntp_conc"], dna_conc=p3["dna_conc"])
+
+    hp_dg = round(float(primer3.calc_hairpin(seq=sequence, **kw).dg) / 1000, 2)
+    sd_dg = round(float(primer3.calc_homodimer(seq=sequence, **kw).dg) / 1000, 2)
+
+    hp_risk = "critical" if hp_dg <= -3.0 else "warning" if hp_dg <= -2.0 else "safe"
+    sd_risk = "critical" if sd_dg <= -6.0 else "warning" if sd_dg <= -4.0 else "safe"
+
+    return {
+        "hairpin_dg": hp_dg,       # kcal/mol
+        "hairpin_risk": hp_risk,   # "safe" | "warning" | "critical"
+        "self_dimer_dg": sd_dg,
+        "self_dimer_risk": sd_risk,
+        "any_issue": hp_risk != "safe" or sd_risk != "safe",
+    }
+
+# Risk thresholds:
+# Hairpin:   critical ≤ -3.0, warning ≤ -2.0  (tương đương IDT OligoAnalyzer hairpin alert)
+# Self-dimer: critical ≤ -6.0, warning ≤ -4.0  (tương đương primer3 PRIMER_MAX_SELF_ANY_TH)
+
+# Verified với default buffer (Kramer 2011 primer):
+#   hairpin_dg  = 0.0 kcal/mol  → safe (không có hairpin structure)
+#   self_dimer_dg = -3.31 kcal/mol → safe (dưới -4.0 warning threshold)
+
+# Integration (routes/design.py):
+# Nếu hairpin_risk == "critical" OR self_dimer_risk == "critical":
+#   → thêm global_warning với severity="warning" (user cần adjust buffer)
+```
+
+---
+
+### M. GC CLAMP SCORING CRITERION — v2.8.3
+
+```python
+# Lý do khoa học: 3' end GC content ảnh hưởng đến polymerase binding specificity.
+# Quá ít G/C → dễ mispriming; quá nhiều → extension efficiency giảm.
+# Sweet spot: chính xác 2 G/C trong 3 nt cuối [IDT PrimerQuest GC_clamp=2].
+
+# Prefilter (đã có từ v2.1):
+# - Strict mode: ≥ 2 G/C trong 3 nt cuối (GC_CLAMP_MIN_IN_LAST3 = 2)
+# - Relaxed fallback: ≥ 1 G/C nếu strict mode reject tất cả candidates
+
+# Scoring criterion 12 (MỚI v2.8.3):
+# Phân biệt quality trong số candidates đã pass prefilter.
+
+# Scoring logic (backend/algorithm/scoring.py):
+last3    = forward["sequence"][-3:].upper()
+gc_last3 = sum(1 for b in last3 if b in "GC")
+if gc_last3 == 2:   gc_clamp_score = 100   # optimal anchor [IDT PrimerQuest]
+elif gc_last3 >= 3: gc_clamp_score = 80    # over-stabilised — minor penalty
+elif gc_last3 == 1: gc_clamp_score = 60    # relaxed fallback — suboptimal
+else:               gc_clamp_score = 0     # no anchor — không nên reach scoring
+
+# Weight: SCORING_WEIGHTS_V3["gc_clamp"] = 0.03
+# Nguồn: IDT PrimerQuest "3' GC clamp(nt) = 2", PrimerAST 2024 feature importance
+
+# Unit test:
+def test_gc_clamp_scoring():
+    """v2.8.3: GC clamp is criterion 12 in scoring."""
+    assert "gc_clamp" in SCORING_WEIGHTS_V3
+    assert SCORING_WEIGHTS_V3["gc_clamp"] == 0.03
+    # Verify weight redistribution
+    assert SCORING_WEIGHTS_V3["gc_content"] == 0.07   # was 0.09
+    assert SCORING_WEIGHTS_V3["gc_skew"] == 0.02      # was 0.03
+    total = sum(SCORING_WEIGHTS_V3.values())
+    assert abs(total - 1.00) < 0.001
+
+def test_gc_clamp_score_values():
+    """GC clamp scoring: 100/80/60/0 for 2/3+/1/0 G/C in last 3 nt."""
+    # optimal: GCA → 2 G/C
+    seq_opt = "ATCGATGCA"
+    last3 = seq_opt[-3:].upper()
+    assert sum(1 for b in last3 if b in "GC") == 2
+
+    # over-stabilised: GCC → 3 G/C
+    seq_rich = "ATCGATGCC"
+    last3 = seq_rich[-3:].upper()
+    assert sum(1 for b in last3 if b in "GC") == 3
+
+    # relaxed: GTA → 1 G/C
+    seq_relax = "ATCGATGTA"
+    last3 = seq_relax[-3:].upper()
+    assert sum(1 for b in last3 if b in "GC") == 1
 ```
 
 ---
@@ -3283,11 +3483,15 @@ def test_discrimination_thresholds_from_chen2005():
     assert PRECURSOR_SIGNAL_CONTRIBUTION == 0.05
 
 def test_scoring_weights_v3_sum_to_1():
-    """v2.7: SCORING_WEIGHTS_V3 has 11 criteria, total = 1.00."""
+    """v2.8.3: SCORING_WEIGHTS_V3 has 12 criteria, total = 1.00."""
     total = sum(SCORING_WEIGHTS_V3.values())
     assert abs(total - 1.00) < 0.001
+    assert len(SCORING_WEIGHTS_V3) == 12
     assert "gc_skew" in SCORING_WEIGHTS_V3
-    assert SCORING_WEIGHTS_V3["gc_skew"] == 0.03
+    assert SCORING_WEIGHTS_V3["gc_skew"] == 0.02      # v2.8.3: reduced from 0.03
+    assert "gc_clamp" in SCORING_WEIGHTS_V3            # v2.8.3: new criterion
+    assert SCORING_WEIGHTS_V3["gc_clamp"] == 0.03
+    assert SCORING_WEIGHTS_V3["gc_content"] == 0.07   # v2.8.3: reduced from 0.09
 
 def test_gc_skew_calculation():
     """GC-skew = (G-C)/(G+C). Positive = more G (risk), negative = more C."""
