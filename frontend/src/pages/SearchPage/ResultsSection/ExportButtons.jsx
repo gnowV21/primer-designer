@@ -42,25 +42,25 @@ export default function ExportButtons({ set, stemloop, reverse }) {
   }
 
   const btns = [
-    { label: 'Copy forward',  action: () => copy(set.sequence, 'forward')   },
-    { label: 'Copy as TSV',   action: () => copy(tsvRow(),    'tsv')        },
-    { label: 'Copy as FASTA', action: () => copy(fastaBlock(), 'fasta')     },
+    { label: 'Copy forward',  key: 'forward', action: () => copy(set.sequence,  'forward') },
+    { label: 'Copy as TSV',   key: 'tsv',     action: () => copy(tsvRow(),      'tsv')     },
+    { label: 'Copy as FASTA', key: 'fasta',   action: () => copy(fastaBlock(),  'fasta')   },
   ];
 
   return (
     <div className="flex flex-wrap gap-2 pt-1">
-      {btns.map(({ label, action }) => (
+      {btns.map(({ label, key, action }) => (
         <button
-          key={label}
+          key={key}
           type="button"
           onClick={action}
           className={`text-xs px-3 py-1.5 rounded-lg border transition-all
-            ${copied === label.split(' ')[1]
+            ${copied === key
               ? 'bg-teal-600 border-teal-600 text-white'
               : 'bg-white border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700'
             }`}
         >
-          {copied === label.split(' ')[1] ? '✓ Copied' : label}
+          {copied === key ? '✓ Copied' : label}
         </button>
       ))}
     </div>
