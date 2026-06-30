@@ -1,6 +1,6 @@
 # SPEC CHI TIẾT — Stem-loop RT-qPCR Primer Designer
 # Tuần 1: Thiết lập dự án · Form input · miRBase API
-# Phiên bản 3.1 — Week 1 HOÀN THÀNH · Backend SQLite cache + circuit breaker · Bug fixes
+# Phiên bản 3.2 — Week 1 HOÀN THÀNH · Sync với SPEC_phase2 v2.8.2 · Bug fixes defaults.js
 
 ---
 
@@ -272,9 +272,9 @@ export const DEFAULTS = {
     tmMin: 58,
     tmMax: 62,
     saltConcentration: 50,        // mM [Na+]
-    primerConcentration: 250,     // nM
+    primerConcentration: 200,     // nM — IDT PrimerQuest default (BUG FIX v3.2: was 250)
     magnesiumConcentration: 1.5,  // mM Mg2+ total
-    dntpTotal: 0.2,               // mM total dNTP (chelates Mg2+)
+    dntpTotal: 0.8,               // mM total 4 dNTPs (BUG FIX v3.2: was 0.2 per-species)
     kPlusConc: 50,                // mM [K+] / KCl
     bufferPH: 8.4,                // Tris-HCl pH at 20°C
   },
@@ -284,7 +284,7 @@ export const DEFAULTS = {
     gcMin: 40,
     gcMax: 60,
     lengthMin: 20,
-    lengthMax: 24,
+    lengthMax: 27,                // BUG FIX v3.2: was 24 — align với P3P General Settings Max=27
     gcClamp3prime: true,
     bindingRegion3prime: 6,       // KHÔNG đổi default này
   },
@@ -316,6 +316,7 @@ export const DEFAULTS = {
     qpcrSystem: 'other',
     rtEnzyme: 'mmlv',
     exportFormat: ['copy'],
+    userLevel: 'advanced',   // 'beginner' | 'advanced' — added v3.2
   },
 };
 
@@ -325,14 +326,13 @@ export const LIMITS = {
     saltMin: 1, saltMax: 500,
     primerConcMin: 50, primerConcMax: 1000,
     mgMin: 0.5, mgMax: 5.0,
-    dntpMin: 0.05, dntpMax: 1.0,
+    dntpMin: 0.2, dntpMax: 2.0,   // v3.2: total dNTPs (4 × 0.05–0.5 mM per species)
     kPlusMin: 0, kPlusMax: 200,
     bufferPHMin: 7.0, bufferPHMax: 9.5,
   },
   primerConstraints: {
     gcMin: 20, gcMax: 80,
-    lengthMin: 15, lengthMax: 35,
-    bindingMin: 4, bindingMax: 8,
+    lengthMin: 15, lengthMax: 27,  // v3.2: align với FORWARD_MAX_LENGTH=27 (SPEC_phase2)
   },
   qpcr: {
     taMin: 50, taMax: 68,
@@ -364,6 +364,24 @@ const [activeSection, setActiveSection] = useState('seq');
 const [visitedSections, setVisitedSections] = useState(new Set());
 const [resetKey, setResetKey] = useState(0);
 const [sectionOpenRequests, setSectionOpenRequests] = useState({});
+
+// Computed fields — tính real-time từ formData, gửi kèm POST body (added v3.2)
+const computedFields = useMemo(() => {
+  const mg   = formData.thermodynamic.magnesiumConcentration;
+  const dntp = formData.thermodynamic.dntpTotal;
+  const freeMg = Math.max(0, mg - dntp);
+  // [Na+_eq] = [Na+] + 120 × sqrt([Mg2+] - [dNTP]) khi Mg2+ > dNTP (Owczarzy 2004)
+  const naEq = dntp < mg
+    ? formData.thermodynamic.saltConcentration + 120 * Math.sqrt(mg - dntp)
+    : formData.thermodynamic.saltConcentration;
+  return {
+    freeMagnesium: parseFloat(freeMg.toFixed(3)),   // mM — free Mg2+ sau chelation
+    naEquivalent:  parseFloat(naEq.toFixed(2)),      // mM — Na+ equivalent cho Tm calc
+  };
+}, [formData.thermodynamic]);
+
+// POST body: { ...formData, _computed: computedFields }
+// Backend dùng _computed trực tiếp — không tính lại
 ```
 
 ### 7.2. Mini navigation sidebar (xl+ screens)
@@ -469,8 +487,8 @@ SearchPage
 | [Na⁺] / NaCl | 50 | 1–500 | mM | Must be between 1 and 500 mM |
 | [K⁺] / KCl | 50 | 0–200 | mM | Must be between 0 and 200 mM |
 | [Mg²⁺] total | 1.5 | 0.5–5.0 | mM | Must be between 0.5 and 5.0 mM |
-| [dNTP] total | 0.2 | 0.05–1.0 | mM | Must be between 0.05 and 1.0 mM |
-| [Primer] | 250 | 50–1000 | nM | Must be between 50 and 1000 nM |
+| [dNTP] total | **0.8** | 0.2–2.0 | mM | Must be between 0.2 and 2.0 mM |
+| [Primer] | **200** | 50–1000 | nM | Must be between 50 and 1000 nM |
 | Buffer pH | 8.4 | 7.0–9.5 | — | pH must be between 7.0 and 9.5 |
 
 ### Effective free [Mg²⁺] indicator
@@ -512,7 +530,7 @@ Timeout: auto-cancel after 2.5s, button returns to "Reset"
 │  20% ──[======40%────────60%======]── 80%                       │
 │                                                                   │
 │  Primer length (nt)                       [tooltip]              │
-│  15nt ──[=====20nt───────24nt=====]── 35nt                      │
+│  15nt ──[=====20nt───────27nt=====]── 27nt                      │
 │                                                                   │
 │  3′ GC Clamp [?]        3′ Binding region [?]                   │
 │  [●──────] ON           [6         ] nt                          │
@@ -915,47 +933,173 @@ https://hglab.hcmus.edu.vn
 | v2.0 | — | +DetectionMethodGroup, +ExperimentalContextGroup, +Mg²⁺ param |
 | v3.0 | 2026-06-20 | +6 ionic/buffer params (dNTP, K⁺, pH), NumInput component, UI/UX polish toàn bộ: teal color system, sticky submit, reset confirmation, drag callout, tooltip delay, warning style unification, English-only UI |
 | v3.1 | 2026-06-20 | **Week 1 HOÀN THÀNH.** +Backend SQLite cache (local_db.py) với 95 entries; +Circuit breaker (circuit_breaker.py, 3 failures → open, 60s cooldown); +seed_db.py (85 offline curated entries); +fetch_and_seed.py với RNAcentral fallback; Fix Bug 2 (Tab trigger), Bug 3 (T validation dead code), Bug DB (RNAcentral species parse); Cập nhật folder structure, checklist 22/22 PASS |
+| v3.2 | 2026-06-30 | **Sync với SPEC_phase2 v2.8.2.** BUG FIX: `dntpTotal: 0.2→0.8` (tổng 4 dNTPs, không phải per-species); BUG FIX: `primerConcentration: 250→200` nM (IDT default); BUG FIX: `lengthMax: 24→27` (align với P3P Max=27); THÊM: `userLevel: 'advanced'`; THÊM: computed fields `freeMagnesium`/`naEquivalent` (POST body); CẬP NHẬT: LIMITS.dNTP và LIMITS.lengthMax; THÊM: Section 25 Phase 2 status, Section 26 data contract |
 
 ---
 
-## 25. Week 2 — Kế hoạch (chưa bắt đầu)
+## 25. Phase 2 — Thuật toán thiết kế primer (ĐANG CHẠY)
 
+> **STATUS: 🚧 IN PROGRESS** — Tham chiếu đầy đủ: SPEC_phase2.md v2.8.2
 > Bắt đầu sau khi Section 23 hoàn thành ✅
 
-### Mục tiêu Week 2: Thuật toán thiết kế primer
-
-**Primer 1 — Stem-loop RT primer**
+### Thư viện đã cài (requirements.txt)
 ```
-Cấu trúc: 5'-[stem-loop hairpin ~44nt]-[binding tail 6nt]-3'
-Binding tail: bổ sung (reverse complement) với 6nt cuối 3' của miRNA
-Hairpin stem: ~6bp, loop: ~4nt
-```
-
-**Primer 2 — Forward qPCR primer**
-```
-Cấu trúc: 5'-[tail để nâng Tm]-[phần đặc hiệu 10–12nt từ 5' miRNA]-3'
-Phần đặc hiệu: bắt đầu từ nt 1 của miRNA
-Tail: thiết kế để đạt Tm target (từ ThermodynamicGroup)
+flask==3.0.3
+flask-cors==4.0.1
+requests==2.31.0
+primer3-py==2.0.3    # Tm nearest-neighbor SantaLucia 1998, hairpin/dimer ΔG
+ViennaRNA==2.6.4     # MFE của stem-loop hairpin (RNA.fold)
+biopython==1.83      # sequence utilities
+numpy==1.26.4        # scoring calculations
 ```
 
-**Primer 3 — Universal reverse primer (cố định)**
+### Cấu trúc backend mới (Phase 2)
 ```
-5'-CCAGTGCAGGGTCCGAGGTA-3'  (20nt, không thay đổi)
+backend/
+├── algorithm/
+│   ├── constants.py             # tất cả magic numbers, thresholds, weights
+│   ├── stemloop_rt.py           # Primer 1: stem-loop RT primer
+│   ├── forward_primer.py        # Primer 2: forward qPCR candidates
+│   ├── universal_reverse.py     # Primer 3: cố định CCAGTGCAGGGTCCGAGGTA
+│   ├── thermodynamics.py        # SantaLucia 1998 NN Tm, salt correction
+│   ├── scoring.py               # V3 scoring: 11 criteria
+│   ├── sequence_utils.py        # validate_rna_sequence, revcomp, gc_pct
+│   ├── structure_check/
+│   │   ├── heterodimer.py       # fwd×stemloop (RT buffer) + fwd×rev (PCR buffer)
+│   │   └── __init__.py
+│   └── specificity_check/
+│       ├── family_crossreactivity.py  # Hamming + ΔTm vs family members
+│       ├── isomir_flag.py             # 5' isomiR discrimination flag
+│       └── __init__.py
+├── data/
+│   ├── mirbase_family_overhangs.json   # PLACEHOLDER — verify vs miRBase v22+
+│   └── known_5prime_isomir_mirnas.json # PLACEHOLDER — verify vs miRBase v22+
+├── routes/
+│   ├── mirbase.py    # GET /api/mirbase/<id> (Week 1)
+│   └── design.py     # POST /api/design (Phase 2)
+└── tests/
+    ├── test_heterodimer.py
+    ├── test_family_crossreactivity.py
+    └── test_isomir_flag.py
 ```
 
-**Tm calculation:**
-- Nearest-neighbor thermodynamics (SantaLucia 1998)
-- Corrected for salt: SantaLucia salt correction formula
-- Input: Na⁺, K⁺, Mg²⁺, dNTP, primer concentration từ ThermodynamicGroup
+Chi tiết xem SPEC_phase2.md v2.8.2.
 
-**Output (ResultsPage):**
-- 3 primer sequences với Tm, GC%, length
-- Amplicon size estimate
-- Warnings nếu có vấn đề với primer quality
+---
 
-**API endpoint mới:**
+## 26. Data contract — POST /api/design (added v3.2)
+
+### Request body (frontend gửi)
+```json
+{
+  "sequence": {
+    "mirbaseId": "hsa-miR-21-5p",
+    "matureSequence": "UAGCUUAUCAGACUGAUGUUGA",
+    "species": "human",
+    "accession": "MIMAT0000076",
+    "family": "miR-21"
+  },
+  "thermodynamic": {
+    "tmMin": 58, "tmMax": 62,
+    "saltConcentration": 50,
+    "primerConcentration": 200,
+    "magnesiumConcentration": 1.5,
+    "dntpTotal": 0.8,
+    "kPlusConc": 50,
+    "bufferPH": 8.4
+  },
+  "primerConstraints": {
+    "gcMin": 40, "gcMax": 60,
+    "lengthMin": 20, "lengthMax": 27,
+    "gcClamp3prime": true,
+    "bindingRegion3prime": 6
+  },
+  "qpcr": {
+    "annealingTemp": 60,
+    "ampliconMin": 60, "ampliconMax": 150,
+    "totalCycles": 40,
+    "pcrEfficiencyMin": 90, "pcrEfficiencyMax": 110
+  },
+  "detectionMethod": {
+    "signalMethod": "taqman",
+    "quantMode": "relative",
+    "referenceGene": "miR-16",
+    "customReferenceGene": "",
+    "enableFamilyDiscrimination": true,
+    "enablePrecursorCheck": false,
+    "enableRefoldingProtocol": true
+  },
+  "experimentalContext": {
+    "sampleType": "tissue",
+    "qpcrSystem": "other",
+    "rtEnzyme": "mmlv",
+    "exportFormat": ["copy"],
+    "userLevel": "advanced"
+  },
+  "_computed": {
+    "freeMagnesium": 0.7,
+    "naEquivalent": 149.23
+  }
+}
 ```
-POST /api/design
-Body: { sequence, thermodynamic, primerConstraints, qpcr, detectionMethod, experimentalContext }
-Response: { rt_primer, fwd_primer, rev_primer, amplicon_size, warnings }
+
+### Response body (backend trả về)
+```json
+{
+  "top3": [
+    {
+      "rank": 1,
+      "sequence": "ACGGATCGATCGATCGATCGATCG",
+      "tail_length": 12,
+      "specific_length": 12,
+      "gc_pct": 50.0,
+      "tm": 60.1,
+      "amplicon_size": 72,
+      "total_score": 87.3,
+      "binding_start_1based": 1,
+      "binding_end_1based": 12,
+      "structure_checks": { "hairpin": {...}, "homodimer": {...} },
+      "heterodimer_checks": {
+        "heterodimer_fwd_stemloop": { "dg": -5.2, "risk_level": "PASS", "three_prime_overlap": false },
+        "heterodimer_fwd_reverse":  { "dg": -4.1, "risk_level": "PASS", "three_prime_overlap": false },
+        "any_high_risk": false,
+        "any_moderate_or_above": false
+      },
+      "isomir_flag": {
+        "isomir_discrimination_risk": false,
+        "mirna_name": "hsa-miR-21-5p",
+        "forward_3prime_position": 12,
+        "risk_window_nt": 2,
+        "note": "..."
+      }
+    }
+  ],
+  "stemloop_rt": { "sequence": "...", "binding_region": "UCAACAU", "tm": 72.3 },
+  "universal_reverse": { "sequence": "CCAGTGCAGGGTCCGAGGTA", "tm": 68.5 },
+  "global_warnings": [
+    { "field": "signalMethod", "severity": "critical", "message": "..." }
+  ],
+  "specificity_warnings": {
+    "cross_reactivity": {
+      "family": "miR-21",
+      "overhang_used": 6,
+      "target_overhang": "UCAACA",
+      "cross_reactivity": [],
+      "recommendation": { "suggested_overhang_length": 6, "resolved": true, "remaining_high_risk_siblings": [] }
+    },
+    "data_note": "Family and isoMiR data are PLACEHOLDER..."
+  },
+  "metadata": {
+    "mirna_sequence": "UAGCUUAUCAGACUGAUGUUGA",
+    "mirna_length": 22,
+    "binding_region_nt": 6,
+    "candidates_generated": 45,
+    "candidates_passed_prefilter": 12,
+    "candidates_rejected": 33,
+    "elapsed_seconds": 0.84,
+    "algorithm_version": "2.8.1",
+    "scoring_version": "V3 (11 criteria)"
+  }
+}
 ```
+

@@ -55,7 +55,8 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     """
     dna_seq    = rna_to_dna(mature_sequence).upper()
     miRNA_len  = len(dna_seq)
-    available  = dna_seq[: miRNA_len - FORWARD_EXCLUDES_LAST_NT]
+    excludes   = int(params.get("bindingRegion3prime", FORWARD_EXCLUDES_LAST_NT))
+    available  = dna_seq[: miRNA_len - excludes]
 
     rejection_log  = []
     all_candidates = []

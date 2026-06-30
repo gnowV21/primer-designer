@@ -1,0 +1,71 @@
+{
+  "_metadata": {
+    "description": "Mature miRNA sequences for common families used in cross-reactivity analysis. Overhang = last N nt of sequence.",
+    "warning": "PLACEHOLDER — ALL SEQUENCES MUST BE VERIFIED AGAINST miRBase v22+ BEFORE PRODUCTION USE. Sequences below are approximations from training data and may contain errors. Source: miRBase (https://mirbase.org). Arm: 5p unless noted.",
+    "fields": "mature_sequence (RNA, 5p arm unless stated)",
+    "last_updated": "PLACEHOLDER — update after miRBase verification",
+    "version": "0.1-placeholder"
+  },
+  "let-7": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. let-7 family differs primarily in positions 17-22 (3' end). Cross-reaction between members reported at 0.1-3.7% (Chen 2005 Figure 7).",
+    "hsa-let-7a-5p": "UGAGGUAGUAGGUUGUAUAGUU",
+    "hsa-let-7b-5p": "UGAGGUAGUAGGUUGUGUGGUU",
+    "hsa-let-7c-5p": "UGAGGUAGUAGGUUGUAUGGUU",
+    "hsa-let-7d-5p": "AGAGGUAGUAGGUUGCAUAGUU",
+    "hsa-let-7e-5p": "UGAGGUAGGAGGUUGUAUAGUU",
+    "hsa-let-7f-1-5p": "UGAGGUAGUAGAUUGUAUAGUU",
+    "hsa-let-7g-5p": "UGAGGUAGUAGUUUGUACAGUU",
+    "hsa-let-7i-5p": "UGAGGUAGUAGUUUGUGCUU",
+    "hsa-miR-98-5p": "UGAGGUAGUAAGUUGUAUUGUU"
+  },
+  "miR-17": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-17 family (oncomiR cluster). Members share CAAAGUGC seed but differ at 3' end.",
+    "hsa-miR-17-5p": "CAAAGUGCUUACAGUGCAGGUAG",
+    "hsa-miR-18a-5p": "UAAGGUGCAUCUAGUGCAGAUAG",
+    "hsa-miR-19a-3p": "UGUGCAAAUCUAUGCAAAACUGA",
+    "hsa-miR-20a-5p": "UAAAGUGCUUAUAGUGCAGGUAG",
+    "hsa-miR-93-5p": "CAAAGUGCUGUUCGUGCAGGUAG",
+    "hsa-miR-106a-5p": "AAAAGUGCUUACAGUGCAGGUAG",
+    "hsa-miR-106b-5p": "UAAAGUGCUGACAGUGCAGAG"
+  },
+  "miR-15": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-15/16 family — tumor suppressors. Members share AGCACAU seed.",
+    "hsa-miR-15a-5p": "UAGCAGCACAUAAUGGUUUGUG",
+    "hsa-miR-15b-5p": "UAGCAGCACAUCAUGGUUUACA",
+    "hsa-miR-16-1-5p": "UAGCAGCACGUAAAUAUUGGCG",
+    "hsa-miR-16-2-5p": "UAGCAGCACGUAAAUAUUGGCG",
+    "hsa-miR-195-5p": "UAGCAGCACAGAAAUAUUGGC",
+    "hsa-miR-497-5p": "CAGCAGCACACUGUGGUUUGU"
+  },
+  "miR-29": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-29 family — UAGCACC seed. Differ at 3' end region.",
+    "hsa-miR-29a-3p": "UAGCACCAUCUGAAAUCGGUUA",
+    "hsa-miR-29b-1-3p": "UAGCACCAUUUGAAAUCAGUGUU",
+    "hsa-miR-29b-2-3p": "UAGCACCAUUUGAAAUCAGUGUU",
+    "hsa-miR-29c-3p": "UAGCACCAUUUGAAAUCGGUUA"
+  },
+  "miR-200": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-200 family — two subgroups: 200a/141 and 200b/200c/429. Differ at seed and 3' end.",
+    "hsa-miR-200a-3p": "UAACACUGUCUGGUAACGAUGUC",
+    "hsa-miR-200b-3p": "UAAUACUGCCUGGUAAUGAUGA",
+    "hsa-miR-200c-3p": "UAAUACUGCCGGGUAAUGAUGGA",
+    "hsa-miR-141-3p": "UAACACUGUCUGGUAAAGAUGG",
+    "hsa-miR-429": "UAAUACUGUCUGGUAAAACCGU"
+  },
+  "miR-30": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-30 family — UGUAAAC seed. Members differ in 3' half.",
+    "hsa-miR-30a-5p": "UGUAAACAUCCUCGACUGGAAGUGU",
+    "hsa-miR-30b-5p": "UGUAAACAUCCUACACUCAGCU",
+    "hsa-miR-30c-1-5p": "UGUAAACAUCCUACACUCUCAGC",
+    "hsa-miR-30d-5p": "UGUAAACAUCCCCGACUGGAAGUGA",
+    "hsa-miR-30e-5p": "UGUAAACAUCCUUGACUGGAAGU"
+  },
+  "miR-25": {
+    "_note": "PLACEHOLDER — VERIFY WITH MIRBASE v22+. miR-25/32/92 cluster — AUUGCAC seed.",
+    "hsa-miR-25-3p": "CAUUGCACUUGUCUCGGUCUGA",
+    "hsa-miR-32-5p": "UAUUGCACAUUACUAAGUUGCA",
+    "hsa-miR-92a-1-3p": "UAUUGCACUUGUCCCGGCCUGU",
+    "hsa-miR-92b-3p": "UAUUGCACUCGUCCCGGCCUCC",
+    "hsa-miR-363-3p": "AAUUGCACGGUAUCCAUCUCUGU"
+  }
+}

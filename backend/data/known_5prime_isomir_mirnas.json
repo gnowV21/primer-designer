@@ -1,0 +1,50 @@
+{
+  "_metadata": {
+    "description": "miRNAs with known abundant 5'-isomiRs that could affect forward primer specificity.",
+    "warning": "PLACEHOLDER — VERIFY BEFORE PRODUCTION USE. Entries based on literature reports of common 5' isomiRs. Sources include: Neilsen et al. 2012 (Bioinformatics), Morin et al. 2008 (Genome Research), miRBase isomiR annotations. Arm positions are 1-based relative to the canonical mature miRNA 5' end.",
+    "version": "0.1-placeholder",
+    "isomir_type": "5prime — shift of ±1 or ±2 nt at 5' end of mature miRNA"
+  },
+  "hsa-miR-21-5p": {
+    "canonical": "UAGCUUAUCAGACUGAUGUUGA",
+    "known_5prime_shift_nt": 1,
+    "source": "PLACEHOLDER — frequent 5' +1 isomir reported in multiple tissues [Neilsen 2012]",
+    "risk_window_nt": 2
+  },
+  "hsa-miR-122-5p": {
+    "canonical": "UGGAGUGUGACAAUGGUGUUUG",
+    "known_5prime_shift_nt": 1,
+    "source": "PLACEHOLDER — liver-specific; 5' +1 isomir reported [Morin 2008]",
+    "risk_window_nt": 2
+  },
+  "hsa-miR-155-5p": {
+    "canonical": "UUAAUGCUAAUUGUGAUAGGGGU",
+    "known_5prime_shift_nt": 1,
+    "source": "PLACEHOLDER — immune cell abundant; 5' isomiR reported [literature]",
+    "risk_window_nt": 2
+  },
+  "hsa-miR-146a-5p": {
+    "canonical": "UGAGAACUGAAUUCCAUGGGUU",
+    "known_5prime_shift_nt": 1,
+    "source": "PLACEHOLDER — inflammation marker; 5' isomiR documented [literature]",
+    "risk_window_nt": 2
+  },
+  "hsa-miR-126-3p": {
+    "canonical": "UCGUACCGUGAGUAAUAAUGCG",
+    "known_5prime_shift_nt": 1,
+    "source": "PLACEHOLDER — vascular; 5' isomiR reported [literature]",
+    "risk_window_nt": 2
+  },
+  "hsa-miR-10a-5p": {
+    "canonical": "UACCCUGUAGAUCCGAAUUUGUG",
+    "known_5prime_shift_nt": 2,
+    "source": "PLACEHOLDER — HOX cluster; notable 5' +2 isomir reported [Morin 2008]",
+    "risk_window_nt": 3
+  },
+  "hsa-miR-10b-5p": {
+    "canonical": "UACCCUGUAGAACCGAAUUUGUG",
+    "known_5prime_shift_nt": 2,
+    "source": "PLACEHOLDER — HOX cluster; 5' +2 isomir reported [literature]",
+    "risk_window_nt": 3
+  }
+}
