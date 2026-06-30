@@ -1,5 +1,5 @@
 # ================================================================
-# scoring.py — Module 6: 11-criterion weighted scoring (v2.7 / V3)
+# scoring.py — Module 6: 12-criterion weighted scoring (v2.8.3 / V3)
 # Total score 0–100. Grade: Excellent(≥80), Good(65–79), Acceptable(50–64), Poor(<50).
 # Weights: SCORING_WEIGHTS_V3 (Section 27/I of spec)
 # ================================================================
@@ -184,6 +184,20 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
     explanations["tm_pair_match"] = (
         f"Tm difference: forward {tm}°C vs reverse {tm_rev}°C = {tm_pair_diff:.1f}°C "
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). Source: PrimerAST 2024."
+    )
+
+    # ── 12. GC clamp at 3' end (0.03) [IDT PrimerQuest] ──────────
+    last3    = forward["sequence"][-3:].upper()
+    gc_last3 = sum(1 for b in last3 if b in "GC")
+    if gc_last3 == 2:    gc_clamp_score = 100   # optimal anchor
+    elif gc_last3 >= 3:  gc_clamp_score = 80    # over-stabilised — minor penalty
+    elif gc_last3 == 1:  gc_clamp_score = 60    # relaxed fallback — suboptimal
+    else:                gc_clamp_score = 0     # no anchor — shouldn't reach scoring
+    scores["gc_clamp"] = gc_clamp_score
+    explanations["gc_clamp"] = (
+        f"GC clamp at 3' end: {gc_last3} G/C in last 3 nt ('{last3}'). "
+        f"Optimal = exactly 2 G/C (score 100); 1 G/C = relaxed fallback (score 60). "
+        f"Source: IDT PrimerQuest GC_clamp_code."
     )
 
     # ── Total weighted score ───────────────────────────────────────

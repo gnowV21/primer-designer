@@ -5,6 +5,7 @@
 # ================================================================
 
 import primer3
+from functools import lru_cache
 from .constants import (
     P3_DEFAULT_MV_CONC, P3_DEFAULT_DV_CONC,
     P3_DEFAULT_DNTP_CONC, P3_DEFAULT_DNA_CONC,
@@ -21,20 +22,26 @@ def _get_p3_params(params: dict) -> dict:
     }
 
 
+@lru_cache(maxsize=4096)
+def _calc_tm_cached(sequence: str, mv_conc: float, dv_conc: float, dntp_conc: float, dna_conc: float) -> float:
+    """Cached inner Tm call — primer3.calc_tm is deterministic for same (sequence, conditions)."""
+    tm = primer3.calc_tm(
+        seq=sequence,
+        mv_conc=mv_conc,
+        dv_conc=dv_conc,
+        dntp_conc=dntp_conc,
+        dna_conc=dna_conc,
+    )
+    return round(float(tm), 2)
+
+
 def calculate_tm_nn(sequence: str, params: dict) -> float:
     """
     Tm via nearest-neighbor (SantaLucia 1998) + Mg2+ salt correction.
     Mirrors Primer3Plus PRIMER_TM_FORMULA=1, PRIMER_SALT_CORRECTIONS=1. [P3P][SL98]
     """
     p3 = _get_p3_params(params)
-    tm = primer3.calc_tm(
-        seq=sequence,
-        mv_conc=p3["mv_conc"],
-        dv_conc=p3["dv_conc"],
-        dntp_conc=p3["dntp_conc"],
-        dna_conc=p3["dna_conc"],
-    )
-    return round(float(tm), 2)
+    return _calc_tm_cached(sequence, p3["mv_conc"], p3["dv_conc"], p3["dntp_conc"], p3["dna_conc"])
 
 
 def calculate_tm_binding_only(specific_region: str, params: dict) -> float:
