@@ -72,6 +72,18 @@ def design_primers():
 
     # ── 3. Universal reverse primer ──────────────────────────────
     reverse = get_universal_reverse(params)
+    rev_ss = reverse.get("self_structure_check", {})
+    if rev_ss.get("hairpin_risk") == "critical" or rev_ss.get("self_dimer_risk") == "critical":
+        global_warnings.append({
+            "field": "universal_reverse",
+            "severity": "warning",
+            "message": (
+                f"Universal reverse primer has a self-structure issue under current buffer "
+                f"conditions (hairpin ΔG = {rev_ss.get('hairpin_dg')} kcal/mol, "
+                f"self-dimer ΔG = {rev_ss.get('self_dimer_dg')} kcal/mol). "
+                f"Consider adjusting salt/Mg²⁺ concentration."
+            ),
+        })
 
     # ── 4. Generate forward candidates ───────────────────────────
     candidates, rejection_log = generate_forward_candidates(seq, params)
@@ -170,8 +182,8 @@ def design_primers():
             "candidates_rejected": len(rejection_log),
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
-            "algorithm_version": "2.8.2",
-            "scoring_version": "V3 (11 criteria)",
+            "algorithm_version": "2.8.3",
+            "scoring_version": "V3 (12 criteria)",
             "sources": [
                 "Chen et al. 2005", "Kramer 2011 Unit 15.10",
                 "Varkonyi-Gasic et al. 2007", "Primer3Plus",

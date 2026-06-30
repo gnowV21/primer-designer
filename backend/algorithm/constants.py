@@ -404,12 +404,13 @@ SYBR_GREEN_WARNING_MESSAGE = (
 )
 UPL_PROBE_OPTION = True  # Phase 4
 
-# v2.7: 11-criterion scoring weights [PAST24]
+# v2.8.3: 12-criterion scoring weights [PAST24][IDT]
 SCORING_WEIGHTS_V3 = {
     "tm_accuracy":          0.20,
     "tm_binding_accuracy":  0.10,
-    "gc_content":           0.09,   # slightly reduced to make room for gc_skew
-    "gc_skew":              0.03,   # NEW — PrimerAST 2026 [PAST24]
+    "gc_content":           0.07,   # reduced from 0.09 to make room for gc_clamp
+    "gc_skew":              0.02,   # reduced from 0.03
+    "gc_clamp":             0.03,   # NEW — 3' anchor quality [IDT PrimerQuest]
     "mfe_stemloop":         0.15,
     "hairpin_penalty":      0.10,
     "dimer_penalty":        0.10,
@@ -418,4 +419,4 @@ SCORING_WEIGHTS_V3 = {
     "amplicon_size":        0.04,
     "tm_pair_match":        0.05,
 }
-# Total: 0.20+0.10+0.09+0.03+0.15+0.10+0.10+0.10+0.04+0.04+0.05 = 1.00
+# Total: 0.20+0.10+0.07+0.02+0.03+0.15+0.10+0.10+0.10+0.04+0.04+0.05 = 1.00
