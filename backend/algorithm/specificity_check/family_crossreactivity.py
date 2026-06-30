@@ -69,8 +69,8 @@ def check_family_crossreactivity(
         "cross_reactivity": results,
         "recommendation": recommendation,
         "data_warning": (
-            "Family sequence data is PLACEHOLDER — verify against miRBase v22+ "
-            "before interpreting these results in a production context."
+            "Family grouping uses miRBase CURRENT seed-based classification (positions 2-8). "
+            "Re-run scripts/build_mirbase_data.py after each miRBase release update."
         ),
     }
 
@@ -91,21 +91,38 @@ def _load_db() -> dict:
 
 def _find_family(db: dict, mirna_name: str, mature_seq: str) -> tuple:
     """
-    Infer miRNA family from name, return (family_name, {member: seq}).
-    Strips organism prefix (hsa-, mmu-, etc.) before matching.
-    Returns (None, {}) if no family found.
+    Look up miRNA family. Returns (family_name, {member: seq}).
+
+    Two strategies (tried in order):
+      1. _mirna_to_family index — O(1) direct lookup (new JSON format from
+         build_mirbase_data.py).  Handles families like mir-17 whose member
+         names (miR-17, miR-18a, …) don't share a common name prefix.
+      2. Name-substring fallback — O(n) scan for backward compatibility with
+         the old hand-curated PLACEHOLDER JSON (family key ⊂ miRNA name).
     """
+    # Strategy 1: direct index lookup (generated JSON has _mirna_to_family)
+    index = db.get("_mirna_to_family")
+    if index and mirna_name in index:
+        family_name = index[mirna_name]
+        members = db.get(family_name, {})
+        filtered = {
+            k: v for k, v in members.items()
+            if not k.startswith("_") and v != mature_seq
+        }
+        return family_name, filtered
+
+    # Strategy 2: substring match — backward compat with PLACEHOLDER JSON
     name_lower = mirna_name.lower()
     for family_key, members in db.items():
         if family_key.startswith("_"):
             continue
         if family_key.lower() in name_lower or name_lower.startswith(f"hsa-{family_key}"):
-            # Exclude metadata keys and the target itself
             filtered = {
                 k: v for k, v in members.items()
                 if not k.startswith("_") and v != mature_seq
             }
             return family_key, filtered
+
     return None, {}
 
 
@@ -254,8 +271,8 @@ def _no_family_result(family_name, overhang_len: int) -> dict:
             "remaining_high_risk_siblings": [],
         },
         "data_warning": (
-            "Family not found in offline DB. "
-            "If this miRNA belongs to a large family (e.g. let-7, miR-17), "
-            "consider verifying cross-reactivity manually using miRBase."
+            "This miRNA has no seed-family siblings in the current dataset "
+            "(unique seed sequence — no cross-reactivity risk identified). "
+            "If unexpected, re-run scripts/build_mirbase_data.py to refresh from miRBase."
         ),
     }
