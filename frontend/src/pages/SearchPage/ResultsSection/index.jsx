@@ -1,5 +1,6 @@
 // ResultsSection — container for Phase 2 primer design output.
-// Shows global warnings, top-3 primer sets, stem-loop RT info, and rejection log.
+// Shows global warnings, top-3 primer sets, stem-loop RT info, rejection log,
+// and specificity warnings (cross-reactivity, heterodimer, isoMiR) from v2.8.2.
 
 import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
@@ -8,7 +9,14 @@ export default function ResultsSection({ results, error }) {
   if (error) return <ErrorPanel error={error} />;
   if (!results) return null;
 
-  const { top3, stemloop_rt, universal_reverse, global_warnings = [], metadata } = results;
+  const {
+    top3,
+    stemloop_rt,
+    universal_reverse,
+    global_warnings = [],
+    metadata,
+    specificity_warnings,
+  } = results;
 
   return (
     <div className="space-y-6">
@@ -89,6 +97,11 @@ export default function ResultsSection({ results, error }) {
         ))}
       </div>
 
+      {/* ── Cross-reactivity panel ── */}
+      {specificity_warnings?.cross_reactivity && (
+        <CrossReactivityPanel data={specificity_warnings.cross_reactivity} />
+      )}
+
       {/* ── Rejection log ── */}
       {metadata?.candidates_rejected > 0 && (
         <RejectionLog
@@ -107,6 +120,101 @@ export default function ResultsSection({ results, error }) {
     </div>
   );
 }
+
+// ── Cross-reactivity section ────────────────────────────────────────
+
+const CR_RISK_STYLE = {
+  IDENTICAL: 'text-red-700 bg-red-50 border-red-300',
+  HIGH:      'text-orange-700 bg-orange-50 border-orange-300',
+  LOW:       'text-amber-700 bg-amber-50 border-amber-200',
+  SAFE:      'text-teal-700 bg-teal-50 border-teal-200',
+};
+
+function CrossReactivityPanel({ data }) {
+  const siblings = data.cross_reactivity || [];
+  const rec = data.recommendation;
+  const hasHighRisk = siblings.some((s) => s.risk === 'IDENTICAL' || s.risk === 'HIGH');
+
+  return (
+    <div className={`rounded-xl border px-4 py-3 space-y-3 ${hasHighRisk ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-50'}`}>
+      {/* Header */}
+      <div>
+        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+          Family Cross-reactivity
+          {data.family && (
+            <span className="ml-2 font-normal normal-case text-slate-500">
+              ({data.family} family · {data.overhang_used}-nt overhang)
+            </span>
+          )}
+        </p>
+        {data.target_overhang && (
+          <p className="text-xs text-slate-500 mt-0.5">
+            Target 3′ overhang: <span className="font-mono">{data.target_overhang}</span>
+          </p>
+        )}
+      </div>
+
+      {/* Sibling table or empty state */}
+      {siblings.length === 0 ? (
+        <p className="text-xs text-teal-700">
+          No cross-reactive family members detected (Hamming distance ≥ 3 on overhang).
+        </p>
+      ) : (
+        <div className="rounded-lg border border-slate-200 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-100 border-b border-slate-200">
+              <tr>
+                <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Sibling miRNA</th>
+                <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Overhang</th>
+                <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Mismatch</th>
+                <th className="text-center px-2 py-1.5 font-semibold text-slate-600">ΔTm</th>
+                <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Risk</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {siblings.map((s) => (
+                <tr key={s.sibling}>
+                  <td className="px-3 py-1.5 font-mono text-slate-700">{s.sibling}</td>
+                  <td className="px-2 py-1.5 text-center font-mono text-slate-600">{s.sibling_overhang}</td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">{s.mismatch}</td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">
+                    {s.delta_tm > 0 ? '+' : ''}{s.delta_tm}°C
+                  </td>
+                  <td className="px-2 py-1.5 text-center">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${CR_RISK_STYLE[s.risk] ?? ''}`}>
+                      {s.risk}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Recommendation (only if there's something to recommend) */}
+      {rec && hasHighRisk && (
+        <div className="rounded-lg bg-white border border-slate-200 px-3 py-2 space-y-1">
+          <p className="text-xs font-semibold text-slate-600">Recommendation</p>
+          <p className="text-xs text-slate-600">{rec.reason}</p>
+          {rec.off_label_warning && (
+            <p className="text-xs text-amber-700 mt-1">⚠ {rec.off_label_warning}</p>
+          )}
+          {!rec.resolved && rec.remaining_high_risk_siblings?.length > 0 && (
+            <p className="text-xs text-red-700">
+              Unresolved at max overhang: {rec.remaining_high_risk_siblings.join(', ')}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Data warning */}
+      <p className="text-xs text-slate-400 italic">{data.data_warning}</p>
+    </div>
+  );
+}
+
+// ── Error panel ────────────────────────────────────────────────────
 
 function ErrorPanel({ error }) {
   const icons = {
