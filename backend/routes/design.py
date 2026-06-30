@@ -72,15 +72,21 @@ def design_primers():
 
     # ── 3. Universal reverse primer ──────────────────────────────
     reverse = get_universal_reverse(params)
-    rev_ss = reverse.get("self_structure_check", {})
-    if rev_ss.get("hairpin_risk") == "critical" or rev_ss.get("self_dimer_risk") == "critical":
+    rev_ss = reverse["self_structure_check"]
+    if rev_ss.get("calculation_error"):
+        global_warnings.append({
+            "field": "universal_reverse",
+            "severity": "warning",
+            "message": "Universal reverse primer self-structure check failed (primer3 error under current buffer conditions).",
+        })
+    elif rev_ss.get("hairpin_risk") == "critical" or rev_ss.get("self_dimer_risk") == "critical":
         global_warnings.append({
             "field": "universal_reverse",
             "severity": "warning",
             "message": (
                 f"Universal reverse primer has a self-structure issue under current buffer "
-                f"conditions (hairpin ΔG = {rev_ss.get('hairpin_dg')} kcal/mol, "
-                f"self-dimer ΔG = {rev_ss.get('self_dimer_dg')} kcal/mol). "
+                f"conditions (hairpin ΔG = {rev_ss['hairpin_dg']} kcal/mol, "
+                f"self-dimer ΔG = {rev_ss['self_dimer_dg']} kcal/mol). "
                 f"Consider adjusting salt/Mg²⁺ concentration."
             ),
         })
@@ -169,7 +175,7 @@ def design_primers():
             "cross_reactivity": cross_reactivity,
             "data_note": (
                 "Family data: miRBase CURRENT, seed-based grouping (positions 2-8). "
-                "isoMiR data: curated from literature (7 entries). "
+                "isoMiR data: curated from literature (7 entries, partial coverage — treat as informational only). "
                 "Re-run scripts/build_mirbase_data.py after miRBase updates."
             ),
         },

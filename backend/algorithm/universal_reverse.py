@@ -4,9 +4,12 @@
 # ================================================================
 
 import primer3
+from functools import lru_cache
 from .constants import (
     UNIVERSAL_REVERSE, UNIVERSAL_REVERSE_TM_PRECALC,
     UNIVERSAL_REVERSE_GC_PRECALC, UNIVERSAL_REVERSE_CHEN_2005,
+    HAIRPIN_DG_MAX_INTERNAL, HAIRPIN_DG_MAX_3PRIME,
+    SELF_DIMER_DG_MAX, SELF_DIMER_DG_3PRIME_MAX,
 )
 from .thermodynamics import _get_p3_params
 
@@ -38,29 +41,53 @@ def get_universal_reverse(params: dict) -> dict:
 def _check_self_structure(sequence: str, params: dict) -> dict:
     """
     Hairpin and self-dimer check for the universal reverse primer under PCR conditions.
-    Fixed sequence — computed once per request (PCR buffer may vary per user params).
+    Fixed sequence — result cached per unique buffer conditions (lru_cache on inner func).
     """
     p3 = _get_p3_params(params)
-    kw = dict(mv_conc=p3["mv_conc"], dv_conc=p3["dv_conc"],
-              dntp_conc=p3["dntp_conc"], dna_conc=p3["dna_conc"])
+    return _check_self_structure_cached(
+        sequence, p3["mv_conc"], p3["dv_conc"], p3["dntp_conc"], p3["dna_conc"]
+    )
 
+
+@lru_cache(maxsize=32)
+def _check_self_structure_cached(
+    sequence: str, mv_conc: float, dv_conc: float, dntp_conc: float, dna_conc: float
+) -> dict:
+    """Inner cached call — keyed on buffer primitives. maxsize=32 covers all realistic buffer combos."""
+    kw = dict(mv_conc=mv_conc, dv_conc=dv_conc, dntp_conc=dntp_conc, dna_conc=dna_conc)
+
+    hp_error = False
     try:
         hp_dg = round(float(primer3.calc_hairpin(seq=sequence, **kw).dg) / 1000, 2)
     except Exception:
-        hp_dg = 0.0
+        hp_dg = None
+        hp_error = True
 
+    sd_error = False
     try:
         sd_dg = round(float(primer3.calc_homodimer(seq=sequence, **kw).dg) / 1000, 2)
     except Exception:
-        sd_dg = 0.0
+        sd_dg = None
+        sd_error = True
 
-    hp_risk = "critical" if hp_dg <= -3.0 else "warning" if hp_dg <= -2.0 else "safe"
-    sd_risk = "critical" if sd_dg <= -6.0 else "warning" if sd_dg <= -4.0 else "safe"
+    # Use named constants so thresholds stay in sync with structure_check module.
+    # HAIRPIN_DG_MAX_INTERNAL = -3.0, HAIRPIN_DG_MAX_3PRIME = -2.0
+    # SELF_DIMER_DG_MAX = -6.0, SELF_DIMER_DG_3PRIME_MAX = -5.0
+    if hp_error:
+        hp_risk = "unknown"
+    else:
+        hp_risk = "critical" if hp_dg <= HAIRPIN_DG_MAX_INTERNAL else "warning" if hp_dg <= HAIRPIN_DG_MAX_3PRIME else "safe"
+
+    if sd_error:
+        sd_risk = "unknown"
+    else:
+        sd_risk = "critical" if sd_dg <= SELF_DIMER_DG_MAX else "warning" if sd_dg <= SELF_DIMER_DG_3PRIME_MAX else "safe"
 
     return {
         "hairpin_dg": hp_dg,
         "hairpin_risk": hp_risk,
         "self_dimer_dg": sd_dg,
         "self_dimer_risk": sd_risk,
-        "any_issue": hp_risk != "safe" or sd_risk != "safe",
+        "any_issue": hp_risk not in ("safe", "unknown") or sd_risk not in ("safe", "unknown"),
+        "calculation_error": hp_error or sd_error,
     }
