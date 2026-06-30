@@ -1,3 +1,21 @@
+# Phase 1
 flask==3.0.3
 flask-cors==4.0.1
 requests==2.31.0
+
+# Phase 2
+primer3-py==2.0.3
+# Tm nearest-neighbor (SantaLucia 1998), hairpin ΔG, self-dimer, hetero-dimer
+
+ViennaRNA==2.6.4
+# MFE of stem-loop hairpin (RNA.fold) — requires C library installed first:
+#   Ubuntu/WSL: sudo apt-get install -y libRNA-dev
+#               pip install ViennaRNA --break-system-packages
+#   conda:      conda install -c bioconda viennarna
+# If ViennaRNA is not installed, primer3-py calc_hairpin is used as MFE proxy.
+
+biopython==1.83
+# Sequence utilities (reverse_complement, etc.)
+
+numpy==1.26.4
+# Scoring calculations

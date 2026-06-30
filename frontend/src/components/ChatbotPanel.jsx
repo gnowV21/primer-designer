@@ -1,23 +1,25 @@
 import { useState } from 'react';
 
-const RobotIcon = ({ className }) => (
-  <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
-    <rect x="3" y="7" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-    <rect x="7" y="10" width="2" height="2" rx="0.5" fill="currentColor"/>
-    <rect x="11" y="10" width="2" height="2" rx="0.5" fill="currentColor"/>
-    <line x1="7" y1="15" x2="13" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="10" y1="7" x2="10" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="10" cy="3" r="1" fill="currentColor"/>
-    <line x1="3" y1="11" x2="1" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="17" y1="11" x2="19" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
+const AIAvatar = ({ size = 'md' }) => {
+  const sizeMap = {
+    sm: 'w-5 h-5',
+    md: 'w-8 h-8',
+    lg: 'w-14 h-14',
+  };
+  const ringMap = {
+    sm: 'ring-1',
+    md: 'ring-2',
+    lg: 'ring-2',
+  };
+  return (
+    <img
+      src="/HuynhLuanAI.jpg"
+      alt="HuynhLuanAI"
+      className={`${sizeMap[size]} ${ringMap[size]} ring-pink-300 ring-offset-1 rounded-full object-cover object-top shrink-0`}
+    />
+  );
+};
 
-const SparkleIcon = ({ className }) => (
-  <svg viewBox="0 0 16 16" fill="currentColor" className={className} aria-hidden="true">
-    <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5z"/>
-  </svg>
-);
 
 const PREVIEW_CAPABILITIES = [
   { icon: '🔬', text: 'Explain thermodynamic parameters' },
@@ -39,9 +41,9 @@ export default function ChatbotPanel() {
       {isOpen ? (
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-2">
-            <RobotIcon className="w-4 h-4 text-teal-600 shrink-0" />
-            <span className="text-sm font-semibold text-gray-700">AI Assistant</span>
-            <span className="text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full leading-none">
+            <AIAvatar size="sm" />
+            <span className="text-sm font-semibold text-gray-700">LuanHuynhAI Assistant</span>
+            <span className="text-[10px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded-full leading-none">
               SOON
             </span>
           </div>
@@ -59,12 +61,12 @@ export default function ChatbotPanel() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            title="Open AI Assistant"
-            className="flex flex-col items-center gap-1.5 px-2.5 py-3 rounded-2xl bg-teal-50 border border-teal-200
-              hover:bg-teal-100 hover:border-teal-300 transition-all duration-150 active:scale-95"
+            title="Open HuynhLuanAI Assistant"
+            className="flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-2xl bg-pink-50 border border-pink-200
+              hover:bg-pink-100 hover:border-pink-300 hover:shadow-md transition-all duration-150 active:scale-95 group"
           >
-            <RobotIcon className="w-5 h-5 text-teal-600" />
-            <span className="text-[9px] font-bold text-teal-700 leading-tight">AI</span>
+            <AIAvatar size="md" />
+            <span className="text-[9px] font-bold text-pink-700 leading-tight group-hover:text-pink-800">HuynhLuanAI</span>
           </button>
         </div>
       )}
@@ -77,18 +79,20 @@ export default function ChatbotPanel() {
       >
         {/* Coming-soon hero */}
         <div className="flex flex-col items-center text-center px-5 py-6 space-y-3 border-b border-gray-100">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200 flex items-center justify-center shadow-sm">
-            <RobotIcon className="w-6 h-6 text-teal-600" />
+          <div className="relative">
+            <AIAvatar size="lg" />
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-pink-500 rounded-full border-2 border-white flex items-center justify-center">
+              <svg viewBox="0 0 8 8" fill="white" className="w-2 h-2"><path d="M4 1l.7 2.1H7l-1.9 1.4.7 2.1L4 5.2 2.2 6.6l.7-2.1L1 3.1h2.3z"/></svg>
+            </span>
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-gray-700">AI Assistant</p>
+            <p className="text-sm font-semibold text-gray-700">LuanHuynhAI Assistant</p>
             <p className="text-xs text-gray-400 leading-relaxed">
-              An AI layer that helps you understand and refine your primer design results.
+              If u have any questions, contact Dr.LuanHuynh,pls.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-600 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full">
-            <SparkleIcon className="w-2.5 h-2.5" />
-            In development
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-2.5 py-1 rounded-full">
+            ✨ In development
           </span>
         </div>
 

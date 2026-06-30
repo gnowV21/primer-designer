@@ -1,8 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import axios from 'axios';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
 import { useMiRBase } from '../../hooks/useMiRBase.js';
 import { SPECIES_OPTIONS } from '../../constants/defaults.js';
+
+/** Highlight the query substring inside `text` with a teal bold span. */
+function Highlight({ text, query }) {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="text-teal-700 font-bold">{text.slice(idx, idx + query.length)}</span>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
 
 function detectInputType(query) {
   const q = query.trim();
@@ -31,10 +47,75 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   const prevQuery = useRef('');
   const [isSeqLookup, setIsSeqLookup] = useState(false);
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggIdx, setActiveSuggIdx] = useState(-1);
+  const [isFetchingSugg, setIsFetchingSugg] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState(null);
+  const suggestTimer = useRef(null);
+  const wrapperRef = useRef(null);
+  const inputRef = useRef(null);
+
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; });
   const onErrorRef = useRef(onError);
   useEffect(() => { onErrorRef.current = onError; });
+
+  // Clear debounce timer on unmount to avoid state updates on a dead component
+  useEffect(() => () => clearTimeout(suggestTimer.current), []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Recalculate dropdown position anchored to input element
+  const updateDropdownRect = useCallback(() => {
+    if (!inputRef.current) return;
+    const r = inputRef.current.getBoundingClientRect();
+    setDropdownRect({ top: r.bottom + 6, left: r.left, width: r.width });
+  }, []);
+
+  // Keep portal position in sync while visible
+  useEffect(() => {
+    if (!showSuggestions) return;
+    updateDropdownRect();
+    window.addEventListener('scroll', updateDropdownRect, true);
+    window.addEventListener('resize', updateDropdownRect);
+    return () => {
+      window.removeEventListener('scroll', updateDropdownRect, true);
+      window.removeEventListener('resize', updateDropdownRect);
+    };
+  }, [showSuggestions, updateDropdownRect]);
+
+  const fetchSuggestions = useCallback(async (q) => {
+    if (q.length < 2 || /^[AUGCUT]+$/i.test(q) || /^MIMAT/i.test(q)) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    updateDropdownRect();
+    setIsFetchingSugg(true);
+    setShowSuggestions(true);
+    try {
+      const { data: items } = await axios.get('/api/mirbase/suggest', { params: { q } });
+      setSuggestions(items);
+      setShowSuggestions(true);
+      setActiveSuggIdx(-1);
+    } catch {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setIsFetchingSugg(false);
+    }
+  }, [updateDropdownRect]);
 
   useEffect(() => {
     if (status === 'found' && result?.sequence) {
@@ -101,6 +182,20 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
     }
   }
 
+  function selectSuggestion(item) {
+    onChange('searchQuery', item.name);
+    prevQuery.current = '';
+    setShowSuggestions(false);
+    setSuggestions([]);
+    // Trigger search immediately
+    fetchMiRNA(item.name);
+    setIsSeqLookup(false);
+    onChange('matureSequence', '');
+    onChange('mirnaName', '');
+    onChange('mirbaseId', '');
+    onError('matureSequence', '');
+  }
+
   function handleQueryChange(e) {
     const val = e.target.value;
     onChange('searchQuery', val);
@@ -113,7 +208,38 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
       onChange('family', '');
       onError('matureSequence', '');
       setIsSeqLookup(false);
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsFetchingSugg(false);
       reset();
+    } else {
+      clearTimeout(suggestTimer.current);
+      suggestTimer.current = setTimeout(() => fetchSuggestions(val), 200);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === 'Enter') handleSearch();
+      if (e.key === 'Tab') setShowSuggestions(false); // close without triggering search while loading
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggIdx(i => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggIdx(i => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggIdx >= 0) selectSuggestion(suggestions[activeSuggIdx]);
+      else { setShowSuggestions(false); handleSearch(); }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setActiveSuggIdx(-1);
+    } else if (e.key === 'Tab') {
+      setShowSuggestions(false);
+      handleSearch();
     }
   }
 
@@ -140,16 +266,121 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={data.searchQuery}
-            onChange={handleQueryChange}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Tab') && handleSearch()}
-            placeholder="hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA"
-            disabled={status === 'loading'}
-            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-gray-50 disabled:text-gray-400"
-          />
+        <div className="flex gap-2" ref={wrapperRef}>
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={data.searchQuery}
+              onChange={handleQueryChange}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (suggestions.length > 0 || isFetchingSugg) {
+                  updateDropdownRect();
+                  setShowSuggestions(true);
+                }
+              }}
+              placeholder="hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA"
+              disabled={status === 'loading'}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-gray-50 disabled:text-gray-400"
+            />
+
+            {/* ── Suggestions dropdown — rendered via portal to escape overflow:hidden parents ── */}
+            {showSuggestions && dropdownRect && createPortal(
+              <div
+                className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+                style={{
+                  position: 'fixed',
+                  top: dropdownRect.top,
+                  left: dropdownRect.left,
+                  width: Math.max(dropdownRect.width, 420),
+                  zIndex: 9999,
+                }}
+              >
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    {isFetchingSugg ? 'Searching…' : `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
+                  </span>
+                  <span className="text-[10px] text-gray-400">↑↓ navigate · Enter select · Esc close</span>
+                </div>
+
+                {/* Loading skeleton */}
+                {isFetchingSugg && (
+                  <div className="px-3 py-2 space-y-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex items-center gap-3 animate-pulse">
+                        <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
+                        <div className="h-3.5 bg-gray-100 rounded w-40" />
+                        <div className="h-3 bg-gray-100 rounded w-24 ml-auto" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Results */}
+                {!isFetchingSugg && suggestions.length > 0 && (
+                  <ul>
+                    {suggestions.map((item, idx) => {
+                      const speciesShort = item.species === 'Homo sapiens' ? 'Human'
+                        : item.species === 'Mus musculus' ? 'Mouse'
+                        : item.species === 'Rattus norvegicus' ? 'Rat'
+                        : item.species || '—';
+                      const isHuman = item.species === 'Homo sapiens';
+                      return (
+                        <li
+                          key={item.name}
+                          onMouseDown={(e) => { e.preventDefault(); selectSuggestion(item); }}
+                          onMouseEnter={() => setActiveSuggIdx(idx)}
+                          className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-gray-50 last:border-0 ${
+                            idx === activeSuggIdx ? 'bg-teal-50' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {/* Icon */}
+                          <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-gray-300'}`}
+                               viewBox="0 0 16 16" fill="none">
+                            <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.6"/>
+                            <line x1="9.8" y1="9.8" x2="13" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                          </svg>
+
+                          {/* Name with highlight */}
+                          <span className="font-mono text-sm text-gray-800 font-medium flex-1 min-w-0 truncate">
+                            <Highlight text={item.name} query={data.searchQuery} />
+                          </span>
+
+                          {/* Accession badge */}
+                          {item.accession && (
+                            <span className="text-[11px] font-mono text-gray-400 shrink-0">
+                              {item.accession}
+                            </span>
+                          )}
+
+                          {/* Species badge */}
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                            isHuman
+                              ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {speciesShort}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {/* Empty state */}
+                {!isFetchingSugg && suggestions.length === 0 && (
+                  <div className="px-4 py-5 text-center">
+                    <p className="text-sm text-gray-500">No miRNA found matching <span className="font-mono font-medium">"{data.searchQuery}"</span></p>
+                    <p className="text-xs text-gray-400 mt-1">Try a different name, or paste the sequence directly</p>
+                  </div>
+                )}
+              </div>,
+              document.body
+            )}
+          </div>
           <button
             type="button"
             onClick={handleSearch}
@@ -251,12 +482,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                 ✗ <strong>Repeat in binding region ({seqAnalysis.bindingRegion}):</strong> The RT primer annealing site contains ≥ 3 identical consecutive nt — this directly affects cDNA fidelity and makes designing a specific overhang very difficult.
               </p>
             )}
-            {!seqAnalysis.startsWithU && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Non-canonical 5′ end:</strong> The sequence does not start with U. Most mature miRNAs start with U for preferential loading into the Ago2 complex. Verify that this is a mature miRNA sequence.
-              </p>
-            )}
-            {seqAnalysis.hasContinuousRepeat && (
+{seqAnalysis.hasContinuousRepeat && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
                 ⚠ <strong>Homopolymer run detected:</strong> ≥ 4 identical consecutive nucleotides found. The algorithm will avoid using this region in primers if possible; if the run falls within the binding region it cannot be avoided.
               </p>

@@ -2,7 +2,7 @@ import re
 import time
 
 import requests
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 from db import local_db
 from db.circuit_breaker import CircuitBreaker
@@ -120,6 +120,14 @@ def _fetch_rnacentral(mirna_id: str) -> dict | None:
         return None
 
 
+@mirbase_bp.route('/mirbase/suggest')
+def suggest_mirna():
+    q = request.args.get('q', '').strip()
+    if len(q) < 2:
+        return jsonify([])
+    return jsonify(local_db.suggest(q))
+
+
 @mirbase_bp.route('/mirbase/<mirna_id>')
 def get_mirna(mirna_id):
     mirna_id = mirna_id.strip()
@@ -175,7 +183,11 @@ def get_mirna(mirna_id):
     # ── 4. Fallback: RNAcentral (EBI) ──────────────────────────────────────
     result = _fetch_rnacentral(mirna_id)
     if result:
-        local_db.upsert(result)
+        # Only cache records that carry a real accession — RNAcentral always
+        # returns accession="" which would permanently shadow any future miRBase
+        # hit for the same name via INSERT OR REPLACE.
+        if result.get('accession'):
+            local_db.upsert(result)
         result["source"] = "rnacentral"
         return jsonify(result)
 

@@ -1,6 +1,6 @@
 # SPEC CHI TIẾT — Stem-loop RT-qPCR Primer Designer
 # Tuần 1: Thiết lập dự án · Form input · miRBase API
-# Phiên bản 3.0 — cập nhật với 6 nhóm input, 6 tham số ionic/buffer, UI/UX polish
+# Phiên bản 3.1 — Week 1 HOÀN THÀNH · Backend SQLite cache + circuit breaker · Bug fixes
 
 ---
 
@@ -131,8 +131,15 @@ primer-designer/
 └── backend/
     ├── app.py
     ├── requirements.txt
-    └── routes/
-        └── mirbase.py
+    ├── routes/
+    │   └── mirbase.py           ← local DB first → miRBase API → RNAcentral fallback
+    ├── db/
+    │   ├── local_db.py          ← SQLite CRUD: init_schema, lookup, upsert (idempotent)
+    │   ├── circuit_breaker.py   ← opens after 3 failures, resets after 60s
+    │   └── mirbase.db           ← 95 curated entries (KHÔNG commit, xem .gitignore)
+    └── scripts/
+        ├── seed_db.py           ← 85 offline entries (human oncomiRs, let-7, clusters…)
+        └── fetch_and_seed.py    ← fetch từ miRBase API / RNAcentral / --all flag
 ```
 
 ---
@@ -695,9 +702,60 @@ if __name__ == '__main__':
 
 ```python
 # GET /api/mirbase/<mirna_id>
-# Tries ?accession=<id> first, then ?name=<id>
+# Request flow (3 tiers):
+#   1. Local SQLite DB (local_db.lookup) — zero latency, Homo sapiens prioritized
+#   2. miRBase REST API (nếu circuit breaker closed)
+#      - Tries ?accession= first (MIMAT…), then ?name=
+#   3. RNAcentral fallback (nếu miRBase fails hoặc circuit breaker open)
 # Returns: { id, accession, sequence, family, species, length }
-# Errors: 400 (invalid), 404 (not found), 503 (connection), 504 (timeout)
+# HTTP errors: 400 (invalid input), 404 (not found), 503 (connection), 504 (timeout)
+# Note: khi miRBase.org down → circuit breaker kích hoạt → invalid IDs trả 504, không phải 404
+```
+
+### File: backend/db/local_db.py
+
+```python
+# init_schema()  — idempotent, gọi khi app start
+# lookup(mirna_id) → dict | None
+#   ORDER BY CASE: Homo sapiens ưu tiên hơn các species khác
+# upsert(record)  — INSERT OR REPLACE
+```
+
+### File: backend/db/circuit_breaker.py
+
+```python
+# check() → tuple[bool, int]  — atomic: (is_open, failure_count)
+# is_open property             — delegate to check()
+# record_failure()             — +1 failure; nếu >= 3 → open
+# record_success()             — reset failure count
+# Cooldown: 60s sau lần failure cuối → tự reset sang closed
+```
+
+### File: backend/scripts/seed_db.py
+
+```python
+# 85 offline entries không cần internet:
+# - Human oncomiRs: miR-21, miR-155, miR-210, miR-221/222, miR-31, miR-200 family
+# - let-7 family: let-7a/b/c/d/e/f/g/i
+# - miR-17-92 cluster: miR-17/18a/19a/19b/20a/92a
+# - Cardiac: miR-1-3p, miR-133a/b, miR-208a/b
+# - Liver: miR-122-5p, miR-192-5p
+# - Immune: miR-146a, miR-223-3p
+# - Circulating: miR-16-5p, miR-451a
+# - Mouse orthologs: mmu-miR-21-5p, mmu-let-7a-5p, mmu-miR-122-5p
+# - Rat orthologs: rno-miR-21-5p, rno-miR-155-5p
+```
+
+### File: backend/scripts/fetch_and_seed.py
+
+```python
+# Usage:
+#   python scripts/fetch_and_seed.py hsa-miR-21-5p MIMAT0000076
+#   python scripts/fetch_and_seed.py --file my_mirnas.txt
+#   python scripts/fetch_and_seed.py --all   # full ~38k entries từ mature.fa.gz
+#
+# Fallback chain: miRBase API → RNAcentral
+# RNAcentral species parsing: regex r'\bfrom\s+([A-Z][a-z]+ [a-z]+)' (đã fix v3.1)
 ```
 
 ### File: backend/requirements.txt
@@ -795,29 +853,31 @@ https://hglab.hcmus.edu.vn
 
 ## 23. Definition of "Week 1 complete"
 
+> **STATUS: ✅ HOÀN THÀNH** — Verified 2026-06-20
+
 **Required 100%:**
-- [ ] `python app.py` runs without error, port 5000
-- [ ] `npm run dev` runs without error, port 5173
-- [ ] Browser tab: "HG Lab | Primer Designer" on Designer page
-- [ ] Navbar: "HG Lab" brand + teal color, tab "Designer" active
-- [ ] Layout correct: navbar + main + chatbot panel + footer
-- [ ] Footer: lab name + version + teal link
-- [ ] Tab switching works, page titles update
-- [ ] All 6 form groups display with correct default values
-- [ ] RangeSlider: teal track/thumb, drag callout bubble, tooltips visible
-- [ ] RangeSlider: thumbs do not overlap
-- [ ] NumInput: click → select all; clear → empty field (not "0")
-- [ ] miRBase ID → Tab → sequence auto-fills (hsa-miR-21-5p)
-- [ ] Sequence validation: T character → correct English error
-- [ ] ThermodynamicGroup: 6 ionic/buffer parameters display correctly
-- [ ] Effective free [Mg²⁺] indicator changes color correctly
-- [ ] All warnings display in English, consistent amber style
-- [ ] Reset button: 2-step confirmation (Confirm reset? → execute)
-- [ ] Submit button: sticky at bottom, shows "Fix errors" state when errors exist
-- [ ] TaqMan/SYBR radio → info box changes correctly
-- [ ] Relative/Absolute radio → reference gene field shows/hides
-- [ ] Sample type Serum → preset suggestion banner
-- [ ] Design Primers → spinner → console.log shows all 6 groups
+- [x] `python app.py` runs without error, port 5000
+- [x] `npm run dev` runs without error, port 5173
+- [x] Browser tab: "HG Lab | Primer Designer" on Designer page
+- [x] Navbar: "HG Lab" brand + teal color, tab "Designer" active
+- [x] Layout correct: navbar + main + chatbot panel + footer
+- [x] Footer: lab name + version + teal link  *(v0.1.0-dev — user added manually)*
+- [x] Tab switching works, page titles update
+- [x] All 6 form groups display with correct default values
+- [x] RangeSlider: teal track/thumb, drag callout bubble, tooltips visible
+- [x] RangeSlider: thumbs do not overlap
+- [x] NumInput: click → select all; clear → empty field (not "0")
+- [x] miRBase ID → Tab → sequence auto-fills (hsa-miR-21-5p → UAGCUUAUCAGACUGAUGUUGA)
+- [x] Sequence validation: T character → "Character 'T' detected. use 'U' instead of 'T'"
+- [x] ThermodynamicGroup: 6 ionic/buffer parameters display correctly
+- [x] Effective free [Mg²⁺] indicator changes color correctly
+- [x] All warnings display in English, consistent amber style
+- [x] Reset button: 2-step confirmation (Confirm reset? → execute)
+- [x] Submit button: sticky at bottom, shows "Fix errors" state when errors exist
+- [x] TaqMan/SYBR radio → info box changes correctly
+- [x] Relative/Absolute radio → reference gene field shows/hides
+- [x] Sample type Serum → preset suggestion banner
+- [x] Design Primers → spinner → console.log shows all 6 groups
 
 **Nice to have:**
 - [ ] Tooltips complete for all fields
@@ -832,6 +892,19 @@ https://hglab.hcmus.edu.vn
 - Real PDF/CSV export (later)
 - Server deployment (optional)
 
+### Bugs fixed trong Week 1
+| Bug | Mô tả | File | Fix |
+|-----|-------|------|-----|
+| Bug 2 | Tab key không trigger miRBase search | SequenceGroup.jsx:148 | `e.key === 'Tab'` thêm vào onKeyDown |
+| Bug 3 | T validation là dead code (regex `[AUGCU]+` bỏ T) | SequenceGroup.jsx:10 | Đổi regex thành `[AUGCUT]+` |
+| Bug DB | RNAcentral species parse sai ("ncRNA from" thay vì "Homo sapiens") | fetch_and_seed.py:96 | Regex `r'\bfrom\s+([A-Z][a-z]+ [a-z]+)'` |
+
+### Trạng thái database (2026-06-20)
+- 95 entries trong SQLite (`backend/db/mirbase.db`)
+- 85 từ seed_db.py (offline, curated) + 10 từ RNAcentral fallback
+- miRBase.org đang DOWN — khi online chạy `python scripts/fetch_and_seed.py --all` để seed ~38k entries
+- DB không commit vào git (xem `.gitignore`)
+
 ---
 
 ## 24. Changelog
@@ -841,3 +914,48 @@ https://hglab.hcmus.edu.vn
 | v1.0 | — | Initial spec: 4 nhóm input cơ bản |
 | v2.0 | — | +DetectionMethodGroup, +ExperimentalContextGroup, +Mg²⁺ param |
 | v3.0 | 2026-06-20 | +6 ionic/buffer params (dNTP, K⁺, pH), NumInput component, UI/UX polish toàn bộ: teal color system, sticky submit, reset confirmation, drag callout, tooltip delay, warning style unification, English-only UI |
+| v3.1 | 2026-06-20 | **Week 1 HOÀN THÀNH.** +Backend SQLite cache (local_db.py) với 95 entries; +Circuit breaker (circuit_breaker.py, 3 failures → open, 60s cooldown); +seed_db.py (85 offline curated entries); +fetch_and_seed.py với RNAcentral fallback; Fix Bug 2 (Tab trigger), Bug 3 (T validation dead code), Bug DB (RNAcentral species parse); Cập nhật folder structure, checklist 22/22 PASS |
+
+---
+
+## 25. Week 2 — Kế hoạch (chưa bắt đầu)
+
+> Bắt đầu sau khi Section 23 hoàn thành ✅
+
+### Mục tiêu Week 2: Thuật toán thiết kế primer
+
+**Primer 1 — Stem-loop RT primer**
+```
+Cấu trúc: 5'-[stem-loop hairpin ~44nt]-[binding tail 6nt]-3'
+Binding tail: bổ sung (reverse complement) với 6nt cuối 3' của miRNA
+Hairpin stem: ~6bp, loop: ~4nt
+```
+
+**Primer 2 — Forward qPCR primer**
+```
+Cấu trúc: 5'-[tail để nâng Tm]-[phần đặc hiệu 10–12nt từ 5' miRNA]-3'
+Phần đặc hiệu: bắt đầu từ nt 1 của miRNA
+Tail: thiết kế để đạt Tm target (từ ThermodynamicGroup)
+```
+
+**Primer 3 — Universal reverse primer (cố định)**
+```
+5'-CCAGTGCAGGGTCCGAGGTA-3'  (20nt, không thay đổi)
+```
+
+**Tm calculation:**
+- Nearest-neighbor thermodynamics (SantaLucia 1998)
+- Corrected for salt: SantaLucia salt correction formula
+- Input: Na⁺, K⁺, Mg²⁺, dNTP, primer concentration từ ThermodynamicGroup
+
+**Output (ResultsPage):**
+- 3 primer sequences với Tm, GC%, length
+- Amplicon size estimate
+- Warnings nếu có vấn đề với primer quality
+
+**API endpoint mới:**
+```
+POST /api/design
+Body: { sequence, thermodynamic, primerConstraints, qpcr, detectionMethod, experimentalContext }
+Response: { rt_primer, fwd_primer, rev_primer, amplicon_size, warnings }
+```

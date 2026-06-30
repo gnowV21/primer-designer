@@ -4,14 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand teal — lab primary (CLAUDE.md spec)
-        'teal-50':  '#E1F5EE',
-        'teal-100': '#C5EEE0',
-        'teal-200': '#5DCAA5',
-        'teal-500': '#1A9E74',
-        'teal-600': '#0F6E56',
-        'teal-700': '#0A5A40',
-        'teal-800': '#085041',
+        // Brand — controlled by CSS variables in index.css (switches with data-theme)
+        'teal-50':  'var(--brand-50)',
+        'teal-100': 'var(--brand-100)',
+        'teal-200': 'var(--brand-200)',
+        'teal-300': 'var(--brand-300)',
+        'teal-400': 'var(--brand-400)',
+        'teal-500': 'var(--brand-500)',
+        'teal-600': 'var(--brand-600)',
+        'teal-700': 'var(--brand-700)',
+        'teal-800': 'var(--brand-800)',
         // Amber — warnings only
         'amber-50':  '#FFFBEB',
         'amber-100': '#FEF3C7',

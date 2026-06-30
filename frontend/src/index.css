@@ -2,13 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme: Pink ─────────────────────────────────── */
+[data-theme="pink"] {
+  --brand-50:  #fdf2f8;
+  --brand-100: #fadcf5;
+  --brand-200: #f3c5e5;
+  --brand-300: #f9a8d4;
+  --brand-400: #f472b6;
+  --brand-500: #f091d0;
+  --brand-600: #d67bda;
+  --brand-700: #eb70c6;
+  --brand-800: #c46ab0;
+}
+
+/* ── Theme: Teal (original lab) ──────────────────── */
+[data-theme="teal"] {
+  --brand-50:  #E1F5EE;
+  --brand-100: #C3EBD9;
+  --brand-200: #5DCAA5;
+  --brand-300: #3DBCA0;
+  --brand-400: #25A888;
+  --brand-500: #178C6E;
+  --brand-600: #0F6E56;
+  --brand-700: #0d6150;
+  --brand-800: #085041;
+}
+
+/* ── Theme: Navy (#273E74 — HGLab brand) ─────────── */
+[data-theme="navy"] {
+  --brand-50:  #EFF3FB;
+  --brand-100: #D8E1F4;
+  --brand-200: #AABCE4;
+  --brand-300: #7592D2;
+  --brand-400: #4068BF;
+  --brand-500: #335399;
+  --brand-600: #273E74;
+  --brand-700: #1C2E54;
+  --brand-800: #111E3B;
+}
+
 html {
   font-size: 110%;
   scroll-behavior: smooth;
 }
 
 *:focus-visible {
-  outline: 2px solid #0F6E56;
+  outline: 2px solid var(--brand-700);
   outline-offset: 2px;
   border-radius: 3px;
 }

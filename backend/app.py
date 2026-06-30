@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from routes.mirbase import mirbase_bp
+from routes.design import design_bp
 from db import local_db
 
 app = Flask(__name__)
@@ -16,6 +17,7 @@ CORS(app, resources={r"/api/*": {"origins": [
 ]}})
 
 app.register_blueprint(mirbase_bp, url_prefix='/api')
+app.register_blueprint(design_bp, url_prefix='/api')
 
 
 @app.route('/api/health')

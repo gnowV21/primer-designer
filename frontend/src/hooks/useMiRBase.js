@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function useMiRBase() {
   const [status, setStatus] = useState('idle'); // 'idle'|'loading'|'found'|'not_found'|'error'
@@ -37,7 +37,7 @@ export function useMiRBase() {
         setErrorMessage('Connection timed out. Check your network and try again.');
       } else {
         setStatus('error');
-        setErrorMessage('Cannot reach backend. Make sure the backend server is running at localhost:5000.');
+        setErrorMessage('Cannot reach the backend. Check your network connection or set VITE_API_URL.');
       }
     }
   }, []);

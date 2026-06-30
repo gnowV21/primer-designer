@@ -27,7 +27,8 @@ from db import local_db
 
 MIRBASE_API    = "https://mirbase.org/api/mirna/"
 RNACENTRAL_API = "https://rnacentral.org/api/v1/rna/"
-MIRBASE_FA_URL = "https://mirbase.org/download/mature.fa.gz"
+MIRBASE_FA_URL    = "https://mirbase.org/download/mature.fa.gz"
+MIRBASE_FA_URL_V2 = "https://mirbase.org/download/mature.fa"   # uncompressed, miRBase ≥ 22.1
 
 SPECIES_MAP = {
     "hsa": "Homo sapiens",
@@ -116,28 +117,34 @@ def fetch_one(mirna_id: str) -> dict | None:
 
 def fetch_all_from_mirbase() -> int:
     """
-    Download the full mature.fa.gz from miRBase and seed all entries.
+    Download the full mature.fa (or mature.fa.gz) from miRBase and seed all entries.
+    Tries uncompressed URL first (miRBase ≥ 22.1), falls back to gzip.
     Returns count of rows inserted.
     """
     import gzip
 
-    print(f"Downloading {MIRBASE_FA_URL} ...", flush=True)
-    try:
-        r = requests.get(MIRBASE_FA_URL, timeout=120, stream=True)
-        r.raise_for_status()
-    except Exception as e:
-        print(f"Download failed: {e}", file=sys.stderr)
+    # Try uncompressed .fa first (available since miRBase restructured their site)
+    for url, compressed in [(MIRBASE_FA_URL_V2, False), (MIRBASE_FA_URL, True)]:
+        print(f"Trying {url} ...", flush=True)
+        try:
+            r = requests.get(url, timeout=120, stream=True)
+            r.raise_for_status()
+            raw = r.content
+            print(f"Downloaded {len(raw):,} bytes.", flush=True)
+            text = (gzip.decompress(raw) if compressed else raw).decode("utf-8")
+            break
+        except Exception as e:
+            print(f"  Failed: {e}", flush=True)
+    else:
         print(
-            "Download manually: https://mirbase.org/download/mature.fa.gz\n"
-            "Then run: python scripts/build_db.py mature.fa.gz",
+            "Both URLs failed. Download manually:\n"
+            "  https://mirbase.org/download/mature.fa\n"
+            "Then run: python scripts/fetch_and_seed.py --file mature.fa  [TODO: add --fasta flag]",
             file=sys.stderr,
         )
         return 0
 
-    gz_data = r.content
-    print(f"Downloaded {len(gz_data):,} bytes. Parsing...", flush=True)
-
-    text = gzip.decompress(gz_data).decode("utf-8")
+    print("Parsing FASTA...", flush=True)
     count = 0
     header, parts = None, []
     for line in text.splitlines():
@@ -146,6 +153,8 @@ def fetch_all_from_mirbase() -> int:
             if header and parts:
                 _seed_fasta_entry(header, "".join(parts))
                 count += 1
+                if count % 1000 == 0:
+                    print(f"  {count:,} entries seeded...", flush=True)
             header, parts = line[1:], []
         elif line:
             parts.append(line)

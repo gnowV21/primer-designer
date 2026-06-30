@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useTheme, THEMES } from '../contexts/ThemeContext.jsx';
 
 const tabs = [
   { to: '/home',    label: 'Home'     },
@@ -7,8 +8,10 @@ const tabs = [
 ];
 
 export default function Navbar() {
+  const { theme, setTheme } = useTheme();
+
   return (
-    <nav className="h-14 flex items-center justify-between px-6 border-b border-gray-200 bg-white shrink-0">
+    <nav className="h-14 flex items-center justify-between px-6 border-b border-gray-200 bg-white sticky top-0 z-50 shrink-0">
 
       {/* Brand */}
       <div className="flex items-center gap-3">
@@ -21,7 +24,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Nav links */}
+      {/* Nav links + Theme switcher */}
       <div className="flex items-center gap-1">
         {tabs.map(({ to, label }) => (
           <NavLink
@@ -36,6 +39,28 @@ export default function Navbar() {
             {label}
           </NavLink>
         ))}
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-gray-200 mx-2" />
+
+        {/* Theme swatches */}
+        <div className="flex items-center gap-1.5" title="Color theme">
+          {Object.entries(THEMES).map(([key, { label, swatch }]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTheme(key)}
+              title={label}
+              aria-label={`Switch to ${label} theme`}
+              className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                theme === key
+                  ? 'ring-2 ring-offset-1 ring-gray-400 scale-125'
+                  : 'opacity-60 hover:opacity-100 hover:scale-110'
+              }`}
+              style={{ backgroundColor: swatch }}
+            />
+          ))}
+        </div>
       </div>
     </nav>
   );
