@@ -269,7 +269,11 @@ PROBE_MAX_FAMILY_MISHYB_SCORE = 12.0
 # SECTION L: BOUND FRACTION (Phase 3)
 # ----------------------------------------------------------------
 
-BOUND_FRACTION_ANNEALING_TEMP = 60.0
+# Round 1 uses RT extension temperature; Round 2 uses qPCR annealing temperature.
+# RT extension: 42°C from RT_REACTION_CONDITIONS (SuperScript III, [K11] protocol).
+# qPCR Ta: 60°C from TM_ANNEALING_TEMP_DEFAULT.
+BOUND_FRACTION_RT_TEMP       = 42.0   # °C — Round 1: binding region binds cDNA during RT step
+BOUND_FRACTION_ANNEALING_TEMP = 60.0  # °C — Round 2: full primer binds amplicon during qPCR
 BOUND_FRACTION_MIN = 90.0
 BOUND_FRACTION_OPT = 97.0
 BOUND_FRACTION_MAX = 100.0
@@ -474,6 +478,7 @@ PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
 PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
+MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
 
 # [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
 # Primer:Template → PCR yield relative to perfect match

@@ -21,6 +21,7 @@ import math
 import primer3
 from functools import lru_cache
 from .constants import (
+    BOUND_FRACTION_RT_TEMP,
     BOUND_FRACTION_ANNEALING_TEMP,
     BOUND_FRACTION_OPT,
     BOUND_FRACTION_MIN,
@@ -67,10 +68,15 @@ def _get_dh_ds_cached(
     return float(result.dh), float(result.ds)
 
 
+def _to_dna(sequence: str) -> str:
+    """Normalize to uppercase DNA (U→T) before passing to primer3."""
+    return sequence.upper().replace("U", "T")
+
+
 def _get_dh_ds(sequence: str, params: dict) -> tuple[float, float]:
     p3 = _get_p3_params(params)
     return _get_dh_ds_cached(
-        sequence,
+        _to_dna(sequence),
         p3["mv_conc"],
         p3["dv_conc"],
         p3["dntp_conc"],
@@ -80,23 +86,26 @@ def _get_dh_ds(sequence: str, params: dict) -> tuple[float, float]:
 
 # ── Bound fraction calculation ────────────────────────────────────
 
-def _calculate_bound_fraction(sequence: str, params: dict) -> float:
+def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> float:
     """
-    [SL04] fraction of primer molecules in duplex at annealing temperature.
+    [SL04] fraction of primer molecules in duplex at the given temperature.
 
     fract = 1 / (1 + sqrt(1 / (Ct/4 * K))) * 100   (%)
     where:
-        T  = BOUND_FRACTION_ANNEALING_TEMP in Kelvin
-        dG = dH - T * dS   (cal/mol)
+        T  = temp_c + 273.15  (Kelvin)
+        dG = dH - T * dS      (cal/mol)
         K  = exp(-dG / (R * T))
         Ct = dna_conc [nM] / 1e9  [mol/L]
+
+    Sequence is normalized to DNA (U→T) before thermodynamic calculation —
+    primers are synthesized as DNA regardless of the RNA template.
     """
     dna_conc_nm = float(params.get("primerConcentration", P3_DEFAULT_DNA_CONC))
-    dH, dS = _get_dh_ds(sequence, params)
-    T = BOUND_FRACTION_ANNEALING_TEMP + 273.15   # Kelvin
-    dG = dH - T * dS                              # cal/mol
+    dH, dS = _get_dh_ds(_to_dna(sequence), params)
+    T = temp_c + 273.15   # Kelvin
+    dG = dH - T * dS      # cal/mol
     K = math.exp(-dG / (_R * T))
-    Ct = dna_conc_nm / 1e9                        # mol/L
+    Ct = dna_conc_nm / 1e9
     fract = (1 / (1 + math.sqrt(1 / ((Ct / 4) * K)))) * 100
     return round(min(fract, 100.0), 2)
 
@@ -105,18 +114,20 @@ def _calculate_bound_fraction(sequence: str, params: dict) -> float:
 
 def calculate_bound_fraction_binding(specific_region: str, params: dict) -> float:
     """
-    Round 1: % specific region (12-17 nt) bound to cDNA template at Ta=60°C.
-    Most important — determines whether RT step can initiate. [spec §4.5]
+    Round 1: % specific region (12-17 nt) bound to cDNA during RT extension step.
+    Evaluated at BOUND_FRACTION_RT_TEMP = 42°C (SuperScript III RT temperature [K11]).
+    Concentration: P3_DEFAULT_DNA_CONC = 200 nM (equimolar convention per [SL04]).
+    [spec §4.5]
     """
-    return _calculate_bound_fraction(specific_region, params)
+    return _calculate_bound_fraction(specific_region, params, BOUND_FRACTION_RT_TEMP)
 
 
 def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
     """
-    Round 2: % full primer bound to amplicon at Ta=60°C. [spec §4.5]
-    Less critical — amplicon already present in PCR cycles.
+    Round 2: % full primer bound to amplicon at qPCR annealing temperature (60°C).
+    Evaluated at BOUND_FRACTION_ANNEALING_TEMP = 60°C = Ta. [spec §4.5]
     """
-    return _calculate_bound_fraction(full_primer, params)
+    return _calculate_bound_fraction(full_primer, params, BOUND_FRACTION_ANNEALING_TEMP)
 
 
 # ── Scoring ───────────────────────────────────────────────────────
