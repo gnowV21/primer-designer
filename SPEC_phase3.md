@@ -15,6 +15,7 @@
 | v1.4 | **VÒNG 3 — KIẾN TRÚC HỆ THỐNG:** (1) BLAST cache SQLite reuse pattern `local_db.py` Week 1, TTL 30 ngày; (2) Circuit breaker cho blastn subprocess (reuse `circuit_breaker.py` Week 1); (3) Rate limit 10 req/phút/IP cho `/api/blast-check`; (4) Database version tracking + cảnh báo khi >90 ngày; (5) GitHub Actions CI test — script logic với mock data, không build database thật trên CI; (6) Smoke test end-to-end với `hsa-miR-21-5p` |
 | v1.5 | **VÒNG 4 — LÀM RÕ 3 QUYẾT ĐỊNH IMPLEMENTATION** (đã benchmark bằng code + phân tích infra): (1) **primer3-py DÙNG `calc_heterodimer(primer, revcomp(primer))`** để lấy dH/dS — verified bằng `ThermoResult` object có `.dh`, `.ds`, `.dg` (§4.7); (2) **BLAST database size ~370 MB** — verify Railway free 1 GB OK; Render cần paid persistent disk; fallback option "protein-coding only" ~200 MB (§9.5); (3) **`LocalDB` Week 1 refactor thành base class `SQLiteKVCache`** — reuse tối đa, backward-compatible với Week 1 (§9.1 mở rộng) |
 | v1.6 | **§13 FRONTEND INTEGRATION** — Full spec cho nút "Check off-target": hook `useBlastCheck`, button placement trong `PrimerSetCard`, loading state, risk badge styling (4 mức), error handling (429/503/timeout/network), result panel layout, integration với `ResultsSection` có sẵn |
+| v1.7 | **[ĐÍNH CHÍNH IMPLEMENTATION 2026-07-01]** (1) §2: Neilsen12 journal = *Trends in Genetics* (không phải Bioinformatics); (2) §4.1+4.2: `BOUND_FRACTION_RT_TEMP = 42°C` cho Round 1 — spec cũ ghi 60°C sai; (3) §5.5: miFam.dat HTTP 500 trên miRBase v22.1 — production dùng seed-based grouping; (4) §6: isoMiR data v1.0.0 verified (8 entries, PMIDs), `evidence_level` field, key đổi từ `data_warning` → `co_amplification_warning`; (5) §8.9+8.11: cross-species filtering + `cross_species_excluded`/`hits_truncated` trong summary; smoke test hsa-miR-21-5p passed |
 
 ---
 
@@ -409,11 +410,62 @@ def test_family_discrimination_weight_in_v4():
 
 - Logic: `in_risk_window = (forward_3prime_position <= risk_window_nt)` (§31.2)
 - **Warning-only** — không vào scoring
-- Data: `known_5prime_isomir_mirnas.json` — verify [Neilsen12], [Morin08] trước production
+- Data: `known_5prime_isomir_mirnas.json` **v1.0.0 (literature-verified, 2026-07-01)** — tất cả PLACEHOLDER đã thay bằng citations PubMed thực
+
+### 6.1 Data v1.0.0 — 8 entries, tất cả verified
+
+| miRNA | evidence_level | Source (PMID) |
+|---|---|---|
+| hsa-miR-10a-5p | study_specific | Morin 2008 [PMID:18285502] |
+| hsa-miR-10b-5p | study_specific | Morin 2008 [PMID:18285502] |
+| hsa-miR-146b-5p | study_specific | Swierniak 2013 [PMID:23783103] |
+| hsa-miR-21-5p | review_supported | Neilsen 2012 [PMID:22883467] |
+| hsa-miR-122-5p | review_supported | Neilsen 2012 [PMID:22883467] |
+| hsa-miR-155-5p | review_supported | Neilsen 2012 [PMID:22883467] |
+| hsa-miR-146a-5p | review_supported | Neilsen 2012 [PMID:22883467] |
+| hsa-miR-126-3p | review_supported | Neilsen 2012 [PMID:22883467] |
+
+`evidence_level` taxonomy:
+- **study_specific**: ≥1 primary paper explicitly reported 5'-isomiR với sequence-level evidence + read counts
+- **review_supported**: documented across multiple independent deep-sequencing datasets; cited in systematic reviews — no single primary PMID retrieved but widely reproduced
+
+### 6.2 Return dict — key đã đổi tên
+
+Key `data_warning` → `co_amplification_warning` (biology-first naming, 2026-07-01):
+
+```python
+# Khi miRNA found trong DB:
+{
+    "isomir_discrimination_risk": bool,
+    "mirna_name": str,
+    "forward_3prime_position": int,
+    "known_5prime_shift_nt": int,
+    "risk_window_nt": int,
+    "evidence_level": str,           # "study_specific" | "review_supported"
+    "note": str,
+    "co_amplification_warning": str, # biology-first warning message
+}
+
+# Khi miRNA không có trong DB:
+{
+    "isomir_discrimination_risk": False,
+    "mirna_name": str,
+    "forward_3prime_position": int,
+    "risk_window_nt": None,
+    "note": str,
+    "data_warning": str,             # giữ nguyên key cũ cho unknown case
+}
+```
+
+### 6.3 Logic note (vestigial geometric check)
+
+`in_risk_window = (forward_3prime_position <= risk_window_nt)`. Với `specific_length` thực tế (12-17 nt) >> `risk_window_nt` (2-3), điều kiện này KHÔNG BAO GIỜ True. Flag hiện chỉ identify **miRNAs WHERE co-amplification risk exists**; geometric sub-check là secondary filter cho primer cực ngắn (pathological). Documented trong `_metadata.flag_logic_note` của JSON file.
 
 ```python
 def test_isomir_flag_triggers_within_risk_window(): ...
 def test_isomir_flag_absent_for_unlisted_mirna(): ...   # absence != no isomiR exists
+def test_evidence_level_field_present(): ...             # evidence_level in return dict
+def test_co_amplification_warning_key(): ...             # key renamed from data_warning
 ```
 
 ---
@@ -684,7 +736,9 @@ def classify_hit_risk(primer: str, alignment: dict) -> str:
     "high_risk_count": 1,
     "medium_risk_count": 2,
     "safe_count": 2,
-    "overall_risk": "HIGH"
+    "cross_species_excluded": 3623,   // [THÊM 2026-07-01] số hits miRBase khác species bị loại
+    "overall_risk": "HIGH",
+    "hits_truncated": false           // [THÊM 2026-07-01] true nếu hit >= BLAST_MAX_HITS_RETURNED (200)
   },
   "cache": {"hit": false, "cache_key": "abc123..."},
   "database_info": {
@@ -704,6 +758,34 @@ elif any hit HIGH:         overall = "HIGH"
 elif any hit MEDIUM:       overall = "MEDIUM"
 else:                      overall = "SAFE"
 ```
+
+### 8.11 Cross-species filtering (thêm 2026-07-01)
+
+**Vấn đề:** miRBase mature.fa chứa ~49K sequences đa loài. miRNA conserved (vd. let-7) tồn tại ở hầu hết vertebrates với sequence gần như giống hệt nhau. Nếu không filter, các orthologs khác loài sẽ:
+- Lấp đầy BLAST_MAX_HITS_RETURNED (200) với false positives sinh học
+- Che khuất genuine human off-targets
+
+**Giải pháp:** `_extract_species_prefix(mirna_id)` — extract 3-letter prefix từ miRNA ID (`hsa-miR-21-5p` → `hsa-`). Hits trong `mirbase_multi` không bắt đầu bằng prefix này bị loại; chỉ tính `cross_species_excluded` để báo cáo.
+
+```python
+def _extract_species_prefix(mirna_id: Optional[str]) -> str:
+    """
+    'hsa-miR-21-5p' → 'hsa-'
+    'mmu-let-7a'    → 'mmu-'
+    None / malformed → MIRBASE_HUMAN_PREFIX ('hsa-')
+    """
+    if mirna_id:
+        m = re.match(r'^([a-z]{3})-', mirna_id.lower())
+        if m:
+            return m.group(1) + "-"
+    return MIRBASE_HUMAN_PREFIX   # fallback = 'hsa-'
+```
+
+**Smoke test kết quả (2026-07-01, hsa-miR-21-5p):**
+- cross_species_excluded: 3,623 — filter loại đúng
+- Self-hit (hsa-miR-21-5p) excluded correctly: 0 hits có "miR-21" trong subject_id
+- Cache: miss (lần 1) → hit (lần 2) — SQLiteKVCache TTL 30d hoạt động đúng
+- Databases searched: mirbase_multi (27 hits) + ensembl_human_cdna (173 hits)
 
 ---
 
