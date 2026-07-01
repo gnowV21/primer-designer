@@ -9,7 +9,7 @@ from algorithm.stemloop_rt import design_stemloop_rt
 from algorithm.forward_primer import generate_forward_candidates
 from algorithm.universal_reverse import get_universal_reverse
 from algorithm.structure_check import run_all_structure_checks
-from algorithm.structure_check.heterodimer import check_all_heterodimers
+from algorithm.structure_check.heterodimer import check_all_heterodimers, check_stemloop_reverse_heterodimer
 from algorithm.specificity_check.family_crossreactivity import check_family_crossreactivity
 from algorithm.specificity_check.isomir_flag import check_isomir_flag
 from algorithm.scoring import score_candidate
@@ -90,6 +90,25 @@ def design_primers():
                 f"conditions (hairpin ΔG = {rev_ss['hairpin_dg']} kcal/mol, "
                 f"self-dimer ΔG = {rev_ss['self_dimer_dg']} kcal/mol). "
                 f"Consider adjusting salt/Mg²⁺ concentration."
+            ),
+        })
+
+    # ── 3b. Stemloop × Reverse heterodimer (one-step RT-qPCR global check) ──
+    # Both stemloop and reverse are fixed sequences — computed once, not per candidate.
+    stemloop_rev_check = check_stemloop_reverse_heterodimer(
+        stemloop_seq=stemloop["sequence"],
+        reverse_seq=reverse["sequence"],
+        params=params,
+    )
+    if stemloop_rev_check["risk_level"] in ("HIGH", "MODERATE"):
+        severity = "critical" if stemloop_rev_check["risk_level"] == "HIGH" else "warning"
+        global_warnings.append({
+            "field": "stemloop_reverse_heterodimer",
+            "severity": severity,
+            "message": (
+                f"Stem-loop RT × Universal Reverse heterodimer: ΔG = {stemloop_rev_check['dg']:.2f} kcal/mol "
+                f"— {stemloop_rev_check['risk_level']} RISK. "
+                f"{stemloop_rev_check['protocol_note']}"
             ),
         })
 
@@ -175,7 +194,10 @@ def design_primers():
     return jsonify({
         "top3": top_n,
         "stemloop_rt": stemloop,
-        "universal_reverse": reverse,
+        "universal_reverse": {
+            **reverse,
+            "stemloop_reverse_heterodimer": stemloop_rev_check,
+        },
         "global_warnings": global_warnings,
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,

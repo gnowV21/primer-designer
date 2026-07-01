@@ -62,6 +62,37 @@ def check_all_heterodimers(
     }
 
 
+def check_stemloop_reverse_heterodimer(
+    stemloop_seq: str,
+    reverse_seq: str,
+    params: dict,
+) -> dict:
+    """
+    Check heterodimer ΔG between the stemloop RT primer and universal reverse primer.
+
+    This pair is miRNA-independent (both sequences are fixed) and is computed once
+    per request, not per candidate.
+
+    Buffer: PCR conditions (user params) — the interaction occurs during the PCR
+    step when both primers coexist in the tube.
+
+    Protocol scope:
+      - One-step RT-qPCR: ALL primers are in one tube throughout → dimer is possible.
+      - Two-step RT-qPCR: stemloop primer is absent during PCR → dimer cannot form.
+
+    Returns same structure as a single _check_pair result, plus a protocol_note.
+    """
+    pcr_p3 = _get_p3_params(params)
+    temp_c = float(params.get("annealingTemp", 60.0))
+    result = _check_pair(stemloop_seq, reverse_seq, pcr_p3, temp_c, label="stemloop_reverse")
+    result["protocol_note"] = (
+        "Relevant for one-step RT-qPCR protocols where all primers coexist in one tube. "
+        "In two-step protocols, the stemloop RT primer is absent during PCR amplification "
+        "and this interaction cannot occur."
+    )
+    return result
+
+
 # ── Internal helpers ──────────────────────────────────────────────
 
 def _rt_p3_params() -> dict:
@@ -156,8 +187,9 @@ def _classify_risk(dg: float, three_prime_overlap: bool) -> str:
 
 def _risk_note(label: str, dg: float, risk: str, overlap: bool, bp_count: int) -> str:
     pair_label = {
-        "fwd_stemloop": "Forward × Stem-loop RT (RT step)",
-        "fwd_reverse":  "Forward × Universal Reverse (PCR step)",
+        "fwd_stemloop":     "Forward × Stem-loop RT (RT step)",
+        "fwd_reverse":      "Forward × Universal Reverse (PCR step)",
+        "stemloop_reverse": "Stem-loop RT × Universal Reverse (one-step PCR)",
     }.get(label, label)
 
     if risk == "HIGH":
