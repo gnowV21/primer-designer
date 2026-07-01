@@ -11,9 +11,11 @@
 #   [Kwok90] Kwok et al. 1990 Nucleic Acids Research 18(4):999-1005
 # ================================================================
 
+import ctypes
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from typing import Optional
 
@@ -23,6 +25,7 @@ from algorithm.constants import (
     PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES,
     PRIMER_BLAST_3PRIME_WINDOW, PRIMER_BLAST_3PRIME_MIN_MISMATCHES,
     PRIMER_BLAST_MIN_TOTAL_MISMATCHES,
+    BLAST_MAX_HITS_RETURNED,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
 
@@ -30,6 +33,26 @@ _DB_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "blast_db"
 _MIRBASE_DB  = os.path.join(_DB_DIR, "mirbase_multi")
 _ENSEMBL_DB  = os.path.join(_DB_DIR, "ensembl_human_cdna")
 _METADATA    = os.path.join(_DB_DIR, "metadata.json")
+
+
+def _win_short_path(path: str) -> str:
+    """Convert path with spaces to 8.3 short form on Windows (blastn rejects spaced paths)."""
+    if not sys.platform.startswith("win") or " " not in path:
+        return path
+    try:
+        if os.path.exists(path):
+            buf = ctypes.create_unicode_buffer(32767)
+            ctypes.windll.kernel32.GetShortPathNameW(path, buf, 32767)
+            return buf.value or path
+        head, tail_parts = path, []
+        while head and not os.path.exists(head):
+            head, part = os.path.split(head)
+            tail_parts.insert(0, part)
+        buf = ctypes.create_unicode_buffer(32767)
+        ctypes.windll.kernel32.GetShortPathNameW(head, buf, 32767)
+        return os.path.join(buf.value or head, *tail_parts)
+    except Exception:
+        return path
 
 
 # ── 3'-terminal mismatch classification ──────────────────────────
@@ -185,8 +208,8 @@ def run_blastn(primer: str, db_path: str, timeout: int = 60) -> list[dict]:
         result = subprocess.run(
             [
                 "blastn",
-                "-query",          fq_path,
-                "-db",             db_path,
+                "-query",          _win_short_path(fq_path),
+                "-db",             _win_short_path(db_path),
                 "-task",           BLAST_TASK,
                 "-word_size",      str(BLAST_WORD_SIZE),
                 "-evalue",         str(BLAST_EVALUE_CUTOFF),
@@ -247,13 +270,18 @@ def check_offtarget(
     dbs = [_MIRBASE_DB, _ENSEMBL_DB]
     db_available = [d for d in dbs if _db_exists(d)]
 
-    fwd_hits = _check_primer(forward_primer, db_available, mirna_id, timeout)
-    rev_hits = _check_primer(reverse_primer, db_available, mirna_id, timeout)
+    fwd_hits, fwd_safe = _check_primer(forward_primer, db_available, mirna_id, timeout)
+    rev_hits, rev_safe = _check_primer(reverse_primer, db_available, mirna_id, timeout) if reverse_primer else ([], 0)
+
+    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe)
+    summary["hits_truncated"] = (
+        len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
+    )
 
     return {
         "forward_primer_hits": fwd_hits,
         "reverse_primer_hits": rev_hits,
-        "summary": _summarise(fwd_hits + rev_hits),
+        "summary": summary,
     }
 
 
@@ -262,12 +290,14 @@ def _check_primer(
     db_paths: list[str],
     mirna_id: Optional[str],
     timeout: int,
-) -> list[dict]:
-    all_hits = []
+) -> tuple[list[dict], int]:
+    """Return (non_safe_hits, safe_count). SAFE hits are counted but not included."""
+    non_safe_hits: list[dict] = []
+    safe_count = 0
     for db in db_paths:
         try:
             raw = run_blastn(primer, db, timeout=timeout)
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             raise   # caller (route) handles circuit breaker
         for h in raw:
             # Skip self-hit
@@ -279,7 +309,6 @@ def _check_primer(
             if subject_seq and query_seq:
                 aln = nw_align(query_seq.replace("-", ""), subject_seq.replace("-", ""))
             else:
-                # fallback: use BLAST mismatch count
                 aln = {
                     "mismatches": h["mismatches"],
                     "mismatch_positions": [],
@@ -288,7 +317,11 @@ def _check_primer(
                     "coverage_pct": round(h["length"] / len(primer) * 100, 1),
                 }
             risk, reason = classify_hit_risk(primer, aln)
-            all_hits.append({
+            # SAFE hits (≥6 mm) are counted in summary but omitted from hit list [Ye12]
+            if risk == "SAFE":
+                safe_count += 1
+                continue
+            non_safe_hits.append({
                 "subject_id":   h["subject_id"],
                 "database":     os.path.basename(db),
                 "alignment": {
@@ -306,24 +339,28 @@ def _check_primer(
                 "risk":   risk,
                 "risk_reason": reason,
             })
-    return all_hits
+    # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
+    _risk_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
+    non_safe_hits.sort(key=lambda h: (_risk_order.get(h["risk"], 9), h["evalue"]))
+    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count
 
 
-def _summarise(hits: list[dict]) -> dict:
-    counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "SAFE": 0}
-    for h in hits:
-        counts[h.get("risk", "SAFE")] = counts.get(h.get("risk", "SAFE"), 0) + 1
+def _summarise(non_safe_hits: list[dict], safe_count: int = 0) -> dict:
+    counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0}
+    for h in non_safe_hits:
+        risk = h.get("risk", "MEDIUM")
+        counts[risk] = counts.get(risk, 0) + 1
     if counts["CRITICAL"] > 0:    overall = "CRITICAL"
     elif counts["HIGH"] > 0:      overall = "HIGH"
     elif counts["MEDIUM"] > 0:    overall = "MEDIUM"
     else:                          overall = "SAFE"
     return {
-        "total_hits":       len(hits),
-        "critical_count":   counts["CRITICAL"],
-        "high_risk_count":  counts["HIGH"],
+        "total_hits":        len(non_safe_hits) + safe_count,
+        "critical_count":    counts["CRITICAL"],
+        "high_risk_count":   counts["HIGH"],
         "medium_risk_count": counts["MEDIUM"],
-        "safe_count":       counts["SAFE"],
-        "overall_risk":     overall,
+        "safe_count":        safe_count,
+        "overall_risk":      overall,
     }
 
 

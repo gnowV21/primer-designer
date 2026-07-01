@@ -186,6 +186,7 @@ def design_primers():
             ),
         },
         "metadata": {
+            "mirna_id": mirna_name,
             "mirna_sequence": seq,
             "mirna_length": len(seq),
             "binding_region_nt": binding_len,

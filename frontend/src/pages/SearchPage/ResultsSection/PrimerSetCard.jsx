@@ -4,6 +4,7 @@ import ScoreGauge from './ScoreGauge.jsx';
 import ScoreBreakdown from './ScoreBreakdown.jsx';
 import StructureChecks from './StructureChecks.jsx';
 import ExportButtons from './ExportButtons.jsx';
+import OffTargetPanel from './OffTargetPanel.jsx';
 import { useState } from 'react';
 
 const RISK_STYLE = {
@@ -13,7 +14,7 @@ const RISK_STYLE = {
   PASS:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function PrimerSetCard({ set, stemloop, reverse }) {
+export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
   const [expanded, setExpanded] = useState(set.rank === 1);
 
   const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-blue-700 bg-blue-50 border-blue-300', 'text-slate-600 bg-slate-50 border-slate-300'];
@@ -103,6 +104,13 @@ export default function PrimerSetCard({ set, stemloop, reverse }) {
               ))}
             </div>
           )}
+
+          {/* ── Off-target check ── */}
+          <OffTargetPanel
+            forwardPrimer={set.sequence}
+            reversePrimer={reverse?.sequence}
+            mirnaId={mirnaId ?? ''}
+          />
 
           {/* ── Export ── */}
           <ExportButtons set={set} stemloop={stemloop} reverse={reverse} />

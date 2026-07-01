@@ -18,6 +18,8 @@ export default function ResultsSection({ results, error }) {
     specificity_warnings,
   } = results;
 
+  const mirnaId = metadata?.mirna_id ?? '';
+
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
@@ -93,7 +95,7 @@ export default function ResultsSection({ results, error }) {
       {/* ── Top-3 primer sets ── */}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
-          <PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} />
+          <PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} mirnaId={mirnaId} />
         ))}
       </div>
 

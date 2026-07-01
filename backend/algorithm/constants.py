@@ -473,6 +473,7 @@ PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specifi
 PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
 PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
+BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 
 # [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
 # Primer:Template → PCR yield relative to perfect match
