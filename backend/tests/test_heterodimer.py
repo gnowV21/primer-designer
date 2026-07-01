@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from algorithm.structure_check.heterodimer import (
     check_all_heterodimers,
+    check_stemloop_reverse_heterodimer,
     _detect_3prime_complementarity,
     _classify_risk,
     _complement_base,
@@ -211,6 +212,43 @@ def test_output_structure():
         assert key in result["heterodimer_fwd_reverse"]
 
 
+# ── Tests: check_stemloop_reverse_heterodimer ────────────────────
+
+# Full stemloop RT primer for hsa-miR-21-5p (STEMLOOP_BODY + RC of last 6nt of miR-21)
+# miR-21-5p: UAGCUUAUCAGACUGAUGUUGA → last 6nt: UGUUGA → RC DNA: TCAACA
+STEMLOOP_RT_MIR21 = STEMLOOP_BODY + "TCAACA"
+
+
+def test_stemloop_reverse_output_structure():
+    """All required keys must be present in the stemloop×reverse check output."""
+    result = check_stemloop_reverse_heterodimer(STEMLOOP_RT_MIR21, UNIVERSAL_REVERSE, DEFAULT_PARAMS)
+    for key in ("dg", "risk_level", "three_prime_overlap", "three_prime_bp", "note", "protocol_note"):
+        assert key in result, f"Missing key: {key}"
+
+
+def test_stemloop_reverse_protocol_note_present():
+    """protocol_note must mention one-step and two-step protocols."""
+    result = check_stemloop_reverse_heterodimer(STEMLOOP_RT_MIR21, UNIVERSAL_REVERSE, DEFAULT_PARAMS)
+    note = result["protocol_note"]
+    assert "one-step" in note.lower()
+    assert "two-step" in note.lower()
+
+
+def test_stemloop_reverse_actual_pair_risk_level():
+    """
+    The actual Chen 2005 stemloop RT primer × universal reverse pair should not
+    be HIGH risk — the system was experimentally validated for co-existence in PCR.
+    This test documents the observed risk level to catch regressions.
+    """
+    result = check_stemloop_reverse_heterodimer(STEMLOOP_RT_MIR21, UNIVERSAL_REVERSE, DEFAULT_PARAMS)
+    # The Chen 2005 primer system is validated — risk must not be HIGH
+    assert result["risk_level"] != "HIGH", (
+        f"Unexpected HIGH risk for Chen 2005 primer pair: dG = {result['dg']:.2f} kcal/mol. "
+        f"This pair has been experimentally validated."
+    )
+    print(f"\n[stemloop×reverse] dG = {result['dg']:.2f} kcal/mol, risk = {result['risk_level']}")
+
+
 if __name__ == "__main__":
     # Quick manual run
     test_complement_base_dna()
@@ -227,4 +265,7 @@ if __name__ == "__main__":
     test_case_a_pass()
     test_case_b_moderate()
     test_case_c_high_risk()
+    test_stemloop_reverse_output_structure()
+    test_stemloop_reverse_protocol_note_present()
+    test_stemloop_reverse_actual_pair_risk_level()
     print("\nAll heterodimer tests passed.")
