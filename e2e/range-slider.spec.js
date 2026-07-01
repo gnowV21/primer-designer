@@ -1,12 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';
-
 test.describe('RangeSlider', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/search`);
-    // Open ThermodynamicGroup to access Tm slider
-    await page.getByText('Thermodynamic Parameters').click();
+    await page.goto('/search');
+    // Open Primer Design Constraints to access Tm slider
+    await page.getByText('Primer Design Constraints').click();
   });
 
   test('Tm badge chips show default values 58°C and 62°C', async ({ page }) => {

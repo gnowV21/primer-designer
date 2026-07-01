@@ -39,7 +39,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
         {status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Checks primer against Ensembl human cDNA + miRBase (all species) using Primer-BLAST rules (Ye 2012).
+              Checks primer against miRBase (all species) for miRNA family cross-reactivity using Primer-BLAST rules (Ye 2012).
             </p>
             <BlastCheckButton status={status} onClick={handleRun} />
           </div>
@@ -179,12 +179,12 @@ function ResultDisplay({ result }) {
       )}
 
       {/* Footnote */}
-      <p className="text-xs text-slate-400 border-t border-slate-100 pt-2">
+      <div className="text-xs text-slate-400 border-t border-slate-100 pt-2">
         {result.cache?.hit ? 'Cached result · ' : ''}
-        DB: miRBase {dbInfo.mirbase_version} + Ensembl GRCh38 r{dbInfo.ensembl_version}
+        DB: miRBase {dbInfo.mirbase_version} (all species)
         {dbInfo.outdated_warning && ' · ⚠ DB may be outdated'}
         {' · built '}{dbInfo.build_date}
-      </p>
+      </div>
     </div>
   );
 }
@@ -213,6 +213,11 @@ function OverallRiskRow({ summary }) {
         )}
         {summary.safe_count > 0 && (
           <span className="text-slate-400">{summary.safe_count.toLocaleString()} safe</span>
+        )}
+        {summary.cross_species_excluded > 0 && (
+          <span className="text-slate-400" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
+            {summary.cross_species_excluded.toLocaleString()} excluded
+          </span>
         )}
       </div>
     </div>

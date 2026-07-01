@@ -124,8 +124,10 @@ def calculate_bound_fraction_binding(specific_region: str, params: dict) -> floa
 
 def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
     """
-    Round 2: % full primer bound to amplicon at qPCR annealing temperature (60°C).
-    Evaluated at BOUND_FRACTION_ANNEALING_TEMP = 60°C = Ta. [spec §4.5]
+    Round 2: % full primer bound to amplicon at qPCR annealing temperature.
+    Evaluated at BOUND_FRACTION_ANNEALING_TEMP = 55°C = Tm_target − 5°C.
+    Evaluating at Tm itself (60°C) gives ~50% by definition of Tm, which is
+    uninformative. Ta = Tm−5°C is the effective primer-binding step. [spec §4.5]
     """
     return _calculate_bound_fraction(full_primer, params, BOUND_FRACTION_ANNEALING_TEMP)
 
@@ -135,10 +137,10 @@ def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
 def score_bound_fraction(fract: float) -> dict:
     """
     Score a bound fraction value (%). [spec §4.6]
-        fract >= OPT (97%):   100
-        90 <= fract < 97:     70 + (fract-90)/7 * 30  (linear)
-        fract < 90:           max(0, (fract-50)/40 * 70)
-    Returns {"score": int, "fraction_pct": float, "explanation": str}
+        fract >= OPT (80%):              100
+        MIN (60%) <= fract < OPT (80%):  70–100  (linear)
+        fract < MIN (60%):               0–70    (proportional to MIN)
+    Returns {"score": int, "fraction_pct": float, "band": str}
     """
     if fract >= BOUND_FRACTION_OPT:
         score = 100
@@ -147,7 +149,8 @@ def score_bound_fraction(fract: float) -> dict:
         score = round(70 + (fract - BOUND_FRACTION_MIN) / (BOUND_FRACTION_OPT - BOUND_FRACTION_MIN) * 30, 1)
         band = "acceptable"
     else:
-        score = round(max(0.0, (fract - 50) / 40 * 70), 1)
+        # Linear: 0% → 0, BOUND_FRACTION_MIN → 70
+        score = round(max(0.0, fract / BOUND_FRACTION_MIN * 70), 1)
         band = "suboptimal"
 
     return {

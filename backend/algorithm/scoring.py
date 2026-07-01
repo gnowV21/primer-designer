@@ -224,10 +224,10 @@ def score_candidate(
         bf_binding_result = score_bound_fraction(bf_binding)
         scores["bound_fraction_binding"] = bf_binding_result["score"]
         explanations["bound_fraction_binding"] = (
-            f"Specific region bound fraction = {bf_binding:.1f}% at Ta=60°C "
-            f"(optimal ≥ 97%, acceptable ≥ 90%). "
+            f"Specific region bound fraction = {bf_binding:.1f}% at 42°C (RT extension step) "
+            f"(optimal ≥ 80%, acceptable ≥ 60%). "
             f"Round 1: specific region ({forward.get('specific_length', '?')} nt) binds cDNA — "
-            f"determines RT initiation. "
+            f"determines RT initiation efficiency. "
             f"Formula: [SL04] SantaLucia & Hicks 2004 (dH/dS from primer3-py heterodimer)."
         )
 
@@ -236,9 +236,10 @@ def score_candidate(
         bf_full_result = score_bound_fraction(bf_full)
         scores["bound_fraction_full"] = bf_full_result["score"]
         explanations["bound_fraction_full"] = (
-            f"Full primer bound fraction = {bf_full:.1f}% at Ta=60°C "
-            f"(optimal ≥ 97%, acceptable ≥ 90%). "
+            f"Full primer bound fraction = {bf_full:.1f}% at Ta=55°C (Tm−5°C qPCR annealing) "
+            f"(optimal ≥ 80%, acceptable ≥ 60%). "
             f"Round 2: full primer ({forward.get('length', '?')} nt) binds amplicon. "
+            f"Evaluated at Tm−5°C, not Tm — at Tm all primers are 50% unbound by definition. "
             f"Formula: [SL04] SantaLucia & Hicks 2004."
         )
 

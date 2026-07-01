@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';
-
 test.describe('Form submit button', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/search`);
+    await page.goto('/search');
   });
 
   test('submit button disabled with no sequence', async ({ page }) => {
@@ -13,8 +11,8 @@ test.describe('Form submit button', () => {
   });
 
   test('submit button shows Fix errors state on validation error', async ({ page }) => {
-    // Trigger an error in Thermodynamic group
-    await page.getByText('Thermodynamic Parameters').click();
+    // Open Primer Design Constraints to access thermodynamic inputs
+    await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.fill('');
     await saltInput.blur();
@@ -22,7 +20,7 @@ test.describe('Form submit button', () => {
   });
 
   test('NumInput clear shows empty field not zero', async ({ page }) => {
-    await page.getByText('Thermodynamic Parameters').click();
+    await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     await saltInput.selectText();
@@ -31,7 +29,7 @@ test.describe('Form submit button', () => {
   });
 
   test('NumInput focus selects all text', async ({ page }) => {
-    await page.getByText('Thermodynamic Parameters').click();
+    await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     // After click, value should be selected (verify by typing immediately)
