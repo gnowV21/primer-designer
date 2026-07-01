@@ -73,31 +73,35 @@ def test_longer_primer_higher_or_equal_fraction():
 # ── scoring ───────────────────────────────────────────────────────
 
 def test_score_at_opt_is_100():
-    result = score_bound_fraction(97.0)
+    # OPT recalibrated to 80% (short PCR primers at Ta=55°C) [spec §4.6]
+    result = score_bound_fraction(80.0)
     assert result["score"] == 100
     assert result["band"] == "optimal"
 
 
 def test_score_above_opt_still_100():
-    result = score_bound_fraction(99.5)
+    result = score_bound_fraction(95.0)
     assert result["score"] == 100
     assert result["band"] == "optimal"
 
 
 def test_score_at_min_boundary():
-    result = score_bound_fraction(90.0)
+    # MIN recalibrated to 60% [spec §4.6]; score at boundary = 70.0
+    result = score_bound_fraction(60.0)
     assert result["score"] == 70.0
     assert result["band"] == "acceptable"
 
 
 def test_score_midpoint_acceptable():
-    result = score_bound_fraction(93.5)
+    # Midpoint of [60, 80) → score = 70 + (70-60)/(80-60)*30 = 85
+    result = score_bound_fraction(70.0)
     assert 70 < result["score"] < 100
     assert result["band"] == "acceptable"
 
 
 def test_score_below_min_suboptimal():
-    result = score_bound_fraction(85.0)
+    # 40% < MIN=60 → suboptimal, score = 40/60*70 ≈ 46.7
+    result = score_bound_fraction(40.0)
     assert result["score"] < 70
     assert result["band"] == "suboptimal"
 
@@ -107,11 +111,14 @@ def test_score_floor_at_zero():
     assert result["score"] == 0.0
 
 
-def test_score_at_50_is_zero():
+def test_score_suboptimal_nonzero_above_zero():
+    # New formula: fract/MIN*70 gives positive score for any fract > 0
     result = score_bound_fraction(50.0)
-    assert result["score"] == 0.0
+    assert result["score"] > 0
+    assert result["band"] == "suboptimal"
 
 
 def test_score_fraction_preserved():
-    result = score_bound_fraction(88.5)
-    assert result["fraction_pct"] == 88.5
+    # 72.0 is in acceptable band [60, 80)
+    result = score_bound_fraction(72.0)
+    assert result["fraction_pct"] == 72.0
