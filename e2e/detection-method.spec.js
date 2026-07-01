@@ -1,32 +1,33 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:5173';
-
 test.describe('DetectionMethodGroup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/search`);
-    // DetectionMethodGroup is defaultOpen — no need to expand
+    await page.goto('/search');
+    // Open Primer Design Constraints then expand Advanced specificity options
+    await page.getByText('Primer Design Constraints').click();
+    await page.getByText('Advanced specificity options').click();
   });
 
-  test('TaqMan selected by default, info box visible', async ({ page }) => {
-    const radio = page.locator('input[name="signalMethod"][value="taqman"]');
-    await expect(radio).toBeChecked();
-    await expect(page.getByText('TaqMan mode')).toBeVisible();
+  test('family discrimination checked by default', async ({ page }) => {
+    const cb = page.getByLabel('Penalize off-target in same miRNA family');
+    await expect(cb).toBeChecked();
   });
 
-  test('switching to SYBR Green changes info box', async ({ page }) => {
-    await page.locator('input[name="signalMethod"][value="sybr"]').check();
-    await expect(page.getByText('SYBR Green mode')).toBeVisible();
-    await expect(page.getByText('TaqMan mode')).not.toBeVisible();
+  test('precursor check unchecked by default', async ({ page }) => {
+    const cb = page.getByLabel('Check cross-reactivity with pre-miRNA');
+    await expect(cb).not.toBeChecked();
   });
 
-  test('Relative mode shows reference gene field', async ({ page }) => {
-    await page.locator('input[name="quantMode"][value="relative"]').check();
-    await expect(page.getByText('Reference gene')).toBeVisible();
+  test('re-folding protocol checked by default', async ({ page }) => {
+    const cb = page.getByLabel('Generate re-folding protocol in output');
+    await expect(cb).toBeChecked();
   });
 
-  test('Absolute mode hides reference gene field', async ({ page }) => {
-    await page.locator('input[name="quantMode"][value="absolute"]').check();
-    await expect(page.getByText('Reference gene')).not.toBeVisible();
+  test('toggling precursor check works', async ({ page }) => {
+    const cb = page.getByLabel('Check cross-reactivity with pre-miRNA');
+    await cb.check();
+    await expect(cb).toBeChecked();
+    await cb.uncheck();
+    await expect(cb).not.toBeChecked();
   });
 });

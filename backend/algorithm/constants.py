@@ -271,11 +271,20 @@ PROBE_MAX_FAMILY_MISHYB_SCORE = 12.0
 
 # Round 1 uses RT extension temperature; Round 2 uses qPCR annealing temperature.
 # RT extension: 42°C from RT_REACTION_CONDITIONS (SuperScript III, [K11] protocol).
-# qPCR Ta: 60°C from TM_ANNEALING_TEMP_DEFAULT.
-BOUND_FRACTION_RT_TEMP       = 42.0   # °C — Round 1: binding region binds cDNA during RT step
-BOUND_FRACTION_ANNEALING_TEMP = 60.0  # °C — Round 2: full primer binds amplicon during qPCR
-BOUND_FRACTION_MIN = 90.0
-BOUND_FRACTION_OPT = 97.0
+# qPCR Ta: 55°C (= Tm_target − 5°C). Evaluating at exactly Tm=60°C would always
+# give ~50% bound fraction by thermodynamic definition of Tm (meaningless score).
+# Evaluating at Tm−5°C represents actual primer binding during the annealing step
+# and gives ~80–90% fraction for well-designed primers — scientifically actionable.
+#
+# Thresholds recalibrated for short oligonucleotides (12–24 nt):
+#   Round 1 specific region (12–17 nt at 42°C): OPT 80%, floor 60%
+#   Round 2 full primer   (~22–24 nt at 55°C):  OPT 80%, floor 60%
+# These reflect achievable fractions. Original 97%/90% were set for long (~27 nt)
+# symmetric-duplex hybridization assays, not short PCR primer conditions.
+BOUND_FRACTION_RT_TEMP        = 42.0  # °C — Round 1: specific region binds cDNA during RT
+BOUND_FRACTION_ANNEALING_TEMP = 55.0  # °C — Round 2: full primer binds amplicon at Ta=Tm−5°C
+BOUND_FRACTION_MIN = 60.0
+BOUND_FRACTION_OPT = 80.0
 BOUND_FRACTION_MAX = 100.0
 
 
@@ -435,9 +444,14 @@ SCORING_WEIGHTS_V3 = {
 #   +family_discrimination (0.05); reduced hairpin/dimer/end_stability by 0.02 each,
 #   gc_content +0.01, tm_pair_match -0.02, gc_clamp -0.01, primer/amplicon_size -0.02 each,
 #   gc_skew -0.01.
+# v3.1 weight rebalance:
+#   mfe_stemloop 0.15→0.14: body is fixed 44 nt; only 6-nt overhang varies → low inter-candidate variance
+#   tm_pair_match 0.03→0.01: reverse is universal fixed (Tm≈60.4°C), redundant with tm_accuracy
+#   gc_clamp 0.02→0.04: 3' end GC critical for polymerase extension; prior weight understated impact
+#   gc_skew 0.01→0.02: marginal increase; still minor but measurable G-quadruplex risk signal
 SCORING_WEIGHTS_V4 = {
     "tm_accuracy":             0.20,  # core — unchanged
-    "mfe_stemloop":            0.15,  # core — unchanged
+    "mfe_stemloop":            0.14,  # -0.01 vs v3.0: body fixed, overhang-only variance
     "tm_binding_accuracy":     0.10,  # core — unchanged
     "hairpin_penalty":         0.08,  # -0.02 vs V3
     "dimer_penalty":           0.08,  # -0.02 vs V3
@@ -446,13 +460,13 @@ SCORING_WEIGHTS_V4 = {
     "bound_fraction_full":     0.03,  # NEW — round 2 (amplicon binding) [SL04]
     "gc_content":              0.08,  # +0.01 vs V3
     "family_discrimination":   0.05,  # NEW — miFam.dat risk [Chen05]
-    "tm_pair_match":           0.03,  # -0.02 vs V3
-    "gc_clamp":                0.02,  # -0.01 vs V3
+    "tm_pair_match":           0.01,  # -0.02 vs v3.0: reverse is fixed universal primer
+    "gc_clamp":                0.04,  # +0.02 vs v3.0: 3' GC critical for extension initiation
     "primer_size":             0.02,  # -0.02 vs V3
     "amplicon_size":           0.02,  # -0.02 vs V3
-    "gc_skew":                 0.01,  # -0.01 vs V3
+    "gc_skew":                 0.02,  # +0.01 vs v3.0: G-quadruplex risk signal
 }
-# Total: 0.20+0.15+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.03+0.02+0.02+0.02+0.01 = 1.00
+# Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.04+0.02+0.02+0.02 = 1.00
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
 # Family discrimination risk → score mapping [Chen05]

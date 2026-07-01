@@ -70,6 +70,8 @@
 - Ưu tiên tuyệt đối: (1) Tính đúng khoa học → (2) Tốc độ < 5s → (3) Giải thích rõ ràng → (4) UI đẹp.
 - All user-facing strings: English only.
 - Mỗi constant phải có comment nguồn trích dẫn — không để số "magic" không có nguồn.
+- Trước mỗi `git commit`: chạy Superpower security check (xem Section 2b).
+- Sau mỗi thay đổi UI có ý nghĩa: chạy Playwright E2E test liên quan 
 
 ---
 

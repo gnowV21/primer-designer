@@ -132,12 +132,6 @@ const advantages = [
   },
 ];
 
-const platforms = [
-  { name: 'ABI / Applied Biosystems', note: 'ROX reference dye required' },
-  { name: 'Bio-Rad CFX',              note: 'No ROX; Cq-based analysis' },
-  { name: 'Roche LightCycler',        note: 'Capillary or 96-well' },
-  { name: 'Qiagen Rotor-Gene',        note: 'Rotary carousel format' },
-];
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -253,27 +247,6 @@ export default function HomePage() {
               <span className={`text-3xl font-black ${s.color} leading-none`}>{s.step}</span>
               <p className="text-sm font-semibold text-slate-700">{s.title}</p>
               <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Platform compatibility */}
-      <div>
-        <h2 className="text-sm font-semibold text-slate-600 mb-3">Compatible qPCR platforms</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {platforms.map(({ name, note }) => (
-            <div
-              key={name}
-              className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
-            >
-              <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5 text-teal-500 mt-0.5 shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="2,7 5.5,11 12,3" />
-              </svg>
-              <div>
-                <p className="text-xs font-semibold text-slate-700">{name}</p>
-                <p className="text-xs text-slate-400">{note}</p>
-              </div>
             </div>
           ))}
         </div>

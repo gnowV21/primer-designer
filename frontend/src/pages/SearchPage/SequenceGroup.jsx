@@ -23,7 +23,7 @@ function Highlight({ text, query }) {
 function detectInputType(query) {
   const q = query.trim();
   if (/^MIMAT\d+$/i.test(q)) return 'accession';
-  if (/^[AUGCUT]+$/i.test(q) && q.length >= 10) return 'sequence';
+  if (/^[AUGCUT]+$/i.test(q)) return 'sequence';
   return 'name';
 }
 

@@ -1,10 +1,15 @@
 # ================================================================
 # blast_offtarget.py — BLAST off-target check (Module 10, Phase 3)
 #
-# Runs blastn against local miRBase + Ensembl databases, then
-# re-aligns with Needleman-Wunsch global alignment (Ye 2012).
+# Runs blastn against local miRBase (all species), then re-aligns
+# with Needleman-Wunsch global alignment (Ye 2012).
 # Classifies each hit using Ye 2012 thresholds + Kwok 1990
 # 3'-terminal mismatch categories.
+#
+# Ensembl human cDNA is NOT included: DNase treatment prior to RT
+# removes all genomic DNA and unspliced RNA. The only template
+# remaining is mature miRNA — off-target risk is limited to miRNA
+# family cross-reactivity, which is covered by miRBase multi-species.
 #
 # Sources:
 #   [Ye12]   Ye et al. 2012 BMC Bioinformatics 13:134 (Primer-BLAST)
@@ -30,9 +35,8 @@ from algorithm.constants import (
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
 
-_DB_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "blast_db")
+_DB_DIR      = os.path.join(os.path.dirname(__file__), "..", "..", "data", "blast_db")
 _MIRBASE_DB  = os.path.join(_DB_DIR, "mirbase_multi")
-_ENSEMBL_DB  = os.path.join(_DB_DIR, "ensembl_human_cdna")
 _METADATA    = os.path.join(_DB_DIR, "metadata.json")
 
 
@@ -268,8 +272,7 @@ def check_offtarget(
 
     mirna_id: if set, skip self-hits where subject contains this ID.
     """
-    dbs = [_MIRBASE_DB, _ENSEMBL_DB]
-    db_available = [d for d in dbs if _db_exists(d)]
+    db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []
 
     species_prefix = _extract_species_prefix(mirna_id)
     fwd_hits, fwd_safe, fwd_cs = _check_primer(forward_primer, db_available, mirna_id, species_prefix, timeout)
@@ -312,8 +315,8 @@ def _check_primer(
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             raise   # caller (route) handles circuit breaker
         for h in raw:
-            # Skip self-hit
-            if mirna_id and mirna_id.lower() in h["subject_id"].lower():
+            # Skip self-hit (including precursor variants e.g. hsa-miR-16-1-5p for hsa-miR-16-5p)
+            if mirna_id and _is_self_hit(h["subject_id"], mirna_id):
                 continue
             # miRBase DB: skip other-species orthologs — same conserved sequence,
             # different organism → irrelevant for same-species assay
@@ -380,6 +383,54 @@ def _summarise(non_safe_hits: list[dict], safe_count: int = 0, cross_species_exc
         "cross_species_excluded":  cross_species_excluded,
         "overall_risk":            overall,
     }
+
+
+def _normalize_mirna_name(name: str) -> str:
+    """
+    Strip precursor-copy number so precursor variants of the same mature miRNA
+    are treated as self-hits.
+
+    miRBase assigns identical mature sequences to multiple precursor genes and
+    may list them as separate FASTA entries:
+      hsa-miR-16-1-5p  (from hsa-mir-16-1)
+      hsa-miR-16-2-5p  (from hsa-mir-16-2)
+    Both are the same mature miRNA as hsa-miR-16-5p.
+
+    Strategy: split on '-', then strip the second-to-last component if it is
+    exactly '1' or '2' AND there are at least 5 components total. The ≥5
+    guard prevents stripping the miRNA name number itself for short names such
+    as hsa-miR-1-5p (4 components → unchanged).
+
+    Examples:
+      hsa-miR-16-1-5p  → hsa-mir-16-5p   (5 parts, drops '1')
+      hsa-miR-16-2-5p  → hsa-mir-16-5p   (5 parts, drops '2')
+      hsa-miR-16-5p    → hsa-mir-16-5p   (4 parts → unchanged)
+      hsa-miR-1-5p     → hsa-mir-1-5p    (4 parts → unchanged)
+      hsa-let-7a-1-5p  → hsa-let-7a-5p  (5 parts, drops '1')
+      hsa-miR-92a-2-5p → hsa-mir-92a-5p (5 parts, drops '2')
+    """
+    parts = name.strip().lower().split('-')
+    if (len(parts) >= 5
+            and re.fullmatch(r'[35]p', parts[-1])
+            and re.fullmatch(r'[12]', parts[-2])):
+        parts.pop(-2)
+    return '-'.join(parts)
+
+
+def _is_self_hit(subject_id: str, mirna_id: str) -> bool:
+    """
+    Return True if this BLAST hit represents the target miRNA itself (not an
+    off-target). Handles precursor variants via _normalize_mirna_name.
+    """
+    s = subject_id.lower()
+    m = mirna_id.lower()
+    # Direct substring match (covers most cases)
+    if m in s or s in m:
+        return True
+    # Normalised match: strip precursor numbers and compare
+    s_norm = _normalize_mirna_name(s)
+    m_norm = _normalize_mirna_name(m)
+    return m_norm in s_norm or s_norm in m_norm
 
 
 def _extract_species_prefix(mirna_id: Optional[str]) -> str:
