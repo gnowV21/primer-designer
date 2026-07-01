@@ -130,6 +130,40 @@ def decompress_full(fasta_gz_path: str, out_fasta_path: str) -> int:
 
 # ── makeblastdb ───────────────────────────────────────────────────
 
+def _win_short_path(path: str) -> str:
+    """
+    On Windows, convert a path with spaces to its 8.3 short form.
+    makeblastdb on Windows rejects paths containing spaces even when quoted.
+    GetShortPathNameW requires the path to exist; for DB output paths (just a
+    prefix, not a real file) we shorten the parent directory and re-append the
+    basename.
+    No-op on non-Windows or if the path has no spaces.
+    """
+    if not sys.platform.startswith("win") or " " not in path:
+        return path
+    try:
+        import ctypes
+        get_short = ctypes.windll.kernel32.GetShortPathNameW
+
+        # If path exists as-is (e.g. a .fa file), shorten directly.
+        if os.path.exists(path):
+            buf = ctypes.create_unicode_buffer(32767)
+            get_short(path, buf, 32767)
+            return buf.value or path
+
+        # Otherwise shorten the nearest existing ancestor, then re-append the tail.
+        head, tail_parts = path, []
+        while head and not os.path.exists(head):
+            head, part = os.path.split(head)
+            tail_parts.insert(0, part)
+        buf = ctypes.create_unicode_buffer(32767)
+        get_short(head, buf, 32767)
+        short_head = buf.value or head
+        return os.path.join(short_head, *tail_parts)
+    except Exception:
+        return path
+
+
 def run_makeblastdb(fasta_path: str, db_out: str, title: str) -> dict:
     """
     Run makeblastdb and return {ok, sequences_count, size_mb}.
@@ -137,14 +171,17 @@ def run_makeblastdb(fasta_path: str, db_out: str, title: str) -> dict:
     """
     cmd = [
         "makeblastdb",
-        "-in", fasta_path,
+        "-in", _win_short_path(fasta_path),
         "-dbtype", "nucl",
-        "-out", db_out,
+        "-out", _win_short_path(db_out),
         "-title", title,
         "-parse_seqids",
     ]
     print(f"  Running: {' '.join(cmd)}", flush=True)
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(result.stderr or result.stdout, file=sys.stderr)
+        raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
     return verify_db_build(db_out)
 
 
@@ -155,7 +192,7 @@ def verify_db_build(db_path: str) -> dict:
     """
     try:
         result = subprocess.run(
-            ["blastdbcmd", "-db", db_path, "-info"],
+            ["blastdbcmd", "-db", _win_short_path(db_path), "-info"],
             capture_output=True, text=True, timeout=30,
         )
         output = result.stdout + result.stderr

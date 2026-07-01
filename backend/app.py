@@ -1,3 +1,11 @@
+import os
+import sys
+
+# Ensure BLAST+ binaries are on PATH on Windows (installed but not yet in process env)
+_BLAST_WIN = r"C:\Program Files\NCBI\blast-2.17.0+\bin"
+if sys.platform.startswith("win") and os.path.isdir(_BLAST_WIN) and _BLAST_WIN not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = _BLAST_WIN + os.pathsep + os.environ.get("PATH", "")
+
 from flask import Flask
 from flask_cors import CORS
 from flask_limiter import Limiter

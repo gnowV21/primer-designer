@@ -38,3 +38,19 @@ test-results/
 
 # Local miRBase SQLite DB (built by scripts/build_db.py — not committed)
 backend/db/mirbase.db
+
+# BLAST databases — built by scripts/build_blast_db.py (large binary, not committed)
+backend/data/blast_db/_tmp/
+backend/data/blast_db/*.nhr
+backend/data/blast_db/*.nin
+backend/data/blast_db/*.nsq
+backend/data/blast_db/*.ndb
+backend/data/blast_db/*.njs
+backend/data/blast_db/*.nog
+backend/data/blast_db/*.nos
+backend/data/blast_db/*.not
+backend/data/blast_db/*.ntf
+backend/data/blast_db/*.nto
+
+# BLAST SQLite cache (ephemeral, not committed)
+backend/data/blast_cache.sqlite

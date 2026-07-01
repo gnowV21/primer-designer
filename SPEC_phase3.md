@@ -1,0 +1,1710 @@
+# SPEC_phase3.md — HG Lab Stem-loop RT-qPCR Primer Designer
+
+**Status:** DESIGN — viết qua quy trình brainstorming (skill: `brainstorming`), dựa trên SPEC_week1_full.md, SPEC_phase2.md v2.8.3, và literature trong project knowledge (bao gồm Ye 2012 + Kwok 1990 upload cho v1.3).
+
+---
+
+## CHANGELOG
+
+| Phiên bản | Thay đổi chính |
+|---|---|
+| v1.0 | Bản nháp đầu tiên — 3 hạng mục độc lập (bound fraction, family discrimination, BLAST off-target) |
+| v1.1 | Hợp nhất family discrimination với thiết kế SPEC_phase2 §30; thêm isomiR flag §31; format theo SPEC_phase2 |
+| v1.2 | **VÒNG 1 — RỦI RO KHOA HỌC:** Bound fraction tính 2 bước (binding 0.05 + full 0.03) đối xứng với 2-step Tm Phase 2; family detection dùng `miFam.dat` chính thức thay heuristic; **đính chính [SL07] → [SL04]** (SantaLucia & Hicks 2004, Annual Review, `annrevbbs3341504.pdf`) |
+| v1.3 | **VÒNG 2 — BLAST RISK CLASSIFICATION:** Formalize risk rules theo Ye 2012 Primer-BLAST + Kwok 1990 3'-terminal mismatch table. Cụ thể: (1) Default specificity — "≥2 mismatch trong 5 base cuối 3' end" từ Ye 2012 §User Interface; (2) Ignore threshold — target với ≥6 mismatch coi như safe; (3) BLAST params — word_size=7, evalue=30000, reward:penalty=1:1; (4) NW global alignment sau BLAST để bù local-alignment gap; (5) 3'-terminal mismatch **có loại** (Kwok 1990 Table III): A:G/G:A/C:C giảm ~100x, A:A giảm ~20x, các mismatch còn lại (đặc biệt T:X, X:T) gần như không ảnh hưởng |
+| v1.4 | **VÒNG 3 — KIẾN TRÚC HỆ THỐNG:** (1) BLAST cache SQLite reuse pattern `local_db.py` Week 1, TTL 30 ngày; (2) Circuit breaker cho blastn subprocess (reuse `circuit_breaker.py` Week 1); (3) Rate limit 10 req/phút/IP cho `/api/blast-check`; (4) Database version tracking + cảnh báo khi >90 ngày; (5) GitHub Actions CI test — script logic với mock data, không build database thật trên CI; (6) Smoke test end-to-end với `hsa-miR-21-5p` |
+| v1.5 | **VÒNG 4 — LÀM RÕ 3 QUYẾT ĐỊNH IMPLEMENTATION** (đã benchmark bằng code + phân tích infra): (1) **primer3-py DÙNG `calc_heterodimer(primer, revcomp(primer))`** để lấy dH/dS — verified bằng `ThermoResult` object có `.dh`, `.ds`, `.dg` (§4.7); (2) **BLAST database size ~370 MB** — verify Railway free 1 GB OK; Render cần paid persistent disk; fallback option "protein-coding only" ~200 MB (§9.5); (3) **`LocalDB` Week 1 refactor thành base class `SQLiteKVCache`** — reuse tối đa, backward-compatible với Week 1 (§9.1 mở rộng) |
+| v1.6 | **§13 FRONTEND INTEGRATION** — Full spec cho nút "Check off-target": hook `useBlastCheck`, button placement trong `PrimerSetCard`, loading state, risk badge styling (4 mức), error handling (429/503/timeout/network), result panel layout, integration với `ResultsSection` có sẵn |
+
+---
+
+## 0. Hướng dẫn cho Claude Code
+
+- Đọc SPEC_phase2.md (đặc biệt Section 25, 27.2 về 2-step Tm, 29, 30, 31, 32) và SPEC_week1.md (đặc biệt `local_db.py`, `circuit_breaker.py`) trước khi implement — Phase 3 build trực tiếp trên các pattern đã có.
+- Trước khi viết bất kỳ module mới nào: dùng skill `brainstorming` nếu phát sinh quyết định thiết kế chưa có trong spec này.
+- Implement theo thứ tự ở Section 11 — chạy unit test sau mỗi module. Nếu có cài skill `test-driven-development` (từ bộ superpowers): viết test trước, xem fail, viết code tối thiểu để pass, rồi refactor.
+- Nếu gặp lỗi khó (BLAST output không parse được, bound fraction lệch...): nếu có skill `systematic-debugging`, dùng quy trình 4 bước root-cause thay vì sửa mò.
+- Ưu tiên tuyệt đối: (1) Tính đúng khoa học → (2) Không phá vỡ tốc độ <5s của `/api/design` Phase 2 → (3) Giải thích rõ ràng → (4) UI đẹp.
+- All user-facing strings: English only.
+- Mỗi constant phải có comment nguồn trích dẫn — không để số "magic" không có nguồn.
+- Không phá vỡ Phase 2: thêm `SCORING_WEIGHTS_V4` mới, giữ `SCORING_WEIGHTS_V3` làm reference. Đính chính ký hiệu [SL07] → [SL04] không phải breaking change.
+
+---
+
+## 1. Tổng quan Phase 3
+
+### Mục tiêu
+Bổ sung 3 hạng mục hoãn từ Phase 2: bound fraction (2 bước, đối xứng 2-step Tm), family discrimination + isomiR flag (đặc hiệu sinh học), và BLAST off-target (kiểm tra toàn hệ gen, optional với cache/circuit breaker/rate limit). AI/LLM sang phase riêng.
+
+### Flow tổng quát — mở rộng trong `/api/design` (đồng bộ, giữ tốc độ)
+```
+[... 8 bước Phase 2 giữ nguyên ...]
+        |
+[7. score_candidates()]   <- MỞ RỘNG: 12 -> 15 tiêu chí
+        + bound_fraction_binding (0.05)  [round 1 - binding cDNA - QUAN TRỌNG NHẤT]
+        + bound_fraction_full    (0.03)  [round sau - binding amplicon]
+        + family_discrimination  (0.05)  [miFam.dat + risk classification §30]
+        |
+[8. format_output()]   <- MỞ RỘNG: isomir_flag annotation (warning-only §31)
+        |
+[Frontend - có nút "Check off-target" mới]
+```
+
+### Flow mới — `/api/blast-check` (async, có cache + circuit breaker + rate limit)
+```
+[User bấm "Check off-target"]
+        |
+[Rate limit check: 10 req/phút/IP]
+        |
+[Cache lookup: SQLite by hash(fwd + rev + db_version)]
+     |                          |
+     v (HIT, <30 ngày)          v (MISS hoặc expired)
+[Trả cache ngay]         [Circuit breaker check]
+                              |
+                              v (CLOSED)
+                        [blastn subprocess]
+                        vs miRBase multi-species + Ensembl human transcriptome
+                              |
+                        [NW global alignment realign (Ye 2012)]
+                              |
+                        [Risk classification (Ye 2012 + Kwok 1990)]
+                              |
+                        [Write cache, TTL 30 ngày]
+                              |
+                        [Trả về]
+```
+
+### Thời gian mục tiêu
+```
+/api/design (Phase 2 + 3 tiêu chí mới):
+    bound_fraction (2 bước):  < 0.15s/candidate  (reuse NN cache Phase 2 v2.8.3)
+    family_discrimination:    < 0.1s/candidate   (lookup local miFam.dat)
+    TOTAL:                    < 4.5s              (trong ngân sách <5s)
+
+/api/blast-check:
+    Cache hit:                < 0.05s              (SQLite lookup)
+    Cache miss:               < 30s cho 1 primer set (benchmark khi có database)
+```
+
+---
+
+## 2. Nguồn tham chiếu các thông số
+
+Kế thừa từ SPEC_phase2.md Section 2 ([P3P], [IDT], [SL98], [Chen05], [Kramer/K11], [Kor07]...). Thêm/sửa Phase 3:
+
+- **[SL04]** = SantaLucia & Hicks 2004, *Annual Review of Biophysics* 33: 415-440 (`annrevbbs3341504.pdf`). **Đây là nguồn thực sự cho "bound fraction myth"** — SPEC_phase2 hiện ký hiệu nhầm là [SL07].
+- **[Ye12]** = Ye et al. 2012, *BMC Bioinformatics* 13: 134, "Primer-BLAST" (`1471-2105-13-134.pdf`). Nguồn cho BLAST risk classification rules.
+- **[Kwok90]** = Kwok et al. 1990, *Nucleic Acids Research* 18(4): 999-1005 (`nar00188-0292.pdf`). Nguồn thực nghiệm cho 3'-terminal mismatch types.
+- [Ensembl] = Ensembl genome browser, human transcriptome GRCh38 cDNA
+- [miRBase] = miRBase database, mature.fa multi-species
+- [miFam] = miRBase miFam.dat (https://www.mirbase.org/download/miFam.dat)
+- [Neilsen12] = Neilsen 2012 Bioinformatics — isomiR profiling
+- [Morin08] = Morin 2008 Genome Research — isomiR discovery
+
+---
+
+## 3. Thư viện và cài đặt
+
+### requirements.txt — thêm mới cho Phase 3
+```
+# Phase 1 + 2 giữ nguyên (flask, primer3-py, ViennaRNA, biopython, numpy)
+
+# Phase 3 — thêm mới
+flask-limiter>=3.5.0    # rate limiting cho /api/blast-check (§8.9)
+# blastn KHÔNG cài qua pip — binary BLAST+ (§3.2)
+```
+
+### Cài Local BLAST+ (binary)
+```bash
+# Ubuntu/Debian:
+sudo apt-get install -y ncbi-blast+
+blastn -version && makeblastdb -version
+
+# Windows dev: cài thủ công NCBI BLAST+ installer .exe hoặc test sau deploy Railway/Render.
+```
+
+### Cấu trúc thư mục backend — mở rộng Phase 3
+```
+backend/
+├── algorithm/
+│   ├── bound_fraction.py                    <- MỚI §4 — 2 hàm (binding/full)
+│   ├── scoring.py                            <- CẬP NHẬT — SCORING_WEIGHTS_V4 (15 tiêu chí)
+│   ├── constants.py                          <- CẬP NHẬT — Section O (đính chính SL07->SL04)
+│   └── specificity_check/
+│       ├── __init__.py
+│       ├── family_crossreactivity.py         <- IMPLEMENT §5 (dùng miFam.dat)
+│       ├── isomir_flag.py                    <- IMPLEMENT §6
+│       ├── blast_offtarget.py                <- MỚI §8 (Ye 2012 + Kwok 1990 rules)
+│       └── blast_cache.py                    <- MỚI §9.2 (SQLite, reuse local_db.py)
+├── data/
+│   ├── mirbase_family_overhangs.json         <- BUILD THẬT (§5.5)
+│   ├── known_5prime_isomir_mirnas.json       <- BUILD THẬT (§6)
+│   ├── blast_cache.sqlite                    <- MỚI, cache runtime
+│   └── blast_db/
+│       ├── mirbase_multi.{nhr,nin,nsq}       <- BLAST index từ miRBase mature.fa
+│       ├── ensembl_human_cdna.{nhr,nin,nsq}  <- BLAST index từ Ensembl cDNA
+│       └── metadata.json                     <- version + build_date (§9.4)
+├── scripts/
+│   ├── build_family_db.py                    <- MỚI §5.5 (miFam.dat + mature.fa)
+│   └── build_blast_db.py                     <- MỚI §9.3 (Ensembl + miRBase, makeblastdb)
+├── routes/
+│   ├── design.py                              <- CẬP NHẬT (gọi bound_fraction + family check)
+│   └── blast_check.py                         <- MỚI §8.10 (POST /api/blast-check)
+└── .github/
+    └── workflows/
+        └── test_phase3.yml                    <- MỚI §10 (GitHub Actions CI)
+```
+
+---
+
+## 4. Module 7: Bound Fraction 2-STEP (algorithm/bound_fraction.py)
+
+### 4.1 Rationale
+[SL04] khuyến nghị quan tâm bound fraction — % target bind đúng — thay vì chỉ Tm, vì hai primer cùng Tm có thể bound fraction khác nhau tại Ta thực tế do dH/dS khác nhau.
+
+Forward primer stem-loop RT-qPCR có cấu trúc đặc biệt: **specific region (12-17 nt) bind cDNA + tail (3-12 nt) artificial GC-rich**. Phase 2 giải vấn đề này cho Tm bằng **2-step Tm** (§27.2). Bound fraction dùng cùng mô hình:
+
+- **Round 1 — `bound_fraction_binding`:** % specific region bind cDNA tại Ta=60°C. **Quan trọng nhất** — quyết định RT-PCR khởi động.
+- **Round sau — `bound_fraction_full`:** % full primer bind amplicon (đã có tail-complement) tại Ta=60°C. Ít quan trọng hơn — amplicon đã có sẵn.
+
+Nguồn: [SL04]; [P3GS] Primer Bound% (Opt 97.0)
+
+### 4.2 Constants (đính chính nguồn v1.2)
+Kế thừa SPEC_phase2.md Section L, đổi ký hiệu:
+```python
+# Source: [SL04] SantaLucia & Hicks 2004, Annual Review of Biophysics
+# (SPEC_phase2 hiện đang ghi [SL07] - đính chính khi có dịp cập nhật)
+BOUND_FRACTION_ANNEALING_TEMP = 60.0
+BOUND_FRACTION_MIN = 90.0
+BOUND_FRACTION_OPT = 97.0    # [P3GS Primer Bound%]
+BOUND_FRACTION_MAX = 100.0
+PENALTY_WT_BOUND_LT = 1.0    # [P3P Penalties]
+PENALTY_WT_BOUND_GT = 1.0    # [P3P Penalties]
+```
+
+### 4.3 Công thức
+```python
+def _calculate_bound_fraction(sequence: str, params: dict) -> float:
+    """
+    [SL04] formula:
+        dG = dH - T * dS
+        K  = exp(-dG / (R * T))    # T = Ta + 273.15 K
+        fract(%) = (1 / (1 + sqrt(1 / ((dna_conc/4e9) * K)))) * 100
+    dna_conc = P3_DEFAULT_DNA_CONC = 200.0 nM (Phase 2 chuẩn hoá)
+    """
+```
+
+### 4.4 Lấy dH và dS từ primer3-py (QUYẾT ĐỊNH v1.5)
+
+**Vấn đề:** `primer3.calc_tm()` chỉ trả về Tm (float), KHÔNG expose dH/dS trực tiếp. Nhưng công thức bound fraction cần cả dH và dS.
+
+**Giải pháp — verified bằng test thực tế v1.5:**
+
+Dùng `primer3.calc_heterodimer(primer, reverse_complement(primer))`. Vì thermodynamics của primer bind với reverse-complement của nó CHÍNH LÀ thermodynamics của perfect duplex primer-cDNA. Test:
+
+```python
+>>> import primer3
+>>> r = primer3.calc_heterodimer('ATCGATCGATCGATCG', 'CGATCGATCGATCGAT')
+>>> r.dh, r.ds, r.dg, r.tm
+(-126200.0, -354.58, -16225.5, 49.82)   # cal/mol, cal/(mol·K), cal/mol, °C
+```
+
+`ThermoResult` object có sẵn 4 attribute: `.tm`, `.dh`, `.ds`, `.dg`. Đây là API chính thức primer3-py, không phải hack. Documented trong `primer3.thermoanalysis.ThermoResult`.
+
+**Implementation:**
+```python
+def _get_thermodynamics_for_perfect_duplex(sequence: str, params: dict) -> tuple[float, float]:
+    """
+    Trả (dH, dS) cho perfect duplex của `sequence` bind với reverse complement của nó.
+    Unit: cal/mol cho dH, cal/(mol·K) cho dS.
+    """
+    p3 = _get_p3_params(params)   # từ Phase 2 thermodynamics.py
+    revcomp = _reverse_complement(sequence)
+    result = primer3.calc_heterodimer(
+        seq1=sequence,
+        seq2=revcomp,
+        mv_conc=p3["mv_conc"],
+        dv_conc=p3["dv_conc"],
+        dntp_conc=p3["dntp_conc"],
+        dna_conc=p3["dna_conc"],
+    )
+    return result.dh, result.ds
+
+def _calculate_bound_fraction(sequence: str, params: dict) -> float:
+    """[SL04] formula, dùng calc_heterodimer để lấy dH/dS."""
+    import math
+    R = 1.987  # cal/(mol·K), gas constant
+    T = BOUND_FRACTION_ANNEALING_TEMP + 273.15   # K
+    dna_conc = params.get("dnaConc", P3_DEFAULT_DNA_CONC)   # nM
+
+    dH, dS = _get_thermodynamics_for_perfect_duplex(sequence, params)
+    dG = dH - T * dS   # cal/mol
+    K = math.exp(-dG / (R * T))
+    fract = (1 / (1 + math.sqrt(1 / ((dna_conc / 4e9) * K)))) * 100
+    return round(fract, 2)
+```
+
+**Lưu ý cache:** dùng `functools.lru_cache` với key `(sequence, mv_conc, dv_conc, dntp_conc, dna_conc)` — reuse pattern memoization Phase 2 v2.8.3. Với candidates gọi bound_fraction nhiều lần, cache hit rate rất cao (specific region ngắn, tail patterns lặp lại).
+
+### 4.5 API (2 hàm public)
+```python
+def calculate_bound_fraction_binding(specific_region: str, params: dict) -> float:
+    """Round 1: % specific region bind cDNA. Quan trọng nhất."""
+    return _calculate_bound_fraction(specific_region, params)
+
+def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
+    """Round sau: % full primer bind amplicon."""
+    return _calculate_bound_fraction(full_primer, params)
+```
+
+### 4.6 Scoring (chung cho cả 2 hàm)
+```python
+def score_bound_fraction(fract: float) -> dict:
+    """
+    fract >= 97 (OPT):   score = 100
+    90 <= fract < 97:    score = 70 + (fract-90)/7 * 30   # tuyến tính
+    fract < 90:          score = max(0, (fract-50)/40 * 70)  # sàn 0 tại 50%
+    """
+```
+
+### 4.7 Unit tests
+```python
+def test_bound_fraction_binding_at_opt_scores_100():
+    assert score_bound_fraction(97.0)["score"] == 100
+
+def test_bound_fraction_full_below_min_scores_low():
+    assert score_bound_fraction(85.0)["score"] < 70
+
+def test_binding_vs_full_independent():
+    specific = "ATCGATGCAT"
+    full     = "GCGCGC" + specific
+    fb = calculate_bound_fraction_binding(specific, DEFAULT_PARAMS)
+    ff = calculate_bound_fraction_full(full, DEFAULT_PARAMS)
+    assert 0 <= fb <= 100 and 0 <= ff <= 100
+
+def test_calc_heterodimer_returns_thermodynamics():
+    """Verify primer3-py workaround: calc_heterodimer trả dH/dS đúng."""
+    import primer3
+    r = primer3.calc_heterodimer('ATCGATCGATCGATCG', 'CGATCGATCGATCGAT')
+    assert r.dh < 0    # exothermic (spontaneous binding)
+    assert r.ds < 0    # entropy decrease (duplex ordered)
+    assert r.dg < 0    # negative dG = binding favorable
+    assert 40 < r.tm < 60   # reasonable Tm range for 16 nt duplex
+
+def test_bound_fraction_formula_matches_santalucia():
+    # So giá trị tính tay theo [SL04] cho 1 primer cụ thể
+    ...
+```
+
+---
+
+## 5. Module 8: Family Cross-Reactivity (algorithm/specificity_check/family_crossreactivity.py)
+
+Đã có thiết kế đầy đủ ở SPEC_phase2.md §30 — Phase 3 chỉ implement code thật + chuyển source family definition sang **miFam.dat**.
+
+### 5.1 Rationale
+Stem-loop RT primer có 6 nt overhang complementary với 3' end mature miRNA. Cùng family, members khác 1-2 nt → cross-reaction. Chen 2005 Fig.7: cross-reaction 0.1-3.7% giữa let-7 members.
+
+Nguồn: [Chen05] Fig.7; [Kramer/K11]; [SL98]
+
+### 5.2 Algorithm (nguyên bản §30.2-30.4)
+1. Extract overhang = 6 nt cuối mature miRNA
+2. Identify family từ **miFam.dat** (§5.5 — thay heuristic)
+3. Với mỗi sibling: Hamming distance + delta-Tm (NN model, perfect-duplex)
+4. Risk classification (bảng 5.3)
+5. Auto-extension 6->8 nt nếu HIGH risk
+
+### 5.3 Risk Classification (giữ nguyên §30.3)
+| Mismatches | delta-Tm | Risk |
+|---|---|---|
+| 0 | any | IDENTICAL |
+| 1 | < 5°C | HIGH |
+| 1 | >= 5°C | LOW |
+| 2 | any | LOW |
+| >= 3 | any | SAFE |
+
+### 5.4 Map risk → scoring criterion
+```python
+FAMILY_DISCRIMINATION_RISK_SCORE = {
+    "SAFE": 100,
+    "LOW": 70,
+    "HIGH": 30,
+    "IDENTICAL": 0,
+    "no_family_data": 100,   # note rõ trong explanation
+}
+# Worst-case: risk tệ nhất trong tất cả siblings quyết định score
+```
+Weight `SCORING_WEIGHTS_V4`: **0.05**.
+
+### 5.5 Data source — `miFam.dat` (thay heuristic v1.1)
+
+**Format:**
+```
+AC   MIPF0000001
+ID   let-7
+MI   MI0000060  hsa-let-7a-1
+MI   MI0000061  hsa-let-7a-2
+MI   MI0000063  mmu-let-7a-1
+//
+AC   MIPF0000002
+ID   mir-17
+...
+```
+
+**Script `backend/scripts/build_family_db.py`:**
+```python
+"""
+1. Tải miFam.dat: https://www.mirbase.org/download/miFam.dat
+2. Tải mature.fa multi-species
+3. Parse miFam.dat -> mỗi family: list precursor MI IDs
+4. Join mature.fa -> precursor MI -> mature miRNA sequences
+5. Trích overhang 6 nt cuối cho từng mature
+6. Output: mirbase_family_overhangs.json (schema §30.5) + field `species`
+"""
+```
+
+**Lợi ích:**
+- Loại Limitation #4 §32 (heuristic fail khi user nhập accession `MIMAT0000062` thay vì tên).
+- Đồng nhất với phân loại chính thức miRBase (peer-reviewed).
+- Auto-update khi miRBase release mới.
+
+### 5.6 Known Limitations (cập nhật)
+Kế thừa §30.7, §32 nhưng **bỏ Limitation #4** (đã fix bằng miFam.dat). Còn lại:
+1. delta-Tm là approximation (Tm perfect duplex, không mismatch duplex thực).
+2. Data offline: chỉ update khi chạy lại script.
+3. Loop-sequence cross-reactivity không implement.
+
+### 5.7 Unit tests
+```python
+def test_let7a_family_loaded_from_miFam():
+    family = load_family("let-7")
+    assert any(m["id"] == "hsa-let-7a-5p" for m in family["members"])
+    assert any(m["id"] == "mmu-let-7a-5p" for m in family["members"])
+
+def test_let7a_vs_let7c_matches_chen2005():
+    """1 mismatch, risk HIGH nếu delta_tm < 5."""
+    ...
+
+def test_no_family_data_returns_safe_score():
+    assert score_family_discrimination_risk("no_family_data") == 100
+
+def test_family_detection_works_with_accession():
+    """Limitation #4 đã fix."""
+    family = identify_family_by_accession("MIMAT0000062")
+    assert family is not None and family["id"] == "let-7"
+
+def test_family_discrimination_weight_in_v4():
+    assert SCORING_WEIGHTS_V4["family_discrimination"] == 0.05
+```
+
+---
+
+## 6. Module 9: isoMiR Flag (algorithm/specificity_check/isomir_flag.py)
+
+Đã có thiết kế đầy đủ SPEC_phase2 §31 — implement nguyên bản.
+
+- Logic: `in_risk_window = (forward_3prime_position <= risk_window_nt)` (§31.2)
+- **Warning-only** — không vào scoring
+- Data: `known_5prime_isomir_mirnas.json` — verify [Neilsen12], [Morin08] trước production
+
+```python
+def test_isomir_flag_triggers_within_risk_window(): ...
+def test_isomir_flag_absent_for_unlisted_mirna(): ...   # absence != no isomiR exists
+```
+
+---
+
+## 7. Scoring Engine — SCORING_WEIGHTS_V4 (12 → 15 tiêu chí)
+
+### 7.1 Bảng weight
+
+| Tiêu chí | v3 (12) | v4 (15) | Ghi chú |
+|---|---|---|---|
+| tm_accuracy | 0.20 | 0.20 | core, giữ nguyên |
+| mfe_stemloop | 0.15 | 0.15 | core, giữ nguyên |
+| tm_binding_accuracy | 0.10 | 0.10 | core, giữ nguyên |
+| hairpin_penalty | 0.10 | 0.08 | giảm 0.02 |
+| dimer_penalty | 0.10 | 0.08 | giảm 0.02 |
+| end_stability | 0.10 | 0.08 | giảm 0.02 |
+| **bound_fraction_binding** | — | **0.05** | MỚI - round 1 (cDNA) |
+| **bound_fraction_full** | — | **0.03** | MỚI - round sau (amplicon) |
+| gc_content | 0.07 | 0.08 | tăng 0.01 |
+| **family_discrimination** | — | **0.05** | MỚI - risk từ miFam.dat |
+| tm_pair_match | 0.05 | 0.03 | giảm 0.02 |
+| gc_clamp | 0.03 | 0.02 | giảm 0.01 |
+| primer_size | 0.04 | 0.02 | giảm 0.02 |
+| amplicon_size | 0.04 | 0.02 | giảm 0.02 |
+| gc_skew | 0.02 | 0.01 | giảm 0.01 |
+| **TỔNG** | **1.00** | **1.00** | verified |
+
+```python
+SCORING_WEIGHTS_V4 = {
+    "tm_accuracy":             0.20,
+    "mfe_stemloop":            0.15,
+    "tm_binding_accuracy":     0.10,
+    "hairpin_penalty":         0.08,
+    "dimer_penalty":           0.08,
+    "end_stability":           0.08,
+    "bound_fraction_binding":  0.05,
+    "bound_fraction_full":     0.03,
+    "gc_content":              0.08,
+    "family_discrimination":   0.05,
+    "tm_pair_match":           0.03,
+    "gc_clamp":                0.02,
+    "primer_size":             0.02,
+    "amplicon_size":           0.02,
+    "gc_skew":                 0.01,
+}
+assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001   # = 1.00
+```
+
+**Lý do chia 5:3 cho bound fraction:** round 1 quyết định RT-PCR khởi động. Nếu fail, không có amplicon cho round sau. Tỷ lệ 5:3 ≈ 1.67 phản ánh "quan trọng hơn nhưng không áp đảo".
+
+**isomir_flag KHÔNG trong weights** (warning-only §31).
+**BLAST off-target KHÔNG trong weights** (optional, endpoint riêng).
+
+### 7.2 Unit test
+```python
+def test_scoring_weights_v4():
+    assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
+    assert len(SCORING_WEIGHTS_V4) == 15
+    assert SCORING_WEIGHTS_V4["bound_fraction_binding"] > SCORING_WEIGHTS_V4["bound_fraction_full"]
+    assert "isomir_flag" not in SCORING_WEIGHTS_V4
+```
+
+---
+
+## 8. Module 10: BLAST Off-target (algorithm/specificity_check/blast_offtarget.py)
+
+Chi tiết đầy đủ theo Ye 2012 + Kwok 1990 (v1.3). Kiến trúc hệ thống (cache/circuit breaker/rate limit) ở §9 (v1.4).
+
+### 8.1 Kiến trúc
+- Tách khỏi `/api/design` — không ảnh hưởng pipeline chính.
+- Endpoint `POST /api/blast-check` optional theo yêu cầu người dùng.
+- Công cụ: Local BLAST+ (`blastn` subprocess).
+
+### 8.2 Database
+- **miRBase** (multi-species mature.fa) — build chung với Module 8.
+- **Human transcriptome** — Ensembl cDNA FASTA GRCh38 (release mới nhất).
+
+### 8.3 BLAST parameters (Ye 2012 defaults)
+
+Nguồn: Ye 2012 §Implementation:
+> "detect a target that contains up to 35% mismatches to the primer sequence. The default BLAST expect value cutoff is 30,000 for the primer-only case... word size of seven (standard BLAST uses 11), 50,000 for the maximum number of database sequences (standard BLAST uses 250) and 1 for match reward to mismatch penalty ratio."
+
+```python
+BLAST_WORD_SIZE = 7                # [Ye12] - vs standard 11
+BLAST_EVALUE_CUTOFF = 30000        # [Ye12] - primer-only case, cao hơn standard 3000 lần
+BLAST_MAX_TARGET_SEQS = 50000      # [Ye12] - vs standard 250
+BLAST_REWARD = 1                   # [Ye12] - match reward
+BLAST_PENALTY = -1                 # [Ye12] - mismatch penalty, ratio 1:1
+BLAST_TASK = "blastn-short"        # cho query ngắn <30 nt
+```
+
+**Word size 7 giới hạn:** Ye 2012 §Comparison note "will miss any targets that have 6 or fewer consecutive matches to a primer" - probability sai lệch ~0.5% cho primer 20 nt với 2 mismatch random.
+
+### 8.4 NW global alignment sau BLAST (Ye 2012)
+
+Ye 2012 §Implementation:
+> "the NW global alignment algorithm is incorporated into Primer-BLAST to realign any regions that are not fully aligned by BLAST."
+
+Lý do: BLAST local alignment có thể miss mismatch ở 5' hoặc 3' end (giảm score cục bộ). Ye 2012 Fig.5 Example 1: BLAST bỏ sót G:G mismatch tại 3'-terminal vì làm giảm alignment score.
+
+**Implementation:**
+```python
+def realign_blast_hit_with_nw(primer: str, subject_region: str) -> dict:
+    """
+    Sau khi có BLAST hit, dùng Needleman-Wunsch global alignment
+    trên toàn bộ chiều dài primer để lấy đúng số mismatch + vị trí.
+
+    Dùng biopython pairwise2 hoặc parasail — không viết NW từ đầu.
+    """
+```
+
+### 8.5 Default specificity thresholds (Ye 2012)
+
+Ye 2012 §User Interface (mặc định Primer-BLAST public server):
+> "at least one primer (for a given primer pair) must have **two or more mismatches** to unintended targets in the **last five bases at the 3' end**, and that any targets with **six mismatches or more** to at least one primer should be ignored."
+
+```python
+# [Ye12] Primer-BLAST defaults
+PRIMER_BLAST_MIN_TOTAL_MISMATCHES = 2       # Ye12 - tổng mismatch tối thiểu
+PRIMER_BLAST_3PRIME_WINDOW = 5              # Ye12 - "last 5 bases at 3' end"
+PRIMER_BLAST_3PRIME_MIN_MISMATCHES = 2      # Ye12 - trong 5 base cuối
+PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6    # Ye12 - safe nếu >=6 mismatch
+```
+
+### 8.6 3'-terminal mismatch classification (Kwok 1990 Table III)
+
+**KEY INSIGHT:** Không phải mọi mismatch bằng nhau. Kwok 1990 test thực nghiệm 12 loại mismatch tại 3'-terminal với HIV-1 gag PCR (800 μM dNTP):
+
+| Primer 3'-base | Template 3'-base | Product yield (relative) | Category |
+|---|---|---|---|
+| A | G | 1/100 (~1%) | **BLOCKING** |
+| G | A | 1/100 (~1%) | **BLOCKING** |
+| C | C | 1/100 (~1%) | **BLOCKING** |
+| A | A | 1/20 (~5%) | **REDUCING** |
+| T | any (T/C/G/A) | 1.0 | **TOLERANT** |
+| any | T | 1.0 | **TOLERANT** |
+| G | G | 1.0 (800 μM); poor (50 μM) | context-dep, mặc định **TOLERANT** |
+| còn lại (C:A, A:C, G:T, T:G, C:T, T:C, T:T, G:C, C:G) | | 1.0 | **TOLERANT** |
+
+Trích Kwok 1990 §Conclusions:
+> "A:G and C:C resulted in approximately a 100-fold reduction... A:A mismatch moderately reduced PCR amplification efficiency per cycle... some 3'-terminal mismatches (T:C, T:G, T:T, G:G, and A:C) appear to amplify as efficiently as the fully complementary primer-template duplex."
+
+**Implementation:**
+```python
+# [Kwok90] Table III - loại mismatch tại 3'-terminal, phân loại theo tác động PCR
+KWOK_3PRIME_MISMATCH_CATEGORY = {
+    # (primer_base, template_base) -> category
+    ("A","G"): "BLOCKING",  ("G","A"): "BLOCKING",  ("C","C"): "BLOCKING",
+    ("A","A"): "REDUCING",
+    # Còn lại TOLERANT (T:X, X:T, G:G, C:A, A:C, C:G, G:C, ...)
+}
+
+def classify_3prime_mismatch(primer_3prime_base: str, template_3prime_base: str) -> str:
+    """Trả về 'BLOCKING' | 'REDUCING' | 'TOLERANT' | 'MATCH' theo Kwok 1990."""
+    if primer_3prime_base == template_3prime_base:
+        return "MATCH"
+    return KWOK_3PRIME_MISMATCH_CATEGORY.get(
+        (primer_3prime_base, template_3prime_base),
+        "TOLERANT"   # mặc định theo Kwok 1990 - hầu hết mismatch còn lại đều tolerant
+    )
+```
+
+### 8.7 Risk classification tổng hợp (Ye 2012 + Kwok 1990)
+
+Logic cuối cùng cho 1 hit BLAST vs 1 primer:
+
+```python
+def classify_hit_risk(primer: str, alignment: dict) -> str:
+    """
+    alignment = {"mismatches": int, "mismatch_positions": [int],
+                 "primer_3prime_base": str, "template_3prime_base": str,
+                 "coverage": float}
+
+    Returns: "SAFE" | "MEDIUM" | "HIGH" | "CRITICAL"
+    """
+    total_mm = alignment["mismatches"]
+
+    # Rule 1 [Ye12]: ignore threshold
+    if total_mm >= PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES:   # >=6
+        return "SAFE"
+
+    # Rule 2 [Ye12]: đếm mismatch trong 5 base cuối 3' end
+    primer_len = len(primer)
+    mm_in_3prime_window = sum(
+        1 for pos in alignment["mismatch_positions"]
+        if pos >= primer_len - PRIMER_BLAST_3PRIME_WINDOW
+    )
+
+    # Rule 3 [Kwok90]: phân loại 3'-terminal mismatch
+    terminal_category = classify_3prime_mismatch(
+        alignment["primer_3prime_base"],
+        alignment["template_3prime_base"],
+    )
+
+    # Combining rules:
+    if terminal_category == "MATCH":
+        # 3' terminal khớp -> risk theo số mismatch tổng
+        if total_mm <= 2:  return "CRITICAL"   # <=2 mm tổng, 3' khớp -> gần identical
+        if total_mm <= 4:  return "HIGH"
+        return "MEDIUM"
+
+    if terminal_category == "BLOCKING":
+        # A:G, G:A, C:C tại 3' terminal -> PCR ~1% (Kwok90) -> luôn SAFE
+        return "SAFE"
+
+    if terminal_category == "REDUCING":
+        # A:A -> PCR ~5%
+        if total_mm >= PRIMER_BLAST_MIN_TOTAL_MISMATCHES: return "MEDIUM"
+        return "HIGH"
+
+    # terminal_category == "TOLERANT" (T:X, X:T, G:G, ...)
+    # Vẫn nguy hiểm - Kwok90 cho thấy PCR gần như bình thường
+    # Ye12 default: cần >=2 mm total AND >=2 mm trong 5 base cuối để SAFE
+    if mm_in_3prime_window >= PRIMER_BLAST_3PRIME_MIN_MISMATCHES:
+        return "MEDIUM"    # có mm gần 3' end -> giảm hiệu suất
+    return "HIGH"          # 3' end tolerant + mm chỉ ở giữa/5' -> nguy hiểm
+```
+
+### 8.8 Ma trận risk (tổng kết)
+
+| Total mm | 3' terminal category | mm trong 5 base cuối | Risk |
+|---|---|---|---|
+| >=6 | any | any | SAFE (Ye12 ignore) |
+| any | BLOCKING (A:G, G:A, C:C) | any | SAFE (Kwok90 ~1% PCR) |
+| <=2 | MATCH | any | CRITICAL |
+| <=4 | MATCH | any | HIGH |
+| >4, <6 | MATCH | any | MEDIUM |
+| any (<6) | REDUCING (A:A) + total>=2 | any | MEDIUM |
+| any (<6) | REDUCING (A:A) + total<2 | any | HIGH |
+| any (<6) | TOLERANT + mm_3'>=2 | >=2 | MEDIUM |
+| any (<6) | TOLERANT + mm_3'<2 | <2 | HIGH |
+
+### 8.9 Endpoint `POST /api/blast-check`
+
+```json
+// Request
+{
+  "forward_primer": "CACGCATGGAAGGACGGG",
+  "reverse_primer": "CCAGTGCAGGGTCCGAGGTA",
+  "mirna_id": "hsa-miR-21-5p"     // để loại self-hit
+}
+
+// Response
+{
+  "forward_primer_hits": [
+    {
+      "subject_id": "ENST00000...",
+      "organism": "Homo sapiens",
+      "gene_name": "PIK3CG",
+      "alignment": {
+        "identity_pct": 94.7,
+        "coverage_pct": 100.0,
+        "mismatches": 1,
+        "mismatch_positions": [12],
+        "primer_3prime_base": "G",
+        "template_3prime_base": "G",
+        "terminal_category": "MATCH"
+      },
+      "evalue": 0.003,
+      "risk": "HIGH",
+      "risk_reason": "1 total mismatch, 3' terminal matches - potential off-target amplification"
+    }
+  ],
+  "reverse_primer_hits": [...],
+  "summary": {
+    "total_hits": 5,
+    "critical_count": 0,
+    "high_risk_count": 1,
+    "medium_risk_count": 2,
+    "safe_count": 2,
+    "overall_risk": "HIGH"
+  },
+  "cache": {"hit": false, "cache_key": "abc123..."},
+  "database_info": {
+    "ensembl_version": "111",
+    "mirbase_version": "22.1",
+    "build_date": "2026-06-15",
+    "age_days": 16,
+    "outdated_warning": false
+  }
+}
+```
+
+### 8.10 Overall risk logic
+```
+if any hit CRITICAL:       overall = "CRITICAL"
+elif any hit HIGH:         overall = "HIGH"
+elif any hit MEDIUM:       overall = "MEDIUM"
+else:                      overall = "SAFE"
+```
+
+---
+
+## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
+
+### 9.1 Cache SQLite — Refactor `LocalDB` Week 1 thành base class `SQLiteKVCache` (QUYẾT ĐỊNH v1.5)
+
+**Vấn đề:** Week 1 có `local_db.py` cache miRBase lookup. Phase 3 cần cache BLAST results. Reuse pattern hay copy-paste?
+
+**Quyết định:** Refactor `LocalDB` Week 1 thành base class chung `SQLiteKVCache`, cả Week 1 (miRBase cache) và Phase 3 (BLAST cache) đều extend base này. Lý do:
+- Tránh duplicate 50-100 dòng SQLite bootstrap (connect, create table, error handling)
+- Backward-compatible với Week 1 nếu giữ nguyên method signatures
+- Chuẩn hoá TTL/expiry logic ở 1 chỗ
+
+**Bước triển khai (Claude Code follow):**
+
+**Step 1 — Đọc `backend/utils/local_db.py` (Week 1)** để xác định 1 trong 2 tình huống:
+
+- **Tình huống A — `LocalDB` đã generic (có `.get(key)`, `.set(key, value)`, `.delete(key)`):**
+  Chỉ cần rename file thành `sqlite_kv_cache.py`, thêm cột `expires_at` vào schema, và cập nhật interface. Week 1 miRBase logic không đổi.
+
+- **Tình huống B — `LocalDB` hardcoded cho miRBase (schema có cột `mirna_id`, `sequence`, `family`; method như `.get_by_mirna_id()`):**
+  Tạo file mới `backend/utils/sqlite_kv_cache.py` với `SQLiteKVCache` base class. Refactor `LocalDB` cũ thành `MirbaseLocalDB(SQLiteKVCache)`, chỉ giữ methods miRBase-specific. Kiểm tra tất cả import `from utils.local_db import LocalDB` trong Week 1 code còn work.
+
+**Step 2 — Base class `SQLiteKVCache`:**
+```python
+# backend/utils/sqlite_kv_cache.py
+import sqlite3
+import json
+import hashlib
+from datetime import datetime, timedelta
+from typing import Optional
+
+class SQLiteKVCache:
+    """
+    Generic SQLite key-value cache with optional TTL.
+    Reused by Week 1 (MirbaseLocalDB) and Phase 3 (BlastCache).
+    """
+    DEFAULT_SCHEMA = """
+        CREATE TABLE IF NOT EXISTS cache (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            metadata TEXT,                       -- JSON blob for extra context
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP                 -- NULL = no expiry
+        );
+        CREATE INDEX IF NOT EXISTS idx_expires ON cache(expires_at);
+    """
+
+    def __init__(self, db_path: str, table_name: str = "cache",
+                 default_ttl_days: Optional[int] = None):
+        self.db_path = db_path
+        self.table = table_name
+        self.default_ttl = default_ttl_days
+        self._init_schema()
+
+    def get(self, key: str) -> Optional[dict]:
+        """Return {value, metadata, created_at} or None if not found / expired."""
+        ...
+
+    def set(self, key: str, value: str, metadata: dict = None,
+            ttl_days: Optional[int] = None) -> None:
+        """Store key -> value. TTL overrides default_ttl if provided."""
+        ...
+
+    def delete(self, key: str) -> bool: ...
+
+    def cleanup_expired(self) -> int: ...
+
+    def _init_schema(self): ...
+```
+
+**Step 3 — `BlastCache` (Phase 3):**
+```python
+# backend/algorithm/specificity_check/blast_cache.py
+from ...utils.sqlite_kv_cache import SQLiteKVCache
+
+BLAST_CACHE_TTL_DAYS = 30
+BLAST_CACHE_DB_PATH = "backend/data/blast_cache.sqlite"
+
+class BlastCache(SQLiteKVCache):
+    def __init__(self):
+        super().__init__(
+            db_path=BLAST_CACHE_DB_PATH,
+            table_name="blast_cache",
+            default_ttl_days=BLAST_CACHE_TTL_DAYS,
+        )
+
+    def get_result(self, fwd: str, rev: str, db_version: str) -> Optional[dict]:
+        key = self._compute_key(fwd, rev, db_version)
+        entry = self.get(key)
+        if entry:
+            return json.loads(entry["value"])
+        return None
+
+    def set_result(self, fwd: str, rev: str, result: dict, db_version: str) -> None:
+        key = self._compute_key(fwd, rev, db_version)
+        self.set(
+            key=key,
+            value=json.dumps(result),
+            metadata={"forward": fwd, "reverse": rev, "db_version": db_version},
+        )
+
+    @staticmethod
+    def _compute_key(fwd: str, rev: str, db_version: str) -> str:
+        raw = f"{fwd}|{rev or ''}|{db_version}"
+        return hashlib.sha256(raw.encode()).hexdigest()[:32]
+```
+
+**Constants (cập nhật từ v1.4):**
+```python
+BLAST_CACHE_TTL_DAYS = 30           # v1.4 giữ nguyên
+BLAST_CACHE_DB_PATH = "backend/data/blast_cache.sqlite"
+```
+
+**Kiểm tra tương thích Week 1 (nếu chọn Tình huống B):**
+```python
+def test_week1_mirbase_cache_still_works_after_refactor():
+    """Regression test: Week 1 miRBase lookup vẫn work sau khi refactor LocalDB."""
+    from utils.local_db import LocalDB   # legacy import
+    db = LocalDB(":memory:")
+    db.cache_mirna("hsa-miR-21-5p", {"sequence": "UAGCUUAUCAGACUGAUGUUGA"})
+    assert db.get_mirna("hsa-miR-21-5p")["sequence"] == "UAGCUUAUCAGACUGAUGUUGA"
+```
+
+### 9.2 Circuit Breaker cho blastn subprocess
+
+**Reuse:** `backend/utils/circuit_breaker.py` Week 1 (đã build cho RNAcentral).
+
+**Constants:**
+```python
+BLAST_CB_FAILURE_THRESHOLD = 3      # 3 lần fail liên tiếp -> OPEN
+BLAST_CB_RECOVERY_TIMEOUT = 60      # 60s trước khi thử HALF_OPEN
+BLAST_CB_EXPECTED_EXCEPTIONS = (subprocess.CalledProcessError, subprocess.TimeoutExpired)
+```
+
+**Sử dụng:**
+```python
+@circuit_breaker(
+    failure_threshold=BLAST_CB_FAILURE_THRESHOLD,
+    recovery_timeout=BLAST_CB_RECOVERY_TIMEOUT,
+    expected_exceptions=BLAST_CB_EXPECTED_EXCEPTIONS,
+)
+def run_blastn(query_fasta: str, db_path: str) -> str:
+    result = subprocess.run(
+        ["blastn", "-query", query_fasta, "-db", db_path, "-outfmt", "6", ...],
+        capture_output=True, text=True, timeout=60, check=True,
+    )
+    return result.stdout
+```
+
+Khi circuit OPEN: `/api/blast-check` trả HTTP 503 kèm `retry_after` header.
+
+### 9.3 Rate Limiting
+
+**Thư viện:** `flask-limiter` (thêm vào requirements.txt).
+
+```python
+# routes/blast_check.py
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+@blast_check_bp.route("/api/blast-check", methods=["POST"])
+@limiter.limit("10 per minute")    # v1.4 - user tự chọn
+def blast_check(): ...
+```
+
+Khi vượt limit: HTTP 429 kèm `Retry-After` header (mặc định flask-limiter tự trả).
+
+### 9.4 Database Version Tracking
+
+**File:** `backend/data/blast_db/metadata.json`
+```json
+{
+  "ensembl_version": "111",
+  "ensembl_url": "https://ftp.ensembl.org/pub/release-111/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz",
+  "mirbase_version": "22.1",
+  "mirbase_url": "https://www.mirbase.org/download/mature.fa",
+  "build_date": "2026-06-15",
+  "sequences_count": {
+    "ensembl_human_cdna": 275129,
+    "mirbase_multi": 48885
+  },
+  "makeblastdb_version": "2.14.0+"
+}
+```
+
+**Cảnh báo cũ:**
+```python
+BLAST_DB_STALE_WARN_DAYS = 90       # v1.4 - cảnh báo nếu build_date >90 ngày
+
+def check_db_freshness(metadata_path: str) -> dict:
+    """
+    Trả về {age_days, outdated_warning, message}
+    Nếu age > 90 ngày: outdated_warning=True, log WARNING, thêm vào response.
+    """
+```
+
+Response `/api/blast-check` đã có field `database_info.outdated_warning` để frontend hiển thị badge cảnh báo.
+
+### 9.5 Script `build_blast_db.py` + Ước tính storage (QUYẾT ĐỊNH v1.5)
+
+**File:** `backend/scripts/build_blast_db.py`
+
+**Storage benchmark thực tế (v1.5):**
+
+| Component | File gốc (gz) | Giải nén | BLAST index (.nhr+.nin+.nsq+...) | Tổng runtime |
+|---|---|---|---|---|
+| Ensembl human cDNA GRCh38 rel 111 | ~85 MB | ~380 MB | ~360 MB | ~360 MB (xoá FASTA) |
+| miRBase mature.fa multi-species | ~2 MB | ~5 MB | ~2 MB | ~2 MB |
+| **TỔNG** | ~87 MB | ~385 MB | ~362 MB | **~370 MB** |
+
+**Kiểm tra khả năng deploy:**
+- **Railway free tier:** 1 GB disk → **OK** (370 MB < 1 GB).
+- **Railway Pro:** không giới hạn thực tế → **OK**.
+- **Render free tier:** ephemeral filesystem, mất khi restart → **KHÔNG dùng được**. Phải upgrade sang persistent disk (~$0.25/GB/tháng, minimum 1 GB).
+- **Google Cloud Run:** stateless container, DB phải mount volume hoặc Cloud Storage → phức tạp.
+
+**Quyết định:** Railway là deploy target chính (đã chọn từ Phase 2).
+
+**Fallback option — nếu cần giảm size:**
+
+Thêm flag `--protein-coding-only` vào `build_blast_db.py`:
+```bash
+python scripts/build_blast_db.py                          # Full Ensembl cDNA (~370 MB)
+python scripts/build_blast_db.py --protein-coding-only    # Chỉ protein-coding (~200 MB)
+```
+
+Cơ chế filter: đọc Ensembl BioMart annotation, chỉ giữ transcripts có `transcript_biotype=protein_coding`. Loại bỏ pseudogenes, lncRNAs, snoRNAs (trừ khi đó là mục tiêu quan tâm).
+
+**Trade-off filter:**
+- Bỏ qua: pseudogene similarity, lncRNA off-target — chấp nhận được cho miRNA qPCR use case.
+- Giữ được: full mRNA off-target check (mục tiêu chính).
+
+**Script:**
+```python
+"""
+1. Tải Ensembl human cDNA FASTA (URL trong ENSEMBL_CDNA_URL constant)
+2. Verify checksum sau download (SHA256 từ Ensembl checksum file)
+3. Nếu --protein-coding-only: filter FASTA giữ chỉ protein_coding transcripts
+4. Tải miRBase mature.fa multi-species (reuse logic build_family_db.py)
+5. Chạy `makeblastdb -in <fasta> -dbtype nucl -out <db_name> -parse_seqids`
+6. Xoá FASTA gốc sau makeblastdb (giữ chỉ .nhr, .nin, .nsq)
+7. Ghi metadata.json (§9.4) với version, build_date, sequences_count, size_mb
+8. Verify build bằng `blastdbcmd -db <db_name> -info` — phải trả sequences_count > 0
+9. Log tổng thời gian + kích thước database cuối
+"""
+
+ENSEMBL_CDNA_URL = "https://ftp.ensembl.org/pub/release-{release}/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"
+ENSEMBL_CHECKSUM_URL = "https://ftp.ensembl.org/pub/release-{release}/fasta/homo_sapiens/cdna/CHECKSUMS"
+ENSEMBL_DEFAULT_RELEASE = 111   # cập nhật định kỳ
+
+MIRBASE_MATURE_URL = "https://www.mirbase.org/download/mature.fa"
+
+def verify_db_build(db_path: str) -> dict:
+    """
+    `blastdbcmd -db <db_path> -info` để check DB build không corrupt.
+    Return: {sequences_count, size_bytes, ok: bool}
+    """
+```
+
+**Nếu benchmark thực tế trên Railway free vượt limit:** Claude Code fallback sang `--protein-coding-only`, log rõ ràng và cập nhật metadata.json để frontend biết mode nào đang chạy.
+
+### 9.6 GitHub Actions CI
+
+**File:** `.github/workflows/test_phase3.yml`
+```yaml
+name: Phase 3 Tests
+
+on:
+  push:
+    branches: [main, phase3-*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-algorithm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          sudo apt-get install -y ncbi-blast+
+      - name: Unit tests (không cần database thật)
+        run: pytest backend/tests/algorithm/ -v
+      - name: Cache/CircuitBreaker/RateLimit tests
+        run: pytest backend/tests/utils/ -v
+      - name: Build script logic test với MOCK data
+        run: |
+          # Test build_family_db.py + build_blast_db.py logic
+          # với miFam.dat mock + mature.fa mock (10-20 sequences)
+          # KHÔNG build database thật (nặng, chậm, tốn CI runtime)
+          pytest backend/tests/scripts/ -v -m "not slow"
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    needs: test-algorithm
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start backend
+        run: python backend/app.py &
+      - name: Smoke test /api/blast-check with hsa-miR-21-5p
+        run: pytest backend/tests/smoke/test_blast_check_e2e.py -v
+```
+
+**Test data mock cho scripts:**
+```
+backend/tests/fixtures/
+├── miFam_mock.dat            # 3 families (let-7, mir-17, mir-21) với 5-6 members mỗi cái
+├── mature_mock.fa            # ~20 mature miRNA sequences khớp với miFam_mock
+└── ensembl_cdna_mock.fa      # ~50 transcript sequences (đủ để makeblastdb chạy)
+```
+
+### 9.7 Smoke test end-to-end
+
+**File:** `backend/tests/smoke/test_blast_check_e2e.py`
+
+```python
+def test_hsa_mir_21_5p_forward_primer_finds_self():
+    """
+    Design primer cho hsa-miR-21-5p, gửi forward primer vào /api/blast-check.
+    Expected: có ít nhất 1 hit với identity 100% (self-hit trong miRBase database).
+    """
+    fwd = "TAGCTTATCAGACTGATGTTGA"  # forward primer từ hsa-miR-21-5p
+    response = client.post("/api/blast-check", json={
+        "forward_primer": fwd,
+        "reverse_primer": UNIVERSAL_REVERSE,
+        "mirna_id": "hsa-miR-21-5p",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["summary"]["total_hits"] >= 1
+    # Self-hit trong miRBase phải là 100% identity
+    assert any(h["alignment"]["identity_pct"] == 100.0 for h in data["forward_primer_hits"])
+
+def test_rate_limit_blocks_11th_request_per_minute():
+    """Rate limit 10/phút - request thứ 11 trong 60s phải HTTP 429."""
+    for _ in range(10):
+        r = client.post("/api/blast-check", json=VALID_PAYLOAD)
+        assert r.status_code == 200
+    r11 = client.post("/api/blast-check", json=VALID_PAYLOAD)
+    assert r11.status_code == 429
+    assert "Retry-After" in r11.headers
+
+def test_cache_hit_returns_immediately():
+    r1 = client.post("/api/blast-check", json=VALID_PAYLOAD)
+    t1 = time.time()
+    r2 = client.post("/api/blast-check", json=VALID_PAYLOAD)
+    t2 = time.time()
+    assert r1.json()["cache"]["hit"] is False
+    assert r2.json()["cache"]["hit"] is True
+    assert (t2 - t1) < 0.1   # cache hit phải <100ms
+
+def test_circuit_breaker_opens_after_3_blastn_failures():
+    """Mock blastn để fail 3 lần liên tiếp - request thứ 4 phải HTTP 503."""
+    with mock.patch("subprocess.run", side_effect=subprocess.CalledProcessError(...)):
+        for _ in range(3):
+            r = client.post("/api/blast-check", json=VALID_PAYLOAD)
+            assert r.status_code == 500
+        r4 = client.post("/api/blast-check", json=VALID_PAYLOAD)
+        assert r4.status_code == 503
+```
+
+---
+
+## 10. API Endpoint — cập nhật `routes/design.py` + mới `routes/blast_check.py`
+
+### 10.1 `/api/design` — thay đổi tối thiểu
+Output JSON Phase 2 giữ schema, mở rộng:
+```json
+{
+  "top_n": [{
+    "...": "... (giữ nguyên fields Phase 2)",
+    "scores": {
+      "...": "...",
+      "bound_fraction_binding": 95.2,
+      "bound_fraction_full": 88.7,
+      "family_discrimination": 70.0
+    },
+    "family_cross_reactivity": { "...": "schema §30.5" },
+    "isomir_flag": { "...": "schema §31.3" }
+  }]
+}
+```
+
+### 10.2 `/api/blast-check` — mới, xem §8.9
+
+---
+
+## 11. Thứ tự implement
+
+1. `bound_fraction.py` + unit tests (Module 7)
+2. Cập nhật `constants.py` (đính chính SL07 -> SL04) + `scoring.py` -> `SCORING_WEIGHTS_V4`
+3. `build_family_db.py` (miFam.dat) -> `mirbase_family_overhangs.json` thật
+4. `family_crossreactivity.py` — implement §30
+5. Tích hợp family_discrimination vào `scoring.py`
+6. `isomir_flag.py` — implement §31
+7. Tích hợp `family_cross_reactivity` + `isomir_flag` vào `/api/design` output
+8. `blast_cache.py` (SQLite reuse `local_db.py`) + unit tests
+9. `build_blast_db.py` — benchmark thời gian/dung lượng
+10. `blast_offtarget.py` — logic Ye 2012 + Kwok 1990 (§8.3-8.8)
+11. `routes/blast_check.py` — endpoint + rate limit + circuit breaker
+12. GitHub Actions workflow (`test_phase3.yml`)
+13. Smoke test end-to-end với hsa-miR-21-5p
+14. Frontend: nút "Check off-target" — xem §13
+
+---
+
+## 12. Định nghĩa "Phase 3 hoàn thành"
+
+**Bắt buộc 100%:**
+
+**Khoa học (v1.2):**
+- [ ] `bound_fraction.py` có 2 hàm binding/full, đúng công thức [SL04]
+- [ ] `SCORING_WEIGHTS_V4` = 15 tiêu chí, tổng 1.00, `binding > full` (0.05 > 0.03)
+- [ ] `family_crossreactivity.py` implement đầy đủ §30, dùng **miFam.dat** (không heuristic)
+- [ ] `mirbase_family_overhangs.json` build từ miFam.dat + mature.fa multi-species
+- [ ] Family detection đúng với accession (Limitation #4 Phase 2 fixed)
+- [ ] `isomir_flag.py` implement §31, data verify với [Neilsen12]/[Morin08]
+- [ ] Đính chính [SL07] -> [SL04] trong constants.py
+
+**BLAST khoa học (v1.3):**
+- [ ] BLAST params đúng [Ye12]: word_size=7, evalue=30000, reward:penalty=1:1, max_target_seqs=50000
+- [ ] NW global alignment realign sau BLAST
+- [ ] Default thresholds [Ye12]: >=2 mm trong 5 base cuối, >=6 mm total = SAFE
+- [ ] 3'-terminal mismatch classification [Kwok90]: BLOCKING (A:G, G:A, C:C), REDUCING (A:A), TOLERANT
+- [ ] Risk classification ma trận §8.8 đúng cho tất cả cases
+
+**Kiến trúc hệ thống (v1.4):**
+- [ ] SQLite cache TTL 30 ngày, reuse pattern `local_db.py` Week 1
+- [ ] Circuit breaker blastn (3 fails liên tiếp -> OPEN, 60s recovery), reuse `circuit_breaker.py`
+- [ ] Rate limit 10 req/phút/IP dùng flask-limiter
+- [ ] Database metadata.json + cảnh báo >90 ngày
+- [ ] `build_blast_db.py` verify checksum + `blastdbcmd -info` sau build
+- [ ] GitHub Actions CI với mock data (không build DB thật trên CI)
+- [ ] Smoke test hsa-miR-21-5p pass (self-hit 100%)
+- [ ] Smoke test rate limit + cache hit + circuit breaker pass
+- [ ] `POST /api/blast-check` không ảnh hưởng tốc độ `/api/design` (<5s vẫn giữ)
+- [ ] All English output
+
+**Quyết định implementation (v1.5):**
+- [ ] Bound fraction dùng `primer3.calc_heterodimer(seq, revcomp(seq))` để lấy dH/dS (§4.4) — có test `test_calc_heterodimer_returns_thermodynamics`
+- [ ] Refactor `LocalDB` Week 1 thành base class `SQLiteKVCache` (§9.1) — có regression test Week 1 miRBase cache vẫn work
+- [ ] BLAST database build ≤ 500 MB trên Railway free tier (§9.5) — verify bằng `du -sh backend/data/blast_db/` sau build
+- [ ] Nếu vượt limit: fallback `--protein-coding-only` mode với metadata.json ghi rõ mode đang chạy
+
+**Cần làm rõ lúc implement:**
+- (không còn — 3 vấn đề đã giải quyết ở v1.5: primer3-py dùng `calc_heterodimer` §4.4, storage ~370 MB fit Railway free §9.5, `LocalDB` refactor thành `SQLiteKVCache` §9.1)
+
+**Frontend (v1.6):**
+- [x] `useBlastCheck.js` hook — status: `idle | loading | done | error`, expose `run()` + `reset()`
+- [x] Button "Check off-target" trong `PrimerSetCard` (expanded panel) — disabled khi `loading`
+- [x] Loading spinner (animate-spin) + "Running…" text khi status = `loading`
+- [x] Risk badge 4 mức: CRITICAL (red), HIGH (orange), MEDIUM (amber), SAFE (teal) — consistent với `RISK_STYLE` có sẵn
+- [x] Error handling: 429 → retry countdown, 503 → circuit open message, timeout → timeout message, network → generic
+- [x] Result panel: summary row + hits accordion (max 5 hits) + `database_info` staleness badge
+- [x] Không gọi `/api/blast-check` tự động — phải user bấm nút
+
+**Không làm trong Phase 3:**
+- TaqMan probe design -> Phase 4
+- PDF/CSV export -> Phase 4
+- AI/LLM -> Phase riêng
+- Alternative BLAST risk models (Kwok 1990 chỉ test HIV-1 gag context; mở rộng test/tuning tuỳ dữ liệu thực tế sau khi có feedback user)
+
+---
+
+## 13. Frontend Integration — Nút "Check off-target" (v1.6)
+
+### 13.1 Tổng quan và placement
+
+**Nguyên tắc thiết kế:**
+- BLAST check tốn thời gian (5–30s); **không tự động** — user phải chủ động bấm
+- Mỗi `PrimerSetCard` có forward primer khác nhau → state/result là **per-card** (local state trong `PrimerSetCard`, không lift lên parent)
+- Universal reverse primer là cố định → giống nhau cho tất cả cards
+- Gọi `POST /api/blast-check` với `forward_primer`, `reverse_primer`, `mirna_id`
+
+**Placement:**
+```
+PrimerSetCard (expanded)
+  ├── Primer sequences (forward/RT/reverse)
+  ├── Score + structure checks
+  ├── Heterodimer checks
+  ├── isoMiR flag detail
+  ├── Warnings
+  ├── [NEW] OffTargetPanel  ← §13.4 — button + result, nằm trước ExportButtons
+  └── ExportButtons
+```
+
+### 13.2 Hook `useBlastCheck.js`
+
+**File:** `frontend/src/hooks/useBlastCheck.js`
+
+```js
+// useBlastCheck — manages a single /api/blast-check request lifecycle.
+// Status machine: idle → loading → done | error
+// Error shape: { type: '429'|'503'|'timeout'|'network'|'server', message, retryAfter? }
+
+import { useState, useRef } from 'react';
+import axios from 'axios';
+
+const BLAST_TIMEOUT_MS = 70_000;  // 70s — longer than server 60s timeout
+
+export default function useBlastCheck() {
+  const [status, setStatus] = useState('idle');  // 'idle'|'loading'|'done'|'error'
+  const [result, setResult] = useState(null);
+  const [error,  setError]  = useState(null);
+  const abortRef = useRef(null);
+
+  async function run(forwardPrimer, reversePrimer, mirnaId) {
+    if (status === 'loading') return;
+
+    // Cancel any previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setStatus('loading');
+    setResult(null);
+    setError(null);
+
+    try {
+      const { data } = await axios.post(
+        '/api/blast-check',
+        { forward_primer: forwardPrimer, reverse_primer: reversePrimer, mirna_id: mirnaId },
+        { signal: controller.signal, timeout: BLAST_TIMEOUT_MS }
+      );
+      setResult(data);
+      setStatus('done');
+    } catch (err) {
+      if (axios.isCancel(err)) return;  // user navigated away — ignore
+
+      const parsed = parseBlastError(err);
+      setError(parsed);
+      setStatus('error');
+    }
+  }
+
+  function reset() {
+    abortRef.current?.abort();
+    setStatus('idle');
+    setResult(null);
+    setError(null);
+  }
+
+  return { status, result, error, run, reset };
+}
+
+// ── Error parser ──────────────────────────────────────────────────────────────
+
+function parseBlastError(err) {
+  const status = err.response?.status;
+  const data   = err.response?.data;
+
+  if (status === 429) {
+    // Flask-Limiter injects Retry-After header (seconds)
+    const retryAfter = parseInt(err.response?.headers?.['retry-after'] ?? '60', 10);
+    return {
+      type: '429',
+      message: 'Rate limit reached — too many requests.',
+      retryAfter,  // seconds; UI shows countdown
+    };
+  }
+  if (status === 503) {
+    return {
+      type: '503',
+      message: data?.error ?? 'BLAST service temporarily unavailable (circuit breaker open).',
+      retryAfter: data?.retry_after ?? 60,
+    };
+  }
+  if (err.code === 'ECONNABORTED' || err.code === 'ERR_CANCELED') {
+    return { type: 'timeout', message: 'Check timed out after 70 s. Try again.' };
+  }
+  if (!err.response) {
+    return { type: 'network', message: 'Network error — check your connection.' };
+  }
+  return {
+    type: 'server',
+    message: data?.error ?? `Server error (HTTP ${status}).`,
+  };
+}
+```
+
+### 13.3 Button + loading state
+
+**Loading spinner** — dùng Tailwind `animate-spin`, consistent với pattern hiện tại:
+
+```jsx
+// ── BlastCheckButton ────────────────────────────────────────────────────────
+// Standalone button component; all blast state lives in parent OffTargetPanel.
+
+function BlastCheckButton({ onClick, loading, done }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className={`
+        inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold
+        border transition-colors
+        ${loading
+          ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+          : done
+          ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+          : 'bg-white border-teal-300 text-teal-700 hover:bg-teal-50'
+        }
+      `}
+    >
+      {loading ? (
+        <>
+          <svg className="animate-spin h-3 w-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          Analyzing…
+        </>
+      ) : done ? (
+        'Re-check off-target'
+      ) : (
+        'Check off-target'
+      )}
+    </button>
+  );
+}
+```
+
+**Disable rule:** button bị disable (`disabled`) chỉ khi `status === 'loading'`. Khi `status === 'done'`, button đổi label thành "Re-check off-target" và vẫn clickable (user có thể chạy lại sau khi DB cập nhật).
+
+### 13.4 Risk badge styling
+
+Dùng cùng `RISK_STYLE` map đã có trong `PrimerSetCard.jsx` — không định nghĩa lại:
+
+```js
+// Reuse từ PrimerSetCard.jsx (move to shared const nếu cần)
+const BLAST_RISK_STYLE = {
+  CRITICAL: 'text-red-700   bg-red-50   border-red-300',
+  HIGH:     'text-orange-700 bg-orange-50 border-orange-300',
+  MEDIUM:   'text-amber-700  bg-amber-50  border-amber-200',
+  SAFE:     'text-teal-700   bg-teal-50   border-teal-200',
+};
+
+// Ý nghĩa mỗi mức (tooltip text):
+const BLAST_RISK_TOOLTIP = {
+  CRITICAL: 'Near-perfect off-target match — primer likely amplifies non-target sequence',
+  HIGH:     'Strong off-target hit — risk of non-specific amplification',
+  MEDIUM:   'Moderate off-target — monitor with melt curve or no-template control',
+  SAFE:     'No significant off-target detected (≥6 mismatches or blocking 3′ mismatch)',
+};
+```
+
+**Overall risk badge** hiển thị trong summary row theo overall_risk từ API (§8.10).
+
+**Per-hit risk badge** hiển thị trong bảng hits, lấy từ `hit.risk` của mỗi entry trong `forward_primer_hits`.
+
+### 13.5 Error handling — 3 trường hợp đặc biệt
+
+#### 13.5.1 HTTP 429 — Rate limit
+
+Hiển thị error panel với countdown timer:
+
+```jsx
+function RateLimitError({ retryAfter, onRetry }) {
+  const [seconds, setSeconds] = useState(retryAfter);
+
+  useEffect(() => {
+    if (seconds <= 0) { onRetry?.(); return; }
+    const id = setTimeout(() => setSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [seconds]);
+
+  return (
+    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+      <span className="font-semibold">Rate limit reached.</span>
+      {' '}Please wait{' '}
+      <span className="font-mono font-bold tabular-nums">{seconds}s</span>
+      {' '}before checking again.
+    </div>
+  );
+}
+```
+
+`onRetry` — callback được gọi khi countdown về 0, reset error state về `idle` (không tự gọi lại BLAST, chỉ enable button).
+
+#### 13.5.2 HTTP 503 — Circuit breaker open
+
+```jsx
+function CircuitOpenError({ retryAfter }) {
+  return (
+    <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800">
+      <span className="font-semibold">BLAST service temporarily unavailable.</span>
+      {' '}The service is recovering from errors — retry in ~{retryAfter}s.
+      {' '}This does not affect primer design results above.
+    </div>
+  );
+}
+```
+
+Lưu ý: không show "Service unavailable" theo nghĩa hệ thống bị lỗi — cần giải thích rõ đây là circuit breaker, primer design vẫn hoạt động bình thường.
+
+#### 13.5.3 Timeout và network error
+
+```jsx
+function GenericBlastError({ error, onRetry }) {
+  const icons = { timeout: '⏱', network: '⚡', server: '⚠' };
+  return (
+    <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-700 flex items-center justify-between gap-3">
+      <span>
+        <span className="mr-1">{icons[error.type] ?? '⚠'}</span>
+        {error.message}
+      </span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="text-teal-700 font-semibold hover:underline shrink-0"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+```
+
+### 13.6 Result panel layout — `OffTargetPanel`
+
+**Component:** `frontend/src/pages/SearchPage/ResultsSection/OffTargetPanel.jsx` (file mới)
+
+```jsx
+// OffTargetPanel — renders the "Check off-target" button + result inline.
+// All state managed locally via useBlastCheck hook.
+
+import { useState } from 'react';
+import useBlastCheck from '../../../../hooks/useBlastCheck.js';
+
+const BLAST_RISK_STYLE = {
+  CRITICAL: 'text-red-700   bg-red-50   border-red-300',
+  HIGH:     'text-orange-700 bg-orange-50 border-orange-300',
+  MEDIUM:   'text-amber-700  bg-amber-50  border-amber-200',
+  SAFE:     'text-teal-700   bg-teal-50   border-teal-200',
+};
+
+export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }) {
+  const { status, result, error, run, reset } = useBlastCheck();
+  const [hitsExpanded, setHitsExpanded] = useState(false);
+
+  function handleRun() {
+    run(forwardPrimer, reversePrimer, mirnaId);
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 overflow-hidden">
+      {/* ── Panel header ── */}
+      <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center justify-between">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          Off-target (BLAST)
+        </p>
+        <BlastCheckButton
+          onClick={handleRun}
+          loading={status === 'loading'}
+          done={status === 'done'}
+        />
+      </div>
+
+      {/* ── Idle state — brief explanation ── */}
+      {status === 'idle' && (
+        <div className="px-3 py-2">
+          <p className="text-xs text-slate-500">
+            Checks forward primer specificity against Ensembl human transcriptome + miRBase
+            multi-species using blastn (Ye 2012 + Kwok 1990 rules). Results are cached 30 days.
+          </p>
+        </div>
+      )}
+
+      {/* ── Error states ── */}
+      {status === 'error' && error && (
+        <div className="px-3 py-2">
+          {error.type === '429' && (
+            <RateLimitError retryAfter={error.retryAfter} onRetry={reset} />
+          )}
+          {error.type === '503' && (
+            <CircuitOpenError retryAfter={error.retryAfter ?? 60} />
+          )}
+          {(error.type === 'timeout' || error.type === 'network' || error.type === 'server') && (
+            <GenericBlastError error={error} onRetry={reset} />
+          )}
+        </div>
+      )}
+
+      {/* ── Done state — result panel ── */}
+      {status === 'done' && result && (
+        <div className="px-3 py-3 space-y-3">
+          {/* ── Summary row ── */}
+          <OverallRiskRow result={result} />
+
+          {/* ── Database staleness warning ── */}
+          {result.database_info?.outdated_warning && (
+            <div className="rounded bg-amber-50 border border-amber-200 px-2 py-1.5 text-xs text-amber-700">
+              ⚠ BLAST database is {result.database_info.age_days} days old (updated{' '}
+              {result.database_info.build_date}). Consider rebuilding for latest sequences.
+            </div>
+          )}
+
+          {/* ── Hits accordion (max 5 shown) ── */}
+          {result.summary?.total_hits > 0 && (
+            <HitsAccordion
+              hits={result.forward_primer_hits ?? []}
+              expanded={hitsExpanded}
+              onToggle={() => setHitsExpanded((v) => !v)}
+            />
+          )}
+
+          {/* ── Cache / DB info footnote ── */}
+          <p className="text-xs text-slate-400">
+            {result.cache?.hit ? 'Cached result' : 'Fresh result'}
+            {result.database_info && ` · DB: Ensembl ${result.database_info.ensembl_version} + miRBase ${result.database_info.mirbase_version}`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+#### 13.6.1 `OverallRiskRow`
+
+```jsx
+function OverallRiskRow({ result }) {
+  const overall = result.summary?.overall_risk ?? 'SAFE';
+  const counts  = result.summary ?? {};
+  const style   = BLAST_RISK_STYLE[overall] ?? BLAST_RISK_STYLE.SAFE;
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${style}`}>
+          {overall}
+        </span>
+        <span className="text-xs text-slate-600">
+          {counts.total_hits ?? 0} hit{counts.total_hits !== 1 ? 's' : ''} total
+        </span>
+      </div>
+      <div className="flex gap-2 text-xs text-slate-500">
+        {counts.critical_count > 0 && (
+          <span className="text-red-700 font-semibold">{counts.critical_count} critical</span>
+        )}
+        {counts.high_count > 0 && (
+          <span className="text-orange-700 font-semibold">{counts.high_count} high</span>
+        )}
+        {counts.medium_risk_count > 0 && (
+          <span className="text-amber-700">{counts.medium_risk_count} medium</span>
+        )}
+        {counts.safe_count > 0 && (
+          <span className="text-teal-700">{counts.safe_count} safe</span>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+#### 13.6.2 `HitsAccordion`
+
+Hiển thị tối đa 5 hits; nếu nhiều hơn thì show "Show all N hits" link. Mỗi hit là 1 row có risk badge + gene name + mismatch count + 3′-terminal info:
+
+```jsx
+const MAX_HITS_DEFAULT = 5;
+
+function HitsAccordion({ hits, expanded, onToggle }) {
+  const shown = expanded ? hits : hits.slice(0, MAX_HITS_DEFAULT);
+
+  return (
+    <div className="rounded-lg border border-slate-200 overflow-hidden">
+      <table className="w-full text-xs">
+        <thead className="bg-slate-100 border-b border-slate-200">
+          <tr>
+            <th className="text-left px-3 py-1.5 font-semibold text-slate-600">Target</th>
+            <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Mismatch</th>
+            <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ mm</th>
+            <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ type</th>
+            <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Risk</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 bg-white">
+          {shown.map((hit, i) => {
+            const style = BLAST_RISK_STYLE[hit.risk] ?? BLAST_RISK_STYLE.SAFE;
+            return (
+              <tr key={i}>
+                <td className="px-3 py-1.5 text-slate-700 font-mono truncate max-w-[160px]" title={hit.target_name}>
+                  {hit.target_name}
+                </td>
+                <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">
+                  {hit.alignment?.mismatches ?? '—'}
+                </td>
+                <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">
+                  {hit.alignment?.mm_in_3prime_window ?? '—'}
+                </td>
+                <td className="px-2 py-1.5 text-center font-mono text-slate-500">
+                  {hit.alignment?.terminal_category ?? '—'}
+                </td>
+                <td className="px-2 py-1.5 text-center">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${style}`}>
+                    {hit.risk}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* ── Expand / collapse toggle ── */}
+      {hits.length > MAX_HITS_DEFAULT && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-full text-center text-xs text-teal-700 hover:text-teal-800 py-1.5 border-t border-slate-200 bg-slate-50"
+        >
+          {expanded ? 'Show fewer hits ▲' : `Show all ${hits.length} hits ▼`}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+### 13.7 Integration vào `PrimerSetCard`
+
+**Thay đổi tối thiểu** trong `PrimerSetCard.jsx` — chỉ thêm `<OffTargetPanel>` trước `<ExportButtons>`:
+
+```jsx
+// Thêm import ở đầu file:
+import OffTargetPanel from './OffTargetPanel.jsx';
+
+// Trong expanded panel, trước ExportButtons:
+{/* ── Off-target check ── */}
+<OffTargetPanel
+  forwardPrimer={set.sequence}
+  reversePrimer={reverse?.sequence}
+  mirnaId={mirnaId}   // ← xem §13.7.1
+/>
+
+{/* ── Export ── */}
+<ExportButtons set={set} stemloop={stemloop} reverse={reverse} />
+```
+
+#### 13.7.1 Truyền `mirnaId` xuống card
+
+`PrimerSetCard` hiện không nhận `mirnaId`. Cần pass từ `ResultsSection`:
+
+```jsx
+// ResultsSection/index.jsx — thêm mirnaId vào destructure:
+const { top3, stemloop_rt, universal_reverse, global_warnings = [], metadata, specificity_warnings } = results;
+const mirnaId = metadata?.mirna_id ?? '';  // backend cần thêm field này vào metadata
+
+// Và truyền xuống PrimerSetCard:
+<PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} mirnaId={mirnaId} />
+```
+
+**Backend change cần thiết:** `routes/design.py` thêm `"mirna_id"` vào `metadata` object trong response (hiện tại chưa có). Thêm 1 dòng:
+```python
+# trong format_output() hoặc cuối routes/design.py:
+"metadata": {
+    ...existing fields...,
+    "mirna_id": mirna_name,   # ← ADD này
+}
+```
+
+#### 13.7.2 `PrimerSetCard` props sau thay đổi
+
+```jsx
+// Prop types cập nhật:
+export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
+  // ...existing code...
+}
+```
+
+Không cần thay đổi gì khác trong SearchPage/index.jsx — `mirnaId` flow tự nhiên qua results metadata.
+
+### 13.8 Files cần tạo / sửa (v1.6)
+
+| File | Loại | Mô tả |
+|------|------|-------|
+| `frontend/src/hooks/useBlastCheck.js` | NEW | Hook quản lý BLAST request lifecycle |
+| `frontend/src/pages/SearchPage/ResultsSection/OffTargetPanel.jsx` | NEW | Panel component (button + result + error) |
+| `frontend/src/pages/SearchPage/ResultsSection/PrimerSetCard.jsx` | EDIT | Thêm `<OffTargetPanel>` + `mirnaId` prop |
+| `frontend/src/pages/SearchPage/ResultsSection/index.jsx` | EDIT | Pass `mirnaId` xuống PrimerSetCard |
+| `backend/routes/design.py` | EDIT | Thêm `mirna_id` vào `metadata` response |
+
+**Không cần:**
+- Không cần Redux / global state — local state trong OffTargetPanel là đủ
+- Không cần new route / API — `/api/blast-check` đã implement (§8, §10.2)
+- Không cần thay đổi constants/defaults.js — không có user-configurable BLAST params
+
+### 13.9 Edge cases cần handle
+
+| Case | Behavior |
+|------|----------|
+| `reverse?.sequence` là undefined | Vẫn gọi API với `reverse_primer: null`; backend validate và trả 400 nếu cần |
+| User bấm "Re-check" ngay sau lần đầu | Abort request cũ (AbortController), chạy lại |
+| User collapse card (expanded = false) trong khi loading | State vẫn giữ; khi expand lại, spinner vẫn hiện — không cancel |
+| `total_hits = 0` và `overall_risk = 'SAFE'` | Không render HitsAccordion; chỉ show OverallRiskRow với "0 hits" |
+| `database_info.age_days > 90` | `outdated_warning = true` từ backend — show amber banner §13.6 |
+| `result.cache.hit = true` | Footnote hiện "Cached result" thay "Fresh result" |
