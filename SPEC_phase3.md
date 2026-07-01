@@ -16,6 +16,7 @@
 | v1.5 | **VÒNG 4 — LÀM RÕ 3 QUYẾT ĐỊNH IMPLEMENTATION** (đã benchmark bằng code + phân tích infra): (1) **primer3-py DÙNG `calc_heterodimer(primer, revcomp(primer))`** để lấy dH/dS — verified bằng `ThermoResult` object có `.dh`, `.ds`, `.dg` (§4.7); (2) **BLAST database size ~370 MB** — verify Railway free 1 GB OK; Render cần paid persistent disk; fallback option "protein-coding only" ~200 MB (§9.5); (3) **`LocalDB` Week 1 refactor thành base class `SQLiteKVCache`** — reuse tối đa, backward-compatible với Week 1 (§9.1 mở rộng) |
 | v1.6 | **§13 FRONTEND INTEGRATION** — Full spec cho nút "Check off-target": hook `useBlastCheck`, button placement trong `PrimerSetCard`, loading state, risk badge styling (4 mức), error handling (429/503/timeout/network), result panel layout, integration với `ResultsSection` có sẵn |
 | v1.7 | **[ĐÍNH CHÍNH IMPLEMENTATION 2026-07-01]** (1) §2: Neilsen12 journal = *Trends in Genetics* (không phải Bioinformatics); (2) §4.1+4.2: `BOUND_FRACTION_RT_TEMP = 42°C` cho Round 1 — spec cũ ghi 60°C sai; (3) §5.5: miFam.dat HTTP 500 trên miRBase v22.1 — production dùng seed-based grouping; (4) §6: isoMiR data v1.0.0 verified (8 entries, PMIDs), `evidence_level` field, key đổi từ `data_warning` → `co_amplification_warning`; (5) §8.9+8.11: cross-species filtering + `cross_species_excluded`/`hits_truncated` trong summary; smoke test hsa-miR-21-5p passed |
+| v1.8 | **[GAP FIX — stemloop RT × universal reverse heterodimer 2026-07-01]** Phase 2 chỉ check 2 cặp heterodimer: fwd×stemloop (RT buffer) và fwd×reverse (PCR buffer). Trong one-step RT-qPCR tất cả 3 primer cùng hiện diện trong PCR tube → cặp stemloop×reverse chưa bao giờ được check. Fix: `check_stemloop_reverse_heterodimer()` mới trong `heterodimer.py`; gọi 1 lần trong `design.py` (không per-candidate vì cả hai sequence cố định); kết quả expose tại `universal_reverse.stemloop_reverse_heterodimer` trong API response; HIGH/MODERATE risk promote lên `global_warnings`. Thực tế Chen 2005 pair: dG = −4.40 kcal/mol → PASS (hệ thống validated thực nghiệm). 3 tests mới, 105/105 pass. commit `78a5e22`. |
 
 ---
 
@@ -1174,8 +1175,27 @@ Output JSON Phase 2 giữ schema, mở rộng:
     },
     "family_cross_reactivity": { "...": "schema §30.5" },
     "isomir_flag": { "...": "schema §31.3" }
-  }]
+  }],
+  "universal_reverse": {
+    "...": "... (giữ nguyên fields Phase 2)",
+    "stemloop_reverse_heterodimer": {
+      "dg": -4.40,
+      "risk_level": "PASS",
+      "three_prime_overlap": false,
+      "three_prime_bp": 0,
+      "note": "Stem-loop RT × Universal Reverse (one-step PCR): ...",
+      "protocol_note": "Relevant for one-step RT-qPCR protocols where all primers coexist in one tube. In two-step protocols, the stemloop RT primer is absent during PCR amplification and this interaction cannot occur."
+    }
+  }
 }
+```
+
+**Ghi chú §10.1a — stemloop × reverse heterodimer:**
+- Cặp này là **FIXED** (không phụ thuộc miRNA) — tính 1 lần per request, không per candidate.
+- Buffer: PCR conditions (user params) — interaction xảy ra trong PCR step khi cả hai primer hiện diện.
+- Scope: one-step RT-qPCR (all primers coexist). Two-step: stemloop absent during PCR → dimer không thể xảy ra.
+- Chen 2005 actual pair: dG = −4.40 kcal/mol → PASS. High risk threshold: ≤ −9.0 kcal/mol AND 3' end complementarity ≥ 3 bp.
+- HIGH/MODERATE risk → tự động promote lên `global_warnings` để user thấy ngay.
 ```
 
 ### 10.2 `/api/blast-check` — mới, xem §8.9
