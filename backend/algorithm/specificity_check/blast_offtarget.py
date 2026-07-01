@@ -14,6 +14,7 @@
 import ctypes
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -25,7 +26,7 @@ from algorithm.constants import (
     PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES,
     PRIMER_BLAST_3PRIME_WINDOW, PRIMER_BLAST_3PRIME_MIN_MISMATCHES,
     PRIMER_BLAST_MIN_TOTAL_MISMATCHES,
-    BLAST_MAX_HITS_RETURNED,
+    BLAST_MAX_HITS_RETURNED, MIRBASE_HUMAN_PREFIX,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
 
@@ -270,10 +271,11 @@ def check_offtarget(
     dbs = [_MIRBASE_DB, _ENSEMBL_DB]
     db_available = [d for d in dbs if _db_exists(d)]
 
-    fwd_hits, fwd_safe = _check_primer(forward_primer, db_available, mirna_id, timeout)
-    rev_hits, rev_safe = _check_primer(reverse_primer, db_available, mirna_id, timeout) if reverse_primer else ([], 0)
+    species_prefix = _extract_species_prefix(mirna_id)
+    fwd_hits, fwd_safe, fwd_cs = _check_primer(forward_primer, db_available, mirna_id, species_prefix, timeout)
+    rev_hits, rev_safe, rev_cs = _check_primer(reverse_primer, db_available, mirna_id, species_prefix, timeout) if reverse_primer else ([], 0, 0)
 
-    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe)
+    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs)
     summary["hits_truncated"] = (
         len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
     )
@@ -289,12 +291,22 @@ def _check_primer(
     primer: str,
     db_paths: list[str],
     mirna_id: Optional[str],
+    species_prefix: str,
     timeout: int,
-) -> tuple[list[dict], int]:
-    """Return (non_safe_hits, safe_count). SAFE hits are counted but not included."""
+) -> tuple[list[dict], int, int]:
+    """Return (non_safe_hits, safe_count, cross_species_excluded).
+
+    SAFE hits (≥6 mm) are counted but not included in the hit list.
+    Cross-species miRBase hits (not matching species_prefix) are excluded entirely —
+    they are biologically irrelevant for same-species qPCR and would otherwise
+    dominate the hit cap with conserved miRNA orthologs from other organisms.
+    species_prefix is derived from mirna_id (e.g., 'hsa-' for hsa-miR-21-5p).
+    """
     non_safe_hits: list[dict] = []
     safe_count = 0
+    cross_species_excluded = 0
     for db in db_paths:
+        is_mirbase = os.path.basename(db).startswith("mirbase")
         try:
             raw = run_blastn(primer, db, timeout=timeout)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
@@ -302,6 +314,11 @@ def _check_primer(
         for h in raw:
             # Skip self-hit
             if mirna_id and mirna_id.lower() in h["subject_id"].lower():
+                continue
+            # miRBase DB: skip other-species orthologs — same conserved sequence,
+            # different organism → irrelevant for same-species assay
+            if is_mirbase and not h["subject_id"].lower().startswith(species_prefix):
+                cross_species_excluded += 1
                 continue
             # NW global realign — more accurate than BLAST local
             subject_seq = h.get("subject_seq", "")
@@ -342,10 +359,10 @@ def _check_primer(
     # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
     _risk_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
     non_safe_hits.sort(key=lambda h: (_risk_order.get(h["risk"], 9), h["evalue"]))
-    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count
+    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded
 
 
-def _summarise(non_safe_hits: list[dict], safe_count: int = 0) -> dict:
+def _summarise(non_safe_hits: list[dict], safe_count: int = 0, cross_species_excluded: int = 0) -> dict:
     counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0}
     for h in non_safe_hits:
         risk = h.get("risk", "MEDIUM")
@@ -355,13 +372,27 @@ def _summarise(non_safe_hits: list[dict], safe_count: int = 0) -> dict:
     elif counts["MEDIUM"] > 0:    overall = "MEDIUM"
     else:                          overall = "SAFE"
     return {
-        "total_hits":        len(non_safe_hits) + safe_count,
-        "critical_count":    counts["CRITICAL"],
-        "high_risk_count":   counts["HIGH"],
-        "medium_risk_count": counts["MEDIUM"],
-        "safe_count":        safe_count,
-        "overall_risk":      overall,
+        "total_hits":              len(non_safe_hits) + safe_count,
+        "critical_count":          counts["CRITICAL"],
+        "high_risk_count":         counts["HIGH"],
+        "medium_risk_count":       counts["MEDIUM"],
+        "safe_count":              safe_count,
+        "cross_species_excluded":  cross_species_excluded,
+        "overall_risk":            overall,
     }
+
+
+def _extract_species_prefix(mirna_id: Optional[str]) -> str:
+    """
+    Extract 3-letter miRBase species prefix from a miRNA ID.
+    'hsa-miR-21-5p' → 'hsa-', 'mmu-let-7a' → 'mmu-'.
+    Falls back to MIRBASE_HUMAN_PREFIX when no prefix is detected.
+    """
+    if mirna_id:
+        m = re.match(r'^([a-z]{3})-', mirna_id.lower())
+        if m:
+            return m.group(1) + "-"
+    return MIRBASE_HUMAN_PREFIX
 
 
 def _db_exists(db_path: str) -> bool:

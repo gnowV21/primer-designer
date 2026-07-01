@@ -91,7 +91,7 @@ def test_output_has_required_keys():
             forward_3prime_position=position,
         )
         for key in ("isomir_discrimination_risk", "mirna_name", "forward_3prime_position",
-                    "risk_window_nt", "note", "data_warning"):
+                    "risk_window_nt", "note", "co_amplification_warning"):
             assert key in result, f"Missing key: {key} at position {position}"
 
 def test_output_boolean_type():

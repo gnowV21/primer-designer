@@ -28,7 +28,8 @@
 - All user-facing strings: English only.
 - Mỗi constant phải có comment nguồn trích dẫn — không để số "magic" không có nguồn.
 - Không phá vỡ Phase 2: thêm `SCORING_WEIGHTS_V4` mới, giữ `SCORING_WEIGHTS_V3` làm reference. Đính chính ký hiệu [SL07] → [SL04] không phải breaking change.
-
+Trước mỗi `git commit`: chạy Superpower security check
+Sau mỗi thay đổi UI có ý nghĩa: chạy Playwright E2E test liên quan 
 ---
 
 ## 1. Tổng quan Phase 3
@@ -98,7 +99,7 @@ Kế thừa từ SPEC_phase2.md Section 2 ([P3P], [IDT], [SL98], [Chen05], [Kram
 - [Ensembl] = Ensembl genome browser, human transcriptome GRCh38 cDNA
 - [miRBase] = miRBase database, mature.fa multi-species
 - [miFam] = miRBase miFam.dat (https://www.mirbase.org/download/miFam.dat)
-- [Neilsen12] = Neilsen 2012 Bioinformatics — isomiR profiling
+- [Neilsen12] = Neilsen CT et al. 2012, *Trends in Genetics* 28(11):544-549 [PMID:22883467, DOI:10.1016/j.tig.2012.07.005] — isomiR profiling. **[ĐÍNH CHÍNH]** Spec này trước đây ghi nhầm journal là "Bioinformatics"; journal thực là *Trends in Genetics*.
 - [Morin08] = Morin 2008 Genome Research — isomiR discovery
 
 ---
@@ -164,7 +165,7 @@ backend/
 
 Forward primer stem-loop RT-qPCR có cấu trúc đặc biệt: **specific region (12-17 nt) bind cDNA + tail (3-12 nt) artificial GC-rich**. Phase 2 giải vấn đề này cho Tm bằng **2-step Tm** (§27.2). Bound fraction dùng cùng mô hình:
 
-- **Round 1 — `bound_fraction_binding`:** % specific region bind cDNA tại Ta=60°C. **Quan trọng nhất** — quyết định RT-PCR khởi động.
+- **Round 1 — `bound_fraction_binding`:** % specific region bind cDNA tại **RT temp = 42°C** (SuperScript III RT extension step [K11]). **Quan trọng nhất** — quyết định RT-PCR khởi động. **[ĐÍNH CHÍNH v1.6]** Spec này trước đây ghi 60°C cho Round 1 — sai. Round 1 xảy ra tại bước RT (42°C), không phải bước qPCR annealing (60°C). Đã fix bằng `BOUND_FRACTION_RT_TEMP = 42.0` trong `constants.py`.
 - **Round sau — `bound_fraction_full`:** % full primer bind amplicon (đã có tail-complement) tại Ta=60°C. Ít quan trọng hơn — amplicon đã có sẵn.
 
 Nguồn: [SL04]; [P3GS] Primer Bound% (Opt 97.0)
@@ -174,7 +175,8 @@ Kế thừa SPEC_phase2.md Section L, đổi ký hiệu:
 ```python
 # Source: [SL04] SantaLucia & Hicks 2004, Annual Review of Biophysics
 # (SPEC_phase2 hiện đang ghi [SL07] - đính chính khi có dịp cập nhật)
-BOUND_FRACTION_ANNEALING_TEMP = 60.0
+BOUND_FRACTION_RT_TEMP       = 42.0   # [K11] SuperScript III RT extension step — Round 1
+BOUND_FRACTION_ANNEALING_TEMP = 60.0  # qPCR annealing temperature — Round 2
 BOUND_FRACTION_MIN = 90.0
 BOUND_FRACTION_OPT = 97.0    # [P3GS Primer Bound%]
 BOUND_FRACTION_MAX = 100.0
@@ -338,7 +340,9 @@ Weight `SCORING_WEIGHTS_V4`: **0.05**.
 
 ### 5.5 Data source — `miFam.dat` (thay heuristic v1.1)
 
-**Format:**
+> **[PRODUCTION STATUS — 2026-07-01]** miFam.dat KHÔNG còn available từ miRBase v22.1. URL `https://www.mirbase.org/download/miFam.dat` trả về HTTP 500. File đã bị remove khi miRBase chuyển sang web-based interface. **Production implementation dùng seed-based grouping thay thế** (`mirbase_family_overhangs.json` — 367 families, 929 hsa- miRNAs, build từ `mature.fa` với 7-nt seed window). Tính năng đang hoạt động đúng trên production.
+
+**Format miFam.dat (archived reference):**
 ```
 AC   MIPF0000001
 ID   let-7
@@ -354,7 +358,7 @@ ID   mir-17
 **Script `backend/scripts/build_family_db.py`:**
 ```python
 """
-1. Tải miFam.dat: https://www.mirbase.org/download/miFam.dat
+1. Tải miFam.dat: https://www.mirbase.org/download/miFam.dat  [hiện trả HTTP 500]
 2. Tải mature.fa multi-species
 3. Parse miFam.dat -> mỗi family: list precursor MI IDs
 4. Join mature.fa -> precursor MI -> mature miRNA sequences
@@ -363,7 +367,7 @@ ID   mir-17
 """
 ```
 
-**Lợi ích:**
+**Lợi ích (nếu miFam.dat available):**
 - Loại Limitation #4 §32 (heuristic fail khi user nhập accession `MIMAT0000062` thay vì tên).
 - Đồng nhất với phân loại chính thức miRBase (peer-reviewed).
 - Auto-update khi miRBase release mới.
