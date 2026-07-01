@@ -27,18 +27,11 @@ from .constants import (
     BOUND_FRACTION_MIN,
     P3_DEFAULT_DNA_CONC,
 )
+from .sequence_utils import reverse_complement as _reverse_complement, rna_to_dna as _rna_to_dna
 from .thermodynamics import _get_p3_params
 
 # Gas constant [SL04]
 _R = 1.987  # cal / (mol·K)
-
-
-# ── Sequence utility ──────────────────────────────────────────────
-
-_COMPLEMENT = str.maketrans("ACGTU", "TGCAA")
-
-def _reverse_complement(seq: str) -> str:
-    return seq.upper().translate(_COMPLEMENT)[::-1]
 
 
 # ── Core thermodynamics via primer3-py ────────────────────────────
@@ -70,7 +63,7 @@ def _get_dh_ds_cached(
 
 def _to_dna(sequence: str) -> str:
     """Normalize to uppercase DNA (U→T) before passing to primer3."""
-    return sequence.upper().replace("U", "T")
+    return _rna_to_dna(sequence.upper())
 
 
 def _get_dh_ds(sequence: str, params: dict) -> tuple[float, float]:

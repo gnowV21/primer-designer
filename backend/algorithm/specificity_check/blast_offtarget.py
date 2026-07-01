@@ -16,6 +16,7 @@
 #   [Kwok90] Kwok et al. 1990 Nucleic Acids Research 18(4):999-1005
 # ================================================================
 
+import concurrent.futures
 import ctypes
 import json
 import os
@@ -38,6 +39,8 @@ from algorithm.constants import (
 _DB_DIR      = os.path.join(os.path.dirname(__file__), "..", "..", "data", "blast_db")
 _MIRBASE_DB  = os.path.join(_DB_DIR, "mirbase_multi")
 _METADATA    = os.path.join(_DB_DIR, "metadata.json")
+
+_RISK_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
 
 
 def _win_short_path(path: str) -> str:
@@ -273,10 +276,22 @@ def check_offtarget(
     mirna_id: if set, skip self-hits where subject contains this ID.
     """
     db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []
+    if not db_available:
+        raise FileNotFoundError(
+            f"BLAST database not found at {_MIRBASE_DB!r}. "
+            "Run 'python scripts/build_blast_db.py' to build it first."
+        )
 
     species_prefix = _extract_species_prefix(mirna_id)
-    fwd_hits, fwd_safe, fwd_cs = _check_primer(forward_primer, db_available, mirna_id, species_prefix, timeout)
-    rev_hits, rev_safe, rev_cs = _check_primer(reverse_primer, db_available, mirna_id, species_prefix, timeout) if reverse_primer else ([], 0, 0)
+    # Pre-compute once; passed into every _is_self_hit call to avoid per-hit recomputation
+    m_norm = _normalize_mirna_name(mirna_id.lower()) if mirna_id else None
+
+    # Run forward and reverse BLAST concurrently — they are fully independent
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout)
+        rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, species_prefix, timeout) if reverse_primer else None
+        fwd_hits, fwd_safe, fwd_cs = fwd_future.result()
+        rev_hits, rev_safe, rev_cs = rev_future.result() if rev_future else ([], 0, 0)
 
     summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs)
     summary["hits_truncated"] = (
@@ -294,6 +309,7 @@ def _check_primer(
     primer: str,
     db_paths: list[str],
     mirna_id: Optional[str],
+    m_norm: Optional[str],
     species_prefix: str,
     timeout: int,
 ) -> tuple[list[dict], int, int]:
@@ -316,7 +332,7 @@ def _check_primer(
             raise   # caller (route) handles circuit breaker
         for h in raw:
             # Skip self-hit (including precursor variants e.g. hsa-miR-16-1-5p for hsa-miR-16-5p)
-            if mirna_id and _is_self_hit(h["subject_id"], mirna_id):
+            if mirna_id and _is_self_hit(h["subject_id"], mirna_id, m_norm):
                 continue
             # miRBase DB: skip other-species orthologs — same conserved sequence,
             # different organism → irrelevant for same-species assay
@@ -360,8 +376,7 @@ def _check_primer(
                 "risk_reason": reason,
             })
     # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
-    _risk_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
-    non_safe_hits.sort(key=lambda h: (_risk_order.get(h["risk"], 9), h["evalue"]))
+    non_safe_hits.sort(key=lambda h: (_RISK_ORDER.get(h["risk"], 9), h["evalue"]))
     return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded
 
 
@@ -412,25 +427,37 @@ def _normalize_mirna_name(name: str) -> str:
     parts = name.strip().lower().split('-')
     if (len(parts) >= 5
             and re.fullmatch(r'[35]p', parts[-1])
-            and re.fullmatch(r'[12]', parts[-2])):
+            and re.fullmatch(r'\d+', parts[-2])):
         parts.pop(-2)
     return '-'.join(parts)
 
 
-def _is_self_hit(subject_id: str, mirna_id: str) -> bool:
+def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -> bool:
     """
     Return True if this BLAST hit represents the target miRNA itself (not an
     off-target). Handles precursor variants via _normalize_mirna_name.
+
+    m_norm: pre-computed _normalize_mirna_name(mirna_id.lower()) — pass from
+    caller to avoid recomputing it for every hit in the loop.
     """
     s = subject_id.lower()
     m = mirna_id.lower()
-    # Direct substring match (covers most cases)
-    if m in s or s in m:
+    # mirna_id is a substring of subject (handles accession-suffixed FASTA IDs)
+    if m in s:
         return True
-    # Normalised match: strip precursor numbers and compare
+    # subject is a word-boundary prefix of mirna_id
+    # e.g. 'hsa-mir-16' matches 'hsa-mir-16-5p' but NOT 'hsa-mir-10-5p'
+    if len(s) <= len(m) and m.startswith(s) and (len(m) == len(s) or m[len(s)] == '-'):
+        return True
+    # Normalised: strip precursor copy numbers then compare with same boundary rules
     s_norm = _normalize_mirna_name(s)
-    m_norm = _normalize_mirna_name(m)
-    return m_norm in s_norm or s_norm in m_norm
+    if m_norm is None:
+        m_norm = _normalize_mirna_name(m)
+    if m_norm in s_norm:
+        return True
+    if len(s_norm) <= len(m_norm) and m_norm.startswith(s_norm) and (len(m_norm) == len(s_norm) or m_norm[len(s_norm)] == '-'):
+        return True
+    return False
 
 
 def _extract_species_prefix(mirna_id: Optional[str]) -> str:
