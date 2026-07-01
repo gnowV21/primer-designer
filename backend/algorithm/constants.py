@@ -96,7 +96,7 @@ TM_FORWARD_TARGET = 60.0    # °C [R2][PAST24]
 TM_FORWARD_TOLERANCE = 2.0  # °C → acceptable 58–62°C
 TM_PAIR_DIFF_MAX = 2.0      # °C [PAST24]
 TM_ANNEALING_TEMP_DEFAULT = 60.0   # °C
-TM_BOUND_FRACTION_TARGET = 97.0    # % [SL07] — Phase 3
+TM_BOUND_FRACTION_TARGET = 97.0    # % [SL04] SantaLucia & Hicks 2004 — Phase 3
 
 # Binding-region Tm target (scoring criterion 2) — v2.8 FIX
 # Old value 35°C was calibrated for probe oligos ≤10 nt, NOT for 12–17 nt regions.
@@ -285,7 +285,7 @@ PENALTY_WT_TM_LT = 1.0
 PENALTY_WT_TM_GT = 1.0
 PENALTY_WT_GC_LT = 0.5    # HG Lab departure from P3P default 0.0
 PENALTY_WT_GC_GT = 0.5
-PENALTY_WT_BOUND_LT = 1.0  # Phase 3 [SL07]
+PENALTY_WT_BOUND_LT = 1.0  # Phase 3 [SL04] SantaLucia & Hicks 2004
 PENALTY_WT_BOUND_GT = 1.0
 PENALTY_WT_END_STABILITY = 0.5
 PENALTY_WT_SELF_COMP = 0.0
@@ -420,3 +420,68 @@ SCORING_WEIGHTS_V3 = {
     "tm_pair_match":        0.05,
 }
 # Total: 0.20+0.10+0.07+0.02+0.03+0.15+0.10+0.10+0.10+0.04+0.04+0.05 = 1.00
+
+
+# ----------------------------------------------------------------
+# SECTION (28): v3.0 — Phase 3 additions
+# ----------------------------------------------------------------
+
+# v3.0: 15-criterion scoring weights (Phase 3). [PAST24][IDT][SL04]
+# Changes from V3: +bound_fraction_binding (0.05), +bound_fraction_full (0.03),
+#   +family_discrimination (0.05); reduced hairpin/dimer/end_stability by 0.02 each,
+#   gc_content +0.01, tm_pair_match -0.02, gc_clamp -0.01, primer/amplicon_size -0.02 each,
+#   gc_skew -0.01.
+SCORING_WEIGHTS_V4 = {
+    "tm_accuracy":             0.20,  # core — unchanged
+    "mfe_stemloop":            0.15,  # core — unchanged
+    "tm_binding_accuracy":     0.10,  # core — unchanged
+    "hairpin_penalty":         0.08,  # -0.02 vs V3
+    "dimer_penalty":           0.08,  # -0.02 vs V3
+    "end_stability":           0.08,  # -0.02 vs V3
+    "bound_fraction_binding":  0.05,  # NEW — round 1 (cDNA binding) [SL04]
+    "bound_fraction_full":     0.03,  # NEW — round 2 (amplicon binding) [SL04]
+    "gc_content":              0.08,  # +0.01 vs V3
+    "family_discrimination":   0.05,  # NEW — miFam.dat risk [Chen05]
+    "tm_pair_match":           0.03,  # -0.02 vs V3
+    "gc_clamp":                0.02,  # -0.01 vs V3
+    "primer_size":             0.02,  # -0.02 vs V3
+    "amplicon_size":           0.02,  # -0.02 vs V3
+    "gc_skew":                 0.01,  # -0.01 vs V3
+}
+# Total: 0.20+0.15+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.03+0.02+0.02+0.02+0.01 = 1.00
+assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
+
+# Family discrimination risk → score mapping [Chen05]
+FAMILY_DISCRIMINATION_RISK_SCORE = {
+    "SAFE":           100,
+    "LOW":             70,
+    "HIGH":            30,
+    "IDENTICAL":        0,
+    "no_family_data": 100,  # score 100 but explanation notes data absence
+}
+
+# BLAST off-target parameters [Ye12] Ye et al. 2012 BMC Bioinformatics 13:134
+BLAST_WORD_SIZE        = 7       # [Ye12] — vs standard 11
+BLAST_EVALUE_CUTOFF    = 30000   # [Ye12] — primer-only case (3000× standard)
+BLAST_MAX_TARGET_SEQS  = 50000   # [Ye12] — vs standard 250
+BLAST_REWARD           = 1       # [Ye12] — match reward
+BLAST_PENALTY          = -1      # [Ye12] — mismatch penalty, ratio 1:1
+BLAST_TASK             = "blastn-short"  # for queries <30 nt
+
+# [Ye12] Primer-BLAST default specificity thresholds
+PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specific enough"
+PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
+PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
+PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
+
+# [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
+# Primer:Template → PCR yield relative to perfect match
+KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
+KWOK_REDUCING_PAIRS  = {("A","A")}                          # ~5% yield
+# All other pairs → TOLERANT (~100% yield or context-dependent)
+
+# BLAST cache / infra
+BLAST_CACHE_TTL_DAYS       = 30   # days before cache entry expires [spec §9.1]
+BLAST_CB_FAILURE_THRESHOLD = 3    # consecutive failures to open circuit [spec §9.2]
+BLAST_CB_RECOVERY_TIMEOUT  = 60   # seconds before HALF_OPEN probe [spec §9.2]
+BLAST_DB_STALE_WARN_DAYS   = 90   # days before database staleness warning [spec §9.4]

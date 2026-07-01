@@ -1,11 +1,14 @@
 # ================================================================
-# scoring.py — Module 6: 12-criterion weighted scoring (v2.8.3 / V3)
+# scoring.py — Module 6: weighted scoring
+# V3 (12 criteria, SCORING_WEIGHTS_V3) — Phase 2, kept as reference.
+# V4 (15 criteria, SCORING_WEIGHTS_V4) — Phase 3 default.
 # Total score 0–100. Grade: Excellent(≥80), Good(65–79), Acceptable(50–64), Poor(<50).
-# Weights: SCORING_WEIGHTS_V3 (Section 27/I of spec)
 # ================================================================
 
 from .constants import (
-    SCORING_WEIGHTS_V3, TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
+    SCORING_WEIGHTS_V3, SCORING_WEIGHTS_V4,
+    FAMILY_DISCRIMINATION_RISK_SCORE,
+    TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
     TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
     MFE_STEMLOOP_MIN, MFE_STEMLOOP_MAX, MFE_STEMLOOP_OPTIMAL,
@@ -15,11 +18,26 @@ from .constants import (
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
 )
 from .sequence_utils import calculate_gc_skew
+from .bound_fraction import (
+    calculate_bound_fraction_binding,
+    calculate_bound_fraction_full,
+    score_bound_fraction,
+)
 
 
-def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) -> dict:
+def score_candidate(
+    forward: dict,
+    stemloop: dict,
+    reverse: dict,
+    params: dict,
+    cross_reactivity: dict | None = None,
+    use_v4: bool = True,
+) -> dict:
     """
-    Score a complete primer set across 12 weighted criteria (SCORING_WEIGHTS_V3).
+    Score a complete primer set.
+    use_v4=True (default): 15 criteria (SCORING_WEIGHTS_V4, Phase 3).
+    use_v4=False: 12 criteria (SCORING_WEIGHTS_V3, Phase 2 compat).
+    cross_reactivity: output from check_family_crossreactivity (needed for V4).
     """
     scores = {}
     explanations = {}
@@ -47,7 +65,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Based on Primer3Plus SEQUENCE_OVERHANG_LEFT principle (SantaLucia 1998 NN)."
     )
 
-    # ── 3. GC content (0.09) ──────────────────────────────────────
+    # ── 3. GC content (0.07 V3 / 0.08 V4) ───────────────────────
     gc = forward["gc_percent"]
     if GC_MIN <= gc <= GC_MAX:
         gc_score = max(60, 100 - abs(gc - GC_OPTIMAL) * 2)
@@ -59,7 +77,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Source: IDT guidelines, PrimerAST 2024."
     )
 
-    # ── 4. GC-skew (0.03) [PAST24] ────────────────────────────────
+    # ── 4. GC-skew (0.02 V3 / 0.01 V4) [PAST24] ─────────────────
     skew = calculate_gc_skew(forward["sequence"])
     if skew <= 0:
         skew_score = 100
@@ -86,18 +104,14 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
     mfe_max    = float(params.get("mfeMax", MFE_STEMLOOP_MAX_RNA if _rna_method else MFE_STEMLOOP_MAX))
     if mfe_min <= mfe <= mfe_max:
         # Piecewise-linear: score=60 at both boundaries, score=100 at _mfe_opt.
-        # Continuous with out-of-range penalties — no floor discontinuity.
         if mfe <= _mfe_opt:
             frac = (mfe - mfe_min) / (_mfe_opt - mfe_min) if (_mfe_opt - mfe_min) > 0 else 1.0
         else:
             frac = (mfe_max - mfe) / (mfe_max - _mfe_opt) if (mfe_max - _mfe_opt) > 0 else 1.0
         mfe_score = 60.0 + 40.0 * max(0.0, frac)
     elif mfe < mfe_min:
-        # Too stable: penalise proportionally (60 → 0 as mfe moves below mfe_min)
         mfe_score = max(0, 60 + (mfe - mfe_min) * 5)
     else:
-        # Too weak: penalise proportionally (60 → 0 as mfe rises above mfe_max).
-        # v2.8 fix: was (mfe_max - mfe) — negative when mfe > mfe_max → score inflated
         mfe_score = max(0, 60 - (mfe - mfe_max) * 5)
     scores["mfe_stemloop"] = round(mfe_score, 1)
     explanations["mfe_stemloop"] = (
@@ -108,7 +122,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Source: Report 2 HG Lab, Chen et al. 2005."
     )
 
-    # ── 6. Hairpin penalty (0.10) ─────────────────────────────────
+    # ── 6. Hairpin penalty (0.10 V3 / 0.08 V4) ───────────────────
     hp = sc.get("hairpin", {})
     hp_dg  = hp.get("dg", 0.0)
     sev    = hp.get("severity", "safe")
@@ -119,7 +133,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Severity: {sev}. Primer3Plus thermodynamic alignment enabled."
     )
 
-    # ── 7. Dimer penalty (0.10) ───────────────────────────────────
+    # ── 7. Dimer penalty (0.10 V3 / 0.08 V4) ────────────────────
     sd_end   = sc.get("self_dimer", {}).get("dg_3prime", 0.0)
     hd_end   = sc.get("hetero_dimer", {}).get("dg_3prime", 0.0)
     worst    = min(sd_end, hd_end)
@@ -137,7 +151,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         + "Source: IDT OligoAnalyzer, Premier Biosoft qPCR guidelines."
     )
 
-    # ── 8. 3' End stability (0.10) [P3P] ──────────────────────────
+    # ── 8. 3' End stability (0.10 V3 / 0.08 V4) [P3P] ───────────
     es = sc.get("end_stability", {})
     es_val  = es.get("stability_kcal_mol", 0.0)
     es_pass = es.get("pass", True)
@@ -152,7 +166,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Source: Primer3Plus PRIMER_MAX_END_STABILITY = 9.0 kcal/mol."
     )
 
-    # ── 9. Primer size (0.04) [P3P Penalties] ─────────────────────
+    # ── 9. Primer size (0.04 V3 / 0.02 V4) [P3P Penalties] ───────
     primer_len = forward.get("length", FORWARD_OPTIMAL_LENGTH)
     size_diff  = abs(primer_len - FORWARD_OPTIMAL_LENGTH)
     scores["primer_size"] = round(max(0, 100 - size_diff * 10), 1)
@@ -161,7 +175,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Δ = {size_diff} nt. Source: Primer3Plus Penalties — Size Lt=Gt=1.0 per nt."
     )
 
-    # ── 10. Amplicon size (0.04) ──────────────────────────────────
+    # ── 10. Amplicon size (0.04 V3 / 0.02 V4) ───────────────────
     amp = forward.get("amplicon_size", 0)
     if AMPLICON_MIN_QPCR <= amp <= AMPLICON_MAX_QPCR:
         amp_score = max(70, 100 - abs(amp - AMPLICON_IDEAL) * 0.5)
@@ -174,25 +188,25 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Source: IDT qPCR primer design guidelines."
     )
 
-    # ── 11. Tm pair match (0.05) ──────────────────────────────────
-    tm_rev      = reverse["tm"]
+    # ── 11. Tm pair match (0.05 V3 / 0.03 V4) ───────────────────
+    tm_rev       = reverse["tm"]
     tm_pair_diff = abs(tm - tm_rev)
-    if tm_pair_diff <= 1.0:          pair_score = 100
+    if tm_pair_diff <= 1.0:               pair_score = 100
     elif tm_pair_diff <= TM_PAIR_DIFF_MAX: pair_score = 80
-    else:                            pair_score = max(0, 80 - (tm_pair_diff - TM_PAIR_DIFF_MAX) * 20)
+    else:                                  pair_score = max(0, 80 - (tm_pair_diff - TM_PAIR_DIFF_MAX) * 20)
     scores["tm_pair_match"] = round(pair_score, 1)
     explanations["tm_pair_match"] = (
         f"Tm difference: forward {tm}°C vs reverse {tm_rev}°C = {tm_pair_diff:.1f}°C "
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). Source: PrimerAST 2024."
     )
 
-    # ── 12. GC clamp at 3' end (0.03) [IDT PrimerQuest] ──────────
+    # ── 12. GC clamp at 3' end (0.03 V3 / 0.02 V4) [IDT] ────────
     last3    = forward["sequence"][-3:].upper()
     gc_last3 = sum(1 for b in last3 if b in "GC")
-    if gc_last3 == 2:    gc_clamp_score = 100   # optimal anchor
-    elif gc_last3 >= 3:  gc_clamp_score = 80    # over-stabilised — minor penalty
-    elif gc_last3 == 1:  gc_clamp_score = 60    # relaxed fallback — suboptimal
-    else:                gc_clamp_score = 0     # no anchor — shouldn't reach scoring
+    if gc_last3 == 2:    gc_clamp_score = 100
+    elif gc_last3 >= 3:  gc_clamp_score = 80
+    elif gc_last3 == 1:  gc_clamp_score = 60
+    else:                gc_clamp_score = 0
     scores["gc_clamp"] = gc_clamp_score
     explanations["gc_clamp"] = (
         f"GC clamp at 3' end: {gc_last3} G/C in last 3 nt ('{last3}'). "
@@ -200,22 +214,76 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
         f"Source: IDT PrimerQuest GC_clamp_code."
     )
 
-    # ── Total weighted score ───────────────────────────────────────
-    total = round(sum(scores[k] * SCORING_WEIGHTS_V3[k] for k in SCORING_WEIGHTS_V3), 1)
+    # ── V4-only criteria ─────────────────────────────────────────
+    weights = SCORING_WEIGHTS_V4 if use_v4 else SCORING_WEIGHTS_V3
+
+    if use_v4:
+        # ── 13. Bound fraction — binding region (0.05) [SL04] ────
+        specific_region = forward.get("specific_sequence") or forward["sequence"][-forward.get("specific_length", len(forward["sequence"])):]
+        bf_binding = calculate_bound_fraction_binding(specific_region, params)
+        bf_binding_result = score_bound_fraction(bf_binding)
+        scores["bound_fraction_binding"] = bf_binding_result["score"]
+        explanations["bound_fraction_binding"] = (
+            f"Specific region bound fraction = {bf_binding:.1f}% at Ta=60°C "
+            f"(optimal ≥ 97%, acceptable ≥ 90%). "
+            f"Round 1: specific region ({forward.get('specific_length', '?')} nt) binds cDNA — "
+            f"determines RT initiation. "
+            f"Formula: [SL04] SantaLucia & Hicks 2004 (dH/dS from primer3-py heterodimer)."
+        )
+
+        # ── 14. Bound fraction — full primer (0.03) [SL04] ───────
+        bf_full = calculate_bound_fraction_full(forward["sequence"], params)
+        bf_full_result = score_bound_fraction(bf_full)
+        scores["bound_fraction_full"] = bf_full_result["score"]
+        explanations["bound_fraction_full"] = (
+            f"Full primer bound fraction = {bf_full:.1f}% at Ta=60°C "
+            f"(optimal ≥ 97%, acceptable ≥ 90%). "
+            f"Round 2: full primer ({forward.get('length', '?')} nt) binds amplicon. "
+            f"Formula: [SL04] SantaLucia & Hicks 2004."
+        )
+
+        # ── 15. Family discrimination (0.05) [Chen05] ────────────
+        worst_risk = _extract_worst_family_risk(cross_reactivity)
+        fam_score = FAMILY_DISCRIMINATION_RISK_SCORE.get(worst_risk, 50)
+        scores["family_discrimination"] = fam_score
+        family_name = cross_reactivity.get("family") if cross_reactivity else None
+        overhang_used = cross_reactivity.get("overhang_used", 6) if cross_reactivity else 6
+        explanations["family_discrimination"] = (
+            f"Family cross-reactivity risk: {worst_risk} "
+            f"(family: {family_name or 'unknown'}, overhang: {overhang_used} nt). "
+            f"Score 100=SAFE/no data, 70=LOW, 30=HIGH, 0=IDENTICAL. "
+            f"Source: Chen et al. 2005 Fig.7; miFam.dat."
+        )
+
+    # ── Total weighted score ──────────────────────────────────────
+    total = round(sum(scores[k] * weights[k] for k in weights if k in scores), 1)
 
     return {
         "total_score": total,
         "grade": _grade(total),
         "scores": scores,
-        "weights": SCORING_WEIGHTS_V3,
+        "weights": weights,
         "explanations": explanations,
+        "scoring_version": "V4" if use_v4 else "V3",
         "pass_all_structure_checks": sc.get("overall_pass", False),
         "has_critical_flag": sc.get("has_critical_flag", False),
     }
 
 
+def _extract_worst_family_risk(cross_reactivity: dict | None) -> str:
+    """Return the worst risk label from cross_reactivity result dict."""
+    if not cross_reactivity:
+        return "no_family_data"
+    hits = cross_reactivity.get("cross_reactivity", [])
+    if not hits:
+        return "no_family_data"
+    rank = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
+    worst = min(hits, key=lambda h: rank.get(h.get("risk", "SAFE"), 3))
+    return worst.get("risk", "no_family_data")
+
+
 def _grade(total: float) -> str:
-    if total >= 80:  return "Excellent"
+    if total >= 80:   return "Excellent"
     elif total >= 65: return "Good"
     elif total >= 50: return "Acceptable"
     else:             return "Poor"

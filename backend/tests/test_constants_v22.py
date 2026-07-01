@@ -24,6 +24,8 @@ from algorithm.constants import (
     MFE_STEMLOOP_MIN_RNA,
     MFE_STEMLOOP_MAX_RNA,
     OVERHANG_LENGTH_DEFAULT,
+    SCORING_WEIGHTS_V3,
+    SCORING_WEIGHTS_V4,
 )
 from algorithm.sequence_utils import check_homopolymer
 
@@ -111,3 +113,36 @@ def test_mfe_rna_range():
 def test_overhang_length_default():
     """Stemloop binding region must default to 6 nt (Chen et al. 2005)."""
     assert OVERHANG_LENGTH_DEFAULT == 6
+
+
+# ── Phase 3: SCORING_WEIGHTS_V4 (15 criteria) ──────────────────────
+
+def test_scoring_weights_v3_sum_to_1():
+    """SCORING_WEIGHTS_V3: 12 criteria must sum to 1.00."""
+    assert abs(sum(SCORING_WEIGHTS_V3.values()) - 1.00) < 0.001
+    assert len(SCORING_WEIGHTS_V3) == 12
+
+
+def test_scoring_weights_v4_sum_to_1():
+    """SCORING_WEIGHTS_V4: 15 criteria must sum to 1.00."""
+    assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
+
+
+def test_scoring_weights_v4_has_15_criteria():
+    assert len(SCORING_WEIGHTS_V4) == 15
+
+
+def test_scoring_weights_v4_bound_fraction_ratio():
+    """bound_fraction_binding (0.05) > bound_fraction_full (0.03) — round 1 more important."""
+    assert SCORING_WEIGHTS_V4["bound_fraction_binding"] > SCORING_WEIGHTS_V4["bound_fraction_full"]
+    assert SCORING_WEIGHTS_V4["bound_fraction_binding"] == 0.05
+    assert SCORING_WEIGHTS_V4["bound_fraction_full"] == 0.03
+
+
+def test_scoring_weights_v4_family_discrimination():
+    assert SCORING_WEIGHTS_V4["family_discrimination"] == 0.05
+
+
+def test_scoring_weights_v4_no_isomir_flag():
+    """isomir_flag is warning-only — must NOT be in weights."""
+    assert "isomir_flag" not in SCORING_WEIGHTS_V4

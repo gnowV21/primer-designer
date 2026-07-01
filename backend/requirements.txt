@@ -19,3 +19,8 @@ biopython==1.83
 
 numpy==1.26.4
 # Scoring calculations
+
+# Phase 3
+flask-limiter>=3.5.0
+# Rate limiting for /api/blast-check (10 req/min/IP) [spec §9.3]
+# blastn BLAST+ binary NOT installed via pip — use: sudo apt-get install -y ncbi-blast+
