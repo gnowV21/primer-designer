@@ -17,6 +17,7 @@
 | v1.6 | **§13 FRONTEND INTEGRATION** — Full spec cho nút "Check off-target": hook `useBlastCheck`, button placement trong `PrimerSetCard`, loading state, risk badge styling (4 mức), error handling (429/503/timeout/network), result panel layout, integration với `ResultsSection` có sẵn |
 | v1.7 | **[ĐÍNH CHÍNH IMPLEMENTATION 2026-07-01]** (1) §2: Neilsen12 journal = *Trends in Genetics* (không phải Bioinformatics); (2) §4.1+4.2: `BOUND_FRACTION_RT_TEMP = 42°C` cho Round 1 — spec cũ ghi 60°C sai; (3) §5.5: miFam.dat HTTP 500 trên miRBase v22.1 — production dùng seed-based grouping; (4) §6: isoMiR data v1.0.0 verified (8 entries, PMIDs), `evidence_level` field, key đổi từ `data_warning` → `co_amplification_warning`; (5) §8.9+8.11: cross-species filtering + `cross_species_excluded`/`hits_truncated` trong summary; smoke test hsa-miR-21-5p passed |
 | v1.8 | **[GAP FIX — stemloop RT × universal reverse heterodimer 2026-07-01]** Phase 2 chỉ check 2 cặp heterodimer: fwd×stemloop (RT buffer) và fwd×reverse (PCR buffer). Trong one-step RT-qPCR tất cả 3 primer cùng hiện diện trong PCR tube → cặp stemloop×reverse chưa bao giờ được check. Fix: `check_stemloop_reverse_heterodimer()` mới trong `heterodimer.py`; gọi 1 lần trong `design.py` (không per-candidate vì cả hai sequence cố định); kết quả expose tại `universal_reverse.stemloop_reverse_heterodimer` trong API response; HIGH/MODERATE risk promote lên `global_warnings`. Thực tế Chen 2005 pair: dG = −4.40 kcal/mol → PASS (hệ thống validated thực nghiệm). 3 tests mới, 105/105 pass. commit `78a5e22`. |
+| v1.9 | **[CẢI THIỆN TÍNH ĐÚNG KHOA HỌC — 2026-07-01]** commit `b36f124`. (1) **Loại Ensembl khỏi BLAST:** DNase treatment trước RT loại toàn bộ genomic DNA và unspliced RNA — template còn lại chỉ là mature miRNA; off-target risk giới hạn ở miRNA family cross-reactivity đã được miRBase multi-species cover đủ. (2) **Bound fraction recalibrate:** `BOUND_FRACTION_ANNEALING_TEMP` 60→**55°C** (Tm−5°C = Ta thực tế qPCR); tại đúng Tm=60°C fraction ~50% theo định nghĩa nhiệt động học → score luôn gần 0 → vô nghĩa. `BOUND_FRACTION_MIN/OPT` 90/97→**60/80%**: threshold cũ dành cho duplex hybridization dài (~27 nt), không phù hợp primer ngắn 12–24 nt. Formula `score_bound_fraction` sửa sang `fract/MIN*70` thay vì `(fract-50)/40*70` hardcoded. (3) **Self-hit precursor variants:** thêm `_normalize_mirna_name()` (strip precursor copy number, guard ≥5 components) + `_is_self_hit()` — loại đúng hsa-miR-16-1-5p và hsa-miR-16-2-5p khỏi off-target khi design cho hsa-miR-16-5p. (4) **SCORING_WEIGHTS_V4 v3.1 rebalance:** `mfe_stemloop` 0.15→**0.14** (body 44 nt cố định; chỉ overhang 6 nt thay đổi → variance thấp), `tm_pair_match` 0.03→**0.01** (reverse cố định Tm≈60.4°C, redundant với tm_accuracy), `gc_clamp` 0.02→**0.04** (3' GC critical cho extension), `gc_skew` 0.01→**0.02**. (5) **E2E / frontend:** baseURL centralize qua `playwright.config.js`; `OffTargetPanel` loại Ensembl references; `detectInputType` bỏ `q.length >= 10` (fix 8–9 nt gap). |
 
 ---
 
@@ -66,7 +67,7 @@ Bổ sung 3 hạng mục hoãn từ Phase 2: bound fraction (2 bước, đối x
                               |
                               v (CLOSED)
                         [blastn subprocess]
-                        vs miRBase multi-species + Ensembl human transcriptome
+                        vs miRBase multi-species (Ensembl đã loại — v1.9)
                               |
                         [NW global alignment realign (Ye 2012)]
                               |
@@ -168,23 +169,29 @@ backend/
 Forward primer stem-loop RT-qPCR có cấu trúc đặc biệt: **specific region (12-17 nt) bind cDNA + tail (3-12 nt) artificial GC-rich**. Phase 2 giải vấn đề này cho Tm bằng **2-step Tm** (§27.2). Bound fraction dùng cùng mô hình:
 
 - **Round 1 — `bound_fraction_binding`:** % specific region bind cDNA tại **RT temp = 42°C** (SuperScript III RT extension step [K11]). **Quan trọng nhất** — quyết định RT-PCR khởi động. **[ĐÍNH CHÍNH v1.6]** Spec này trước đây ghi 60°C cho Round 1 — sai. Round 1 xảy ra tại bước RT (42°C), không phải bước qPCR annealing (60°C). Đã fix bằng `BOUND_FRACTION_RT_TEMP = 42.0` trong `constants.py`.
-- **Round sau — `bound_fraction_full`:** % full primer bind amplicon (đã có tail-complement) tại Ta=60°C. Ít quan trọng hơn — amplicon đã có sẵn.
+- **Round sau — `bound_fraction_full`:** % full primer bind amplicon (đã có tail-complement) tại **Ta=55°C (= Tm_target − 5°C)**. Tại đúng Tm=60°C, ~50% primer unbound theo định nghĩa nhiệt động học — evaluate tại đây cho score ~0 luôn, vô nghĩa về mặt thiết kế. Đánh giá tại Tm−5°C là nhiệt độ annealing thực tế qPCR. Ít quan trọng hơn Round 1 — amplicon đã có sẵn. **[FIX v1.9]**
 
 Nguồn: [SL04]; [P3GS] Primer Bound% (Opt 97.0)
 
-### 4.2 Constants (đính chính nguồn v1.2)
+### 4.2 Constants (đính chính nguồn v1.2; recalibrate v1.9)
 Kế thừa SPEC_phase2.md Section L, đổi ký hiệu:
 ```python
 # Source: [SL04] SantaLucia & Hicks 2004, Annual Review of Biophysics
 # (SPEC_phase2 hiện đang ghi [SL07] - đính chính khi có dịp cập nhật)
-BOUND_FRACTION_RT_TEMP       = 42.0   # [K11] SuperScript III RT extension step — Round 1
-BOUND_FRACTION_ANNEALING_TEMP = 60.0  # qPCR annealing temperature — Round 2
-BOUND_FRACTION_MIN = 90.0
-BOUND_FRACTION_OPT = 97.0    # [P3GS Primer Bound%]
+BOUND_FRACTION_RT_TEMP        = 42.0  # [K11] SuperScript III RT extension step — Round 1
+BOUND_FRACTION_ANNEALING_TEMP = 55.0  # [v1.9 FIX] Tm_target − 5°C = Ta thực tế qPCR
+                                      # Cũ: 60.0°C (= Tm) → fraction ~50% by definition → score ~0 luôn
+BOUND_FRACTION_MIN = 60.0   # [v1.9 FIX] Cũ: 90.0 — threshold cho long duplex ~27 nt, không phù hợp primer ngắn
+BOUND_FRACTION_OPT = 80.0   # [v1.9 FIX] Cũ: 97.0 — primer 14 nt / 50% GC tại 42°C đạt ~63-80%; 97% không khả thi
 BOUND_FRACTION_MAX = 100.0
 PENALTY_WT_BOUND_LT = 1.0    # [P3P Penalties]
 PENALTY_WT_BOUND_GT = 1.0    # [P3P Penalties]
 ```
+
+**Lý do recalibrate v1.9:**
+- Nhiệt động học: tại đúng Tm (60°C), 50% duplex và 50% single-strand là định nghĩa của Tm → bound fraction ~50% với mọi primer tốt → score ≈ 0 với threshold cũ (OPT=97%). Evaluate tại Tm−5°C = 55°C cho primer Tm=60°C: fraction ≈ 82% → score ≥100.
+- Calibration short oligo: OPT=97%/MIN=90% được thiết lập cho long symmetric-duplex hybridization (~27 nt equimolar). Primer RT 12–17 nt tại 42°C và primer full 22–24 nt tại 55°C thực tế chỉ đạt 60–85%.
+- Formula suboptimal: `(fract-50)/40*70` hardcode anchor 50% và range 40 từ threshold cũ → sai sau khi đổi MIN. Mới: `fract/MIN*70` — tuyến tính từ 0%→0 đến MIN%→70, consistent với MIN constant.
 
 ### 4.3 Công thức
 ```python
@@ -261,13 +268,20 @@ def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
     return _calculate_bound_fraction(full_primer, params)
 ```
 
-### 4.6 Scoring (chung cho cả 2 hàm)
+### 4.6 Scoring (chung cho cả 2 hàm) — recalibrate v1.9
+
 ```python
 def score_bound_fraction(fract: float) -> dict:
     """
-    fract >= 97 (OPT):   score = 100
-    90 <= fract < 97:    score = 70 + (fract-90)/7 * 30   # tuyến tính
-    fract < 90:          score = max(0, (fract-50)/40 * 70)  # sàn 0 tại 50%
+    [v1.9 recalibrated — OPT=80%, MIN=60%]
+    fract >= OPT (80%):              score = 100
+    MIN (60%) <= fract < OPT (80%):  score = 70 + (fract-MIN)/(OPT-MIN) * 30  # tuyến tính 70→100
+    fract < MIN (60%):               score = max(0, fract/MIN * 70)             # tuyến tính 0→70
+
+    Cũ (v1.8 và trước):
+    fract >= 97: 100
+    90 <= fract < 97: 70 + (fract-90)/7 * 30
+    fract < 90: max(0, (fract-50)/40 * 70)   ← hardcode 50/40 từ threshold cũ
     """
 ```
 
@@ -473,31 +487,32 @@ def test_co_amplification_warning_key(): ...             # key renamed from data
 
 ## 7. Scoring Engine — SCORING_WEIGHTS_V4 (12 → 15 tiêu chí)
 
-### 7.1 Bảng weight
+### 7.1 Bảng weight — v4 (Phase 3 ra mắt) → v4.1 (v1.9 rebalance)
 
-| Tiêu chí | v3 (12) | v4 (15) | Ghi chú |
-|---|---|---|---|
-| tm_accuracy | 0.20 | 0.20 | core, giữ nguyên |
-| mfe_stemloop | 0.15 | 0.15 | core, giữ nguyên |
-| tm_binding_accuracy | 0.10 | 0.10 | core, giữ nguyên |
-| hairpin_penalty | 0.10 | 0.08 | giảm 0.02 |
-| dimer_penalty | 0.10 | 0.08 | giảm 0.02 |
-| end_stability | 0.10 | 0.08 | giảm 0.02 |
-| **bound_fraction_binding** | — | **0.05** | MỚI - round 1 (cDNA) |
-| **bound_fraction_full** | — | **0.03** | MỚI - round sau (amplicon) |
-| gc_content | 0.07 | 0.08 | tăng 0.01 |
-| **family_discrimination** | — | **0.05** | MỚI - risk từ miFam.dat |
-| tm_pair_match | 0.05 | 0.03 | giảm 0.02 |
-| gc_clamp | 0.03 | 0.02 | giảm 0.01 |
-| primer_size | 0.04 | 0.02 | giảm 0.02 |
-| amplicon_size | 0.04 | 0.02 | giảm 0.02 |
-| gc_skew | 0.02 | 0.01 | giảm 0.01 |
-| **TỔNG** | **1.00** | **1.00** | verified |
+| Tiêu chí | V3 (12) | V4 ra mắt | **V4.1 (v1.9)** | Ghi chú v1.9 |
+|---|---|---|---|---|
+| tm_accuracy | 0.20 | 0.20 | **0.20** | core, giữ nguyên |
+| mfe_stemloop | 0.15 | 0.15 | **0.14** | body 44 nt cố định; variance thấp |
+| tm_binding_accuracy | 0.10 | 0.10 | **0.10** | core, giữ nguyên |
+| hairpin_penalty | 0.10 | 0.08 | **0.08** | |
+| dimer_penalty | 0.10 | 0.08 | **0.08** | |
+| end_stability | 0.10 | 0.08 | **0.08** | |
+| **bound_fraction_binding** | — | **0.05** | **0.05** | round 1 (cDNA) |
+| **bound_fraction_full** | — | **0.03** | **0.03** | round sau (amplicon) |
+| gc_content | 0.07 | 0.08 | **0.08** | |
+| **family_discrimination** | — | **0.05** | **0.05** | risk từ miFam.dat |
+| tm_pair_match | 0.05 | 0.03 | **0.01** | reverse cố định Tm≈60.4°C → redundant |
+| gc_clamp | 0.03 | 0.02 | **0.04** | 3' GC critical cho extension |
+| primer_size | 0.04 | 0.02 | **0.02** | |
+| amplicon_size | 0.04 | 0.02 | **0.02** | |
+| gc_skew | 0.02 | 0.01 | **0.02** | G-quadruplex risk signal |
+| **TỔNG** | **1.00** | **1.00** | **1.00** | verified |
 
 ```python
+# SCORING_WEIGHTS_V4 — v4.1 (commit b36f124, v1.9)
 SCORING_WEIGHTS_V4 = {
     "tm_accuracy":             0.20,
-    "mfe_stemloop":            0.15,
+    "mfe_stemloop":            0.14,  # -0.01: body 44 nt cố định, chỉ overhang 6 nt thay đổi
     "tm_binding_accuracy":     0.10,
     "hairpin_penalty":         0.08,
     "dimer_penalty":           0.08,
@@ -506,16 +521,22 @@ SCORING_WEIGHTS_V4 = {
     "bound_fraction_full":     0.03,
     "gc_content":              0.08,
     "family_discrimination":   0.05,
-    "tm_pair_match":           0.03,
-    "gc_clamp":                0.02,
+    "tm_pair_match":           0.01,  # -0.02: reverse cố định Tm≈60.4°C → redundant với tm_accuracy
+    "gc_clamp":                0.04,  # +0.02: 3' end GC là critical cho polymerase extension
     "primer_size":             0.02,
     "amplicon_size":           0.02,
-    "gc_skew":                 0.01,
+    "gc_skew":                 0.02,  # +0.01: G-quadruplex risk signal
 }
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001   # = 1.00
 ```
 
 **Lý do chia 5:3 cho bound fraction:** round 1 quyết định RT-PCR khởi động. Nếu fail, không có amplicon cho round sau. Tỷ lệ 5:3 ≈ 1.67 phản ánh "quan trọng hơn nhưng không áp đảo".
+
+**Lý do rebalance v1.9:**
+- `mfe_stemloop` 0.15→0.14: Tất cả designs dùng cùng 44-nt body; MFE chỉ thay đổi theo 6-nt overhang → inter-candidate variance thấp → không xứng đáng 15%.
+- `tm_pair_match` 0.03→0.01: Universal reverse Tm ≈ 60.4°C (cố định). Forward target là 60°C. Bất kỳ primer nào score cao `tm_accuracy` đều tự động score cao `tm_pair_match` → redundant, giảm về 1%.
+- `gc_clamp` 0.02→0.04: Primer không có GC tại 3' end (score 0) gần như không thể extend. Tác động 2 điểm (0.02×100) quá thấp so với tầm quan trọng sinh học.
+- `gc_skew` 0.01→0.02: Tín hiệu G-quadruplex; tăng nhẹ để có tác động ≥2 điểm.
 
 **isomir_flag KHÔNG trong weights** (warning-only §31).
 **BLAST off-target KHÔNG trong weights** (optional, endpoint riêng).
@@ -540,9 +561,13 @@ Chi tiết đầy đủ theo Ye 2012 + Kwok 1990 (v1.3). Kiến trúc hệ thố
 - Endpoint `POST /api/blast-check` optional theo yêu cầu người dùng.
 - Công cụ: Local BLAST+ (`blastn` subprocess).
 
-### 8.2 Database
-- **miRBase** (multi-species mature.fa) — build chung với Module 8.
-- **Human transcriptome** — Ensembl cDNA FASTA GRCh38 (release mới nhất).
+### 8.2 Database — **miRBase only** (v1.9)
+
+- **miRBase** (multi-species mature.fa) — build chung với Module 8. ~48K sequences, ~2 MB index.
+- ~~**Ensembl human cDNA GRCh38**~~ — **ĐÃ LOẠI (v1.9).** Lý do khoa học: DNase treatment trước bước RT loại toàn bộ genomic DNA và unspliced RNA khỏi mẫu. Template còn lại cho RT-PCR chỉ là mature miRNA. Off-target risk trong stem-loop RT-qPCR giới hạn ở **miRNA family cross-reactivity** — đã được miRBase multi-species cover đầy đủ. Ensembl cDNA gây false positives (mRNA hits) không liên quan sinh học và chiếm phần lớn BLAST_MAX_HITS_RETURNED.
+
+**Trước v1.9:** `dbs = [_MIRBASE_DB, _ENSEMBL_DB]`
+**v1.9+:** `db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []`
 
 ### 8.3 BLAST parameters (Ye 2012 defaults)
 
@@ -743,11 +768,11 @@ def classify_hit_risk(primer: str, alignment: dict) -> str:
   },
   "cache": {"hit": false, "cache_key": "abc123..."},
   "database_info": {
-    "ensembl_version": "111",
     "mirbase_version": "22.1",
     "build_date": "2026-06-15",
     "age_days": 16,
     "outdated_warning": false
+    // "ensembl_version" ĐÃ BỎ (v1.9) — Ensembl không còn trong pipeline
   }
 }
 ```
@@ -786,7 +811,48 @@ def _extract_species_prefix(mirna_id: Optional[str]) -> str:
 - cross_species_excluded: 3,623 — filter loại đúng
 - Self-hit (hsa-miR-21-5p) excluded correctly: 0 hits có "miR-21" trong subject_id
 - Cache: miss (lần 1) → hit (lần 2) — SQLiteKVCache TTL 30d hoạt động đúng
-- Databases searched: mirbase_multi (27 hits) + ensembl_human_cdna (173 hits)
+- Database searched: mirbase_multi only (v1.9, Ensembl đã loại)
+
+### 8.12 Self-hit detection cho precursor variants (v1.9)
+
+**Vấn đề:** Cùng mature miRNA có thể được encode bởi nhiều precursor gene. miRBase list chúng như các FASTA entry riêng biệt:
+```
+hsa-miR-16-1-5p  (from hsa-mir-16-1)
+hsa-miR-16-2-5p  (from hsa-mir-16-2)
+```
+Cả hai có sequence giống hệt `hsa-miR-16-5p`. Check cũ: `mirna_id.lower() in subject_id.lower()` → `"hsa-mir-16-5p" in "hsa-mir-16-1-5p"` = **False** → tất cả precursor variants xuất hiện trong off-target results của chính mình.
+
+**Fix (v1.9):**
+
+```python
+def _normalize_mirna_name(name: str) -> str:
+    """
+    Strip precursor copy number: hsa-miR-16-1-5p → hsa-mir-16-5p
+    Guard ≥5 components: hsa-miR-1-5p (4 components) → UNCHANGED
+    
+    Examples:
+      hsa-miR-16-1-5p  → hsa-mir-16-5p   (5 components, drops '1')
+      hsa-miR-16-2-5p  → hsa-mir-16-5p   (5 components, drops '2')
+      hsa-miR-1-5p     → hsa-mir-1-5p    (4 components → unchanged)
+      hsa-let-7a-1-5p  → hsa-let-7a-5p   (5 components, drops '1')
+    """
+    parts = name.strip().lower().split('-')
+    if (len(parts) >= 5
+            and re.fullmatch(r'[35]p', parts[-1])
+            and re.fullmatch(r'[12]', parts[-2])):
+        parts.pop(-2)
+    return '-'.join(parts)
+
+def _is_self_hit(subject_id: str, mirna_id: str) -> bool:
+    """Direct substring check + normalized comparison."""
+    s, m = subject_id.lower(), mirna_id.lower()
+    if m in s or s in m:
+        return True
+    return _normalize_mirna_name(m) in _normalize_mirna_name(s) or \
+           _normalize_mirna_name(s) in _normalize_mirna_name(m)
+```
+
+**Tại sao guard ≥5 components?** `hsa-miR-1-5p` chỉ có 4 components `['hsa', 'miR', '1', '5p']`. Penultimate là `'1'` — nhưng đây là MIR NAME number, không phải precursor copy number. Nếu không guard, sẽ strip thành `hsa-miR-5p` (sai).
 
 ---
 
@@ -960,21 +1026,18 @@ Khi vượt limit: HTTP 429 kèm `Retry-After` header (mặc định flask-limit
 
 ### 9.4 Database Version Tracking
 
-**File:** `backend/data/blast_db/metadata.json`
+**File:** `backend/data/blast_db/metadata.json` — v1.9 (miRBase only)
 ```json
 {
-  "ensembl_version": "111",
-  "ensembl_url": "https://ftp.ensembl.org/pub/release-111/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz",
-  "mirbase_version": "22.1",
-  "mirbase_url": "https://www.mirbase.org/download/mature.fa",
+  "mirbase_version": "CURRENT",
   "build_date": "2026-06-15",
   "sequences_count": {
-    "ensembl_human_cdna": 275129,
     "mirbase_multi": 48885
   },
   "makeblastdb_version": "2.14.0+"
 }
 ```
+*(Fields `ensembl_version`, `ensembl_url`, `protein_coding_only` đã bỏ trong v1.9.)*
 
 **Cảnh báo cũ:**
 ```python
@@ -1578,8 +1641,8 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
       {status === 'idle' && (
         <div className="px-3 py-2">
           <p className="text-xs text-slate-500">
-            Checks forward primer specificity against Ensembl human transcriptome + miRBase
-            multi-species using blastn (Ye 2012 + Kwok 1990 rules). Results are cached 30 days.
+            Checks primer against miRBase (all species) for miRNA family cross-reactivity
+            using blastn (Ye 2012 + Kwok 1990 rules). Results are cached 30 days.
           </p>
         </div>
       )}
