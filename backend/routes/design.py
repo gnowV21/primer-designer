@@ -67,6 +67,8 @@ def design_primers():
             ),
         })
 
+    mirna_name = data.get("sequence", {}).get("mirnaId", "") or ""
+
     # ── 2. Stem-loop RT primer ───────────────────────────────────
     stemloop = design_stemloop_rt(seq, params)
 
@@ -120,10 +122,21 @@ def design_primers():
             params=params,
         )
 
-    # ── 6. Score all candidates ───────────────────────────────────
+    # ── 6. Score all candidates (V4: includes bound_fraction + family) ─
+    # cross_reactivity is the same for all candidates (depends on miRNA, not primer)
+    cross_reactivity_shared = check_family_crossreactivity(
+        mature_seq=seq,
+        mirna_name=mirna_name,
+        params=params,
+        overhang_len=binding_len,
+    )
     scored = []
     for c in candidates:
-        result = score_candidate(c, stemloop, reverse, params)
+        result = score_candidate(
+            c, stemloop, reverse, params,
+            cross_reactivity=cross_reactivity_shared,
+            use_v4=True,
+        )
         scored.append({**c, **result})
 
     # ── 7. Rank → Top N ──────────────────────────────────────────
@@ -133,20 +146,13 @@ def design_primers():
         p["binding_start_1based"] = (p.get("tail_length", 0)) + OUTPUT_BASE_INDEX
         p["binding_end_1based"]   = len(p["sequence"]) + OUTPUT_BASE_INDEX - 1
         # isoMiR flag per candidate (depends on forward primer 3' end position)
-        mirna_name = data.get("sequence", {}).get("mirnaId", "") or ""
         p["isomir_flag"] = check_isomir_flag(
             mirna_name=mirna_name,
             forward_3prime_position=p.get("specific_length", 0),
         )
 
-    # ── 8. Global specificity checks (once, not per candidate) ───
-    mirna_name = data.get("sequence", {}).get("mirnaId", "") or ""
-    cross_reactivity = check_family_crossreactivity(
-        mature_seq=seq,
-        mirna_name=mirna_name,
-        params=params,
-        overhang_len=binding_len,
-    )
+    # ── 8. Global specificity checks — reuse pre-computed result ─────
+    cross_reactivity = cross_reactivity_shared
 
     # Promote HIGH cross-reactivity to global_warnings for immediate visibility
     if any(r["risk"] in ("IDENTICAL", "HIGH") for r in cross_reactivity.get("cross_reactivity", [])):
@@ -188,8 +194,8 @@ def design_primers():
             "candidates_rejected": len(rejection_log),
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
-            "algorithm_version": "2.8.3",
-            "scoring_version": "V3 (12 criteria)",
+            "algorithm_version": "3.0.0",
+            "scoring_version": "V4 (15 criteria)",
             "sources": [
                 "Chen et al. 2005", "Kramer 2011 Unit 15.10",
                 "Varkonyi-Gasic et al. 2007", "Primer3Plus",

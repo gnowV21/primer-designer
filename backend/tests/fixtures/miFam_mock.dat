@@ -1,0 +1,18 @@
+AC   MIPF0000001
+ID   let-7
+MI   MI0000060  hsa-let-7a-1
+MI   MI0000061  hsa-let-7a-2
+MI   MI0000063  mmu-let-7a-1
+MI   MI0000064  hsa-let-7b
+MI   MI0000065  hsa-let-7c
+//
+AC   MIPF0000002
+ID   mir-17
+MI   MI0000071  hsa-mir-17
+MI   MI0000072  hsa-mir-18a
+MI   MI0000073  hsa-mir-19a
+//
+AC   MIPF0000003
+ID   mir-21
+MI   MI0000077  hsa-mir-21
+//
