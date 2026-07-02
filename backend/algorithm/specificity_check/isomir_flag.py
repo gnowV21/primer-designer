@@ -67,38 +67,25 @@ def check_isomir_flag(
             ),
         }
 
-    risk_window = int(entry.get("risk_window_nt", 2))
     shift_nt    = int(entry.get("known_5prime_shift_nt", 1))
+    risk_window = int(entry.get("risk_window_nt", 2))
+    evidence    = entry.get("evidence_level", "unknown")
 
-    # Forward primer 3' end is at position `forward_3prime_position` (1-based).
-    # 5' isoMiR shifts the start by ±shift_nt, so the first risk_window_nt positions
-    # from the 5' end of the miRNA are in the variable region.
-    in_risk_window = forward_3prime_position <= risk_window
-
-    if in_risk_window:
-        note = (
-            f"Forward primer 3' end is at position {forward_3prime_position} (1-based) "
-            f"on the mature miRNA. A known 5' isomiR (±{shift_nt} nt shift) exists for "
-            f"this miRNA — the primer 3' end falls within the {risk_window}-nt risk window "
-            f"and may not discriminate between the canonical sequence and the isomiR. "
-            f"Source: {entry.get('source', 'PLACEHOLDER — verify')}."
-        )
-    else:
-        note = (
-            f"Forward primer 3' end is at position {forward_3prime_position} (1-based), "
-            f"beyond the {risk_window}-nt 5' isoMiR risk window. "
-            f"Primer is likely to discriminate canonical from shifted 5' isomiRs."
-        )
-
-    evidence = entry.get("evidence_level", "unknown")
+    # DB lookup only — entry found means this miRNA has documented 5' isomiRs.
+    # Geometric `in_risk_window` check removed (v2.1 §6.3): for typical specific_lengths
+    # (12–17 nt) the check was never True and produced confusing False negatives.
     return {
-        "isomir_discrimination_risk": in_risk_window,
+        "isomir_discrimination_risk": True,
         "mirna_name": mirna_name,
         "forward_3prime_position": forward_3prime_position,
         "known_5prime_shift_nt": shift_nt,
         "risk_window_nt": risk_window,
         "evidence_level": evidence,
-        "note": note,
+        "note": (
+            f"This miRNA has documented 5'-isomiRs (±{shift_nt} nt shift). "
+            "Stem-loop RT-qPCR forward primers span the 5' end of the miRNA and "
+            "will co-amplify canonical and shifted isomiR species."
+        ),
         "co_amplification_warning": (
             f"This miRNA has documented 5'-isomiRs (±{shift_nt} nt shift). "
             "Stem-loop RT-qPCR forward primers span the 5' end of the miRNA and "
