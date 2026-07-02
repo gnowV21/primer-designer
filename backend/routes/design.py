@@ -70,6 +70,16 @@ def design_primers():
 
     mirna_name = data.get("sequence", {}).get("mirnaId", "") or ""
 
+    # ── 1b. Edge-case detection (run early so errors can carry edge_cases) ──
+    edge_cases = detect_edge_cases(seq)
+    for ec in edge_cases:
+        if ec["severity"] == "critical":
+            global_warnings.append({
+                "field": f"edge_case_{ec['code']}",
+                "severity": "critical",
+                "message": ec["message"],
+            })
+
     # ── 2. Stem-loop RT primer ───────────────────────────────────
     stemloop = design_stemloop_rt(seq, params)
 
@@ -125,6 +135,8 @@ def design_primers():
             "error": "No valid forward primer candidates found with current parameters.",
             "suggestion": "Try relaxing the Tm range, GC% bounds, or amplicon size constraints.",
             "rejection_summary": reasons,
+            "edge_cases": edge_cases,
+            "global_warnings": global_warnings,
         }), 422
 
     # ── 5. Structure checks (per candidate) ──────────────────────
@@ -185,16 +197,6 @@ def design_primers():
                 f"See specificity_warnings.cross_reactivity for details."
             ),
         })
-
-    # ── Edge-case detection ──────────────────────────────────────
-    edge_cases = detect_edge_cases(seq)
-    for ec in edge_cases:
-        if ec["severity"] == "critical":
-            global_warnings.append({
-                "field": f"edge_case_{ec['code']}",
-                "severity": "critical",
-                "message": ec["message"],
-            })
 
     elapsed = round(time.time() - start, 2)
 

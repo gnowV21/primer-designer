@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "purpose": "Ground-truth reference set for validating the stem-loop RT-qPCR primer designer.",
+    "design_is_deterministic_note": "For Chen-2005 stem-loop RT-qPCR, two of the three primers are fully determined by the mature miRNA sequence: (1) the RT stem-loop primer = fixed universal body + reverse-complement of the 3'-terminal 6 nt; (2) the universal reverse primer is a fixed constant. The forward primer's specific region equals the 5' prefix of the miRNA. The validator recomputes these expected values independently from the SAME sequence the tool used (returned in metadata.mirna_sequence), so results do not depend on any hand-entered sequence.",
+    "sources": [
+      "[Chen05] Chen C et al. Nucleic Acids Res. 2005;33(20):e179 — original stem-loop RT-qPCR; RT primer hybridizes 6-8 nt at 3' end of mature miRNA.",
+      "[Wang17] Wang Y et al. Mol Med Rep. 2017;17(3):3690-3696. DOI 10.3892/mmr.2017.8297 (PubMed PMID 29257343) — let-7 members share 16 identical 5' nt; single-nucleotide discrimination; amplification efficiency 0.93-1.14.",
+      "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
+      "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
+    ]
+  },
+  "expected_constants": {
+    "stemloop_body": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC",
+    "universal_reverse": "CCAGTGCAGGGTCCGAGGTA",
+    "overhang_len": 6
+  },
+  "plausibility_windows": {
+    "forward_tm_c": [55.0, 65.0],
+    "forward_gc_pct": [40.0, 60.0],
+    "amplicon_bp": [40, 110],
+    "qpcr_efficiency_ref_pct": [90, 110]
+  },
+  "mirnas": [
+    {
+      "id": "hsa-miR-21-5p",
+      "role": "canonical positive control; widely published stem-loop assay target",
+      "expected_family": null
+    },
+    {
+      "id": "hsa-let-7a-5p",
+      "role": "family discrimination anchor",
+      "expected_family": "let-7",
+      "expected_cross_reactive_siblings": ["hsa-let-7c-5p", "hsa-let-7f-5p"],
+      "note": "[Wang17]: let-7a/c/f differ by as little as 1 nt; specificity module SHOULD flag siblings."
+    },
+    {
+      "id": "hsa-let-7c-5p",
+      "role": "family discrimination (1-nt from let-7a)",
+      "expected_family": "let-7"
+    },
+    {
+      "id": "hsa-let-7f-5p",
+      "role": "family discrimination",
+      "expected_family": "let-7"
+    },
+    {
+      "id": "hsa-miR-16-5p",
+      "role": "common reference/normalizer miRNA",
+      "expected_family": null
+    },
+    {
+      "id": "hsa-miR-155-5p",
+      "role": "23-nt miRNA (length variation)",
+      "expected_family": null
+    },
+    {
+      "id": "hsa-miR-122-5p",
+      "role": "liver-specific marker",
+      "expected_family": null
+    },
+    {
+      "id": "cel-miR-39-3p",
+      "role": "spike-in control (non-human); cross-species sanity",
+      "expected_family": null
+    }
+  ],
+  "edge_cases": [
+    {
+      "label": "very_short_17nt",
+      "matureSequence": "UAGCUUAUCAGACUGAU",
+      "expect_edge_code": "E1",
+      "note": "17 nt < 18 → E1 critical (short miRNA)."
+    },
+    {
+      "label": "low_gc",
+      "matureSequence": "UAUAUAUUAAUAUUAUAUAAUU",
+      "expect_edge_code": "E4",
+      "note": "GC << 30% → E4 low-GC warning (synthetic)."
+    },
+    {
+      "label": "high_gc",
+      "matureSequence": "GCGCGGCGCGGCGCGCGGCGCG",
+      "expect_edge_code": "E5",
+      "note": "GC >> 70% → E5 high-GC warning (synthetic)."
+    },
+    {
+      "label": "homopolymer_runG",
+      "matureSequence": "UAGCUUGGGGGAUCAGACUGAU",
+      "expect_edge_code": "E6",
+      "note": "poly-G run → E6 warning (synthetic)."
+    }
+  ]
+}
