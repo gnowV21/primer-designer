@@ -59,11 +59,16 @@ def blast_check():
         return jsonify({"error": "forward_primer is required"}), 400
     if len(fwd) > 60:
         return jsonify({"error": "forward_primer too long (max 60 nt)"}), 400
-    if not fwd.replace("ACGTN", ""):  # validate nucleotide chars
-        pass  # valid
     invalid_chars = set(fwd) - set("ACGTN")
     if invalid_chars:
         return jsonify({"error": f"Invalid characters in forward_primer: {invalid_chars}"}), 400
+
+    # mirna_id must carry arm designation (-5p/-3p) to prevent _is_self_hit false-positives.
+    # e.g. 'hsa-miR-1' (no arm) → m = 'hsa-mir-1' is a substring of 'hsa-mir-10-5p' [spec §8.12]
+    if mirna_id and not (mirna_id.endswith("-5p") or mirna_id.endswith("-3p")):
+        return jsonify({
+            "error": "mirna_id must include arm designation (-5p or -3p), e.g. 'hsa-miR-21-5p'."
+        }), 400
 
     # ── 2. Database freshness check ──────────────────────────────
     db_info = check_db_freshness(_METADATA)
@@ -99,8 +104,13 @@ def blast_check():
     except subprocess.CalledProcessError as e:
         _circuit_breaker.record_failure()
         return jsonify({"error": f"BLAST subprocess failed: {e.returncode}"}), 500
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         _circuit_breaker.record_failure()
+        msg = str(e)
+        if "build_blast_db" in msg or "database not found" in msg.lower():
+            # BLAST DB missing — admin must run build script [spec §8.2]
+            return jsonify({"error": msg, "retry_after": None}), 503
+        # blastn binary not installed
         return jsonify({
             "error": "blastn binary not found. NCBI BLAST+ must be installed on the server."
         }), 503
