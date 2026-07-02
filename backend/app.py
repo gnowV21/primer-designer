@@ -13,6 +13,7 @@ from flask_limiter.util import get_remote_address
 from routes.mirbase import mirbase_bp
 from routes.design import design_bp
 from routes.blast_check import blast_check_bp
+from routes.export import export_bp
 from db import local_db
 
 app = Flask(__name__)
@@ -38,6 +39,7 @@ limiter = Limiter(
 app.register_blueprint(mirbase_bp,    url_prefix="/api")
 app.register_blueprint(design_bp,     url_prefix="/api")
 app.register_blueprint(blast_check_bp, url_prefix="/api")
+app.register_blueprint(export_bp,     url_prefix="/api")
 
 # Apply rate limit to blast-check endpoint: 10 req/min/IP [spec §9.3]
 limiter.limit("10 per minute")(blast_check_bp)

@@ -505,3 +505,26 @@ BLAST_CACHE_TTL_DAYS       = 30   # days before cache entry expires [spec §9.1]
 BLAST_CB_FAILURE_THRESHOLD = 3    # consecutive failures to open circuit [spec §9.2]
 BLAST_CB_RECOVERY_TIMEOUT  = 60   # seconds before HALF_OPEN probe [spec §9.2]
 BLAST_DB_STALE_WARN_DAYS   = 90   # days before database staleness warning [spec §9.4]
+
+
+# ----------------------------------------------------------------
+# SECTION Q: EDGE-CASE THRESHOLDS (Phase 4)
+# [Chen05] mature miRNA canonical ~22 nt; [IDT] GC 40-60%, poly-G ≥4;
+# [MIQE09] reporting requirements; [R2] forward specific = 10-12 nt from 5'
+# Thresholds marked [convention] are engineering conventions —
+# review with lab data if available.
+# ----------------------------------------------------------------
+
+MIRNA_LEN_CRITICAL_SHORT = 18    # nt — < this → critical [Chen05][R2]: 6-nt overhang
+                                  # + 12 nt specific = 18 nt minimum
+MIRNA_LEN_WARN_SHORT     = 20    # nt — < this → warning  [convention]
+MIRNA_LEN_INFO_LONG      = 26    # nt — > this → info     [Chen05] ~22 nt typical
+
+MIRNA_GC_LOW             = 30.0  # % — below → warning: low Tm  [IDT][MIQE09]
+MIRNA_GC_HIGH            = 70.0  # % — above → warning: secondary structure [IDT]
+
+HOMOPOLYMER_RUN_MIN      = 5     # nt — run ≥ this → warning (any base) [IDT Max Poly-X=5]
+POLY_G_RUN_MIN           = 4     # nt — G run ≥ this → warning (G-quadruplex) [IDT]
+
+LOW_COMPLEXITY_TOP2_PCT  = 60.0  # % — top-2 bases ≥ this → low complexity [convention]
+LOW_COMPLEXITY_DINUC_REP = 5     # × — dinucleotide repeat ≥ this → low complexity [convention]

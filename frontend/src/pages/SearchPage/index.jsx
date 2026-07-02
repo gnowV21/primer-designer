@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DEFAULTS } from '../../constants/defaults.js';
 import { computeSeqAnalysis } from '../../utils/seqAnalysis.js';
@@ -18,6 +19,8 @@ const NAV_SECTIONS = [
 export default function SearchPage() {
   useEffect(() => { document.title = 'HG Lab | Primer Designer'; }, []);
 
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     sequence:            { ...DEFAULTS.sequence },
     thermodynamic:       { ...DEFAULTS.thermodynamic },
@@ -33,9 +36,8 @@ export default function SearchPage() {
   const [visitedSections, setVisitedSections] = useState(new Set());
   const [resetKey, setResetKey] = useState(0);
   const [sectionOpenRequests, setSectionOpenRequests] = useState({});
-  const [results, setResults] = useState(null);
   const [designError, setDesignError] = useState(null);
-  const resultsRef = useRef(null);
+  const errorRef = useRef(null);
 
   const markVisited = useCallback((id) => {
     setVisitedSections((prev) => prev.has(id) ? prev : new Set([...prev, id]));
@@ -134,15 +136,11 @@ export default function SearchPage() {
   async function handleSubmit() {
     if (hasErrors || isSubmitting || !seqAnalysis) return;
     setIsSubmitting(true);
-    setResults(null);
     setDesignError(null);
     try {
       const postBody = { ...formData, _computed: computedFields };
       const response = await axios.post('/api/design', postBody, { timeout: 15000 });
-      setResults(response.data);
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      navigate('/results', { state: { results: response.data, params: formData } });
     } catch (err) {
       if (err.response?.status === 422) {
         setDesignError({
@@ -159,7 +157,7 @@ export default function SearchPage() {
         setDesignError({ type: 'network', message: 'Could not reach the backend. Is the Flask server running?' });
       }
       setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } finally {
       setIsSubmitting(false);
@@ -325,10 +323,10 @@ export default function SearchPage() {
       </div>
     </div>
 
-      {/* ── Results ── */}
-      {(results || designError) && (
-        <div ref={resultsRef} className="pb-10">
-          <ResultsSection results={results} error={designError} />
+      {/* ── Design error ── */}
+      {designError && (
+        <div ref={errorRef} className="pb-10">
+          <ResultsSection results={null} error={designError} />
         </div>
       )}
     </div>
