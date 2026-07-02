@@ -14,6 +14,7 @@ from algorithm.specificity_check.family_crossreactivity import check_family_cros
 from algorithm.specificity_check.isomir_flag import check_isomir_flag
 from algorithm.scoring import score_candidate
 from algorithm.sequence_utils import validate_rna_sequence
+from algorithm.edge_cases import detect_edge_cases
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -185,6 +186,16 @@ def design_primers():
             ),
         })
 
+    # ── Edge-case detection ──────────────────────────────────────
+    edge_cases = detect_edge_cases(seq)
+    for ec in edge_cases:
+        if ec["severity"] == "critical":
+            global_warnings.append({
+                "field": f"edge_case_{ec['code']}",
+                "severity": "critical",
+                "message": ec["message"],
+            })
+
     elapsed = round(time.time() - start, 2)
 
     rejection_summary = {}
@@ -199,6 +210,7 @@ def design_primers():
             "stemloop_reverse_heterodimer": stemloop_rev_check,
         },
         "global_warnings": global_warnings,
+        "edge_cases": edge_cases,
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,
             "data_note": (
