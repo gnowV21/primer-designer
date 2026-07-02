@@ -18,6 +18,7 @@
 | v1.7 | **[ĐÍNH CHÍNH IMPLEMENTATION 2026-07-01]** (1) §2: Neilsen12 journal = *Trends in Genetics* (không phải Bioinformatics); (2) §4.1+4.2: `BOUND_FRACTION_RT_TEMP = 42°C` cho Round 1 — spec cũ ghi 60°C sai; (3) §5.5: miFam.dat HTTP 500 trên miRBase v22.1 — production dùng seed-based grouping; (4) §6: isoMiR data v1.0.0 verified (8 entries, PMIDs), `evidence_level` field, key đổi từ `data_warning` → `co_amplification_warning`; (5) §8.9+8.11: cross-species filtering + `cross_species_excluded`/`hits_truncated` trong summary; smoke test hsa-miR-21-5p passed |
 | v1.8 | **[GAP FIX — stemloop RT × universal reverse heterodimer 2026-07-01]** Phase 2 chỉ check 2 cặp heterodimer: fwd×stemloop (RT buffer) và fwd×reverse (PCR buffer). Trong one-step RT-qPCR tất cả 3 primer cùng hiện diện trong PCR tube → cặp stemloop×reverse chưa bao giờ được check. Fix: `check_stemloop_reverse_heterodimer()` mới trong `heterodimer.py`; gọi 1 lần trong `design.py` (không per-candidate vì cả hai sequence cố định); kết quả expose tại `universal_reverse.stemloop_reverse_heterodimer` trong API response; HIGH/MODERATE risk promote lên `global_warnings`. Thực tế Chen 2005 pair: dG = −4.40 kcal/mol → PASS (hệ thống validated thực nghiệm). 3 tests mới, 105/105 pass. commit `78a5e22`. |
 | v1.9 | **[CẢI THIỆN TÍNH ĐÚNG KHOA HỌC — 2026-07-01]** commit `b36f124`. (1) **Loại Ensembl khỏi BLAST:** DNase treatment trước RT loại toàn bộ genomic DNA và unspliced RNA — template còn lại chỉ là mature miRNA; off-target risk giới hạn ở miRNA family cross-reactivity đã được miRBase multi-species cover đủ. (2) **Bound fraction recalibrate:** `BOUND_FRACTION_ANNEALING_TEMP` 60→**55°C** (Tm−5°C = Ta thực tế qPCR); tại đúng Tm=60°C fraction ~50% theo định nghĩa nhiệt động học → score luôn gần 0 → vô nghĩa. `BOUND_FRACTION_MIN/OPT` 90/97→**60/80%**: threshold cũ dành cho duplex hybridization dài (~27 nt), không phù hợp primer ngắn 12–24 nt. Formula `score_bound_fraction` sửa sang `fract/MIN*70` thay vì `(fract-50)/40*70` hardcoded. (3) **Self-hit precursor variants:** thêm `_normalize_mirna_name()` (strip precursor copy number, guard ≥5 components) + `_is_self_hit()` — loại đúng hsa-miR-16-1-5p và hsa-miR-16-2-5p khỏi off-target khi design cho hsa-miR-16-5p. (4) **SCORING_WEIGHTS_V4 v3.1 rebalance:** `mfe_stemloop` 0.15→**0.14** (body 44 nt cố định; chỉ overhang 6 nt thay đổi → variance thấp), `tm_pair_match` 0.03→**0.01** (reverse cố định Tm≈60.4°C, redundant với tm_accuracy), `gc_clamp` 0.02→**0.04** (3' GC critical cho extension), `gc_skew` 0.01→**0.02**. (5) **E2E / frontend:** baseURL centralize qua `playwright.config.js`; `OffTargetPanel` loại Ensembl references; `detectInputType` bỏ `q.length >= 10` (fix 8–9 nt gap). |
+| v2.1 | **[SPEC CONSISTENCY FIXES — 2026-07-02]** 9 điểm không nhất quán giữa spec và implementation. *Stale pseudocode:* (1) §4.7 test examples cập nhật 97.0→80.0 / 85.0→40.0 (v1.9 recalibrate); (2) §4.3/4.4/4.5 pseudocode thêm `temp_c` parameter (42°C vs 55°C), `Ct = dna_conc_nm/1e9` thay vì `dna_conc/4e9`. *Ensembl stale (v1.9 đã loại):* (3) §3 folder structure xóa `ensembl_human_cdna.{nhr,nin,nsq}`; (4) §9.5 rewrite storage table (370 MB Ensembl → ~2 MB miRBase-only); (5) §13.6 cache footnote sửa `ensembl_version` → `miRBase version + build_date`. *Inconsistency:* (6) §12 checklist 2 items đổi "miFam.dat" → "seed-based grouping" theo thực tế §5.5 (HTTP 500). *Logic:* (7) §6.3 vestigial `in_risk_window` — quyết định bỏ geometric check, đơn giản hóa flag thành DB lookup only; (8) §8.2 thêm HTTP 503 spec cho FileNotFoundError trong route; (9) §8.12 thêm note về `m in s` edge case khi thiếu arm designation + yêu cầu validate tại API layer. |
 | v2.0 | **[CODE REVIEW FIXES — 2026-07-02]** commit `c18a9a4`. 8 vấn đề từ medium code review. *Correctness:* (1) DB vắng mặt → `check_offtarget` nay raise `FileNotFoundError` thay vì trả `overall_risk='SAFE'` sai; (2) `_is_self_hit` bỏ nhánh `s in m` gây false-positive (e.g. 'hsa-mir-1' match bên trong 'hsa-mir-10-5p') — thay bằng word-boundary prefix check + áp dụng boundary rule tương tự cho normalized comparison; (3) `_normalize_mirna_name` regex `[12]` → **`\d+`** — bắt copy number ≥3 (hsa-miR-509-**3**-5p và hsa-miR-550a-**3**-5p có trong project data); (4) `test_bound_fraction.py` cập nhật theo MIN=60/OPT=80 (bị bỏ sót ở v1.9). *Efficiency:* (5) Forward + reverse BLAST nay chạy song song qua `ThreadPoolExecutor(max_workers=2)` — giảm latency 50%; (6) `m_norm` tính 1 lần trong `check_offtarget`, truyền qua `_check_primer` → `_is_self_hit` — loại N lần tính lại per hit; (7) `_RISK_ORDER` hoisted lên module-level constant. *Cleanup:* (8) `bound_fraction.py` private `_reverse_complement`/`_to_dna` thay bằng delegate sang `sequence_utils.reverse_complement` / `sequence_utils.rna_to_dna`. |
 
 ---
@@ -146,8 +147,7 @@ backend/
 │   ├── known_5prime_isomir_mirnas.json       <- BUILD THẬT (§6)
 │   ├── blast_cache.sqlite                    <- MỚI, cache runtime
 │   └── blast_db/
-│       ├── mirbase_multi.{nhr,nin,nsq}       <- BLAST index từ miRBase mature.fa
-│       ├── ensembl_human_cdna.{nhr,nin,nsq}  <- BLAST index từ Ensembl cDNA
+│       ├── mirbase_multi.{nhr,nin,nsq}       <- BLAST index từ miRBase mature.fa (v1.9: Ensembl đã loại)
 │       └── metadata.json                     <- version + build_date (§9.4)
 ├── scripts/
 │   ├── build_family_db.py                    <- MỚI §5.5 (miFam.dat + mature.fa)
@@ -196,13 +196,15 @@ PENALTY_WT_BOUND_GT = 1.0    # [P3P Penalties]
 
 ### 4.3 Công thức
 ```python
-def _calculate_bound_fraction(sequence: str, params: dict) -> float:
+def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> float:
     """
     [SL04] formula:
         dG = dH - T * dS
-        K  = exp(-dG / (R * T))    # T = Ta + 273.15 K
-        fract(%) = (1 / (1 + sqrt(1 / ((dna_conc/4e9) * K)))) * 100
+        K  = exp(-dG / (R * T))    # T = temp_c + 273.15 K
+        Ct = dna_conc_nm / 1e9     # mol/L từ nM
+        fract(%) = (1 / (1 + sqrt(1 / ((Ct/4) * K)))) * 100
     dna_conc = P3_DEFAULT_DNA_CONC = 200.0 nM (Phase 2 chuẩn hoá)
+    temp_c: nhiệt độ evaluate — 42°C (Round 1) hoặc 55°C (Round 2)
     """
 ```
 
@@ -242,17 +244,20 @@ def _get_thermodynamics_for_perfect_duplex(sequence: str, params: dict) -> tuple
     )
     return result.dh, result.ds
 
-def _calculate_bound_fraction(sequence: str, params: dict) -> float:
-    """[SL04] formula, dùng calc_heterodimer để lấy dH/dS."""
+def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> float:
+    """[SL04] formula, dùng calc_heterodimer để lấy dH/dS.
+    temp_c: 42.0 (Round 1 RT) hoặc 55.0 (Round 2 qPCR annealing)
+    """
     import math
     R = 1.987  # cal/(mol·K), gas constant
-    T = BOUND_FRACTION_ANNEALING_TEMP + 273.15   # K
-    dna_conc = params.get("dnaConc", P3_DEFAULT_DNA_CONC)   # nM
+    T = temp_c + 273.15   # K — nhận từ caller, không hardcode
+    dna_conc_nm = params.get("primerConcentration", P3_DEFAULT_DNA_CONC)   # nM
 
     dH, dS = _get_thermodynamics_for_perfect_duplex(sequence, params)
     dG = dH - T * dS   # cal/mol
     K = math.exp(-dG / (R * T))
-    fract = (1 / (1 + math.sqrt(1 / ((dna_conc / 4e9) * K)))) * 100
+    Ct = dna_conc_nm / 1e9   # mol/L
+    fract = (1 / (1 + math.sqrt(1 / ((Ct / 4) * K)))) * 100
     return round(fract, 2)
 ```
 
@@ -261,12 +266,12 @@ def _calculate_bound_fraction(sequence: str, params: dict) -> float:
 ### 4.5 API (2 hàm public)
 ```python
 def calculate_bound_fraction_binding(specific_region: str, params: dict) -> float:
-    """Round 1: % specific region bind cDNA. Quan trọng nhất."""
-    return _calculate_bound_fraction(specific_region, params)
+    """Round 1: % specific region bind cDNA tại 42°C (RT step). Quan trọng nhất."""
+    return _calculate_bound_fraction(specific_region, params, BOUND_FRACTION_RT_TEMP)
 
 def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
-    """Round sau: % full primer bind amplicon."""
-    return _calculate_bound_fraction(full_primer, params)
+    """Round sau: % full primer bind amplicon tại 55°C (Ta = Tm_target − 5°C)."""
+    return _calculate_bound_fraction(full_primer, params, BOUND_FRACTION_ANNEALING_TEMP)
 ```
 
 ### 4.6 Scoring (chung cho cả 2 hàm) — recalibrate v1.9
@@ -289,10 +294,12 @@ def score_bound_fraction(fract: float) -> dict:
 ### 4.7 Unit tests
 ```python
 def test_bound_fraction_binding_at_opt_scores_100():
-    assert score_bound_fraction(97.0)["score"] == 100
+    # OPT recalibrated to 80% (v1.9) — cũ: 97.0
+    assert score_bound_fraction(80.0)["score"] == 100
 
 def test_bound_fraction_full_below_min_scores_low():
-    assert score_bound_fraction(85.0)["score"] < 70
+    # MIN recalibrated to 60% (v1.9); 40% < 60% → suboptimal, score < 70 — cũ: 85.0
+    assert score_bound_fraction(40.0)["score"] < 70
 
 def test_binding_vs_full_independent():
     specific = "ATCGATGCAT"
@@ -473,12 +480,19 @@ Key `data_warning` → `co_amplification_warning` (biology-first naming, 2026-07
 }
 ```
 
-### 6.3 Logic note (vestigial geometric check)
+### 6.3 Logic note (vestigial geometric check — v2.1: RECOMMEND REMOVE)
 
-`in_risk_window = (forward_3prime_position <= risk_window_nt)`. Với `specific_length` thực tế (12-17 nt) >> `risk_window_nt` (2-3), điều kiện này KHÔNG BAO GIỜ True. Flag hiện chỉ identify **miRNAs WHERE co-amplification risk exists**; geometric sub-check là secondary filter cho primer cực ngắn (pathological). Documented trong `_metadata.flag_logic_note` của JSON file.
+`in_risk_window = (forward_3prime_position <= risk_window_nt)`. Với `specific_length` thực tế (12-17 nt) >> `risk_window_nt` (2-3), điều kiện này **KHÔNG BAO GIỜ True** cho primer trong range spec. Flag hiện chỉ identify **miRNAs WHERE co-amplification risk exists** (DB lookup only); geometric sub-check không có tác dụng thực tế.
+
+**Quyết định v2.1:** Bỏ geometric check `in_risk_window` khỏi code. Hàm flag đơn giản hóa thành:
+1. Lookup miRNA ID trong `known_5prime_isomir_mirnas.json`
+2. Nếu found → `isomir_discrimination_risk = True` + trả `co_amplification_warning`
+3. Nếu not found → `isomir_discrimination_risk = False` + `data_warning` (absence ≠ no isomiR exists)
+
+Geometric sub-check (`forward_3prime_position <= risk_window_nt`) là dead code — remove để tránh confusion. Nếu cần trong tương lai (primer < 8 nt, ngoài range spec hiện tại), thêm lại với logic rõ ràng.
 
 ```python
-def test_isomir_flag_triggers_within_risk_window(): ...
+def test_isomir_flag_triggers_for_known_mirna(): ...    # DB lookup → risk=True
 def test_isomir_flag_absent_for_unlisted_mirna(): ...   # absence != no isomiR exists
 def test_evidence_level_field_present(): ...             # evidence_level in return dict
 def test_co_amplification_warning_key(): ...             # key renamed from data_warning
@@ -579,6 +593,16 @@ if not db_available:
         "Run 'python scripts/build_blast_db.py' to build it first."
     )
 ```
+
+**HTTP status cho route `blast_check.py`:** Khi `check_offtarget` raise `FileNotFoundError`, route phải catch và trả **HTTP 503** (Service Unavailable), không phải 500:
+```python
+# routes/blast_check.py
+try:
+    result = check_offtarget(...)
+except FileNotFoundError as e:
+    return jsonify({"error": str(e), "retry_after": None}), 503
+```
+Lý do: 503 báo "service tạm thời không có" (admin cần chạy build script), semantic đúng hơn 500 ("lỗi server bất ngờ"). Frontend đã handle 503 qua `CircuitOpenError` component (§13.5.2).
 
 ### 8.3 BLAST parameters (Ye 2012 defaults)
 
@@ -889,6 +913,8 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Tại sao guard ≥5 components?** `hsa-miR-1-5p` chỉ có 4 components `['hsa', 'miR', '1', '5p']`. Penultimate là `'1'` — nhưng đây là MIR NAME number, không phải precursor copy number. Nếu không guard, sẽ strip thành `hsa-miR-5p` (sai).
 
+**Edge case — thiếu arm designation (v2.1 note):** Nhánh `if m in s` có thể cho false positive nếu user nhập miRNA ID không có arm suffix (vd. `hsa-miR-1` thay vì `hsa-miR-1-5p`). Khi đó `m = 'hsa-mir-1'` là substring của `'hsa-mir-10-5p'` → self-hit false positive, off-target thật bị suppress. Giải pháp: **API route `blast_check.py` phải validate `mirna_id` có arm suffix (-5p/-3p) trước khi gọi `check_offtarget`**. Nếu thiếu arm, trả 400 Bad Request với message gợi ý format đúng. User lookup từ miRBase (§routes/mirbase.py) luôn trả full ID có arm nên đây chỉ là edge case khi user nhập tay.
+
 **Performance (v2.0):** `m_norm` được tính 1 lần trong `check_offtarget` rồi truyền xuống `_check_primer` → `_is_self_hit`. Trước v2.0, mỗi BLAST hit gọi `_normalize_mirna_name(mirna_id)` lại từ đầu (N lần tính cùng 1 giá trị).
 
 ---
@@ -1089,57 +1115,36 @@ def check_db_freshness(metadata_path: str) -> dict:
 
 Response `/api/blast-check` đã có field `database_info.outdated_warning` để frontend hiển thị badge cảnh báo.
 
-### 9.5 Script `build_blast_db.py` + Ước tính storage (QUYẾT ĐỊNH v1.5)
+### 9.5 Script `build_blast_db.py` + Ước tính storage (cập nhật v1.9)
 
 **File:** `backend/scripts/build_blast_db.py`
 
-**Storage benchmark thực tế (v1.5):**
+**[v1.9 — Ensembl đã loại]** Ensembl human cDNA đã bị remove khỏi pipeline (§8.2). Database chỉ gồm miRBase mature.fa.
 
-| Component | File gốc (gz) | Giải nén | BLAST index (.nhr+.nin+.nsq+...) | Tổng runtime |
-|---|---|---|---|---|
-| Ensembl human cDNA GRCh38 rel 111 | ~85 MB | ~380 MB | ~360 MB | ~360 MB (xoá FASTA) |
-| miRBase mature.fa multi-species | ~2 MB | ~5 MB | ~2 MB | ~2 MB |
-| **TỔNG** | ~87 MB | ~385 MB | ~362 MB | **~370 MB** |
+**Storage benchmark thực tế (v1.9 — miRBase only):**
+
+| Component | File gốc (gz) | Giải nén | BLAST index (.nhr+.nin+.nsq+...) |
+|---|---|---|---|
+| miRBase mature.fa multi-species (~48K sequences) | ~0.6 MB | ~2 MB | **~2 MB** |
 
 **Kiểm tra khả năng deploy:**
-- **Railway free tier:** 1 GB disk → **OK** (370 MB < 1 GB).
-- **Railway Pro:** không giới hạn thực tế → **OK**.
-- **Render free tier:** ephemeral filesystem, mất khi restart → **KHÔNG dùng được**. Phải upgrade sang persistent disk (~$0.25/GB/tháng, minimum 1 GB).
-- **Google Cloud Run:** stateless container, DB phải mount volume hoặc Cloud Storage → phức tạp.
+- **Railway free tier:** 1 GB disk → **OK** (~2 MB << 1 GB).
+- **Render free tier:** ephemeral filesystem, mất khi restart → **KHÔNG dùng được** cho bất kỳ persistent DB nào.
+- **Google Cloud Run:** stateless container, DB phải mount volume → phức tạp.
 
 **Quyết định:** Railway là deploy target chính (đã chọn từ Phase 2).
-
-**Fallback option — nếu cần giảm size:**
-
-Thêm flag `--protein-coding-only` vào `build_blast_db.py`:
-```bash
-python scripts/build_blast_db.py                          # Full Ensembl cDNA (~370 MB)
-python scripts/build_blast_db.py --protein-coding-only    # Chỉ protein-coding (~200 MB)
-```
-
-Cơ chế filter: đọc Ensembl BioMart annotation, chỉ giữ transcripts có `transcript_biotype=protein_coding`. Loại bỏ pseudogenes, lncRNAs, snoRNAs (trừ khi đó là mục tiêu quan tâm).
-
-**Trade-off filter:**
-- Bỏ qua: pseudogene similarity, lncRNA off-target — chấp nhận được cho miRNA qPCR use case.
-- Giữ được: full mRNA off-target check (mục tiêu chính).
 
 **Script:**
 ```python
 """
-1. Tải Ensembl human cDNA FASTA (URL trong ENSEMBL_CDNA_URL constant)
-2. Verify checksum sau download (SHA256 từ Ensembl checksum file)
-3. Nếu --protein-coding-only: filter FASTA giữ chỉ protein_coding transcripts
-4. Tải miRBase mature.fa multi-species (reuse logic build_family_db.py)
-5. Chạy `makeblastdb -in <fasta> -dbtype nucl -out <db_name> -parse_seqids`
-6. Xoá FASTA gốc sau makeblastdb (giữ chỉ .nhr, .nin, .nsq)
-7. Ghi metadata.json (§9.4) với version, build_date, sequences_count, size_mb
-8. Verify build bằng `blastdbcmd -db <db_name> -info` — phải trả sequences_count > 0
-9. Log tổng thời gian + kích thước database cuối
+1. Tải miRBase mature.fa multi-species
+   URL: https://www.mirbase.org/download/mature.fa
+2. Chạy `makeblastdb -in mature.fa -dbtype nucl -out mirbase_multi -parse_seqids`
+3. Xoá FASTA gốc sau makeblastdb (giữ chỉ .nhr, .nin, .nsq)
+4. Ghi metadata.json (§9.4) với version, build_date, sequences_count, size_mb
+5. Verify build bằng `blastdbcmd -db mirbase_multi -info` — phải trả sequences_count > 0
+6. Log tổng thời gian + kích thước database cuối
 """
-
-ENSEMBL_CDNA_URL = "https://ftp.ensembl.org/pub/release-{release}/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"
-ENSEMBL_CHECKSUM_URL = "https://ftp.ensembl.org/pub/release-{release}/fasta/homo_sapiens/cdna/CHECKSUMS"
-ENSEMBL_DEFAULT_RELEASE = 111   # cập nhật định kỳ
 
 MIRBASE_MATURE_URL = "https://www.mirbase.org/download/mature.fa"
 
@@ -1149,8 +1154,6 @@ def verify_db_build(db_path: str) -> dict:
     Return: {sequences_count, size_bytes, ok: bool}
     """
 ```
-
-**Nếu benchmark thực tế trên Railway free vượt limit:** Claude Code fallback sang `--protein-coding-only`, log rõ ràng và cập nhật metadata.json để frontend biết mode nào đang chạy.
 
 ### 9.6 GitHub Actions CI
 
@@ -1328,9 +1331,9 @@ Output JSON Phase 2 giữ schema, mở rộng:
 **Khoa học (v1.2):**
 - [ ] `bound_fraction.py` có 2 hàm binding/full, đúng công thức [SL04]
 - [ ] `SCORING_WEIGHTS_V4` = 15 tiêu chí, tổng 1.00, `binding > full` (0.05 > 0.03)
-- [ ] `family_crossreactivity.py` implement đầy đủ §30, dùng **miFam.dat** (không heuristic)
-- [ ] `mirbase_family_overhangs.json` build từ miFam.dat + mature.fa multi-species
-- [ ] Family detection đúng với accession (Limitation #4 Phase 2 fixed)
+- [ ] `family_crossreactivity.py` implement đầy đủ §30, dùng **seed-based grouping** (miFam.dat HTTP 500 — §5.5)
+- [ ] `mirbase_family_overhangs.json` build từ seed-based grouping + mature.fa multi-species
+- [ ] Family detection đúng với accession qua seed lookup (miFam.dat unavailable — §5.5)
 - [ ] `isomir_flag.py` implement §31, data verify với [Neilsen12]/[Morin08]
 - [ ] Đính chính [SL07] -> [SL04] trong constants.py
 
@@ -1725,7 +1728,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
           {/* ── Cache / DB info footnote ── */}
           <p className="text-xs text-slate-400">
             {result.cache?.hit ? 'Cached result' : 'Fresh result'}
-            {result.database_info && ` · DB: Ensembl ${result.database_info.ensembl_version} + miRBase ${result.database_info.mirbase_version}`}
+            {result.database_info && ` · DB: miRBase ${result.database_info.mirbase_version} (built ${result.database_info.build_date})`}
           </p>
         </div>
       )}
