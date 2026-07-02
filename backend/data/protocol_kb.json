@@ -1,0 +1,123 @@
+{
+  "kb_version": "1.0",
+  "updated": "2026-07-03",
+  "description": "Protocol/Evidence Advisor knowledge base — 6 evidence-backed rules (P1-P6). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
+  "rules": [
+    {
+      "id": "P1",
+      "title": "SYBR + high family cross-reactivity",
+      "when": {
+        "signal_method": "sybr",
+        "family_risk": ["HIGH", "IDENTICAL"]
+      },
+      "recommendation": "SYBR Green cannot discriminate family members differing by 1 nt in the 3′ overhang region. Consider TaqMan probe-based detection, or design separate stem-loop RT primers for each family member.",
+      "match_weights": { "signal_method_sybr": 0.5, "family_risk_high": 0.5 },
+      "pros": ["TaqMan eliminates non-specific signal", "Separate RT primers give single-member specificity"],
+      "cons": ["TaqMan probes add cost", "Multiple RT reactions increase workload"],
+      "sources": [
+        { "tag": "Wang17", "doi": "10.3892/mmr.2017.8297", "pmid": "29257343", "note": "let-7 panel; members differ by 1 nt; SYBR required stringent annealing optimisation" },
+        { "tag": "Chen05", "doi": "10.1093/nar/gni178", "pmid": "16314309", "note": "original stem-loop RT-qPCR; specificity derives from stem-loop steric hindrance, not probe" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P2",
+      "title": "Difficult sample type or low input RNA",
+      "when": {
+        "sample_types": ["ffpe", "plasma", "serum", "cfRNA", "low_input"],
+        "input_amount_ng_max": 10
+      },
+      "recommendation": "Consider LNA-enhanced primers: literature reports improved accuracy and reproducibility at low RNA input (FFPE, plasma) compared to standard DNA primers.",
+      "match_weights": { "sample_type_difficult": 0.6, "low_input": 0.4 },
+      "pros": [
+        "Improved Tm and hybridisation affinity for short miRNA targets [Andreasen10]",
+        "Reliable down to ~20 copies per reaction [Kunwar23]",
+        "Suitable for degraded RNA (FFPE, plasma)"
+      ],
+      "cons": [
+        "LNA oligo synthesis cost is higher than standard DNA",
+        "Require empirical Tm optimisation",
+        "Limited to research use without clinical validation"
+      ],
+      "sources": [
+        { "tag": "Andreasen10", "doi": "10.1016/j.ymeth.2010.01.006", "pmid": "20215018", "note": "LNA-enhanced primer improved quantification in total RNA from clinical samples" },
+        { "tag": "Kunwar23", "doi": "10.3390/diagnostics13132170", "pmid": "37443567", "note": "stem-loop TaqMan vs LNA-qPCR; both reliable to ~20 copies; LNA friendlier for clinical labs" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P3",
+      "title": "SYBR Green detection (any assay)",
+      "when": {
+        "signal_method": "sybr"
+      },
+      "recommendation": "Melting-curve analysis is mandatory with SYBR Green. Non-specific signal (primer-dimer, off-target) only becomes apparent in the melting curve and is not detectable from Cq alone.",
+      "match_weights": { "signal_method_sybr": 1.0 },
+      "pros": ["Detects primer-dimer and non-specific amplification products", "Low cost — no probe required"],
+      "cons": ["Adds analysis step", "Cannot multiplex (single fluorescence channel)"],
+      "sources": [
+        { "tag": "Lagatie17", "doi": "10.1007/s00436-017-5382-5", "pmid": "28111713", "note": "even LNA assays produced non-specific signal only revealed by melting curve" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P4",
+      "title": "Multiplex or multi-target panel",
+      "when": {
+        "multiplex": true,
+        "target_count_min": 2
+      },
+      "recommendation": "For multiplex panels, consult stem-loop multiplex RT + dual-probe TaqMan literature. Primer cross-reactivity and probe spectral overlap must be verified empirically.",
+      "match_weights": { "multiplex": 0.7, "target_count": 0.3 },
+      "pros": ["Saves sample volume", "Reduces cost and instrument time per target", "Enables simultaneous normaliser co-amplification"],
+      "cons": ["Primer/probe design complexity increases", "May require optimisation of each primer pair concentration", "Risk of competitive inhibition at high multiplex levels"],
+      "sources": [
+        { "tag": "Cao23", "doi": "10.1016/j.ab.2023.115267", "pmid": "37516424", "note": "21-miRNA multiplex stem-loop assay; cross-reactivity verification critical" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P5",
+      "title": "Short or low-GC miRNA (edge E1 or E4)",
+      "when": {
+        "edge_codes": ["E1", "E4"]
+      },
+      "recommendation": "For short (<18 nt) or low-GC (<30%) miRNAs, consider LNA substitution at 2-3 positions in the specific region, or extending the 5′ tail to raise forward primer Tm. Validate melting curve to confirm single-product amplification.",
+      "match_weights": { "edge_E1": 0.5, "edge_E4": 0.5 },
+      "pros": [
+        "LNA increases Tm by ~2-8°C per substitution for short targets [Andreasen10]",
+        "5′ tail extension achieves Tm without changing binding specificity"
+      ],
+      "cons": [
+        "LNA positions require empirical optimisation",
+        "Extended tails may increase primer-dimer risk — check structure_checks"
+      ],
+      "sources": [
+        { "tag": "Andreasen10", "doi": "10.1016/j.ymeth.2010.01.006", "pmid": "20215018", "note": "LNA spike for low-Tm miRNA targets" },
+        { "tag": "Kunwar23", "doi": "10.3390/diagnostics13132170", "pmid": "37443567", "note": "reliability at low copy number and difficult targets" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P6",
+      "title": "Clinical or diagnostic application",
+      "when": {
+        "application_contexts": ["clinical", "diagnostic", "cap_clia", "regulatory"]
+      },
+      "recommendation": "For clinical laboratory applications, LNA-qPCR may offer operational advantages (CAP/CLIA compatibility, kit-based workflow). Both stem-loop TaqMan and LNA-qPCR are analytically comparable at >20 copies per reaction.",
+      "match_weights": { "clinical_context": 1.0 },
+      "pros": [
+        "LNA-qPCR demonstrated CAP/CLIA-compatible workflow [Kunwar23]",
+        "Stem-loop TaqMan well-established; extensive published validation [Chen05]"
+      ],
+      "cons": [
+        "Regulatory validation (IVD) requires additional clinical studies beyond analytical performance",
+        "This tool is for research use only"
+      ],
+      "sources": [
+        { "tag": "Kunwar23", "doi": "10.3390/diagnostics13132170", "pmid": "37443567", "note": "analytical validation of CogniMIR miRNA panel; LNA-qPCR clinically friendlier" }
+      ],
+      "disclaimer": "For research use only. NOT validated for clinical in-vitro diagnostic (IVD) use. Requires independent clinical validation."
+    }
+  ]
+}
