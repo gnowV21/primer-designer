@@ -526,5 +526,8 @@ MIRNA_GC_HIGH            = 70.0  # % — above → warning: secondary structure 
 HOMOPOLYMER_RUN_MIN      = 5     # nt — run ≥ this → warning (any base) [IDT Max Poly-X=5]
 POLY_G_RUN_MIN           = 4     # nt — G run ≥ this → warning (G-quadruplex) [IDT]
 
-LOW_COMPLEXITY_TOP2_PCT  = 60.0  # % — top-2 bases ≥ this → low complexity [convention]
+LOW_COMPLEXITY_TOP2_PCT  = 70.0  # % — top-2 bases ≥ this → low complexity [convention]
+                                 # 60% was too sensitive: normal AT-rich miRNAs (e.g. hsa-miR-21-5p
+                                 # T:36%+A:27%=63.6%) triggered spuriously. 70% captures genuine
+                                 # low-complexity sequences (e.g. AAAAAA... or ATATAT...) only.
 LOW_COMPLEXITY_DINUC_REP = 5     # × — dinucleotide repeat ≥ this → low complexity [convention]

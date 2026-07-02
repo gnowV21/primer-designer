@@ -44,7 +44,8 @@ _CSV_ROLES  = ("Forward", "RT_StemLoop", "Universal_Reverse")
 
 
 def _sanitize(mirna_id: str) -> str:
-    return _SAFE_CHARS.sub("_", mirna_id)[:40] if mirna_id else "unknown"
+    s = _SAFE_CHARS.sub("_", mirna_id)[:40] if mirna_id else "unknown"
+    return re.sub(r"\.\.+", "_", s)  # collapse .. to block path traversal
 
 
 # ── Route ─────────────────────────────────────────────────────────
