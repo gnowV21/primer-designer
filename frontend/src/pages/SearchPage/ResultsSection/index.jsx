@@ -5,7 +5,7 @@
 import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
 
-export default function ResultsSection({ results, error }) {
+export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
   if (!results) return null;
 
@@ -23,7 +23,7 @@ export default function ResultsSection({ results, error }) {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      {!hideHeader && <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">Design Results</h2>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -34,10 +34,10 @@ export default function ResultsSection({ results, error }) {
         <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-3 py-1 font-medium">
           Algorithm v{metadata?.algorithm_version}
         </span>
-      </div>
+      </div>}
 
-      {/* ── Global warnings ── */}
-      {global_warnings.length > 0 && (
+      {/* ── Global warnings — suppressed when hideHeader=true (shown by QualitySummary in ResultsPage) ── */}
+      {!hideHeader && global_warnings.length > 0 && (
         <div className="space-y-2">
           {global_warnings.map((w, i) => (
             <div

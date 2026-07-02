@@ -70,7 +70,7 @@ export default function ResultsPage() {
       <QualitySummary results={results} />
 
       {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
-      <ResultsSection results={results} error={null} />
+      <ResultsSection results={results} error={null} hideHeader />
 
       {/* ── Thermodynamics table (tabs) ── */}
       <div>
