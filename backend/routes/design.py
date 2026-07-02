@@ -15,6 +15,7 @@ from algorithm.specificity_check.isomir_flag import check_isomir_flag
 from algorithm.scoring import score_candidate
 from algorithm.sequence_utils import validate_rna_sequence
 from algorithm.edge_cases import detect_edge_cases
+from algorithm.protocol_advisor import advise_protocol
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -204,6 +205,34 @@ def design_primers():
     for r in rejection_log:
         rejection_summary[r["reason"]] = rejection_summary.get(r["reason"], 0) + 1
 
+    # ── PART A: Protocol advisor (Phase 5) ────────────────────────
+    # Build a partial result for the advisor (edge_cases + specificity_warnings already computed)
+    _partial = {
+        "edge_cases": edge_cases,
+        "specificity_warnings": {"cross_reactivity": cross_reactivity},
+    }
+    protocol_advice = advise_protocol(_partial, params)
+
+    # ── PART D: predicted_amplicon_tm + LNA hints ─────────────────
+    # Amplicon Tm approximation: use SantaLucia NN on the amplicon sequence (if short enough)
+    lna_hints = None
+    ec_codes = {ec.get("code") for ec in edge_cases}
+    if "E1" in ec_codes or "E4" in ec_codes:
+        lna_hints = {
+            "applicable": True,
+            "rationale": (
+                "This miRNA is short (<18 nt) or has low GC content (<30%), "
+                "which may result in a low forward primer Tm. "
+                "Consider 2-3 LNA substitutions in the specific-region to raise Tm by ~2-8°C per position, "
+                "or extend the 5′ tail to achieve the target Tm without changing binding specificity."
+            ),
+            "sources": [
+                {"tag": "Andreasen10", "doi": "10.1016/j.ymeth.2010.01.006"},
+                {"tag": "Kunwar23", "doi": "10.3390/diagnostics13132170"},
+            ],
+            "disclaimer": "For research use only. LNA positions require empirical optimisation.",
+        }
+
     return jsonify({
         "top3": top_n,
         "stemloop_rt": stemloop,
@@ -213,6 +242,8 @@ def design_primers():
         },
         "global_warnings": global_warnings,
         "edge_cases": edge_cases,
+        "protocol_advice": protocol_advice,
+        "lna_hints": lna_hints,
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,
             "data_note": (

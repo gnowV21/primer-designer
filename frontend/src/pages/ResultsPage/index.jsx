@@ -8,6 +8,7 @@ import EdgeCaseBanner from './EdgeCaseBanner.jsx';
 import QualitySummary from './QualitySummary.jsx';
 import ThermoTable from './ThermoTable.jsx';
 import ExportBar from './ExportBar.jsx';
+import ProtocolAdvisor from './ProtocolAdvisor.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 
 export default function ResultsPage() {
@@ -35,7 +36,7 @@ export default function ResultsPage() {
   }
 
   const { results } = state;
-  const { top3, metadata, edge_cases = [] } = results;
+  const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null } = results;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
@@ -79,6 +80,26 @@ export default function ResultsPage() {
         </h2>
         <ThermoTable results={results} />
       </div>
+
+      {/* ── Protocol Advisor (Phase 5 §A) — collapsed by default ── */}
+      <ProtocolAdvisor advice={protocol_advice} />
+
+      {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
+      {lna_hints?.applicable && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
+          <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">LNA Assist Suggestion</p>
+          <p className="text-xs text-amber-800">{lna_hints.rationale}</p>
+          <div className="flex gap-2 text-xs text-amber-700">
+            {lna_hints.sources?.map((s, i) => (
+              <a key={i} href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
+                 className="underline hover:text-amber-900">
+                [{s.tag}]
+              </a>
+            ))}
+          </div>
+          <p className="text-xs italic text-amber-600">{lna_hints.disclaimer}</p>
+        </div>
+      )}
 
       {/* ── Export bar ── */}
       <ExportBar results={results} />
