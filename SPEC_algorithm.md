@@ -1,6 +1,6 @@
 # SPEC_algorithm.md — HG Lab Stem-loop RT-qPCR Primer Designer
 # Tài liệu thuật toán hợp nhất — Phase 2 + Phase 3
-# Phiên bản: 3.0 (merge) — Ngày: 2026-07-02
+# Phiên bản: 3.1 (bug fixes 2026-07-03) — Ngày gốc: 2026-07-02
 
 ---
 
@@ -19,6 +19,16 @@
 | v2.8.1 | 8 bug fixes từ code review (MFE sign error, binding Tm target 35→45°C, diversity filter, pool bias...) |
 | v2.8.2 | Specificity Module: heterodimer (fwd×stemloop + fwd×rev), family_crossreactivity, isomir_flag |
 | v2.8.3 | Tm caching (lru_cache); URev self-structure check; gc_clamp criterion 12 → SCORING_WEIGHTS_V3 |
+
+### v3.1 — Bug fixes (2026-07-03)
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| B1 | `routes/design.py` | Bug | `detect_edge_cases()` gọi sau early-return 422 → edge_cases không có trong error response |
+| B2 | `constants.py` | Calibration | `LOW_COMPLEXITY_TOP2_PCT 60→70%` — 60% quá thấp cho AT-rich miRNA |
+| B3 | `routes/export.py` | Security | `_sanitize()` không collapse `..` → thêm `re.sub(r"\.\.+", "_")` |
+
+---
 
 ### Lịch sử phiên bản Phase 3 (tóm tắt, nguồn gốc `SPEC_phase3.md`)
 
@@ -1658,7 +1668,21 @@ def test_normalize_mirna_name():
 
 ---
 
-## §24 Algorithm Bug Fixes [Phase 2 §28]
+## §24 Algorithm Bug Fixes [Phase 2 §28 + post-Phase 4]
+
+### Bảng tổng hợp v3.1 (2026-07-03)
+
+| # | File | Loại | Mô tả | Severity |
+|---|---|---|---|---|
+| B1 | `routes/design.py` | Bug | `detect_edge_cases()` gọi sau early-return 422 (no candidates) → `edge_cases` không được đính kèm vào error response; E1/E4/E5 không bao giờ được validator thấy | High |
+| B2 | `algorithm/constants.py` | Calibration | `LOW_COMPLEXITY_TOP2_PCT = 60.0` quá thấp → hsa-miR-21-5p (T:36%+A:27%=63.6%) bị flag E7 spuriously; nâng lên 70.0% | Medium |
+| B3 | `routes/export.py` | Security | `_sanitize("../../etc/passwd")` → `.._.._etc_passwd` vẫn chứa `..` (path traversal token); thêm `re.sub(r"\.\.+", "_", s)` để collapse | Medium |
+
+**B1 root cause:** Edge-case detection được đặt ở cuối `design_primers()` (dòng 190), sau `if not candidates: return 422` ở dòng 124. Fix: move `detect_edge_cases(seq)` lên trước step 4 (generate candidates), include `edge_cases` và `global_warnings` trong 422 body.
+
+**B2 root cause:** `TOP2_PCT = 60%` dựa trên convention cho sequence chung, không tính đến đặc điểm AT-rich của miRNA sinh học. Cho 22-nt miRNA với phân phối ngang bằng (A≈27%, T≈36%, G≈23%, C≈14%), top-2 = 63.6% là bình thường. 70% phù hợp hơn — chỉ flag khi 2 base thực sự chiếm ưu thế (ATATAT..., GCGCGC...).
+
+**B3 root cause:** `_SAFE_CHARS = re.compile(r"[^A-Za-z0-9._-]")` giữ dấu `.` để hỗ trợ tên như `hsa-miR-21.2`. Chuỗi `../../` → `.._.._` (slash bị replace nhưng `..` giữ nguyên). Fix: thêm post-step collapse `..+` → `_`.
 
 ### Bảng tổng hợp (v2.8.1)
 

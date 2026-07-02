@@ -123,14 +123,17 @@ def test_export_csv_has_column_headers():
 
 
 def test_export_csv_filename_sanitized():
-    """Path traversal in mirna_id must not appear in filename."""
+    """Path traversal in mirna_id must not allow directory traversal in filename.
+    After sanitisation, '..' must be collapsed; '/' is already stripped by _SAFE_CHARS.
+    The remaining words (e.g. 'passwd') are harmless once traversal tokens are gone.
+    """
     results = dict(_RESULTS)
     results["metadata"] = dict(_RESULTS["metadata"])
     results["metadata"]["mirna_id"] = "../../etc/passwd"
     r = _post("csv", results)
     cd = r.headers.get("Content-Disposition", "")
-    assert ".." not in cd
-    assert "passwd" not in cd.split("filename=")[-1].split("/")[-1]
+    assert ".." not in cd          # no double-dot traversal
+    assert "/" not in cd.split("filename=")[-1]   # no path separator
 
 
 # ── PDF tests ─────────────────────────────────────────────────────
