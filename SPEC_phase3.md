@@ -18,6 +18,7 @@
 | v1.7 | **[ĐÍNH CHÍNH IMPLEMENTATION 2026-07-01]** (1) §2: Neilsen12 journal = *Trends in Genetics* (không phải Bioinformatics); (2) §4.1+4.2: `BOUND_FRACTION_RT_TEMP = 42°C` cho Round 1 — spec cũ ghi 60°C sai; (3) §5.5: miFam.dat HTTP 500 trên miRBase v22.1 — production dùng seed-based grouping; (4) §6: isoMiR data v1.0.0 verified (8 entries, PMIDs), `evidence_level` field, key đổi từ `data_warning` → `co_amplification_warning`; (5) §8.9+8.11: cross-species filtering + `cross_species_excluded`/`hits_truncated` trong summary; smoke test hsa-miR-21-5p passed |
 | v1.8 | **[GAP FIX — stemloop RT × universal reverse heterodimer 2026-07-01]** Phase 2 chỉ check 2 cặp heterodimer: fwd×stemloop (RT buffer) và fwd×reverse (PCR buffer). Trong one-step RT-qPCR tất cả 3 primer cùng hiện diện trong PCR tube → cặp stemloop×reverse chưa bao giờ được check. Fix: `check_stemloop_reverse_heterodimer()` mới trong `heterodimer.py`; gọi 1 lần trong `design.py` (không per-candidate vì cả hai sequence cố định); kết quả expose tại `universal_reverse.stemloop_reverse_heterodimer` trong API response; HIGH/MODERATE risk promote lên `global_warnings`. Thực tế Chen 2005 pair: dG = −4.40 kcal/mol → PASS (hệ thống validated thực nghiệm). 3 tests mới, 105/105 pass. commit `78a5e22`. |
 | v1.9 | **[CẢI THIỆN TÍNH ĐÚNG KHOA HỌC — 2026-07-01]** commit `b36f124`. (1) **Loại Ensembl khỏi BLAST:** DNase treatment trước RT loại toàn bộ genomic DNA và unspliced RNA — template còn lại chỉ là mature miRNA; off-target risk giới hạn ở miRNA family cross-reactivity đã được miRBase multi-species cover đủ. (2) **Bound fraction recalibrate:** `BOUND_FRACTION_ANNEALING_TEMP` 60→**55°C** (Tm−5°C = Ta thực tế qPCR); tại đúng Tm=60°C fraction ~50% theo định nghĩa nhiệt động học → score luôn gần 0 → vô nghĩa. `BOUND_FRACTION_MIN/OPT` 90/97→**60/80%**: threshold cũ dành cho duplex hybridization dài (~27 nt), không phù hợp primer ngắn 12–24 nt. Formula `score_bound_fraction` sửa sang `fract/MIN*70` thay vì `(fract-50)/40*70` hardcoded. (3) **Self-hit precursor variants:** thêm `_normalize_mirna_name()` (strip precursor copy number, guard ≥5 components) + `_is_self_hit()` — loại đúng hsa-miR-16-1-5p và hsa-miR-16-2-5p khỏi off-target khi design cho hsa-miR-16-5p. (4) **SCORING_WEIGHTS_V4 v3.1 rebalance:** `mfe_stemloop` 0.15→**0.14** (body 44 nt cố định; chỉ overhang 6 nt thay đổi → variance thấp), `tm_pair_match` 0.03→**0.01** (reverse cố định Tm≈60.4°C, redundant với tm_accuracy), `gc_clamp` 0.02→**0.04** (3' GC critical cho extension), `gc_skew` 0.01→**0.02**. (5) **E2E / frontend:** baseURL centralize qua `playwright.config.js`; `OffTargetPanel` loại Ensembl references; `detectInputType` bỏ `q.length >= 10` (fix 8–9 nt gap). |
+| v2.0 | **[CODE REVIEW FIXES — 2026-07-02]** commit `c18a9a4`. 8 vấn đề từ medium code review. *Correctness:* (1) DB vắng mặt → `check_offtarget` nay raise `FileNotFoundError` thay vì trả `overall_risk='SAFE'` sai; (2) `_is_self_hit` bỏ nhánh `s in m` gây false-positive (e.g. 'hsa-mir-1' match bên trong 'hsa-mir-10-5p') — thay bằng word-boundary prefix check + áp dụng boundary rule tương tự cho normalized comparison; (3) `_normalize_mirna_name` regex `[12]` → **`\d+`** — bắt copy number ≥3 (hsa-miR-509-**3**-5p và hsa-miR-550a-**3**-5p có trong project data); (4) `test_bound_fraction.py` cập nhật theo MIN=60/OPT=80 (bị bỏ sót ở v1.9). *Efficiency:* (5) Forward + reverse BLAST nay chạy song song qua `ThreadPoolExecutor(max_workers=2)` — giảm latency 50%; (6) `m_norm` tính 1 lần trong `check_offtarget`, truyền qua `_check_primer` → `_is_self_hit` — loại N lần tính lại per hit; (7) `_RISK_ORDER` hoisted lên module-level constant. *Cleanup:* (8) `bound_fraction.py` private `_reverse_complement`/`_to_dna` thay bằng delegate sang `sequence_utils.reverse_complement` / `sequence_utils.rna_to_dna`. |
 
 ---
 
@@ -569,6 +570,16 @@ Chi tiết đầy đủ theo Ye 2012 + Kwok 1990 (v1.3). Kiến trúc hệ thố
 **Trước v1.9:** `dbs = [_MIRBASE_DB, _ENSEMBL_DB]`
 **v1.9+:** `db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []`
 
+**v2.0 — DB unavailable behavior:** Nếu `db_available` rỗng (DB chưa build), `check_offtarget` raise `FileNotFoundError` ngay lập tức. Trước v2.0, hàm silently trả về `overall_risk='SAFE'` với 0 hits — frontend hiển thị "No significant off-target hits detected." mặc dù không có kiểm tra nào được chạy. Raise exception để API route trả 500, frontend hiển thị error state thay vì false SAFE.
+
+```python
+if not db_available:
+    raise FileNotFoundError(
+        f"BLAST database not found at {_MIRBASE_DB!r}. "
+        "Run 'python scripts/build_blast_db.py' to build it first."
+    )
+```
+
 ### 8.3 BLAST parameters (Ye 2012 defaults)
 
 Nguồn: Ye 2012 §Implementation:
@@ -822,37 +833,63 @@ hsa-miR-16-2-5p  (from hsa-mir-16-2)
 ```
 Cả hai có sequence giống hệt `hsa-miR-16-5p`. Check cũ: `mirna_id.lower() in subject_id.lower()` → `"hsa-mir-16-5p" in "hsa-mir-16-1-5p"` = **False** → tất cả precursor variants xuất hiện trong off-target results của chính mình.
 
-**Fix (v1.9):**
+**Fix (v1.9 + v2.0):**
 
 ```python
 def _normalize_mirna_name(name: str) -> str:
     """
     Strip precursor copy number: hsa-miR-16-1-5p → hsa-mir-16-5p
     Guard ≥5 components: hsa-miR-1-5p (4 components) → UNCHANGED
-    
+
+    v2.0: regex widened [12] → \d+ để bắt copy number ≥3.
+    Project data có hsa-miR-509-3-5p, hsa-miR-550a-3-5p (copy number 3).
+
     Examples:
       hsa-miR-16-1-5p  → hsa-mir-16-5p   (5 components, drops '1')
       hsa-miR-16-2-5p  → hsa-mir-16-5p   (5 components, drops '2')
+      hsa-miR-509-3-5p → hsa-mir-509-5p  (5 components, drops '3') [v2.0]
       hsa-miR-1-5p     → hsa-mir-1-5p    (4 components → unchanged)
       hsa-let-7a-1-5p  → hsa-let-7a-5p   (5 components, drops '1')
     """
     parts = name.strip().lower().split('-')
     if (len(parts) >= 5
             and re.fullmatch(r'[35]p', parts[-1])
-            and re.fullmatch(r'[12]', parts[-2])):
+            and re.fullmatch(r'\d+', parts[-2])):   # v2.0: [12] → \d+
         parts.pop(-2)
     return '-'.join(parts)
 
-def _is_self_hit(subject_id: str, mirna_id: str) -> bool:
-    """Direct substring check + normalized comparison."""
+def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -> bool:
+    """
+    v2.0: bỏ nhánh `s in m` (false-positive); thêm word-boundary prefix check.
+    m_norm: pre-computed _normalize_mirna_name(mirna_id.lower()) từ caller.
+
+    Vấn đề với `s in m` cũ: 'hsa-mir-1' là substring của 'hsa-mir-10-5p'
+    → off-target thật bị suppress. Fix: chỉ kiểm tra `m in s` (mirna_id là
+    substring của subject, e.g. FASTA ID có accession suffix); nhánh ngược
+    dùng word-boundary check để phân biệt 'hsa-mir-16' vs 'hsa-mir-10-5p'.
+    """
     s, m = subject_id.lower(), mirna_id.lower()
-    if m in s or s in m:
+    # mirna_id là substring của subject (FASTA ID có thể có accession suffix)
+    if m in s:
         return True
-    return _normalize_mirna_name(m) in _normalize_mirna_name(s) or \
-           _normalize_mirna_name(s) in _normalize_mirna_name(m)
+    # subject là prefix word-boundary của mirna_id
+    # 'hsa-mir-16' match 'hsa-mir-16-5p', KHÔNG match 'hsa-mir-10-5p'
+    if len(s) <= len(m) and m.startswith(s) and (len(m) == len(s) or m[len(s)] == '-'):
+        return True
+    # Normalized: strip copy numbers rồi áp dụng cùng boundary rules
+    s_norm = _normalize_mirna_name(s)
+    if m_norm is None:
+        m_norm = _normalize_mirna_name(m)
+    if m_norm in s_norm:
+        return True
+    if len(s_norm) <= len(m_norm) and m_norm.startswith(s_norm) and (len(m_norm) == len(s_norm) or m_norm[len(s_norm)] == '-'):
+        return True
+    return False
 ```
 
 **Tại sao guard ≥5 components?** `hsa-miR-1-5p` chỉ có 4 components `['hsa', 'miR', '1', '5p']`. Penultimate là `'1'` — nhưng đây là MIR NAME number, không phải precursor copy number. Nếu không guard, sẽ strip thành `hsa-miR-5p` (sai).
+
+**Performance (v2.0):** `m_norm` được tính 1 lần trong `check_offtarget` rồi truyền xuống `_check_primer` → `_is_self_hit`. Trước v2.0, mỗi BLAST hit gọi `_normalize_mirna_name(mirna_id)` lại từ đầu (N lần tính cùng 1 giá trị).
 
 ---
 
