@@ -526,6 +526,13 @@ PRIMER_SIZE_MODE = "specific"     # [Busk14 I6] DOI 10.1186/1471-2105-15-29
 # Score = 100 at 17 nt, decreasing for shorter specific regions (lower specificity).
 FORWARD_SPECIFIC_LEN_REF = 17    # nt — max specific_length; score 100 at this length [Busk14]
 
+# Template secondary structure (PROMPT 7 — Fan19 I9)
+# Fan 2019 (DOI 10.1080/07391102.2018.1498804): stable hairpin within amplicon
+# inhibits PCR (stem ≥20 bp → loss of product). Recommend analyzing ≥60 bp context.
+TEMPLATE_FOLD_WINDOW       = 60   # nt — folding window around binding site [Fan19]
+TEMPLATE_STRUCTURE_MFE_WARN = -5.0  # kcal/mol — folding stability threshold for warning [Fan19]
+TEMPLATE_BINDING_PAIRED_MAX = 3   # bases — max paired bases in binding region (soft limit)
+
 # [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
 # Primer:Template → PCR yield relative to perfect match
 KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
