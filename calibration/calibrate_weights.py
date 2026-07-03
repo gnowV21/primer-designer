@@ -64,9 +64,9 @@ def fit_weights(X, y, w0, lam, iters=5000, lr=None):
     n = X.shape[1]
     w = w0.copy()
     if lr is None:
-        # step size ~ 1/Lipschitz
+        # Lipschitz constant of gradient(||Xw-y||^2 + lam||w-w0||^2) = 2*(σ_max^2 + lam)
         L = np.linalg.norm(X, 2) ** 2 + lam + 1e-9
-        lr = 1.0 / L
+        lr = 1.0 / (2 * L)
     for _ in range(iters):
         grad = 2 * X.T @ (X @ w - y) + 2 * lam * (w - w0)
         w = project_simplex(w - lr * grad)
@@ -142,6 +142,9 @@ def build_features_from_api(assays, base_url, target_mode):
                 r = requests.get(f"{base_url}/api/mirbase/{mid}", timeout=20)
                 if r.status_code == 200:
                     payload["sequence"]["matureSequence"] = r.json().get("sequence", "")
+                else:
+                    print(f"  ! {a['assay_id']}: miRBase returned {r.status_code}; skipping")
+                    continue
             except Exception as e:  # noqa: BLE001
                 print(f"  ! {a['assay_id']}: mirbase lookup failed ({e}); skipping")
                 continue
@@ -165,17 +168,27 @@ def build_features_from_api(assays, base_url, target_mode):
 
 
 def choose_candidate(cands, published_forward):
-    """Pick the candidate matching the published primer if given, else the top-ranked one."""
-    if published_forward:
-        pf = published_forward.upper()
-        best, best_score = cands[0], -1
-        for c in cands:
-            s = c.get("sequence", "").upper()
-            overlap = len(os.path.commonprefix([s, pf])) + len(os.path.commonprefix([s[::-1], pf[::-1]]))
-            if overlap > best_score:
-                best, best_score = c, overlap
-        return best
-    return cands[0]
+    """Pick the candidate matching the published primer if given, else the top-ranked one.
+
+    Matching uses the candidate's specific_sequence (3' binding region) aligned against
+    the 3' suffix of published_forward of the same length.  This avoids the 5' tail
+    dominating the score — the tail is shared across all candidates and is irrelevant
+    for discriminating which miRNA-specific sequence matches the published design.
+    """
+    if not published_forward:
+        return cands[0]
+    pf = published_forward.upper()
+    best, best_score = cands[0], -1
+    for c in cands:
+        spec = c.get("specific_sequence", "").upper() or c.get("sequence", "").upper()
+        n = min(len(spec), len(pf))
+        if n == 0:
+            continue
+        # Count matching bases at the 3' end (biologically meaningful binding region)
+        suffix_match = sum(a == b for a, b in zip(spec[-n:], pf[-n:]))
+        if suffix_match > best_score:
+            best, best_score = c, suffix_match
+    return best
 
 
 # ----------------------------- reporting -----------------------------
