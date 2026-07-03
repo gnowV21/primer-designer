@@ -94,17 +94,36 @@ IDT (Integrated DNA Technologies) là nhà cung cấp thương mại. Hướng d
 
 **Workaround tạm thời:** Dùng Tm RT primer như gần đúng cho *so sánh tương đối* giữa các ứng viên (ranking), không phải Tm tuyệt đối thực tế. Workaround dài hạn: NUPACK hoặc RNAstructure với tham số DNA:RNA (Sugimoto 1995). Chưa triển khai vì cần dependency mới.
 
-### E.2 Salt correction — SantaLucia method (không phải Owczarzy); benchmark độc lập
+### E.2 Salt correction — SantaLucia method (không phải Owczarzy); benchmark độc lập; công thức divalent là von Ahsen 2001
 
 Tool dùng `salt_corrections_method='santalucia'` (default của primer3-py 2.0), **không phải** `'owczarzy'`. Header comment trong `thermodynamics.py` trước đây ghi sai **"Owczarzy 2004 Mg2+ correction"** — sai cả method name (SantaLucia) lẫn năm (2004 là Na⁺, không phải Mg²⁺). Đã sửa 2026-07-03.
 
-**Hệ quả với benchmark:**
-- Owczarzy 2008 (Mg²⁺) và 2004 (Na⁺) là **validation datasets hoàn toàn độc lập** — **không circularity**.
-- Nếu dùng `salt_corrections_method='owczarzy'`, Owczarzy 2008 sẽ là bán-circular (chỉ kiểm việc triển khai formula, không phải model accuracy).
-- So sánh thực nghiệm (34 oligos): `santalucia` MAE=2.68°C Bias=−2.65°C; `owczarzy` MAE=2.64°C Bias=−2.08°C. Owczarzy nhỉnh hơn một chút (đặc biệt Mg series: 3.12 vs 2.82) nhưng kém độc lập trong benchmark hiện có → **giữ `santalucia`**.
+**Pipeline salt correction được xác nhận từ C source (oligotm.c, primer3-py 2.0.3):**
 
-**Mở rộng benchmark (khuyến nghị chưa triển khai):**
-Dữ liệu Owczarzy đã lưu đủ 9 cột Mg + 5 cột Na = ~242 điểm (so với 34 điểm hiện tại một cột). Chạy `python calibration/check_tm.py --expand-salt` để dùng toàn bộ dải muối, kiểm hiệu chỉnh muối trên toàn dải thay vì chỉ một nồng độ tham chiếu.
+```c
+// santalucia branch (dòng 447-449):
+K_mM = K_mM + divalent_to_monovalent(divalent_conc, dntp_conc);  // ← von Ahsen 2001
+delta_S = delta_S + 0.368 * (len - 1) * log(K_mM / 1000.0);     // SantaLucia entropy
+
+// divalent_to_monovalent (dòng 774-784):
+return 120 * sqrt(divalent - dntp);   // von Ahsen 2001, DOI 10.1093/clinchem/47.11.1956
+```
+
+**Circularity verdict (cập nhật chính xác 2026-07-03):**
+
+| Series | Pipeline tool | Benchmark | Độc lập? |
+|--------|--------------|-----------|----------|
+| **Na⁺** | SantaLucia entropy correction áp trực tiếp lên K_mM (Na⁺) | Owczarzy 2004 Na⁺ data | ✓ **Hoàn toàn độc lập** |
+| **Mg²⁺** | Bước 1: `120√(Mg−dNTP)` [von Ahsen 2001]; bước 2: SantaLucia entropy | Owczarzy 2008 Mg²⁺ data | ✓ **Độc lập cả hai bước** (von Ahsen 2001 ≠ Owczarzy formula; bước 2 = SantaLucia 1998, trước Owczarzy 2008 10 năm) |
+
+**Diễn đạt an toàn cho paper:**
+- Na⁺ series: *"independent validation of the SantaLucia 1998 monovalent salt correction"*
+- Mg²⁺ series: *"independent validation of the full divalent pipeline: von Ahsen 2001 divalent-to-monovalent conversion [DOI 10.1093/clinchem/47.11.1956] followed by SantaLucia 1998 entropy correction"*
+
+**So sánh thực nghiệm (34 oligos):** `santalucia` MAE=2.68°C Bias=−2.65°C; `owczarzy` MAE=2.64°C Bias=−2.08°C. Owczarzy nhỉnh hơn một chút (Mg series: 3.12 vs 2.82 MAE) nhưng kém độc lập trong benchmark hiện có → **giữ `santalucia`**.
+
+**Mở rộng benchmark (đã triển khai):**
+Chạy `python calibration/check_tm.py --expand-salt` để dùng 242 điểm (9 cột Mg × 18 oligos + 5 cột Na × 16 oligos), kiểm salt correction trên toàn dải. Kết quả: SantaLucia under-predicts ở Mg ≤3 mM nhưng over-predicts ở Mg ≥50 mM (non-monotonic bias). Điều kiện vận hành tool (1.5 mM Mg) ở vùng under-predict — bias −2.65°C vẫn relevant.
 
 ---
 

@@ -12,9 +12,20 @@ KEY IMPLEMENTATION NOTES:
      complementary formula: Tm = dH/(dS + R*ln(CT/4))). Pass Ct directly;
      do NOT pre-divide by 4 (confirmed experimentally — see tm_benchmark.json
      known_bias_2026-07-03).
-  3. Salt correction: 'santalucia' (primer3-py default). NOT 'owczarzy'.
-     Owczarzy 2008/2004 data are INDEPENDENT of the tool's salt model.
-  4. --expand-salt: use all 9 Mg + 5 Na salt columns (~242 data points)
+  3. Salt correction path (confirmed from primer3 C source, oligotm.c):
+     - 'santalucia' mode (tool default, NOT 'owczarzy'):
+         a. Divalent→monovalent: K_equiv = 120 * sqrt(Mg - dNTP)  [von Ahsen 2001]
+         b. K_mM += K_equiv, then SantaLucia entropy correction: dS += 0.368*(len-1)*ln(K/1000)
+     - 'owczarzy' mode (NOT used by tool): direct Owczarzy 2004 (Na+) / 2008 (Mg2+) formula.
+     CIRCULARITY VERDICT:
+       Na series: santalucia entropy correction on K_mM (Na+); Owczarzy 2004 Na+ data = FULLY INDEPENDENT.
+       Mg series: von Ahsen 2001 (not Owczarzy) converts Mg2+ → equiv K_mM, then SantaLucia correction.
+                  Owczarzy 2008 Mg2+ data = INDEPENDENT from BOTH steps (separate paper, separate dataset).
+       → No circularity for either series. Safe to report both as independent validation.
+  4. RT primer exclusion: oligos with primer_type='rt' are excluded from Tm accuracy check.
+     RT primers hybridize with miRNA (RNA) → DNA:RNA hybrid; DNA:DNA NN params are not valid
+     for absolute Tm on an RNA template (Sugimoto 1995). Only forward/reverse (DNA:DNA) are validated.
+  5. --expand-salt: use all 9 Mg + 5 Na salt columns (~242 data points)
      instead of only the single reference column (34 points). Reveals whether
      the salt-correction function tracks experiment across the full salt range.
 
@@ -24,6 +35,7 @@ Usage:
 
 Sources:
   [SL98]       DOI 10.1073/pnas.95.4.1460  (NN params + SantaLucia salt correction)
+  [vAhsen01]   DOI 10.1093/clinchem/47.11.1956  (von Ahsen 2001 divalent→monovalent formula)
   [Owczarzy04] DOI 10.1021/bi034621r       (Na+ series, Table 2 — independent validation)
   [Owczarzy08] DOI 10.1021/bi702363u       (Mg2+ series, Table 1 — independent validation)
   [Sugimoto95] DOI 10.1021/bi00035a029     (DNA:RNA hybrid NN — NOT implemented here)
@@ -135,6 +147,14 @@ def run_check(benchmark_path: str, report_path: str, expand_salt: bool = False):
     else:
         oligos = verified
         print(f"  Default: {len(oligos)} data points (single reference column per oligo)")
+
+    # Exclude RT primers from absolute Tm validation: RT primer hybridizes with miRNA (RNA)
+    # → DNA:RNA hybrid; DNA:DNA NN params (primer3) are not valid for absolute Tm on RNA template.
+    # Only forward/reverse primers (DNA:DNA duplex path) are meaningfully validated here.
+    rt_excluded = [o for o in oligos if o.get("primer_type") == "rt"]
+    if rt_excluded:
+        oligos = [o for o in oligos if o.get("primer_type") != "rt"]
+        print(f"  Excluded {len(rt_excluded)} RT primer entries (DNA:RNA hybrid — DNA:DNA NN invalid for absolute Tm)")
 
     print()
 
@@ -260,10 +280,19 @@ def _write_report(path, rows, bench,
         "",
         f"- {mode_note}",
         "- Tool model: SantaLucia 1998 NN (primer3-py, `salt_corrections_method='santalucia'`)",
-        "- Salt correction: **SantaLucia** (NOT Owczarzy) — Owczarzy 2008/2004 data are INDEPENDENT.",
-        "- Predictions at **each data point's measured conditions** (per-oligo salt/Ct from benchmark)",
+        "- Salt correction pipeline (confirmed from primer3 C source, oligotm.c):",
+        "  - Na⁺ series: SantaLucia entropy correction directly on K_mM (Na⁺ only).",
+        "    → **Owczarzy 2004 Na⁺ data: fully independent** validation of monovalent salt correction.",
+        "  - Mg²⁺ series: step 1 = von Ahsen 2001 divalent→monovalent `120√(Mg−dNTP)`; "
+        "step 2 = SantaLucia entropy on combined K_mM.",
+        "    → **Owczarzy 2008 Mg²⁺ data: fully independent** from both steps "
+        "(von Ahsen 2001 ≠ Owczarzy formula; SantaLucia 1998 ≠ Owczarzy 2008).",
+        "  - **No circularity** for either series — safe to report both as independent validation.",
+        "- Predictions at **each data point's measured conditions** (per-oligo salt/Ct from benchmark).",
         "- Ct convention: `primer_conc_nm` = Ct (total strand); passed directly to primer3.calc_tm "
-        "which divides by 4 internally",
+        "which divides by 4 internally.",
+        "- RT primers excluded: DNA:RNA hybrid Tm uses DNA:DNA NN params (approx. only); "
+        "only forward/reverse (DNA:DNA) are validated here.",
         f"- Experimental noise floor: σ(Tm) ≈ {NOISE_FLOOR_C} °C (Owczarzy 2008); "
         "errors within 1–2 °C are excellent.",
         "",
@@ -349,14 +378,18 @@ def _write_report(path, rows, bench,
         "",
         "## Prediction method",
         "- Base NN: SantaLucia 1998 (DOI 10.1073/pnas.95.4.1460) via primer3-py.",
-        "- Salt correction: `salt_corrections_method='santalucia'` (primer3-py default). "
-        "Owczarzy 2008 (Mg²⁺) and Owczarzy 2004 (Na⁺) are **independent** validation datasets — no circularity.",
+        "- Salt correction (`salt_corrections_method='santalucia'`, primer3-py default, confirmed from oligotm.c):",
+        "  - Na⁺: SantaLucia entropy correction on K_mM. Owczarzy 2004 Na⁺ = independent validation. ✓",
+        "  - Mg²⁺: von Ahsen 2001 [DOI 10.1093/clinchem/47.11.1956] converts Mg²⁺−dNTP → K_equiv = 120√(Mg−dNTP), "
+        "then SantaLucia entropy on K_mM+K_equiv. Owczarzy 2008 Mg²⁺ = independent from both steps. ✓",
+        "  - No circularity for either series.",
         "- Validation datasets are independent of the SantaLucia 1998 training set.",
-        "- Short oligos (≤12 nt): larger prediction errors are expected (boundary of NN validity).",
+        "- Short oligos (≤12 nt): larger prediction errors expected (boundary of NN validity).",
         f"- Experimental noise floor: σ(Tm) ≈ {NOISE_FLOOR_C} °C (Owczarzy 2008, UV-melting). "
         "Model errors within 1–2 °C are excellent relative to this baseline.",
         "- ⚠ DNA:RNA hybrid: RT primer Tm uses DNA:DNA NN params. Actual RT primer Tm on miRNA "
-        "target (DNA:RNA hybrid) may differ by 3–8 °C (Sugimoto 1995 DNA:RNA params not implemented).",
+        "target (DNA:RNA hybrid) may differ by 3–8 °C (Sugimoto 1995 DNA:RNA params not implemented). "
+        "RT primers are excluded from this validation.",
         "",
         "*For research use only. Not for clinical in-vitro diagnostic use.*",
     ]

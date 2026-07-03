@@ -41,10 +41,21 @@
     "mg_columns_mM": [0.5, 1.5, 3.0, 10, 20, 50, 125, 300, 600],
     "salt_correction_independence_2026-07-03": {
       "tool_salt_method": "salt_corrections_method='santalucia' (primer3-py default, NOT 'owczarzy')",
-      "circularity_verdict": "NONE — Owczarzy 2008 Mg2+ formula is not used by the tool; benchmark is fully independent.",
-      "owczarzy_comparison": "Empirical test on 34 oligos: santalucia MAE=2.68 C Bias=-2.65 C; owczarzy MAE=2.64 C Bias=-2.08 C. Owczarzy method is marginally better but would create partial circularity with Owczarzy 2008 data. Keep santalucia.",
+      "mg_series_divalent_conversion": {
+        "formula": "120 * sqrt(Mg2+_mM - dNTP_mM)",
+        "source": "von Ahsen N et al. Clin Chem 2001;47(11):1956-1961. DOI 10.1093/clinchem/47.11.1956",
+        "confirmed_from": "primer3 C source: oligotm.c divalent_to_monovalent() lines 774-784; santalucia branch lines 447-449",
+        "independence_note": "von Ahsen 2001 uses its own experimental dataset, published 7 years before Owczarzy 2008. Neither the formula nor the dataset overlaps with Owczarzy 2008. Mg2+ series is fully independent."
+      },
+      "circularity_verdict": {
+        "na_series": "NONE — SantaLucia entropy correction applied to K_mM (Na+) directly. Owczarzy 2004 Na+ data is fully independent of SantaLucia 1998.",
+        "mg_series": "NONE — pipeline uses von Ahsen 2001 divalent conversion (not Owczarzy) then SantaLucia entropy. Owczarzy 2008 Mg2+ data is independent from both steps.",
+        "paper_wording_na": "independent validation of the SantaLucia 1998 monovalent salt correction",
+        "paper_wording_mg": "independent validation of the full divalent pipeline: von Ahsen 2001 divalent-to-monovalent conversion [DOI 10.1093/clinchem/47.11.1956] followed by SantaLucia 1998 entropy correction"
+      },
+      "owczarzy_comparison": "Empirical test on 34 oligos: santalucia MAE=2.68 C Bias=-2.65 C; owczarzy MAE=2.64 C Bias=-2.08 C. Owczarzy marginally better but would create partial circularity with Owczarzy 2008 data. Keep santalucia.",
       "label_fix": "thermodynamics.py header previously said 'Owczarzy 2004 Mg2+ correction' — WRONG on both method name (SantaLucia) and year (2004 is Na+; 2008 is Mg2+). Fixed 2026-07-03.",
-      "dna_rna_gap": "primer3.calc_tm uses DNA:DNA NN params. RT primer hybridizes with miRNA (RNA) -> DNA:RNA hybrid. Sugimoto 1995 params needed for exact RT primer Tm; current Tm is an approximation valid for relative comparison only."
+      "dna_rna_gap": "primer3.calc_tm uses DNA:DNA NN params. RT primer hybridizes with miRNA (RNA) -> DNA:RNA hybrid. Sugimoto 1995 params needed for exact RT primer Tm; current Tm is an approximation valid for relative comparison only. RT primers excluded from check_tm.py validation (primer_type='rt' filter)."
     }
   },
   "oligos": [
