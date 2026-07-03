@@ -21,6 +21,7 @@ from .constants import (
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR,
     STEMLOOP_BODY, STEMLOOP_BODY_LENGTH, UNIVERSAL_REVERSE,
     MIN_CANDIDATE_3PRIME_DISTANCE, TM_ANNEALING_TEMP_DEFAULT, TM_FORWARD_TOLERANCE,
+    TAIL_MAX_HOMOPOLYMER_RUN,
 )
 from .sequence_utils import rna_to_dna, calculate_gc, check_homopolymer
 from .thermodynamics import calculate_tm_nn, calculate_tm_binding_only
@@ -206,12 +207,17 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
     GC_BASES = frozenset("GC")
     result   = []
 
+    def _has_tail_homopolymer(t):
+        """Return True if tail contains a run of TAIL_MAX_HOMOPOLYMER_RUN or more identical bases."""
+        run_str = lambda b: b * TAIL_MAX_HOMOPOLYMER_RUN
+        return any(run_str(b) in t for b in "ACGT")
+
     if tail_len <= 6:
         for combo in itertools.product("ACGT", repeat=tail_len):
             tail = "".join(combo)
             if sum(1 for b in tail if b in GC_BASES) / tail_len < 0.5:
                 continue
-            if check_homopolymer(tail, 4):
+            if _has_tail_homopolymer(tail):
                 continue
             result.append(tail)
         # Sort by GC% descending so the pool top-400 are the most GC-rich tails,
@@ -231,7 +237,7 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
             seen.add(tail)
             if sum(1 for b in tail if b in GC_BASES) / tail_len < 0.5:
                 continue
-            if check_homopolymer(tail, 4):
+            if _has_tail_homopolymer(tail):
                 continue
             result.append(tail)
 

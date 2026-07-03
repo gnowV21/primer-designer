@@ -1,13 +1,13 @@
 target,source,length,status,checks_pass,failed_checks,rt_overhang_expected,rt_overhang_actual,tm_full,gc_pct,amplicon_bp,grade,score,siblings_flagged,edge_expected,edge_found,edge_check
-hsa-miR-21-5p,mirbase,22,200,10/10,,TCAACA,TCAACA,60.0,44.4,71,Excellent,93.2,,,,
-hsa-let-7a-5p,mirbase,22,200,11/11,,AACTAT,AACTAT,60.0,57.1,68,Excellent,80.7,"hsa-let-7d-5p:IDENTICAL,hsa-let-7e-5p:IDENTICAL,hsa-let-7f-5p:IDENTICAL,hsa-mir-98-5p:HIGH,hsa-let-7c-5p:HIGH,hsa-let-7g-5p:HIGH,hsa-let-7b-5p:LOW",,,
-hsa-let-7c-5p,mirbase,22,200,10/10,,AACCAT,AACCAT,60.0,60.0,67,Excellent,81.8,,,,
-hsa-let-7f-5p,mirbase,22,200,10/10,,AACTAT,AACTAT,60.0,50.0,68,Excellent,86.1,,,,
+hsa-miR-21-5p,mirbase,22,200,10/10,,TCAACA,TCAACA,60.0,52.2,67,Excellent,94.5,,,,
+hsa-let-7a-5p,mirbase,22,200,11/11,,AACTAT,AACTAT,60.0,60.0,67,Excellent,80.3,"hsa-let-7d-5p:IDENTICAL,hsa-let-7e-5p:IDENTICAL,hsa-let-7f-5p:IDENTICAL,hsa-mir-98-5p:HIGH,hsa-let-7c-5p:HIGH,hsa-let-7g-5p:HIGH,hsa-let-7b-5p:LOW",,,
+hsa-let-7c-5p,mirbase,22,200,10/10,,AACCAT,AACCAT,60.0,59.1,69,Excellent,82.1,,,,
+hsa-let-7f-5p,mirbase,22,200,10/10,,AACTAT,AACTAT,60.0,54.5,66,Excellent,85.1,,,,
 hsa-miR-16-5p,mirbase,22,200,10/10,,CGCCAA,CGCCAA,60.0,57.9,66,Excellent,89.5,,,,
-hsa-miR-155-5p,mirbase,24,200,10/10,,AACCCC,AACCCC,60.0,44.0,71,Excellent,92.0,,,,
+hsa-miR-155-5p,mirbase,24,200,10/10,,AACCCC,AACCCC,60.0,44.0,71,Excellent,92.6,,,,
 hsa-miR-122-5p,mirbase,22,200,10/10,,CAAACA,CAAACA,60.0,52.4,64,Excellent,92.7,,,,
-cel-miR-39-3p,mirbase,22,200,10/10,,CAAGCT,CAAGCT,60.0,57.1,64,Excellent,94.0,,,,
-very_short_17nt,,,HTTP 422,1/1,,,,,,,,,,E1,"E1,E7",PASS
+cel-miR-39-3p,mirbase,22,200,10/10,,CAAGCT,CAAGCT,60.0,50.0,67,Excellent,94.3,,,,
+very_short_17nt,,,HTTP 422,1/1,,,,,,,,,,E1,E1,PASS
 low_gc,,,HTTP 422,1/1,,,,,,,,,,E4,"E4,E7",PASS
 high_gc,,,HTTP 422,1/1,,,,,,,,,,E5,"E5,E7",PASS
-homopolymer_runG,inline,22,200,1/1,,,,,,,,,,E6,"E6,E7",PASS
+homopolymer_runG,inline,22,200,1/1,,,,,,,,,,E6,E6,PASS
