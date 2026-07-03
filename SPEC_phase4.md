@@ -418,6 +418,8 @@ POLY_G_RUN_MIN           = 4    # ≥ → warning (G-quadruplex) [IDT]
 ## 12. Recommendations — Tối ưu thuật toán (KHÔNG bắt buộc, chờ duyệt)
 
 > Phần trả lời câu hỏi của Vuong: "cần điều chỉnh gì để thuật toán tốt hơn". Đây là đề xuất, tách khỏi phạm vi bắt buộc Phase 4. Mỗi mục có: vấn đề → đề xuất → effort → rủi ro.
+>
+> **→ Đã mở rộng thành `SPEC_phase5.md`:** Protocol/Evidence Advisor (PART A), **hồi quy hiệu chỉnh trọng số scoring** (PART B — trọng tâm, dùng dữ liệu paper), Tm accuracy (PART C), amplicon melting + LNA (PART D). Các mục §12.1–12.6 dưới đây vẫn hợp lệ; §12.2 (amplicon fold) và calibration là ưu tiên cao nhất.
 
 ### 12.1 Hard-filter gates trước scoring
 **Vấn đề:** scoring hiện là weighted-sum 15 tiêu chí (SPEC_phase3 §7). Weighted-sum có thể cho điểm cao một set mắc 1 lỗi chí mạng (vd self-dimer ΔG rất âm) vì bù trừ bởi tiêu chí khác.

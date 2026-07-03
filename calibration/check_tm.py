@@ -49,9 +49,11 @@ def predict_tm(base_url: str, dna_seq: str) -> float | None:
             sys.path.insert(0, backend_dir)
         from algorithm.thermodynamics import calculate_tm_nn
         # Keys must match what _get_p3_params() reads in thermodynamics.py
+        # NOTE: keep in sync with backend/algorithm/constants.py
+        # (P3_DEFAULT_MV_CONC=50, P3_DEFAULT_DV_CONC=1.5, P3_DEFAULT_DNTP_CONC=0.8, P3_DEFAULT_DNA_CONC=200)
         params = {
             "saltConcentration":      50,
-            "magnesiumConcentration": 3.0,
+            "magnesiumConcentration": 1.5,   # was 3.0 (did not match constants); Mg2+ = P3_DEFAULT_DV_CONC
             "dntpTotal":              0.8,
             "primerConcentration":    200,
             "tmMethod":               "santalucia",
@@ -144,9 +146,12 @@ def _write_report(path: str, rows: list, bench: dict, mae: float = None, bias: f
 
     lines.append("")
     lines.append("## Salt correction confirmation")
-    lines.append("The tool applies the Owczarzy 2004 Mg²⁺/dNTP correction on top of the")
-    lines.append("SantaLucia 1998 nearest-neighbour model (see `backend/algorithm/thermodynamics.py`).")
-    lines.append("Parameters in use: Na⁺ equiv 50 mM, Mg²⁺ 3.0 mM, dNTP 0.8 mM, [primer] 200 nM.")
+    lines.append("Base model: SantaLucia 1998 nearest-neighbour (see `backend/algorithm/thermodynamics.py`).")
+    lines.append("Note on citations: the Mg²⁺/dNTP salt correction is **Owczarzy 2008** "
+                 "(DOI 10.1021/bi702363u), NOT Owczarzy 2004 (DOI 10.1021/bi034621r, which is Na⁺-only). "
+                 "Verify which correction thermodynamics.py actually implements before citing it in the paper.")
+    lines.append("Parameters in use: Na⁺ equiv 50 mM, Mg²⁺ 1.5 mM, dNTP 0.8 mM, [primer] 200 nM "
+                 "(must match constants.py).")
     lines.append("")
     lines.append("*For research use only. Not for clinical in-vitro diagnostic use.*")
 
