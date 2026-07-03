@@ -16,7 +16,8 @@ from .constants import (
     HAIRPIN_DG_MAX_INTERNAL, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR, AMPLICON_IDEAL,
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
-    GC_CLAMP_SCORE_OPTIMAL, GC_CLAMP_SCORE_WEAK, GC_CLAMP_SCORE_TRIPLE_C,
+    GC_CLAMP_SCORE_OPTIMAL, GC_CLAMP_SCORE_1GC_CONSERVATIVE,
+    GC_CLAMP_SCORE_WEAK, GC_CLAMP_SCORE_TRIPLE_C, GC_CLAMP_1GC_AS_OPTIMAL,
     DIMER_FULL_DG_CRITICAL,
     PRIMER_SIZE_MODE, FORWARD_SPECIFIC_LEN_REF,
 )
@@ -226,21 +227,30 @@ def score_candidate(
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). Source: PrimerAST 2024."
     )
 
-    # ── 12. GC clamp at 3' end (0.03 V3 / 0.04 V4) [Busk14] ────────
-    # miRNA-specific evidence (Busk 2014, DOI 10.1186/1471-2105-15-29):
-    # 1-2 G/C optimal; 0 or 3 G/C weak (too loose / too rigid);
-    # 3 consecutive C at 3' is especially harmful for extension initiation.
+    # ── 12. GC clamp at 3' end (0.03 V3 / 0.04 V4) [Busk14+IDT] ───
+    # Two-tier logic (PROMPT 1):
+    # (a) LOCKED multi-source: CCC→25, 3 G/C→50, 0 G/C→50, 2 G/C→100.
+    # (b) PENDING single-source: 1 G/C → 75 (conservative, GC_CLAMP_1GC_AS_OPTIMAL=False)
+    #     or 100 (Busk14-style, flag=True) — enable after calibrate_weights.py confirms.
+    # Trade-off: IDT prefers ≥2 G/C for PCR efficiency (anchor); Busk14 (miRNA-specific)
+    # accepts 1 G/C as optimal for mismatch discrimination. Default: conservative.
     last3    = forward["sequence"][-3:].upper()
     gc_last3 = sum(1 for b in last3 if b in "GC")
-    if gc_last3 in (1, 2):    gc_clamp_score = GC_CLAMP_SCORE_OPTIMAL   # 100
-    elif last3 == "CCC":      gc_clamp_score = GC_CLAMP_SCORE_TRIPLE_C  # 25
-    else:                     gc_clamp_score = GC_CLAMP_SCORE_WEAK       # 50 (0 or 3 G/C)
+    if last3 == "CCC":       gc_clamp_score = GC_CLAMP_SCORE_TRIPLE_C         # 25 — (a)
+    elif gc_last3 == 3:      gc_clamp_score = GC_CLAMP_SCORE_WEAK             # 50 — (a)
+    elif gc_last3 == 0:      gc_clamp_score = GC_CLAMP_SCORE_WEAK             # 50 — (a)
+    elif gc_last3 == 2:      gc_clamp_score = GC_CLAMP_SCORE_OPTIMAL          # 100 — (a)
+    else:                    gc_clamp_score = (GC_CLAMP_SCORE_OPTIMAL         # 100 — (b) Busk14
+                                               if GC_CLAMP_1GC_AS_OPTIMAL
+                                               else GC_CLAMP_SCORE_1GC_CONSERVATIVE)  # 75 — (b) default
     scores["gc_clamp"] = gc_clamp_score
     explanations["gc_clamp"] = (
-        f"GC clamp at 3' end: {gc_last3} G/C in last 3 nt ('{last3}'). "
-        f"Optimal = 1-2 G/C (score 100); 0 or 3 G/C = suboptimal (score 50); "
-        f"3 consecutive C (score 25) — poor extension initiation. "
-        f"Source: Busk 2014 (miRNA-specific, DOI 10.1186/1471-2105-15-29)."
+        f"3'-end composition: {gc_last3} G/C in last 3 nt ('{last3}') → score {gc_clamp_score}. "
+        f"Rule: 2 G/C = optimal anchor+specificity [Busk14+IDT]; "
+        f"1 G/C = good specificity, weaker anchor "
+        f"[trade-off: IDT prefers G/C for PCR efficiency; Busk 2014 (miRNA-specific, DOI 10.1186/1471-2105-15-29) "
+        f"accepts 1 G/C as optimal — single-source heuristic, pending calibration; default conservative]; "
+        f"0 or 3 G/C = suboptimal [Busk14+IDT]; CCC at 3' = severe penalty [Busk14, multi-source]."
     )
 
     # ── V4-only criteria ─────────────────────────────────────────
