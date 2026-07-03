@@ -17,6 +17,7 @@ from algorithm.sequence_utils import validate_rna_sequence
 from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
+from algorithm.template_structure import check_template_structure
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -155,6 +156,8 @@ def design_primers():
             reverse_seq=reverse["sequence"],
             params=params,
         )
+        # Template secondary structure around forward primer binding site [Fan19]
+        c["template_structure"] = check_template_structure(seq, c, params)
 
     # ── 5b. Hard-filter gate (evidence-based, before scoring) ────────
     # Eliminates candidates with catastrophic structural flaws that a
@@ -227,6 +230,20 @@ def design_primers():
                 f"See specificity_warnings.cross_reactivity for details."
             ),
         })
+
+    # ── 8b. Template structure warnings (Fan19) ────────────────────
+    # Surface warning if any top-N candidate has a hairpin at its binding site.
+    for p in top_n:
+        ts = p.get("template_structure", {})
+        if ts.get("has_strong_local_hairpin"):
+            global_warnings.append({
+                "field": "template_structure",
+                "severity": "warning",
+                "message": (
+                    f"Rank #{p['rank']} forward primer: "
+                    + (ts.get("warning") or "Template hairpin detected at binding site.")
+                ),
+            })
 
     elapsed = round(time.time() - start, 2)
 
