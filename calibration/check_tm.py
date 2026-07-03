@@ -3,157 +3,239 @@
 check_tm.py — SPEC_phase5 PART C: Tm model accuracy validation.
 
 Compares the tool's SantaLucia 1998 NN Tm predictions against experimentally
-measured values from published papers. Reports MAE, bias, and confirms that
-Mg2+/dNTP salt correction (SL04) is being applied.
+measured values from Owczarzy 2004 (Na+ series) and Owczarzy 2008 (Mg2+ series).
+
+KEY IMPLEMENTATION NOTES:
+  1. Predictions at EACH OLIGO'S MEASURED CONDITIONS (salt_na_mm, salt_mg_mm,
+     dntp_mm, primer_conc_nm from benchmark), NOT the tool's default salt.
+  2. primer3.calc_tm() uses dna_conc/4 INTERNALLY (SantaLucia non-self-
+     complementary formula: Tm = dH/(dS + R*ln(CT/4))). Pass Ct directly;
+     do NOT pre-divide by 4 (confirmed experimentally — see tm_benchmark.json
+     known_bias_2026-07-03).
 
 Usage:
-  # 1) Start backend:  cd backend && python app.py
-  # 2) Run:
-  python calibration/check_tm.py \
-    --benchmark calibration/tm_benchmark.json \
-    --base-url http://localhost:5000 \
-    --report calibration/tm_report.md
+  python calibration/check_tm.py \\
+    --benchmark calibration/tm_benchmark.json \\
+    --report    calibration/tm_report.md
 
-Requires: requests (pip install -r calibration/requirements.txt)
-
-Sources: [SL98] DOI 10.1073/pnas.95.4.1460; [SL04] DOI 10.1146/annurev.biophys.32.110601.141800
+Sources:
+  [SL98]       DOI 10.1073/pnas.95.4.1460
+  [Owczarzy04] DOI 10.1021/bi034621r  (Na+ series, Table 2)
+  [Owczarzy08] DOI 10.1021/bi702363u  (Mg2+/dNTP series, Table 1)
 """
 import argparse
 import json
 import sys
+import os
 
-try:
-    import requests
-except ImportError:
-    sys.exit("requests not installed: pip install -r calibration/requirements.txt")
-
-BIAS_WARN_C = 1.5  # °C systematic bias threshold — trigger report if exceeded
+BIAS_WARN_C = 1.5   # °C — systematic bias threshold for report flag
 
 
-def predict_tm(base_url: str, dna_seq: str) -> float | None:
+def _load_backend():
+    backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend")
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+    from algorithm.thermodynamics import calculate_tm_nn
+    return calculate_tm_nn
+
+
+def predict_tm(oligo: dict, calculate_tm_nn) -> float | None:
     """
-    Call /api/design with a synthetic miRNA that uses dna_seq as the full forward primer
-    and extract tm_full. We exploit the fact that the forward primer specific_region
-    approaches the full sequence when we submit a short miRNA and let the tool design
-    a primer covering it entirely.
+    Predict Tm at the oligo's MEASURED conditions.
 
-    Alternative: directly call the internal Tm function via a /api/debug-tm endpoint
-    if one exists (not in current API). Here we use the simpler import approach when
-    running in the same Python environment.
+    Salt parameters are read per-oligo from the benchmark:
+      salt_na_mm    → mv_conc  (monovalent; 1 mM for Mg-only Tris buffer)
+      salt_mg_mm    → dv_conc  (Mg2+ mM; 0 for Na-only series)
+      dntp_mm       → dntp_conc (0 for both Owczarzy series)
+      primer_conc_nm = Ct (total strand).  primer3.calc_tm uses dna_conc/4
+                      internally, so pass Ct directly — do NOT pre-divide.
     """
-    # Try direct import first (faster, avoids HTTP round-trip)
+    seq = oligo.get("sequence_dna", "")
+    if not seq:
+        return None
+
+    na_mm  = float(oligo.get("salt_na_mm",  0) or 0)
+    mg_mm  = float(oligo.get("salt_mg_mm",  0) or 0)
+    dnt_mm = float(oligo.get("dntp_mm",     0) or 0)
+    ct_nm  = float(oligo.get("primer_conc_nm", 2000) or 2000)
+
+    params = {
+        "saltConcentration":      na_mm,
+        "magnesiumConcentration": mg_mm,
+        "dntpTotal":              dnt_mm,
+        "primerConcentration":    ct_nm,   # = Ct; primer3 divides by 4 internally
+        "tmMethod":               "santalucia",
+    }
     try:
-        import sys, os
-        backend_dir = os.path.join(os.path.dirname(__file__), "..", "backend")
-        if backend_dir not in sys.path:
-            sys.path.insert(0, backend_dir)
-        from algorithm.thermodynamics import calculate_tm_nn
-        # Keys must match what _get_p3_params() reads in thermodynamics.py
-        # NOTE: keep in sync with backend/algorithm/constants.py
-        # (P3_DEFAULT_MV_CONC=50, P3_DEFAULT_DV_CONC=1.5, P3_DEFAULT_DNTP_CONC=0.8, P3_DEFAULT_DNA_CONC=200)
-        params = {
-            "saltConcentration":      50,
-            "magnesiumConcentration": 1.5,   # was 3.0 (did not match constants); Mg2+ = P3_DEFAULT_DV_CONC
-            "dntpTotal":              0.8,
-            "primerConcentration":    200,
-            "tmMethod":               "santalucia",
-        }
-        return calculate_tm_nn(dna_seq, params)
-    except Exception:
-        pass  # fall back to HTTP below
-
-    # HTTP fallback via /api/mirbase not ideal — skip for now
-    return None
+        return calculate_tm_nn(seq, params)
+    except Exception as exc:
+        print(f"  ! calc_tm failed for {oligo.get('oligo_id', seq[:10])}: {exc}")
+        return None
 
 
-def run_check(benchmark_path: str, base_url: str, report_path: str):
+def run_check(benchmark_path: str, report_path: str):
     with open(benchmark_path, encoding="utf-8") as f:
         bench = json.load(f)
 
-    oligos = [o for o in bench.get("oligos", []) if o.get("verified") is True]
+    all_oligos = bench.get("oligos", [])
+    oligos = [o for o in all_oligos if o.get("verified") is True]
+
     print(f"\n=== Tm model accuracy check ===")
-    print(f"Verified entries: {len(oligos)} (of {len(bench.get('oligos', []))} total)")
+    print(f"Benchmark: {benchmark_path}")
+    print(f"Verified entries: {len(oligos)} / {len(all_oligos)} total\n")
 
     if not oligos:
-        print("\nNo verified entries — emitting stub report.")
+        print("No verified entries — emitting stub report.")
         _write_report(report_path, [], bench)
         return
 
+    try:
+        calculate_tm_nn = _load_backend()
+    except Exception as exc:
+        sys.exit(f"Could not import backend thermodynamics module: {exc}\n"
+                 "Run from the repo root or ensure backend/ is importable.")
+
     rows = []
     for o in oligos:
-        seq = o.get("sequence_dna", "")
         exp = o.get("tm_experimental_c")
-        if not seq or exp is None:
+        if not o.get("sequence_dna") or exp is None:
             continue
-        pred = predict_tm(base_url, seq)
+        pred = predict_tm(o, calculate_tm_nn)
         if pred is None:
-            print(f"  ! {o['oligo_id']}: prediction failed, skipping")
             continue
         err = pred - exp
+        is_mg = (o.get("salt_mg_mm") or 0) > 0
         rows.append({
-            "id": o["oligo_id"],
-            "length": o.get("length_nt", len(seq)),
-            "tm_exp": exp,
-            "tm_pred": round(pred, 1),
-            "error": round(err, 1),
+            "id":         o["oligo_id"],
+            "length":     o.get("length_nt", len(o["sequence_dna"])),
+            "gc_pct":     o.get("gc_pct"),
+            "tm_exp":     exp,
+            "tm_pred":    round(pred, 1),
+            "error":      round(err, 1),
             "source_doi": o.get("source_doi", ""),
+            "series":     "mg" if is_mg else "na",
+            "na_mm":      o.get("salt_na_mm", 0),
+            "mg_mm":      o.get("salt_mg_mm", 0),
         })
-        print(f"  {o['oligo_id']:<30} exp={exp:.1f}°C  pred={pred:.1f}°C  err={err:+.1f}°C")
+        cond = (f"[Mg {o.get('salt_mg_mm',0):.1f}mM Na {o.get('salt_na_mm',0):.0f}mM]"
+                if is_mg else f"[Na {o.get('salt_na_mm',0):.0f}mM]")
+        print(f"  {o['oligo_id']:<28} {cond}  exp={exp:.1f}°C  pred={pred:.1f}°C  err={err:+.1f}°C")
 
     if not rows:
         print("No rows processed.")
         _write_report(report_path, rows, bench)
         return
 
-    errors = [r["error"] for r in rows]
-    mae = sum(abs(e) for e in errors) / len(errors)
-    bias = sum(errors) / len(errors)
+    def _stats(rr):
+        if not rr:
+            return None, None
+        e = [r["error"] for r in rr]
+        return sum(abs(x) for x in e) / len(e), sum(e) / len(e)
 
-    print(f"\nMAE  = {mae:.2f}°C")
-    print(f"Bias = {bias:+.2f}°C  ({'WARNING: systematic bias > 1.5°C' if abs(bias) > BIAS_WARN_C else 'OK'})")
+    mg_rows = [r for r in rows if r["series"] == "mg"]
+    na_rows = [r for r in rows if r["series"] == "na"]
+    all_mae, all_bias   = _stats(rows)
+    mg_mae, mg_bias     = _stats(mg_rows)
+    na_mae, na_bias     = _stats(na_rows)
 
-    _write_report(report_path, rows, bench, mae=mae, bias=bias)
+    print(f"\n{'-'*62}")
+    print(f"  All ({len(rows)})       MAE={all_mae:.2f} C   Bias={all_bias:+.2f} C")
+    if mg_rows:
+        print(f"  Mg series ({len(mg_rows)})  MAE={mg_mae:.2f} C   Bias={mg_bias:+.2f} C  [Owczarzy 2008]")
+    if na_rows:
+        print(f"  Na series ({len(na_rows)})  MAE={na_mae:.2f} C   Bias={na_bias:+.2f} C  [Owczarzy 2004]")
+    if abs(all_bias) > BIAS_WARN_C:
+        direction = "UNDER" if all_bias < 0 else "OVER"
+        print(f"  WARNING: tool {direction}-predicts Tm by {all_bias:+.2f} C on average")
+
+    _write_report(report_path, rows, bench,
+                  all_mae=all_mae, all_bias=all_bias,
+                  mg_rows=mg_rows, na_rows=na_rows,
+                  mg_mae=mg_mae, mg_bias=mg_bias,
+                  na_mae=na_mae, na_bias=na_bias)
 
 
-def _write_report(path: str, rows: list, bench: dict, mae: float = None, bias: float = None):
+def _write_report(path, rows, bench,
+                  all_mae=None, all_bias=None,
+                  mg_rows=None, na_rows=None,
+                  mg_mae=None, mg_bias=None,
+                  na_mae=None, na_bias=None):
+    mg_rows = mg_rows or []
+    na_rows = na_rows or []
+
     lines = [
         "# Tm Model Accuracy Report — SPEC_phase5 PART C",
         "",
         f"- Verified oligos: {len(rows)}",
-        f"- Tool model: SantaLucia 1998 NN + SL04 Mg²⁺/dNTP salt correction",
+        "- Tool model: SantaLucia 1998 NN (primer3-py)",
+        "- Predictions at **each oligo's measured conditions** (per-oligo salt/Ct from benchmark)",
+        "- Ct convention: benchmark `primer_conc_nm` = Ct (total strand); passed directly to "
+        "primer3.calc_tm which divides by 4 internally",
         "",
     ]
-    if not rows:
-        lines.append("**No verified experimental data yet.**")
-        lines.append("")
-        lines.append(f"Populate `{bench.get('_meta', {}).get('purpose', 'tm_benchmark.json')}` "
-                     f"with `verified: true` entries (experimental Tm from cited papers) to enable this analysis.")
-    else:
-        lines.append("## Per-oligo results\n")
-        lines.append("| ID | Length | Tm exp (°C) | Tm pred (°C) | Error (°C) | DOI |")
-        lines.append("|---|---|---|---|---|---|")
-        for r in rows:
-            lines.append(f"| {r['id']} | {r['length']} | {r['tm_exp']} | {r['tm_pred']} "
-                         f"| {r['error']:+.1f} | {r['source_doi']} |")
-        lines.append("")
-        lines.append(f"**MAE = {mae:.2f}°C** | **Bias = {bias:+.2f}°C**")
-        if abs(bias) > BIAS_WARN_C:
-            lines.append(f"\n⚠ Systematic bias > {BIAS_WARN_C}°C detected. "
-                         "Review salt-correction parameters in `constants.py` (P3_DEFAULT_SALT_CONC, P3_DEFAULT_MG_CONC). "
-                         "Do NOT change the NN model parameters — only the salt correction terms.")
-        else:
-            lines.append("\nBias within acceptable range. No salt-correction adjustment needed.")
 
-    lines.append("")
-    lines.append("## Salt correction confirmation")
-    lines.append("Base model: SantaLucia 1998 nearest-neighbour (see `backend/algorithm/thermodynamics.py`).")
-    lines.append("Note on citations: the Mg²⁺/dNTP salt correction is **Owczarzy 2008** "
-                 "(DOI 10.1021/bi702363u), NOT Owczarzy 2004 (DOI 10.1021/bi034621r, which is Na⁺-only). "
-                 "Verify which correction thermodynamics.py actually implements before citing it in the paper.")
-    lines.append("Parameters in use: Na⁺ equiv 50 mM, Mg²⁺ 1.5 mM, dNTP 0.8 mM, [primer] 200 nM "
-                 "(must match constants.py).")
-    lines.append("")
-    lines.append("*For research use only. Not for clinical in-vitro diagnostic use.*")
+    if not rows:
+        lines += [
+            "**No verified experimental data yet.**",
+            "",
+            "Populate `calibration/tm_benchmark.json` with `verified: true` entries "
+            "(transcribed from Owczarzy 2004/2008 tables) to enable this analysis.",
+        ]
+    else:
+        lines += ["## Summary", ""]
+        lines += [
+            "| Series | N | MAE (°C) | Bias (°C) | Source |",
+            "|---|---|---|---|---|",
+            f"| **All** | {len(rows)} | {all_mae:.2f} | {all_bias:+.2f} | — |",
+        ]
+        if mg_rows:
+            lines.append(f"| Mg²⁺ 1.5 mM (Owczarzy 2008) | {len(mg_rows)} "
+                         f"| {mg_mae:.2f} | {mg_bias:+.2f} | DOI 10.1021/bi702363u |")
+        if na_rows:
+            lines.append(f"| Na⁺ 69 mM (Owczarzy 2004)   | {len(na_rows)} "
+                         f"| {na_mae:.2f} | {na_bias:+.2f} | DOI 10.1021/bi034621r |")
+        lines.append("")
+
+        if abs(all_bias) > BIAS_WARN_C:
+            direction = "under-predicts" if all_bias < 0 else "over-predicts"
+            lines += [
+                f"⚠ **Systematic bias = {all_bias:+.2f}°C** (threshold ±{BIAS_WARN_C}°C). "
+                f"Tool {direction} Tm.",
+                "",
+                "Possible causes: (1) primer3 salt-correction underestimates Mg²⁺ stabilisation "
+                "at low concentrations; (2) NN parameters slightly off for short oligos (≤12 nt); "
+                "(3) benchmark conditions (1 mM monovalent, no dNTP) differ from tool defaults "
+                "(50 mM Na + 1.5 mM Mg + 0.8 mM dNTP). The bias at **actual operating conditions** "
+                "(50 mM Na + 1.5 mM Mg + 0.8 mM dNTP, primers 15–25 nt) may differ. "
+                "Do NOT adjust `TM_FORWARD_TARGET` without in-lab measurements at tool conditions.",
+            ]
+        else:
+            lines.append(f"Bias within ±{BIAS_WARN_C}°C — model well-calibrated for this dataset.")
+
+        lines += [
+            "",
+            "## Per-oligo results", "",
+            "| ID | nt | GC% | Na (mM) | Mg (mM) | Tm exp | Tm pred | Error |",
+            "|---|---|---|---|---|---|---|---|",
+        ]
+        for r in rows:
+            gc = f"{r['gc_pct']:.0f}" if r.get("gc_pct") is not None else "—"
+            lines.append(
+                f"| {r['id']} | {r['length']} | {gc} | {r['na_mm']} | {r['mg_mm']} "
+                f"| {r['tm_exp']:.1f} | {r['tm_pred']:.1f} | {r['error']:+.1f} |"
+            )
+
+    lines += [
+        "",
+        "## Prediction method",
+        "- Base NN: SantaLucia 1998 (DOI 10.1073/pnas.95.4.1460) via primer3-py.",
+        "- Mg²⁺/dNTP salt correction: Owczarzy 2008 (DOI 10.1021/bi702363u) "
+        "(note: `thermodynamics.py` header may say '2004' — Owczarzy 2004 is Na⁺-only).",
+        "- Validation datasets are **independent** of the SantaLucia 1998 training set.",
+        "- Short oligos (≤12 nt): larger prediction errors are expected (boundary of NN validity).",
+        "",
+        "*For research use only. Not for clinical in-vitro diagnostic use.*",
+    ]
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
@@ -161,9 +243,8 @@ def _write_report(path: str, rows: list, bench: dict, mae: float = None, bias: f
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Validate the tool's Tm model against Owczarzy benchmarks.")
     ap.add_argument("--benchmark", default="calibration/tm_benchmark.json")
-    ap.add_argument("--base-url", default="http://localhost:5000")
-    ap.add_argument("--report", default="calibration/tm_report.md")
+    ap.add_argument("--report",    default="calibration/tm_report.md")
     args = ap.parse_args()
-    run_check(args.benchmark, args.base_url, args.report)
+    run_check(args.benchmark, args.report)
