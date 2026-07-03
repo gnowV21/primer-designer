@@ -125,6 +125,13 @@ GC_CLAMP_MIN_COUNT = 1
 GC_CLAMP_MAX_CONSECUTIVE = 3
 GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2
 
+# miRNA-specific GC clamp scoring (Busk 2014 DOI 10.1186/1471-2105-15-29)
+# Evidence: miRNA forward primers with 1-2 G/C in last 3 nt outperform
+# 0 or 3 G/C; 3 consecutive C at 3' is especially problematic for extension.
+GC_CLAMP_SCORE_OPTIMAL   = 100  # 1-2 G/C in last 3 nt — optimal anchor [Busk14]
+GC_CLAMP_SCORE_WEAK      = 50   # 0 G/C (no anchor) OR 3 G/C (too rigid) [Busk14]
+GC_CLAMP_SCORE_TRIPLE_C  = 25   # 3 consecutive C at 3' — extension penalty [Busk14]
+
 MAX_HOMOPOLYMER_RUN = 5       # [P3P Advanced Settings] Max Poly-X = 5
 GC_MAX_IN_3PRIME_WINDOW = 5   # [P3P Advanced Settings] Max End GC = 5
 
@@ -146,8 +153,13 @@ SELF_DIMER_DG_3PRIME_MAX = -5.0    # kcal/mol [Premier Biosoft]
 HETERO_DIMER_DG_MAX = -6.0
 HETERO_DIMER_DG_3PRIME_MAX = -5.0
 
-END_DIMER_DG_CRITICAL = -5.0      # kcal/mol — polymerase can extend
+END_DIMER_DG_CRITICAL = -5.0      # kcal/mol — polymerase can extend (3'-end) [Premier Biosoft]
 END_STABILITY_MAX = 9.0            # kcal/mol [P3P PRIMER_MAX_END_STABILITY]
+
+# Full-structure (global) dimer ΔG threshold (Kang 2017 DOI 10.1261/rna.061150.117)
+# Distinct from END_DIMER_DG_CRITICAL (3'-end only).
+# Kang: ΔG_total > -9 kcal/mol → OK for qPCR; < -9 → significant qPCR inhibition.
+DIMER_FULL_DG_CRITICAL = -9.0     # kcal/mol — full-structure self/hetero-dimer [Kang17]
 
 
 # ----------------------------------------------------------------
@@ -493,6 +505,10 @@ PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
+
+# Hard-filter gate (PROMPT 3 — A/B toggle)
+# Set False to disable hard-filter layer and fall back to soft-scoring only (for comparison).
+HARD_FILTER_ENABLED = True
 
 # [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
 # Primer:Template → PCR yield relative to perfect match
