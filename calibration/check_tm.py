@@ -111,7 +111,7 @@ def expand_salt_series(oligos: list, meta: dict) -> list:
                     entry["tm_experimental_c"] = o["tm_by_mg_mM"][i]
                     entry["oligo_id"] = f"{o['oligo_id']}@Mg{mg}mM"
                     expanded.append(entry)
-        elif "tm_by_na_mM" in o:
+        if "tm_by_na_mM" in o:
             for i, na in enumerate(na_cols):
                 if i < len(o["tm_by_na_mM"]) and o["tm_by_na_mM"][i] is not None:
                     entry = dict(o)
@@ -141,20 +141,21 @@ def run_check(benchmark_path: str, report_path: str, expand_salt: bool = False):
     print(f"Benchmark: {benchmark_path}")
     print(f"Verified entries: {len(verified)} / {len(all_oligos)} total")
 
+    # Exclude RT primers from absolute Tm validation BEFORE expansion: RT primer hybridizes
+    # with miRNA (RNA) → DNA:RNA hybrid; DNA:DNA NN params (primer3) invalid for absolute Tm.
+    # Exclusion happens on `verified` (source list) so the count reflects source primers, not
+    # the larger number of expanded rows that would result from expand_salt.
+    rt_excluded = [o for o in verified if o.get("primer_type") == "rt"]
+    if rt_excluded:
+        verified = [o for o in verified if o.get("primer_type") != "rt"]
+        print(f"  Excluded {len(rt_excluded)} RT primer(s) (DNA:RNA hybrid — DNA:DNA NN invalid for absolute Tm)")
+
     if expand_salt:
         oligos = expand_salt_series(verified, meta)
         print(f"  --expand-salt: {len(oligos)} data points (all salt columns)")
     else:
         oligos = verified
         print(f"  Default: {len(oligos)} data points (single reference column per oligo)")
-
-    # Exclude RT primers from absolute Tm validation: RT primer hybridizes with miRNA (RNA)
-    # → DNA:RNA hybrid; DNA:DNA NN params (primer3) are not valid for absolute Tm on RNA template.
-    # Only forward/reverse primers (DNA:DNA duplex path) are meaningfully validated here.
-    rt_excluded = [o for o in oligos if o.get("primer_type") == "rt"]
-    if rt_excluded:
-        oligos = [o for o in oligos if o.get("primer_type") != "rt"]
-        print(f"  Excluded {len(rt_excluded)} RT primer entries (DNA:RNA hybrid — DNA:DNA NN invalid for absolute Tm)")
 
     print()
 

@@ -30,15 +30,26 @@ try:
 except ImportError:  # only needed when building features from the live API
     requests = None
 
-# --- V4 prior: 15 criteria in a FIXED order (must match constants.SCORING_WEIGHTS_V4) ---
-V4_KEYS = [
-    "tm_accuracy", "mfe_stemloop", "tm_binding_accuracy", "hairpin_penalty",
-    "dimer_penalty", "end_stability", "bound_fraction_binding", "bound_fraction_full",
-    "gc_content", "family_discrimination", "tm_pair_match", "gc_clamp",
-    "primer_size", "amplicon_size", "gc_skew",
-]
-V4_WEIGHTS = np.array([0.20, 0.14, 0.10, 0.08, 0.08, 0.08, 0.05, 0.03,
-                       0.08, 0.05, 0.01, 0.04, 0.02, 0.02, 0.02])
+# --- V4 prior: derive from backend/algorithm/constants.py (single source of truth) ---
+# Falls back to a hardcoded snapshot only when the backend is not importable (e.g. CI without
+# the full repo).  The assert below catches any drift between the snapshot and live constants.
+_backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+if _backend_path not in sys.path:
+    sys.path.insert(0, _backend_path)
+try:
+    from algorithm.constants import SCORING_WEIGHTS_V4 as _V4_CONST
+    V4_KEYS    = list(_V4_CONST.keys())
+    V4_WEIGHTS = np.array(list(_V4_CONST.values()))
+except ImportError:
+    # Hardcoded fallback — keep in sync with constants.SCORING_WEIGHTS_V4
+    V4_KEYS = [
+        "tm_accuracy", "mfe_stemloop", "tm_binding_accuracy", "hairpin_penalty",
+        "dimer_penalty", "end_stability", "bound_fraction_binding", "bound_fraction_full",
+        "gc_content", "family_discrimination", "tm_pair_match", "gc_clamp",
+        "primer_size", "amplicon_size", "gc_skew",
+    ]
+    V4_WEIGHTS = np.array([0.20, 0.14, 0.10, 0.08, 0.08, 0.08, 0.05, 0.03,
+                           0.08, 0.05, 0.01, 0.04, 0.02, 0.02, 0.02])
 # Core biology criteria we never let collapse to ~0 (weight floor):
 CORE_KEYS = {"tm_accuracy", "tm_binding_accuracy", "hairpin_penalty", "dimer_penalty"}
 W_FLOOR = 0.005
@@ -240,7 +251,12 @@ def calibrate(X, y, n_min):
         r = loocv_rmse(X, y, w0, lam)
         if r < best_rmse:
             best_rmse, best_lam, = r, lam
-    best_w = fit_weights(X, y, w0, best_lam) if best_lam is not None else w0
+    if best_lam is None:
+        notes.append("WARNING: all LOOCV evaluations diverged (inf RMSE) — "
+                     "grid search produced no finite result; V4 weights kept as fallback.")
+        best_w = w0
+    else:
+        best_w = fit_weights(X, y, w0, best_lam)
 
     # adopt gate
     core_ok = all(best_w[V4_KEYS.index(k)] >= W_FLOOR for k in CORE_KEYS)

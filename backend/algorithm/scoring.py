@@ -185,7 +185,7 @@ def score_candidate(
     # PRIMER_SIZE_MODE="full" (legacy): penalize by deviation from FORWARD_OPTIMAL_LENGTH.
     if PRIMER_SIZE_MODE == "specific":
         spec_len = forward.get("specific_length", forward.get("length", FORWARD_SPECIFIC_LEN_REF))
-        primer_size_score = round(min(100.0, (spec_len ** 2 / FORWARD_SPECIFIC_LEN_REF ** 2) * 100))
+        primer_size_score = round(min(100.0, (spec_len ** 2 / FORWARD_SPECIFIC_LEN_REF ** 2) * 100), 1)
         explanations["primer_size"] = (
             f"Specific region = {spec_len} nt (reference max: {FORWARD_SPECIFIC_LEN_REF} nt). "
             f"Score = min(100, (len/ref)²×100) = {primer_size_score}. "
