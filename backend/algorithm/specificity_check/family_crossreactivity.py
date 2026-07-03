@@ -5,22 +5,25 @@
 # Algorithm:
 #   1. Extract overhang (last N nt) of target mature miRNA.
 #   2. Identify family from miRNA name → lookup siblings in JSON DB.
-#   3. For each sibling, compute Hamming distance on overhang.
+#   3. For each sibling, compute Hamming distance AND Kwok weighted distance on overhang.
 #   4. Estimate Tm discrimination via SantaLucia 1998 NN model
 #      (reuses existing calculate_tm_nn).
 #   5. Classify risk: IDENTICAL / HIGH / LOW.
+#      Kwok weighted distance: 3'-proximal mismatches block extension → downgrade to LOW [Kwok90].
 #   6. If any HIGH risk → auto-extend overhang to 7→8 nt and repeat.
 #
 # Data: backend/data/mirbase_family_overhangs.json (offline — no API calls)
 # WARNING: Family sequences in JSON are PLACEHOLDER — verify vs miRBase v22+.
 #
-# Sources: [Chen05] Chen et al. 2005; [K11] Kramer 2011; [SL98] SantaLucia 1998
+# Sources: [Chen05] Chen et al. 2005; [K11] Kramer 2011; [SL98] SantaLucia 1998;
+#          [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — position-weighted mismatch discrimination
 # ================================================================
 
 import json
 import os
 from ..thermodynamics import calculate_tm_nn
 from ..sequence_utils import rna_to_dna
+from ..constants import KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING
 
 _DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "mirbase_family_overhangs.json")
 _DB_CACHE: dict | None = None
@@ -138,6 +141,24 @@ def _hamming(s1: str, s2: str) -> int:
     return sum(c1 != c2 for c1, c2 in zip(s1, s2))
 
 
+def _kwok_distance(s1: str, s2: str) -> float:
+    """Position-weighted mismatch distance: mismatches closer to the 3' end score higher.
+
+    A higher kwok_distance means the mismatches are located where they discriminate best
+    (3'-proximal), making co-amplification less likely [Kwok90].
+    Uses KWOK_POSITION_WEIGHTS[i] for mismatch at position i from the 3' end (0 = terminal).
+    """
+    if len(s1) != len(s2):
+        return 0.0
+    n = len(s1)
+    total = 0.0
+    for i, (c1, c2) in enumerate(zip(reversed(s1), reversed(s2))):
+        if c1 != c2:
+            w = KWOK_POSITION_WEIGHTS[i] if i < len(KWOK_POSITION_WEIGHTS) else 1.0
+            total += w
+    return total
+
+
 def _calc_tm(seq_rna: str, params: dict) -> float:
     """
     Tm of the N-nt RNA overhang binding to its perfect DNA complement,
@@ -148,18 +169,23 @@ def _calc_tm(seq_rna: str, params: dict) -> float:
     return calculate_tm_nn(dna, params)
 
 
-def _classify_risk(mismatch: int, delta_tm: float) -> str:
+def _classify_risk(mismatch: int, delta_tm: float, kwok_dist: float = 0.0) -> str:
     """
-    Risk per task spec:
-      0 mismatch             → IDENTICAL (worst — cannot discriminate)
-      1 mismatch, ΔTm < 5°C → HIGH
-      1 mismatch, ΔTm ≥ 5°C → LOW
-      2 mismatches           → LOW
-      ≥ 3 mismatches         → SAFE (not listed in output)
+    Risk classification for a sibling with `mismatch` mismatches in the overhang.
+
+      0 mismatch                                → IDENTICAL
+      1 mismatch, kwok_dist ≥ KWOK_DIST_DISCRIMINATING → LOW
+          (mismatch is 3'-proximal — blocks extension per Kwok90, independent of ΔTm)
+      1 mismatch, ΔTm ≥ 5°C                    → LOW
+      1 mismatch, ΔTm < 5°C                    → HIGH
+      2 mismatches                              → LOW
+      ≥ 3 mismatches                            → SAFE
     """
     if mismatch == 0:
         return "IDENTICAL"
     if mismatch == 1:
+        if kwok_dist >= KWOK_DIST_DISCRIMINATING:
+            return "LOW"   # 3'-proximal mismatch discriminates well regardless of ΔTm [Kwok90]
         return "HIGH" if delta_tm < 5.0 else "LOW"
     if mismatch == 2:
         return "LOW"
@@ -189,14 +215,16 @@ def _evaluate(
         if mismatch >= 3:
             continue  # SAFE — omit from output
 
+        kwok_dist = _kwok_distance(target_overhang, sibling_overhang)
         tm_sibling = _calc_tm(sibling_overhang, params)
         delta_tm = round(tm_target - tm_sibling, 1)
-        risk = _classify_risk(mismatch, delta_tm)
+        risk = _classify_risk(mismatch, delta_tm, kwok_dist)
 
         results.append({
             "sibling": sibling_name,
             "sibling_overhang": sibling_overhang,
             "mismatch": mismatch,
+            "kwok_distance": round(kwok_dist, 1),
             "tm_target_overhang": round(tm_target, 1),
             "tm_sibling_overhang": round(tm_sibling, 1),
             "delta_tm": delta_tm,
