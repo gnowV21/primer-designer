@@ -545,6 +545,14 @@ KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
 KWOK_REDUCING_PAIRS  = {("A","A")}                          # ~5% yield
 # All other pairs → TOLERANT (~100% yield or context-dependent)
 
+# [Kwok90] Position-weighted distance for family cross-reactivity discrimination.
+# Weight[i] = contribution of a mismatch at position i from the 3' end (0 = 3'-terminal).
+# 3'-proximal mismatches block extension far more than 5'-proximal ones [Kwok90 Fig.3].
+# Used in check_family_crossreactivity() to reclassify 1-mismatch siblings whose mismatch
+# sits at the 3' end — such siblings are much less likely to be co-amplified.
+KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]  # positions 0–5 from 3' end
+KWOK_DIST_DISCRIMINATING = 3.0   # weighted dist ≥ this → 3'-proximal mismatch; classify as LOW
+
 # BLAST cache / infra
 BLAST_CACHE_TTL_DAYS       = 30   # days before cache entry expires [spec §9.1]
 BLAST_CB_FAILURE_THRESHOLD = 3    # consecutive failures to open circuit [spec §9.2]

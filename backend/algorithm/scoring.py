@@ -292,7 +292,9 @@ def score_candidate(
             f"Family cross-reactivity risk: {worst_risk} "
             f"(family: {family_name or 'unknown'}, overhang: {overhang_used} nt). "
             f"Score 100=SAFE/no data, 70=LOW, 30=HIGH, 0=IDENTICAL. "
-            f"Source: Chen et al. 2005 Fig.7; miFam.dat."
+            f"Risk uses Kwok 1990 position-weighted distance: 3'-proximal mismatches "
+            f"block extension and are reclassified from HIGH→LOW [Kwok90 NAR 18:999]. "
+            f"Source: Chen et al. 2005 Fig.7; Kwok et al. 1990."
         )
 
     # ── Total weighted score ──────────────────────────────────────
