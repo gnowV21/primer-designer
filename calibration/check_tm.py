@@ -48,10 +48,13 @@ def predict_tm(base_url: str, dna_seq: str) -> float | None:
         if backend_dir not in sys.path:
             sys.path.insert(0, backend_dir)
         from algorithm.thermodynamics import calculate_tm_nn
-        # Default params matching tool defaults
+        # Keys must match what _get_p3_params() reads in thermodynamics.py
         params = {
-            "saltConc": 50, "mgConc": 3.0, "dntpConc": 0.8,
-            "primerConc": 200, "tmMethod": "santalucia",
+            "saltConcentration":      50,
+            "magnesiumConcentration": 3.0,
+            "dntpTotal":              0.8,
+            "primerConcentration":    200,
+            "tmMethod":               "santalucia",
         }
         return calculate_tm_nn(dna_seq, params)
     except Exception:
