@@ -12,23 +12,29 @@ KEY IMPLEMENTATION NOTES:
      complementary formula: Tm = dH/(dS + R*ln(CT/4))). Pass Ct directly;
      do NOT pre-divide by 4 (confirmed experimentally — see tm_benchmark.json
      known_bias_2026-07-03).
+  3. Salt correction: 'santalucia' (primer3-py default). NOT 'owczarzy'.
+     Owczarzy 2008/2004 data are INDEPENDENT of the tool's salt model.
+  4. --expand-salt: use all 9 Mg + 5 Na salt columns (~242 data points)
+     instead of only the single reference column (34 points). Reveals whether
+     the salt-correction function tracks experiment across the full salt range.
 
 Usage:
-  python calibration/check_tm.py \\
-    --benchmark calibration/tm_benchmark.json \\
-    --report    calibration/tm_report.md
+  python calibration/check_tm.py
+  python calibration/check_tm.py --expand-salt
 
 Sources:
-  [SL98]       DOI 10.1073/pnas.95.4.1460
-  [Owczarzy04] DOI 10.1021/bi034621r  (Na+ series, Table 2)
-  [Owczarzy08] DOI 10.1021/bi702363u  (Mg2+/dNTP series, Table 1)
+  [SL98]       DOI 10.1073/pnas.95.4.1460  (NN params + SantaLucia salt correction)
+  [Owczarzy04] DOI 10.1021/bi034621r       (Na+ series, Table 2 — independent validation)
+  [Owczarzy08] DOI 10.1021/bi702363u       (Mg2+ series, Table 1 — independent validation)
+  [Sugimoto95] DOI 10.1021/bi00035a029     (DNA:RNA hybrid NN — NOT implemented here)
 """
 import argparse
 import json
 import sys
 import os
 
-BIAS_WARN_C = 1.5   # °C — systematic bias threshold for report flag
+BIAS_WARN_C = 1.5   # systematic bias threshold for report flag
+NOISE_FLOOR_C = 0.3  # Owczarzy 2008 experimental sigma(Tm); errors within 1-2x are excellent
 
 
 def _load_backend():
@@ -44,11 +50,11 @@ def predict_tm(oligo: dict, calculate_tm_nn) -> float | None:
     Predict Tm at the oligo's MEASURED conditions.
 
     Salt parameters are read per-oligo from the benchmark:
-      salt_na_mm    → mv_conc  (monovalent; 1 mM for Mg-only Tris buffer)
-      salt_mg_mm    → dv_conc  (Mg2+ mM; 0 for Na-only series)
-      dntp_mm       → dntp_conc (0 for both Owczarzy series)
+      salt_na_mm    -> mv_conc  (monovalent; 1 mM for Mg-only Tris buffer)
+      salt_mg_mm    -> dv_conc  (Mg2+ mM; 0 for Na-only series)
+      dntp_mm       -> dntp_conc (0 for both Owczarzy series)
       primer_conc_nm = Ct (total strand).  primer3.calc_tm uses dna_conc/4
-                      internally, so pass Ct directly — do NOT pre-divide.
+                      internally, so pass Ct directly -- do NOT pre-divide.
     """
     seq = oligo.get("sequence_dna", "")
     if not seq:
@@ -73,20 +79,68 @@ def predict_tm(oligo: dict, calculate_tm_nn) -> float | None:
         return None
 
 
-def run_check(benchmark_path: str, report_path: str):
+def expand_salt_series(oligos: list, meta: dict) -> list:
+    """
+    Expand each benchmark oligo across ALL measured salt concentrations.
+
+    Mg-series: 18 oligos x 9 Mg concentrations = 162 data points
+    Na-series: 16 oligos x 5 Na concentrations =  80 data points
+    Total: 242 vs default 34 (single reference column).
+    """
+    mg_cols = meta.get("mg_columns_mM", [0.5, 1.5, 3.0, 10, 20, 50, 125, 300, 600])
+    na_cols = meta.get("na_columns_mM", [69, 119, 220, 621, 1020])
+    expanded = []
+    for o in oligos:
+        if "tm_by_mg_mM" in o:
+            for i, mg in enumerate(mg_cols):
+                if i < len(o["tm_by_mg_mM"]) and o["tm_by_mg_mM"][i] is not None:
+                    entry = dict(o)
+                    entry["salt_mg_mm"] = float(mg)
+                    entry["tm_experimental_c"] = o["tm_by_mg_mM"][i]
+                    entry["oligo_id"] = f"{o['oligo_id']}@Mg{mg}mM"
+                    expanded.append(entry)
+        elif "tm_by_na_mM" in o:
+            for i, na in enumerate(na_cols):
+                if i < len(o["tm_by_na_mM"]) and o["tm_by_na_mM"][i] is not None:
+                    entry = dict(o)
+                    entry["salt_na_mm"] = float(na)
+                    entry["tm_experimental_c"] = o["tm_by_na_mM"][i]
+                    entry["oligo_id"] = f"{o['oligo_id']}@Na{na}mM"
+                    expanded.append(entry)
+    return expanded
+
+
+def _stats(rr):
+    if not rr:
+        return None, None
+    e = [r["error"] for r in rr]
+    return sum(abs(x) for x in e) / len(e), sum(e) / len(e)
+
+
+def run_check(benchmark_path: str, report_path: str, expand_salt: bool = False):
     with open(benchmark_path, encoding="utf-8") as f:
         bench = json.load(f)
 
+    meta = bench.get("_meta", {})
     all_oligos = bench.get("oligos", [])
-    oligos = [o for o in all_oligos if o.get("verified") is True]
+    verified = [o for o in all_oligos if o.get("verified") is True]
 
     print(f"\n=== Tm model accuracy check ===")
     print(f"Benchmark: {benchmark_path}")
-    print(f"Verified entries: {len(oligos)} / {len(all_oligos)} total\n")
+    print(f"Verified entries: {len(verified)} / {len(all_oligos)} total")
+
+    if expand_salt:
+        oligos = expand_salt_series(verified, meta)
+        print(f"  --expand-salt: {len(oligos)} data points (all salt columns)")
+    else:
+        oligos = verified
+        print(f"  Default: {len(oligos)} data points (single reference column per oligo)")
+
+    print()
 
     if not oligos:
-        print("No verified entries — emitting stub report.")
-        _write_report(report_path, [], bench)
+        print("No entries to process.")
+        _write_report(report_path, [], bench, expand_salt=expand_salt)
         return
 
     try:
@@ -105,10 +159,11 @@ def run_check(benchmark_path: str, report_path: str):
             continue
         err = pred - exp
         is_mg = (o.get("salt_mg_mm") or 0) > 0
+        gc = o.get("gc_pct")
         rows.append({
             "id":         o["oligo_id"],
             "length":     o.get("length_nt", len(o["sequence_dna"])),
-            "gc_pct":     o.get("gc_pct"),
+            "gc_pct":     gc,
             "tm_exp":     exp,
             "tm_pred":    round(pred, 1),
             "error":      round(err, 1),
@@ -117,60 +172,100 @@ def run_check(benchmark_path: str, report_path: str):
             "na_mm":      o.get("salt_na_mm", 0),
             "mg_mm":      o.get("salt_mg_mm", 0),
         })
-        cond = (f"[Mg {o.get('salt_mg_mm',0):.1f}mM Na {o.get('salt_na_mm',0):.0f}mM]"
-                if is_mg else f"[Na {o.get('salt_na_mm',0):.0f}mM]")
-        print(f"  {o['oligo_id']:<28} {cond}  exp={exp:.1f}°C  pred={pred:.1f}°C  err={err:+.1f}°C")
+        if not expand_salt:
+            cond = (f"[Mg {o.get('salt_mg_mm',0):.1f}mM Na {o.get('salt_na_mm',0):.0f}mM]"
+                    if is_mg else f"[Na {o.get('salt_na_mm',0):.0f}mM]")
+            print(f"  {o['oligo_id']:<28} {cond}  exp={exp:.1f} C  pred={pred:.1f} C  err={err:+.1f} C")
 
     if not rows:
         print("No rows processed.")
-        _write_report(report_path, rows, bench)
+        _write_report(report_path, rows, bench, expand_salt=expand_salt)
         return
-
-    def _stats(rr):
-        if not rr:
-            return None, None
-        e = [r["error"] for r in rr]
-        return sum(abs(x) for x in e) / len(e), sum(e) / len(e)
 
     mg_rows = [r for r in rows if r["series"] == "mg"]
     na_rows = [r for r in rows if r["series"] == "na"]
+
+    # Stratify by oligo length
+    short_rows = [r for r in rows if r["length"] <= 12]
+    med_rows   = [r for r in rows if 13 <= r["length"] <= 20]
+    long_rows  = [r for r in rows if r["length"] >= 21]
+
+    # Stratify by GC content
+    gc_lo_rows = [r for r in rows if (r.get("gc_pct") or 0) <= 40]
+    gc_mi_rows = [r for r in rows if 40 < (r.get("gc_pct") or 0) <= 65]
+    gc_hi_rows = [r for r in rows if (r.get("gc_pct") or 0) > 65]
+
     all_mae, all_bias   = _stats(rows)
-    mg_mae, mg_bias     = _stats(mg_rows)
-    na_mae, na_bias     = _stats(na_rows)
+    mg_mae,  mg_bias    = _stats(mg_rows)
+    na_mae,  na_bias    = _stats(na_rows)
 
     print(f"\n{'-'*62}")
-    print(f"  All ({len(rows)})       MAE={all_mae:.2f} C   Bias={all_bias:+.2f} C")
+    print(f"  All ({len(rows)})         MAE={all_mae:.2f} C   Bias={all_bias:+.2f} C")
     if mg_rows:
-        print(f"  Mg series ({len(mg_rows)})  MAE={mg_mae:.2f} C   Bias={mg_bias:+.2f} C  [Owczarzy 2008]")
+        print(f"  Mg series ({len(mg_rows)})    MAE={mg_mae:.2f} C   Bias={mg_bias:+.2f} C  [Owczarzy 2008]")
     if na_rows:
-        print(f"  Na series ({len(na_rows)})  MAE={na_mae:.2f} C   Bias={na_bias:+.2f} C  [Owczarzy 2004]")
+        print(f"  Na series ({len(na_rows)})    MAE={na_mae:.2f} C   Bias={na_bias:+.2f} C  [Owczarzy 2004]")
+
+    print(f"\n  -- By length --")
+    for label, grp in [("<=12 nt", short_rows), ("13-20 nt", med_rows), ("21+ nt", long_rows)]:
+        if grp:
+            mae, bias = _stats(grp)
+            print(f"  {label} ({len(grp)})    MAE={mae:.2f} C   Bias={bias:+.2f} C")
+
+    print(f"\n  -- By GC% --")
+    for label, grp in [("GC<=40%", gc_lo_rows), ("GC 41-65%", gc_mi_rows), ("GC>65%", gc_hi_rows)]:
+        if grp:
+            mae, bias = _stats(grp)
+            print(f"  {label} ({len(grp)})    MAE={mae:.2f} C   Bias={bias:+.2f} C")
+
     if abs(all_bias) > BIAS_WARN_C:
         direction = "UNDER" if all_bias < 0 else "OVER"
-        print(f"  WARNING: tool {direction}-predicts Tm by {all_bias:+.2f} C on average")
+        print(f"\n  WARNING: tool {direction}-predicts Tm by {all_bias:+.2f} C on average")
+    print(f"  (Experimental noise floor sigma~{NOISE_FLOOR_C} C; errors within 1-2 C are excellent)")
 
     _write_report(report_path, rows, bench,
+                  expand_salt=expand_salt,
                   all_mae=all_mae, all_bias=all_bias,
                   mg_rows=mg_rows, na_rows=na_rows,
                   mg_mae=mg_mae, mg_bias=mg_bias,
-                  na_mae=na_mae, na_bias=na_bias)
+                  na_mae=na_mae, na_bias=na_bias,
+                  short_rows=short_rows, med_rows=med_rows, long_rows=long_rows,
+                  gc_lo_rows=gc_lo_rows, gc_mi_rows=gc_mi_rows, gc_hi_rows=gc_hi_rows)
 
 
 def _write_report(path, rows, bench,
+                  expand_salt=False,
                   all_mae=None, all_bias=None,
                   mg_rows=None, na_rows=None,
                   mg_mae=None, mg_bias=None,
-                  na_mae=None, na_bias=None):
-    mg_rows = mg_rows or []
-    na_rows = na_rows or []
+                  na_mae=None, na_bias=None,
+                  short_rows=None, med_rows=None, long_rows=None,
+                  gc_lo_rows=None, gc_mi_rows=None, gc_hi_rows=None):
+    mg_rows    = mg_rows or []
+    na_rows    = na_rows or []
+    short_rows = short_rows or []
+    med_rows   = med_rows or []
+    long_rows  = long_rows or []
+    gc_lo_rows = gc_lo_rows or []
+    gc_mi_rows = gc_mi_rows or []
+    gc_hi_rows = gc_hi_rows or []
+
+    mode_note = (f"**expand-salt mode**: all salt columns ({len(rows)} data points, "
+                 f"18 Mg oligos × 9 conc + 16 Na oligos × 5 conc)"
+                 if expand_salt else
+                 f"**default mode**: single reference column per oligo ({len(rows)} data points)")
 
     lines = [
         "# Tm Model Accuracy Report — SPEC_phase5 PART C",
         "",
-        f"- Verified oligos: {len(rows)}",
-        "- Tool model: SantaLucia 1998 NN (primer3-py)",
-        "- Predictions at **each oligo's measured conditions** (per-oligo salt/Ct from benchmark)",
-        "- Ct convention: benchmark `primer_conc_nm` = Ct (total strand); passed directly to "
-        "primer3.calc_tm which divides by 4 internally",
+        f"- {mode_note}",
+        "- Tool model: SantaLucia 1998 NN (primer3-py, `salt_corrections_method='santalucia'`)",
+        "- Salt correction: **SantaLucia** (NOT Owczarzy) — Owczarzy 2008/2004 data are INDEPENDENT.",
+        "- Predictions at **each data point's measured conditions** (per-oligo salt/Ct from benchmark)",
+        "- Ct convention: `primer_conc_nm` = Ct (total strand); passed directly to primer3.calc_tm "
+        "which divides by 4 internally",
+        f"- Experimental noise floor: σ(Tm) ≈ {NOISE_FLOOR_C} °C (Owczarzy 2008); "
+        "errors within 1–2 °C are excellent.",
         "",
     ]
 
@@ -182,18 +277,42 @@ def _write_report(path, rows, bench,
             "(transcribed from Owczarzy 2004/2008 tables) to enable this analysis.",
         ]
     else:
-        lines += ["## Summary", ""]
+        lines += ["## Summary by dataset", ""]
         lines += [
             "| Series | N | MAE (°C) | Bias (°C) | Source |",
             "|---|---|---|---|---|",
             f"| **All** | {len(rows)} | {all_mae:.2f} | {all_bias:+.2f} | — |",
         ]
         if mg_rows:
-            lines.append(f"| Mg²⁺ 1.5 mM (Owczarzy 2008) | {len(mg_rows)} "
+            lines.append(f"| Mg²⁺ series (Owczarzy 2008) | {len(mg_rows)} "
                          f"| {mg_mae:.2f} | {mg_bias:+.2f} | DOI 10.1021/bi702363u |")
         if na_rows:
-            lines.append(f"| Na⁺ 69 mM (Owczarzy 2004)   | {len(na_rows)} "
+            lines.append(f"| Na⁺ series (Owczarzy 2004)  | {len(na_rows)} "
                          f"| {na_mae:.2f} | {na_bias:+.2f} | DOI 10.1021/bi034621r |")
+        lines.append("")
+
+        # By length
+        lines += ["## Summary by oligo length", ""]
+        lines += [
+            "| Length | N | MAE (°C) | Bias (°C) |",
+            "|---|---|---|---|",
+        ]
+        for label, grp in [("≤12 nt", short_rows), ("13–20 nt", med_rows), ("21+ nt", long_rows)]:
+            if grp:
+                mae, bias = _stats(grp)
+                lines.append(f"| {label} | {len(grp)} | {mae:.2f} | {bias:+.2f} |")
+        lines.append("")
+
+        # By GC
+        lines += ["## Summary by GC%", ""]
+        lines += [
+            "| GC% | N | MAE (°C) | Bias (°C) |",
+            "|---|---|---|---|",
+        ]
+        for label, grp in [("≤40%", gc_lo_rows), ("41–65%", gc_mi_rows), (">65%", gc_hi_rows)]:
+            if grp:
+                mae, bias = _stats(grp)
+                lines.append(f"| {label} | {len(grp)} | {mae:.2f} | {bias:+.2f} |")
         lines.append("")
 
         if abs(all_bias) > BIAS_WARN_C:
@@ -202,19 +321,20 @@ def _write_report(path, rows, bench,
                 f"⚠ **Systematic bias = {all_bias:+.2f}°C** (threshold ±{BIAS_WARN_C}°C). "
                 f"Tool {direction} Tm.",
                 "",
-                "Possible causes: (1) primer3 salt-correction underestimates Mg²⁺ stabilisation "
-                "at low concentrations; (2) NN parameters slightly off for short oligos (≤12 nt); "
+                "Possible causes: (1) SantaLucia salt correction underestimates Mg²⁺ "
+                "stabilisation at low [Na⁺] (1 mM Tris buffer); "
+                "(2) NN parameters slightly off for short oligos (≤12 nt); "
                 "(3) benchmark conditions (1 mM monovalent, no dNTP) differ from tool defaults "
-                "(50 mM Na + 1.5 mM Mg + 0.8 mM dNTP). The bias at **actual operating conditions** "
-                "(50 mM Na + 1.5 mM Mg + 0.8 mM dNTP, primers 15–25 nt) may differ. "
+                "(50 mM Na + 1.5 mM Mg + 0.8 mM dNTP). "
                 "Do NOT adjust `TM_FORWARD_TARGET` without in-lab measurements at tool conditions.",
+                "",
             ]
         else:
             lines.append(f"Bias within ±{BIAS_WARN_C}°C — model well-calibrated for this dataset.")
+            lines.append("")
 
         lines += [
-            "",
-            "## Per-oligo results", "",
+            "## Per-data-point results", "",
             "| ID | nt | GC% | Na (mM) | Mg (mM) | Tm exp | Tm pred | Error |",
             "|---|---|---|---|---|---|---|---|",
         ]
@@ -229,10 +349,14 @@ def _write_report(path, rows, bench,
         "",
         "## Prediction method",
         "- Base NN: SantaLucia 1998 (DOI 10.1073/pnas.95.4.1460) via primer3-py.",
-        "- Mg²⁺/dNTP salt correction: Owczarzy 2008 (DOI 10.1021/bi702363u) "
-        "(note: `thermodynamics.py` header may say '2004' — Owczarzy 2004 is Na⁺-only).",
-        "- Validation datasets are **independent** of the SantaLucia 1998 training set.",
+        "- Salt correction: `salt_corrections_method='santalucia'` (primer3-py default). "
+        "Owczarzy 2008 (Mg²⁺) and Owczarzy 2004 (Na⁺) are **independent** validation datasets — no circularity.",
+        "- Validation datasets are independent of the SantaLucia 1998 training set.",
         "- Short oligos (≤12 nt): larger prediction errors are expected (boundary of NN validity).",
+        f"- Experimental noise floor: σ(Tm) ≈ {NOISE_FLOOR_C} °C (Owczarzy 2008, UV-melting). "
+        "Model errors within 1–2 °C are excellent relative to this baseline.",
+        "- ⚠ DNA:RNA hybrid: RT primer Tm uses DNA:DNA NN params. Actual RT primer Tm on miRNA "
+        "target (DNA:RNA hybrid) may differ by 3–8 °C (Sugimoto 1995 DNA:RNA params not implemented).",
         "",
         "*For research use only. Not for clinical in-vitro diagnostic use.*",
     ]
@@ -244,7 +368,9 @@ def _write_report(path, rows, bench,
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Validate the tool's Tm model against Owczarzy benchmarks.")
-    ap.add_argument("--benchmark", default="calibration/tm_benchmark.json")
-    ap.add_argument("--report",    default="calibration/tm_report.md")
+    ap.add_argument("--benchmark",    default="calibration/tm_benchmark.json")
+    ap.add_argument("--report",       default="calibration/tm_report.md")
+    ap.add_argument("--expand-salt",  action="store_true",
+                    help="Use all 9 Mg + 5 Na salt columns (~242 points) instead of single reference column.")
     args = ap.parse_args()
-    run_check(args.benchmark, args.report)
+    run_check(args.benchmark, args.report, expand_salt=args.expand_salt)

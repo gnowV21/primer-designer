@@ -81,6 +81,33 @@ IDT (Integrated DNA Technologies) là nhà cung cấp thương mại. Hướng d
 
 ---
 
+## E. Giới hạn mô hình Tm — cần biết để diễn giải kết quả calibration
+
+### E.1 DNA:RNA hybrid — khoảng trống độ chính xác chính của RT primer
+
+`primer3.calc_tm()` dùng tham số nearest-neighbor **DNA:DNA** (SantaLucia 1998). RT primer của stem-loop bắt cặp với **miRNA (RNA)** → đây là hybrid **DNA:RNA**. Bộ tham số NN cho DNA:RNA khác hẳn: ΔH và ΔS khác nhau → Tm thực của RT primer trên miRNA template có thể lệch **3–8 °C** so với dự đoán DNA:DNA, tùy trình tự (Sugimoto 1995, DOI 10.1021/bi00035a029).
+
+**Hệ quả:**
+- Tm của **RT primer** mà tool hiển thị là Tm DNA:DNA giả định, không phải Tm thực khi bắt cặp với miRNA.
+- **Forward primer và reverse primer** (PCR step, bắt cặp với cDNA → DNA:DNA) **không bị ảnh hưởng**.
+- Owczarzy benchmark (calibration/tm_benchmark.json) chỉ validate DNA:DNA duplex → **không kiểm được sai số RT primer**.
+
+**Workaround tạm thời:** Dùng Tm RT primer như gần đúng cho *so sánh tương đối* giữa các ứng viên (ranking), không phải Tm tuyệt đối thực tế. Workaround dài hạn: NUPACK hoặc RNAstructure với tham số DNA:RNA (Sugimoto 1995). Chưa triển khai vì cần dependency mới.
+
+### E.2 Salt correction — SantaLucia method (không phải Owczarzy); benchmark độc lập
+
+Tool dùng `salt_corrections_method='santalucia'` (default của primer3-py 2.0), **không phải** `'owczarzy'`. Header comment trong `thermodynamics.py` trước đây ghi sai **"Owczarzy 2004 Mg2+ correction"** — sai cả method name (SantaLucia) lẫn năm (2004 là Na⁺, không phải Mg²⁺). Đã sửa 2026-07-03.
+
+**Hệ quả với benchmark:**
+- Owczarzy 2008 (Mg²⁺) và 2004 (Na⁺) là **validation datasets hoàn toàn độc lập** — **không circularity**.
+- Nếu dùng `salt_corrections_method='owczarzy'`, Owczarzy 2008 sẽ là bán-circular (chỉ kiểm việc triển khai formula, không phải model accuracy).
+- So sánh thực nghiệm (34 oligos): `santalucia` MAE=2.68°C Bias=−2.65°C; `owczarzy` MAE=2.64°C Bias=−2.08°C. Owczarzy nhỉnh hơn một chút (đặc biệt Mg series: 3.12 vs 2.82) nhưng kém độc lập trong benchmark hiện có → **giữ `santalucia`**.
+
+**Mở rộng benchmark (khuyến nghị chưa triển khai):**
+Dữ liệu Owczarzy đã lưu đủ 9 cột Mg + 5 cột Na = ~242 điểm (so với 34 điểm hiện tại một cột). Chạy `python calibration/check_tm.py --expand-salt` để dùng toàn bộ dải muối, kiểm hiệu chỉnh muối trên toàn dải thay vì chỉ một nồng độ tham chiếu.
+
+---
+
 ## Nguồn (đã đọc full-text, trích từ PubMed)
 - **[Busk14]** Busk PK. "A tool for design of primers for microRNA-specific quantitative RT-qPCR." *BMC Bioinformatics.* 2014;15:29. PMID 24472427 · DOI [10.1186/1471-2105-15-29](https://doi.org/10.1186/1471-2105-15-29). *(open access; luật thiết kế + score matrix + tỉ lệ thành công)*
 - **[Kang17]** Kang ST et al. "miPrimer: an empirical-based qPCR primer design method for small noncoding microRNA." *RNA.* 2017;24(3):304–312. PMID 29208706 · DOI [10.1261/rna.061150.117](https://doi.org/10.1261/rna.061150.117). *(ngưỡng dimer −9 kcal/mol, Tm 59–60 °C, tail, 120-cặp)*

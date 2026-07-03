@@ -1,6 +1,12 @@
 # ================================================================
 # thermodynamics.py — Tm and ΔG calculations via primer3-py
-# Method: SantaLucia 1998 nearest-neighbor + Owczarzy 2004 Mg2+ correction
+# Method: SantaLucia 1998 nearest-neighbor thermodynamics [SL98]
+# Salt correction: SantaLucia method (primer3-py default: salt_corrections_method='santalucia')
+# NOTE: Owczarzy Mg2+ correction (2008, DOI 10.1021/bi702363u) is NOT used here.
+#   Owczarzy 2004/2008 datasets are used as INDEPENDENT validation only
+#   (calibration/tm_benchmark.json) — no circularity.
+# NOTE: DNA:RNA hybrid Tm (RT primer + miRNA) uses DNA:DNA NN params here; actual
+#   hybrid Tm may differ by 3-8 °C (Sugimoto 1995 DNA:RNA params not implemented).
 # Consistent with Primer3Plus PRIMER_TM_FORMULA=1, PRIMER_SALT_CORRECTIONS=1
 # ================================================================
 

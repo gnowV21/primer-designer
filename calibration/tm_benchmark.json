@@ -38,7 +38,14 @@
       "interpretation": "Tool (primer3 SantaLucia NN) systematically UNDER-predicts Tm by ~2-3 C across both Na and Mg series. Bias is larger for Mg series (short oligos 10-11 nt are 4-5 C off). This is consistent with known limitations of SantaLucia 1998 NN at low salt and short oligo length. The tool's actual operating range (primers 15-25 nt, 50 mM Na + 1.5 mM Mg + 0.8 mM dNTP) may behave differently from these benchmark conditions (1 mM Na for Mg-series, 69 mM Na for Na-series, no dNTP). Do NOT adjust TM_FORWARD_TARGET blindly.",
       "action": "Monitor, do not change TM_FORWARD_TARGET yet. The bias at ACTUAL operating conditions (50 mM Na + 1.5 mM Mg + 0.8 mM dNTP, primers 15-25 nt) is unknown. Collect in-lab Tm measurements at those conditions for directly relevant calibration."
     },
-    "mg_columns_mM": [0.5, 1.5, 3.0, 10, 20, 50, 125, 300, 600]
+    "mg_columns_mM": [0.5, 1.5, 3.0, 10, 20, 50, 125, 300, 600],
+    "salt_correction_independence_2026-07-03": {
+      "tool_salt_method": "salt_corrections_method='santalucia' (primer3-py default, NOT 'owczarzy')",
+      "circularity_verdict": "NONE — Owczarzy 2008 Mg2+ formula is not used by the tool; benchmark is fully independent.",
+      "owczarzy_comparison": "Empirical test on 34 oligos: santalucia MAE=2.68 C Bias=-2.65 C; owczarzy MAE=2.64 C Bias=-2.08 C. Owczarzy method is marginally better but would create partial circularity with Owczarzy 2008 data. Keep santalucia.",
+      "label_fix": "thermodynamics.py header previously said 'Owczarzy 2004 Mg2+ correction' — WRONG on both method name (SantaLucia) and year (2004 is Na+; 2008 is Mg2+). Fixed 2026-07-03.",
+      "dna_rna_gap": "primer3.calc_tm uses DNA:DNA NN params. RT primer hybridizes with miRNA (RNA) -> DNA:RNA hybrid. Sugimoto 1995 params needed for exact RT primer Tm; current Tm is an approximation valid for relative comparison only."
+    }
   },
   "oligos": [
     {"oligo_id": "owc08_10mer_01", "sequence_dna": "TTGTAGTCAT", "length_nt": 10, "gc_pct": 30.0, "tm_experimental_c": 30.9, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [27.2,30.9,32.3,34.9,36.0,37.3,37.5,37.1,35.4], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
