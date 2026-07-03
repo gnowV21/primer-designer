@@ -16,10 +16,11 @@ from algorithm.scoring import score_candidate
 from algorithm.sequence_utils import validate_rna_sequence
 from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
+from algorithm.hard_filters import apply_hard_filters
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
-    OVERHANG_LENGTH_DEFAULT,
+    OVERHANG_LENGTH_DEFAULT, HARD_FILTER_ENABLED,
 )
 
 design_bp = Blueprint("design", __name__)
@@ -154,6 +155,34 @@ def design_primers():
             reverse_seq=reverse["sequence"],
             params=params,
         )
+
+    # ── 5b. Hard-filter gate (evidence-based, before scoring) ────────
+    # Eliminates candidates with catastrophic structural flaws that a
+    # weighted sum cannot compensate for [Busk14][Kang17].
+    if HARD_FILTER_ENABLED:
+        hard_passed = []
+        for c in candidates:
+            rejections = apply_hard_filters(c)
+            if rejections:
+                for reason in rejections:
+                    rejection_log.append({"sequence": c.get("sequence", ""), "reason": reason})
+            else:
+                hard_passed.append(c)
+
+        # Fallback: if hard-filter removed everything, widen by disabling it
+        # and surface a warning rather than returning an empty 422.
+        if not hard_passed and candidates:
+            global_warnings.append({
+                "field": "hard_filter_fallback",
+                "severity": "warning",
+                "message": (
+                    "All candidates were rejected by the hard-filter gate (full-structure dimer ΔG, "
+                    "3'-end critical dimer, or critical hairpin). Returning best available candidates "
+                    "without hard-filter enforcement. Review dimer/hairpin scores carefully."
+                ),
+            })
+        else:
+            candidates = hard_passed
 
     # ── 6. Score all candidates (V4: includes bound_fraction + family) ─
     # cross_reactivity is the same for all candidates (depends on miRNA, not primer)

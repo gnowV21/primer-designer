@@ -16,6 +16,8 @@ from .constants import (
     HAIRPIN_DG_MAX_INTERNAL, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR, AMPLICON_IDEAL,
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
+    GC_CLAMP_SCORE_OPTIMAL, GC_CLAMP_SCORE_WEAK, GC_CLAMP_SCORE_TRIPLE_C,
+    DIMER_FULL_DG_CRITICAL,
 )
 from .sequence_utils import calculate_gc_skew
 from .bound_fraction import (
@@ -139,16 +141,24 @@ def score_candidate(
     worst    = min(sd_end, hd_end)
     critical = sc.get("has_critical_flag", False)
 
-    if critical:          dimer_score = 0
-    elif worst > -4.0:    dimer_score = 100
-    elif worst > -5.0:    dimer_score = 75
-    elif worst > -6.0:    dimer_score = 40
-    else:                 dimer_score = 0
+    # Full-structure check [Kang17]: ΔG_total < -9 kcal/mol → inhibits qPCR
+    sd_full       = sc.get("self_dimer", {}).get("dg_overall", 0.0)
+    hd_full       = sc.get("hetero_dimer", {}).get("dg_overall", 0.0)
+    worst_full    = min(sd_full, hd_full)
+    full_critical = worst_full < DIMER_FULL_DG_CRITICAL
+
+    if critical or full_critical:  dimer_score = 0
+    elif worst > -4.0:             dimer_score = 100
+    elif worst > -5.0:             dimer_score = 75
+    elif worst > -6.0:             dimer_score = 40
+    else:                          dimer_score = 0
     scores["dimer_penalty"] = dimer_score
     explanations["dimer_penalty"] = (
-        f"Worst 3'-end dimer ΔG = {worst:.2f} kcal/mol (threshold: > {SELF_DIMER_DG_3PRIME_MAX} kcal/mol). "
-        + ("CRITICAL: polymerase can extend this dimer. " if critical else "")
-        + "Source: IDT OligoAnalyzer, Premier Biosoft qPCR guidelines."
+        f"3'-end dimer ΔG = {worst:.2f} kcal/mol (threshold: > {SELF_DIMER_DG_3PRIME_MAX} kcal/mol). "
+        f"Full-structure dimer ΔG = {worst_full:.2f} kcal/mol (threshold: > {DIMER_FULL_DG_CRITICAL} kcal/mol). "
+        + ("CRITICAL: polymerase can extend 3'-end dimer. " if critical else "")
+        + ("CRITICAL: full-structure ΔG below -9 kcal/mol — qPCR inhibition expected [Kang17]. " if full_critical else "")
+        + "Sources: IDT OligoAnalyzer, Premier Biosoft qPCR guidelines; Kang 2017 (DOI 10.1261/rna.061150.117)."
     )
 
     # ── 8. 3' End stability (0.10 V3 / 0.08 V4) [P3P] ───────────
@@ -200,18 +210,21 @@ def score_candidate(
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). Source: PrimerAST 2024."
     )
 
-    # ── 12. GC clamp at 3' end (0.03 V3 / 0.02 V4) [IDT] ────────
+    # ── 12. GC clamp at 3' end (0.03 V3 / 0.04 V4) [Busk14] ────────
+    # miRNA-specific evidence (Busk 2014, DOI 10.1186/1471-2105-15-29):
+    # 1-2 G/C optimal; 0 or 3 G/C weak (too loose / too rigid);
+    # 3 consecutive C at 3' is especially harmful for extension initiation.
     last3    = forward["sequence"][-3:].upper()
     gc_last3 = sum(1 for b in last3 if b in "GC")
-    if gc_last3 == 2:    gc_clamp_score = 100
-    elif gc_last3 >= 3:  gc_clamp_score = 80
-    elif gc_last3 == 1:  gc_clamp_score = 60
-    else:                gc_clamp_score = 0
+    if gc_last3 in (1, 2):    gc_clamp_score = GC_CLAMP_SCORE_OPTIMAL   # 100
+    elif last3 == "CCC":      gc_clamp_score = GC_CLAMP_SCORE_TRIPLE_C  # 25
+    else:                     gc_clamp_score = GC_CLAMP_SCORE_WEAK       # 50 (0 or 3 G/C)
     scores["gc_clamp"] = gc_clamp_score
     explanations["gc_clamp"] = (
         f"GC clamp at 3' end: {gc_last3} G/C in last 3 nt ('{last3}'). "
-        f"Optimal = exactly 2 G/C (score 100); 1 G/C = relaxed fallback (score 60). "
-        f"Source: IDT PrimerQuest GC_clamp_code."
+        f"Optimal = 1-2 G/C (score 100); 0 or 3 G/C = suboptimal (score 50); "
+        f"3 consecutive C (score 25) — poor extension initiation. "
+        f"Source: Busk 2014 (miRNA-specific, DOI 10.1186/1471-2105-15-29)."
     )
 
     # ── V4-only criteria ─────────────────────────────────────────
