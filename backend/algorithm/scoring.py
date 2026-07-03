@@ -18,6 +18,7 @@ from .constants import (
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
     GC_CLAMP_SCORE_OPTIMAL, GC_CLAMP_SCORE_WEAK, GC_CLAMP_SCORE_TRIPLE_C,
     DIMER_FULL_DG_CRITICAL,
+    PRIMER_SIZE_MODE, FORWARD_SPECIFIC_LEN_REF,
 )
 from .sequence_utils import calculate_gc_skew
 from .bound_fraction import (
@@ -176,14 +177,29 @@ def score_candidate(
         f"Source: Primer3Plus PRIMER_MAX_END_STABILITY = 9.0 kcal/mol."
     )
 
-    # ── 9. Primer size (0.04 V3 / 0.02 V4) [P3P Penalties] ───────
-    primer_len = forward.get("length", FORWARD_OPTIMAL_LENGTH)
-    size_diff  = abs(primer_len - FORWARD_OPTIMAL_LENGTH)
-    scores["primer_size"] = round(max(0, 100 - size_diff * 10), 1)
-    explanations["primer_size"] = (
-        f"Primer length = {primer_len} nt (optimal: {FORWARD_OPTIMAL_LENGTH} nt). "
-        f"Δ = {size_diff} nt. Source: Primer3Plus Penalties — Size Lt=Gt=1.0 per nt."
-    )
+    # ── 9. Primer size (0.04 V3 / 0.02 V4) ──────────────────────────
+    # PRIMER_SIZE_MODE="specific" [Busk14 I6]: score by binding-region length only.
+    # The 5' tail is added solely to reach target Tm and should not penalize the primer.
+    # Longer specific region → higher sequence identity requirement → better discrimination.
+    # PRIMER_SIZE_MODE="full" (legacy): penalize by deviation from FORWARD_OPTIMAL_LENGTH.
+    if PRIMER_SIZE_MODE == "specific":
+        spec_len = forward.get("specific_length", forward.get("length", FORWARD_SPECIFIC_LEN_REF))
+        primer_size_score = round(min(100.0, (spec_len ** 2 / FORWARD_SPECIFIC_LEN_REF ** 2) * 100))
+        explanations["primer_size"] = (
+            f"Specific region = {spec_len} nt (reference max: {FORWARD_SPECIFIC_LEN_REF} nt). "
+            f"Score = min(100, (len/ref)²×100) = {primer_size_score}. "
+            f"Longer specific region → more discriminating. 5' tail excluded — tail adjusts Tm only. "
+            f"Source: Busk 2014 (DOI 10.1186/1471-2105-15-29), miRNA-specific scoring."
+        )
+    else:
+        primer_len = forward.get("length", FORWARD_OPTIMAL_LENGTH)
+        size_diff  = abs(primer_len - FORWARD_OPTIMAL_LENGTH)
+        primer_size_score = round(max(0.0, 100 - size_diff * 10), 1)
+        explanations["primer_size"] = (
+            f"Primer length = {primer_len} nt (optimal: {FORWARD_OPTIMAL_LENGTH} nt). "
+            f"Δ = {size_diff} nt. Source: Primer3Plus Penalties — Size Lt=Gt=1.0 per nt."
+        )
+    scores["primer_size"] = primer_size_score
 
     # ── 10. Amplicon size (0.04 V3 / 0.02 V4) ───────────────────
     amp = forward.get("amplicon_size", 0)

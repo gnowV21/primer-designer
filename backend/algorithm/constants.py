@@ -81,6 +81,12 @@ FORWARD_TAIL_MAX = 12
 FORWARD_TAIL_OPTIMAL_MAX = 7  # nt — Kramer recommends 3-7 [K11]
 FORWARD_TAIL_GC_ENRICHED = True  # tails should be GC-rich [V07]
 
+# Max consecutive identical bases allowed in the generated tail pool.
+# Busk 2014 (DOI 10.1186/1471-2105-15-29) uses G,A,C,G,C tail order —
+# avoiding poly(C)/poly(G) stretches that cause polymerase slippage.
+# Value = minimum run length that triggers rejection (reject runs >= this number).
+TAIL_MAX_HOMOPOLYMER_RUN = 3   # reject runs ≥ 3 identical bases in tail [Busk14 I4]
+
 FORWARD_MIN_LENGTH = 18    # nt
 FORWARD_MAX_LENGTH = 27    # nt [P3P General Settings Max:27]
 FORWARD_OPTIMAL_LENGTH = 22  # nt — scoring target
@@ -509,6 +515,16 @@ MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRB
 # Hard-filter gate (PROMPT 3 — A/B toggle)
 # Set False to disable hard-filter layer and fall back to soft-scoring only (for comparison).
 HARD_FILTER_ENABLED = True
+
+# primer_size scoring mode (PROMPT 6 — A/B toggle)
+# "specific" (Busk14): score by specific_length only; tail length does not penalize.
+#   score = min(100, (specific_len / FORWARD_SPECIFIC_LEN_REF)^2 * 100)
+# "full" (legacy): penalize by |full_primer_len - FORWARD_OPTIMAL_LENGTH| * 10.
+PRIMER_SIZE_MODE = "specific"     # [Busk14 I6] DOI 10.1186/1471-2105-15-29
+
+# Reference specific_length for Busk14 primer_size scoring (= FORWARD_SPECIFIC_LENGTH_MAX)
+# Score = 100 at 17 nt, decreasing for shorter specific regions (lower specificity).
+FORWARD_SPECIFIC_LEN_REF = 17    # nt — max specific_length; score 100 at this length [Busk14]
 
 # [Kwok90] Kwok et al. 1990 NAR 18(4):999-1005 — 3'-terminal mismatch categories
 # Primer:Template → PCR yield relative to perfect match
