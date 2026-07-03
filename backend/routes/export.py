@@ -124,23 +124,23 @@ def _build_csv(results: dict, filename: str):
             s.get("grade", ""), f"Binding region {s.get('specific_length', '?')} nt",
         ])
 
-        # RT stem-loop (same for all sets)
-        sl_sc = sl.get("self_structure_check", {})
-        writer.writerow([
-            rank, "RT_StemLoop", sl.get("sequence", ""), sl.get("length", ""),
-            _fmt(sl.get("tm_full")), _fmt(sl.get("gc_percent")),
-            _fmt(sl_sc.get("hairpin_dg")), "", "", "", "",
-            f"MFE {_fmt(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})",
-        ])
+    # RT stem-loop — same for all sets, written once
+    sl_sc = sl.get("self_structure_check", {})
+    writer.writerow([
+        "", "RT_StemLoop", sl.get("sequence", ""), sl.get("length", ""),
+        _fmt(sl.get("tm_full")), _fmt(sl.get("gc_percent")),
+        _fmt(sl_sc.get("hairpin_dg")), "", "", "", "",
+        f"MFE {_fmt(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})",
+    ])
 
-        # Universal reverse (same for all sets)
-        rev_sc = rev.get("self_structure_check", {})
-        writer.writerow([
-            rank, "Universal_Reverse", rev.get("sequence", ""), rev.get("length", ""),
-            _fmt(rev.get("tm")), _fmt(rev.get("gc_percent")),
-            _fmt(rev_sc.get("hairpin_dg")), _fmt(rev_sc.get("self_dimer_dg")),
-            "", "", "", "Fixed universal reverse [Chen05][K11]",
-        ])
+    # Universal reverse — same for all sets, written once
+    rev_sc = rev.get("self_structure_check", {})
+    writer.writerow([
+        "", "Universal_Reverse", rev.get("sequence", ""), rev.get("length", ""),
+        _fmt(rev.get("tm")), _fmt(rev.get("gc_percent")),
+        _fmt(rev_sc.get("hairpin_dg")), _fmt(rev_sc.get("self_dimer_dg")),
+        "", "", "", "Fixed universal reverse [Chen05][K11]",
+    ])
 
     response = make_response(buf.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
@@ -163,7 +163,8 @@ def _build_pdf(results: dict, filename: str):
     ec    = results.get("edge_cases", [])
 
     # Escape meta strings used in reportlab XML Paragraphs
-    e = _html.escape
+    esc = _html.escape
+    e = esc  # keep short alias for meta fields below
     mirna_id_safe  = e(str(meta.get("mirna_id", "unknown")))
     mirna_seq_safe = e(str(meta.get("mirna_sequence", "")))
     alg_ver_safe   = e(str(meta.get("algorithm_version", "?")))
@@ -271,15 +272,15 @@ def _build_pdf(results: dict, filename: str):
         story.append(Paragraph("Quality Warnings", h2))
         for w in issues:
             prefix = "⚠ Critical:" if w["severity"] == "critical" else "ℹ Warning:"
-            story.append(Paragraph(f"<b>{prefix}</b> {w.get('message', '')}", body))
+            story.append(Paragraph(f"<b>{prefix}</b> {esc(w.get('message', ''))}", body))
         story.append(Spacer(1, 0.3*cm))
 
     # ── Edge cases ────────────────────────────────────────────────
-    criticals = [e for e in ec if e.get("severity") in ("critical", "warning")]
+    criticals = [ec_item for ec_item in ec if ec_item.get("severity") in ("critical", "warning")]
     if criticals:
         story.append(Paragraph("Sequence Edge Cases", h2))
-        for e in criticals:
-            story.append(Paragraph(f"[{e['code']}] {e.get('message', '')}", body))
+        for ec_item in criticals:
+            story.append(Paragraph(f"[{esc(ec_item['code'])}] {esc(ec_item.get('message', ''))}", body))
         story.append(Spacer(1, 0.3*cm))
 
     # ── Footer ────────────────────────────────────────────────────

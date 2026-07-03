@@ -249,6 +249,24 @@ function ErrorPanel({ error }) {
           </div>
         </div>
       )}
+      {error.edge_cases?.length > 0 && (
+        <div className="border-t border-red-200 pt-3 space-y-1">
+          <p className="text-xs font-semibold text-red-600 mb-1">Sequence issues detected:</p>
+          {error.edge_cases.map((ec, i) => (
+            <p key={i} className="text-xs text-red-700">
+              <span className="font-semibold">[{ec.code}]</span> {ec.message}
+            </p>
+          ))}
+        </div>
+      )}
+      {error.global_warnings?.filter(w => w.severity === 'critical').length > 0 && (
+        <div className="border-t border-red-200 pt-3 space-y-1">
+          <p className="text-xs font-semibold text-red-600 mb-1">Critical warnings:</p>
+          {error.global_warnings.filter(w => w.severity === 'critical').map((w, i) => (
+            <p key={i} className="text-xs text-red-700">{w.message}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

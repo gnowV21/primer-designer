@@ -148,6 +148,8 @@ export default function SearchPage() {
           message: err.response.data?.error || 'No valid candidates found.',
           suggestion: err.response.data?.suggestion,
           rejection_summary: err.response.data?.rejection_summary,
+          edge_cases: err.response.data?.edge_cases,
+          global_warnings: err.response.data?.global_warnings,
         });
       } else if (err.response?.data?.error) {
         setDesignError({ type: 'validation', message: err.response.data.error });

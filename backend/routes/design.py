@@ -188,7 +188,7 @@ def design_primers():
     cross_reactivity = cross_reactivity_shared
 
     # Promote HIGH cross-reactivity to global_warnings for immediate visibility
-    if any(r["risk"] in ("IDENTICAL", "HIGH") for r in cross_reactivity.get("cross_reactivity", [])):
+    if any(r.get("risk") in ("IDENTICAL", "HIGH") for r in cross_reactivity.get("cross_reactivity", [])):
         global_warnings.append({
             "field": "cross_reactivity",
             "severity": "warning",

@@ -116,16 +116,22 @@ function AdviceCard({ item }) {
               <p className="text-xs font-semibold mb-0.5">References</p>
               <div className="flex flex-wrap gap-1.5">
                 {item.sources.map((s, i) => (
-                  <a
-                    key={i}
-                    href={`https://doi.org/${s.doi}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs underline opacity-70 hover:opacity-100"
-                    title={s.note || s.doi}
-                  >
-                    [{s.tag}]
-                  </a>
+                  s.doi ? (
+                    <a
+                      key={i}
+                      href={`https://doi.org/${s.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs underline opacity-70 hover:opacity-100"
+                      title={s.note || s.doi}
+                    >
+                      [{s.tag}]
+                    </a>
+                  ) : (
+                    <span key={i} className="text-xs opacity-70" title={s.note || s.tag}>
+                      [{s.tag}]
+                    </span>
+                  )
                 ))}
               </div>
             </div>

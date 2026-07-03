@@ -33,7 +33,8 @@ def _load_kb() -> dict:
             with open(_KB_PATH, encoding="utf-8") as f:
                 _KB_CACHE = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            _KB_CACHE = {"rules": [], "kb_version": "error", "updated": "unknown"}
+            # Do not cache the error — retry on next request after the file is fixed
+            return {"rules": [], "kb_version": "error", "updated": "unknown"}
     return _KB_CACHE
 
 
@@ -107,9 +108,6 @@ def advise_protocol(design_result: dict, form_params: dict) -> list[dict]:
         elif rid == "P4":
             if multiplex:
                 score += weights.get("multiplex", 0)
-            # count target_count implicitly from multiplex flag
-            if multiplex:
-                score += weights.get("target_count", 0)
 
         elif rid == "P5":
             if "E1" in edge_codes:
