@@ -1,68 +1,80 @@
 {
   "_meta": {
-    "purpose": "Experimental Tm benchmark to validate the tool's nearest-neighbour Tm model INDEPENDENTLY. Each oligo must have an EXPERIMENTALLY MEASURED duplex Tm (UV-melting / DSC) under stated salt conditions.",
-    "provenance_fixes_2026-07-03": [
-      "REMOVED the two previous entries whose tm_experimental_c was actually the tool's OWN predicted Tm (circular; would give MAE~0). Never validate a model against its own output.",
-      "SEPARATED provenance: sequence_source_doi (where the sequence comes from) vs tm_source_doi (where the measured Tm comes from). The old file attached the Chen-2005 DOI to a Tm value that did not come from Chen 2005.",
-      "CORRECTED recorded tool salt conditions to match backend/algorithm/constants.py (Mg2+ = 1.5 mM = P3_DEFAULT_DV_CONC, NOT 3.0 mM).",
-      "Added the two proper independent experimental datasets (Owczarzy 2004 sodium; Owczarzy 2008 magnesium/dNTP)."
-    ],
+    "purpose": "Experimental Tm benchmark to validate the tool's nearest-neighbour Tm model INDEPENDENTLY, using real measured duplex Tm from two independent Owczarzy datasets (34 oligos total: 18 magnesium-series + 16 sodium-series).",
+    "dataset_source": {
+      "mg_series": "Owczarzy R, Moreira BG, You Y, Behlke MA, Walder JA. Biochemistry 2008;47(19):5336-5353. DOI 10.1021/bi702363u. PMID 18422348. Data = Table 1 (18 DNA duplexes, Tm at 9 Mg2+ concentrations). tm_experimental_c = 1.5 mM Mg2+ column (matches tool P3_DEFAULT_DV_CONC); full 9-col array in tm_by_mg_mM (mg_columns_mM).",
+      "na_series": "Owczarzy R, You Y, Moreira BG, Manthey JA, Huang L, Behlke MA, Walder JA. Biochemistry 2004;43(12):3537-3554. DOI 10.1021/bi034621r. PMID 15035624. Data = Table 2 (subset of 16 of 92 duplexes spanning length 10-25 nt and GC 20-80%). tm_experimental_c = 69 mM Na+ column (lowest, closest to tool default 50 mM); full 5-col array in tm_by_na_mM (na_columns_mM). Mg2+ = 0 for this series."
+    },
+    "na_columns_mM": [69, 119, 220, 621, 1020],
+    "transcription_note": "Both series parsed from the article PDFs (2008 Table 1, 2004 Table 2) via text extraction on 2026-07-03, then independently RE-PARSED for cross-check: all Mg rows and 4 spot-checked Na rows matched exactly; f(GC) column agreed with computed GC for every Na row. Values are physically consistent (monotonic in salt, sensible ranges). Ct = 2 uM total strand for both. Still RECOMMENDED to eyeball-verify against the PDFs before publication.",
+    "measurement_conditions": {
+      "Ct_total_strand_uM": 2.0,
+      "Ct_tolerance_uM": 0.2,
+      "buffer": "2 mM Tris-HCl for [Mg2+] 0.5-20 mM; 10 mM Tris-HCl for [Mg2+] 50-600 mM. No KCl, no added NaCl.",
+      "monovalent_from_tris_mM": "~1 mM for 2 mM Tris (half protonated); ~5 mM for 10 mM Tris.",
+      "CRITICAL_concentration_convention": "Ct = TOTAL single-strand concentration = 2 uM. The SantaLucia non-self-complementary Tm formula uses CT/4 inside the ln(). primer3.calc_tm() divides dna_conc by 4 INTERNALLY — pass Ct (2000 nM) directly; do NOT pre-divide. Confirmed experimentally: passing Ct=2000 gives MAE~2-3 C vs exp; passing Ct/4=500 gives ~4-5 C systematic under-prediction.",
+      "CRITICAL_predict_at_measured_conditions": "Predict Tm at THIS dataset's conditions (Mg2+ per column, monovalent ~1 mM, Ct=2000 nM), NOT the tool's default (Na+ 50 mM). Otherwise the comparison is invalid."
+    },
     "honesty_rules": [
-      "Only entries with verified==true enter MAE/bias. Do NOT invent or estimate Tm values.",
-      "tm_experimental_c must be a MEASURED value transcribed from tm_source_doi tables/supplement (or measured in-lab), NOT a predicted/tool value.",
-      "Record the exact salt conditions of the measurement; if they differ from the tool's, note it (Owczarzy 2008 gives the correction to reconcile Mg2+/monovalent)."
+      "Only entries with verified==true enter MAE/bias.",
+      "tm_experimental_c below = the 1.5 mM Mg2+ column for Mg-series (matches tool P3_DEFAULT_DV_CONC=1.5) and 69 mM Na+ column for Na-series.",
+      "Do NOT invent values. These were transcribed from the source PDF tables."
     ],
     "CRITICAL_do_not_confuse": [
-      "This benchmark is for OLIGO/PRIMER DUPLEX Tm (what the tool predicts for a primer). It is NOT the amplicon melting-curve (product) Tm that qPCR papers report as 'Tm ~78C'. Do not mix the two.",
-      "Do NOT validate the SantaLucia-1998-based model using the SantaLucia 1998 dataset itself (circular; it is the training set). Owczarzy 2004/2008 are INDEPENDENT UV-melting datasets and are the correct choice."
+      "This is OLIGO/PRIMER DUPLEX Tm (what the tool predicts), NOT amplicon melting-curve (product) Tm.",
+      "Do NOT validate the SantaLucia-1998 model using the SantaLucia 1998 dataset (circular). Owczarzy 2008 is independent."
     ],
     "tool_salt_conditions": {
-      "na_mm": 50,
-      "mg_mm": 1.5,
-      "dntp_mm": 0.8,
-      "oligo_nm": 200,
-      "note": "From constants.py: P3_DEFAULT_MV_CONC=50, P3_DEFAULT_DV_CONC=1.5, P3_DEFAULT_DNTP_CONC=0.8, P3_DEFAULT_DNA_CONC=200. Keep in sync with constants.py."
+      "na_mm": 50, "mg_mm": 1.5, "dntp_mm": 0.8, "oligo_nm": 200,
+      "note": "These are the tool's DEFAULT operating conditions (constants.py). They are NOT the measurement conditions of this benchmark; see measurement_conditions above."
     },
-    "recommended_datasets": [
-      "[Owczarzy04] Owczarzy R et al. 'Effects of sodium ions on DNA duplex oligomers: improved predictions of melting temperatures.' Biochemistry 2004;43(12):3537-3554. PMID 15035624. DOI 10.1021/bi034621r -- 92 DNA duplex oligomers, UV-melting, [Na+] 69 mM to 1.02 M; independent-set avg error ~1.6 C.",
-      "[Owczarzy08] Owczarzy R et al. 'Predicting stability of DNA duplexes in solutions containing magnesium and monovalent cations.' Biochemistry 2008;47(19):5336-5353. PMID 18422348. DOI 10.1021/bi702363u -- Mg2+/K+/Na+/Tris/dNTP melting datasets; PCR-relevant (1.5-5 mM Mg2+, 20-100 mM monovalent). MATCHES the tool Mg2+/dNTP regime.",
-      "[SL98/SL04] SantaLucia 1998 (DOI 10.1073/pnas.95.4.1460) and SantaLucia & Hicks 2004 (DOI 10.1146/annurev.biophys.32.110601.141800) provide the NN PARAMETERS the tool uses -- do NOT use as a validation set (circular)."
-    ],
-    "how_to_populate": "Transcribe individual oligos (sequence + measured Tm + exact [Na+]/[Mg2+]) from the Owczarzy 2004 sodium series and Owczarzy 2008 magnesium series. Aim for >=15-20 oligos spanning length 8-30 nt and GC 20-80%. Prefer Owczarzy 2008 entries near the tool conditions (1.5 mM Mg2+). Set verified=true only after transcription is checked against the paper."
+    "known_bias_2026-07-03": {
+      "mg_series_mae_c": 3.12,
+      "mg_series_bias_c": -3.05,
+      "na_series_mae_c": 2.19,
+      "na_series_bias_c": -2.19,
+      "all_mae_c": 2.68,
+      "all_bias_c": -2.64,
+      "interpretation": "Tool (primer3 SantaLucia NN) systematically UNDER-predicts Tm by ~2-3 C across both Na and Mg series. Bias is larger for Mg series (short oligos 10-11 nt are 4-5 C off). This is consistent with known limitations of SantaLucia 1998 NN at low salt and short oligo length. The tool's actual operating range (primers 15-25 nt, 50 mM Na + 1.5 mM Mg + 0.8 mM dNTP) may behave differently from these benchmark conditions (1 mM Na for Mg-series, 69 mM Na for Na-series, no dNTP). Do NOT adjust TM_FORWARD_TARGET blindly.",
+      "action": "Monitor, do not change TM_FORWARD_TARGET yet. The bias at ACTUAL operating conditions (50 mM Na + 1.5 mM Mg + 0.8 mM dNTP, primers 15-25 nt) is unknown. Collect in-lab Tm measurements at those conditions for directly relevant calibration."
+    },
+    "mg_columns_mM": [0.5, 1.5, 3.0, 10, 20, 50, 125, 300, 600]
   },
   "oligos": [
-    {
-      "oligo_id": "TEMPLATE_owczarzy04_naXX",
-      "sequence_dna": "",
-      "length_nt": null,
-      "tm_experimental_c": null,
-      "salt_na_mm": null,
-      "salt_mg_mm": 0,
-      "dntp_mm": 0,
-      "primer_conc_nm": null,
-      "sequence_source_doi": "10.1021/bi034621r",
-      "tm_source_doi": "10.1021/bi034621r",
-      "source_doi": "10.1021/bi034621r",
-      "tm_source_pmid": "15035624",
-      "verified": false,
-      "notes": "TEMPLATE -- fill sequence + measured Tm + [Na+] from Owczarzy 2004 sodium series. Delete this row once real rows are added. (source_doi kept for check_tm.py compatibility = tm_source_doi)"
-    },
-    {
-      "oligo_id": "TEMPLATE_owczarzy08_mgXX",
-      "sequence_dna": "",
-      "length_nt": null,
-      "tm_experimental_c": null,
-      "salt_na_mm": null,
-      "salt_mg_mm": 1.5,
-      "dntp_mm": 0.8,
-      "primer_conc_nm": null,
-      "sequence_source_doi": "10.1021/bi702363u",
-      "tm_source_doi": "10.1021/bi702363u",
-      "source_doi": "10.1021/bi702363u",
-      "tm_source_pmid": "18422348",
-      "verified": false,
-      "notes": "TEMPLATE -- fill from Owczarzy 2008 magnesium series; prefer entries near 1.5 mM Mg2+ to match the tool. Delete once real rows are added."
-    }
+    {"oligo_id": "owc08_10mer_01", "sequence_dna": "TTGTAGTCAT", "length_nt": 10, "gc_pct": 30.0, "tm_experimental_c": 30.9, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [27.2,30.9,32.3,34.9,36.0,37.3,37.5,37.1,35.4], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_10mer_02", "sequence_dna": "ATCGTCTGGA", "length_nt": 10, "gc_pct": 50.0, "tm_experimental_c": 38.9, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [35.1,38.9,40.6,43.4,43.4,43.7,44.4,43.0,41.6], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_10mer_03", "sequence_dna": "GATGCGCTCG", "length_nt": 10, "gc_pct": 70.0, "tm_experimental_c": 47.7, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [44.0,47.7,48.8,50.7,51.2,51.6,51.9,49.9,47.7], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_10mer_04", "sequence_dna": "GGGACCGCCT", "length_nt": 10, "gc_pct": 80.0, "tm_experimental_c": 51.9, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [48.3,51.9,53.7,55.5,55.9,55.4,56.1,54.9,52.2], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_11mer_05", "sequence_dna": "CGTACACATGC", "length_nt": 11, "gc_pct": 54.5, "tm_experimental_c": 44.2, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [40.2,44.2,45.7,48.1,48.0,48.1,48.6,47.0,44.9], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_11mer_06", "sequence_dna": "CCATTGCTACC", "length_nt": 11, "gc_pct": 54.5, "tm_experimental_c": 42.7, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [38.9,42.7,44.2,46.3,46.9,47.2,47.5,47.0,44.8], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_15mer_07", "sequence_dna": "TTCTACCTATGTGAT", "length_nt": 15, "gc_pct": 33.3, "tm_experimental_c": 46.1, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [43.3,46.1,47.8,50.2,50.4,51.0,51.5,50.7,49.4], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_15mer_08", "sequence_dna": "GCAGTGGATGTGAGA", "length_nt": 15, "gc_pct": 53.3, "tm_experimental_c": 55.1, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [52.3,55.1,56.5,58.1,58.7,59.2,59.0,58.2,56.1], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_15mer_09", "sequence_dna": "CAGCCTCGTCGCAGC", "length_nt": 15, "gc_pct": 73.3, "tm_experimental_c": 64.1, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [61.9,64.1,65.3,66.8,67.3,67.5,67.3,65.5,63.7], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_20mer_10", "sequence_dna": "TGATTCTACCTATGTGATTT", "length_nt": 20, "gc_pct": 30.0, "tm_experimental_c": 54.6, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [51.8,54.6,55.8,57.7,58.2,59.3,59.5,58.8,57.7], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_20mer_11", "sequence_dna": "AGCTGCAGTGGATGTGAGAA", "length_nt": 20, "gc_pct": 50.0, "tm_experimental_c": 63.7, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [61.1,63.7,64.8,66.3,66.8,67.7,67.3,66.3,64.7], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_20mer_12", "sequence_dna": "CAGCCTCGTTCGCACAGCCC", "length_nt": 20, "gc_pct": 70.0, "tm_experimental_c": 71.3, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [68.9,71.3,72.3,73.4,73.9,74.2,73.9,72.3,70.3], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_25mer_13", "sequence_dna": "GTTCTATACTCTTGAAGTTGATTAC", "length_nt": 25, "gc_pct": 32.0, "tm_experimental_c": 59.7, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [57.2,59.7,60.8,62.4,63.0,63.8,64.0,63.5,62.6], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_25mer_14", "sequence_dna": "CTGGTCTGGATCTGAGAACTTCAGG", "length_nt": 25, "gc_pct": 52.0, "tm_experimental_c": 67.7, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [65.6,67.7,68.7,69.8,70.3,70.7,70.6,69.8,68.6], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_25mer_15", "sequence_dna": "CAGTGGGCTCCTGGGCGTGCTGGTC", "length_nt": 25, "gc_pct": 72.0, "tm_experimental_c": 75.3, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [73.5,75.3,76.2,77.3,77.6,78.2,77.4,75.9,74.0], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_30mer_16", "sequence_dna": "CTTAAGATATGAGAACTTCAACTAATGTGT", "length_nt": 30, "gc_pct": 30.0, "tm_experimental_c": 63.1, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [61.0,63.1,64.1,65.5,66.0,67.1,67.1,66.2,65.2], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_30mer_17", "sequence_dna": "AGTCTGGTCTGGATCTGAGAACTTCAGGCT", "length_nt": 30, "gc_pct": 50.0, "tm_experimental_c": 71.6, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [69.8,71.6,72.5,73.6,73.9,74.2,74.4,73.5,72.2], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc08_30mer_18", "sequence_dna": "GACCTGACGTGGACCGCTCCTGGGCGTGGT", "length_nt": 30, "gc_pct": 70.0, "tm_experimental_c": 77.8, "salt_mg_mm": 1.5, "salt_na_mm": 1, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_mg_mM": [76.1,77.8,78.6,79.4,79.7,80.0,79.8,78.1,76.4], "tm_source_doi": "10.1021/bi702363u", "source_doi": "10.1021/bi702363u", "tm_source_table": "Table 1", "verified": true},
+    {"oligo_id": "owc04_na_01", "sequence_dna": "ATCAATCATA", "length_nt": 10, "gc_pct": 20.0, "tm_experimental_c": 21.3, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [21.3, 24.5, 27.9, 32.4, 33.6], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_02", "sequence_dna": "CCAACTTCTT", "length_nt": 10, "gc_pct": 40.0, "tm_experimental_c": 29.0, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [29.0, 32.1, 35.9, 39.6, 40.6], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_03", "sequence_dna": "CGATCTGCGA", "length_nt": 10, "gc_pct": 60.0, "tm_experimental_c": 39.2, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [39.2, 42.3, 45.6, 48.4, 49.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_04", "sequence_dna": "GGGACCGCCT", "length_nt": 10, "gc_pct": 80.0, "tm_experimental_c": 46.7, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [46.7, 50.3, 53.1, 56.5, 57.0], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_05", "sequence_dna": "TACTAACATTAACTA", "length_nt": 15, "gc_pct": 20.0, "tm_experimental_c": 35.3, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [35.3, 40.4, 44.1, 49.3, 51.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_06", "sequence_dna": "ATCGTCTCGGTATAA", "length_nt": 15, "gc_pct": 40.0, "tm_experimental_c": 45.5, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [45.5, 49.4, 52.9, 57.4, 58.6], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_07", "sequence_dna": "CGCCTCATGCTCATC", "length_nt": 15, "gc_pct": 60.0, "tm_experimental_c": 52.8, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [52.8, 56.7, 60.1, 63.6, 65.8], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_08", "sequence_dna": "GCGTCGGTCCGGGCT", "length_nt": 15, "gc_pct": 80.0, "tm_experimental_c": 64.9, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [64.9, 67.7, 70.5, 73.9, 74.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_09", "sequence_dna": "TATGTATATTTTGTAATCAG", "length_nt": 20, "gc_pct": 20.0, "tm_experimental_c": 44.4, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [44.4, 47.7, 52.6, 57.6, 61.2], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_10", "sequence_dna": "CCATCATTGTGTCTACCTCA", "length_nt": 20, "gc_pct": 45.0, "tm_experimental_c": 55.6, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [55.6, 59.5, 63.1, 67.3, 68.5], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_11", "sequence_dna": "CGTACTAGCGTTGGTCATGG", "length_nt": 20, "gc_pct": 55.0, "tm_experimental_c": 59.6, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [59.6, 63.1, 66.6, 70.5, 71.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_12", "sequence_dna": "GTCCACGCCCGGTGCGACGG", "length_nt": 20, "gc_pct": 80.0, "tm_experimental_c": 70.9, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [70.9, 73.9, 77.3, 79.8, 81.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_13", "sequence_dna": "GATATAGCAAAATTCTAAGTTAATA", "length_nt": 25, "gc_pct": 20.0, "tm_experimental_c": 49.1, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [49.1, 53.5, 57.7, 63.3, 66.1], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_14", "sequence_dna": "TTCCAAAAGGAGTTATGAGTTGCGA", "length_nt": 25, "gc_pct": 40.0, "tm_experimental_c": 59.1, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [59.1, 63.0, 67.2, 71.6, 73.8], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_15", "sequence_dna": "AGCAAGTCGAGCAGGGCCTACGTTT", "length_nt": 25, "gc_pct": 56.0, "tm_experimental_c": 68.3, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [68.3, 72.6, 76.3, 80.0, 81.5], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true},
+    {"oligo_id": "owc04_na_16", "sequence_dna": "ACGGGTCCCCGCACCGCACCGCCAG", "length_nt": 25, "gc_pct": 80.0, "tm_experimental_c": 76.8, "salt_na_mm": 69, "salt_mg_mm": 0, "dntp_mm": 0, "primer_conc_nm": 2000, "tm_by_na_mM": [76.8, 79.9, 84.0, 87.1, 88.3], "tm_source_doi": "10.1021/bi034621r", "source_doi": "10.1021/bi034621r", "tm_source_table": "Table 2", "verified": true}
   ],
-  "_TODO": "Populate >=15 verified oligos from Owczarzy 2004 (Na+ series) and Owczarzy 2008 (Mg2+/dNTP series), spanning length 8-30 nt and GC 20-80%, then run: python calibration/check_tm.py. Until then check_tm.py correctly reports 'no verified data'."
+  "_TODO": "34 verified oligos loaded. Run: python calibration/check_tm.py. Results (2026-07-03): all MAE=2.68 C, Bias=-2.64 C (systematic under-prediction). Mg-series MAE=3.12 C Bias=-3.05 C; Na-series MAE=2.19 C Bias=-2.19 C. See known_bias_2026-07-03 in _meta for interpretation. Do NOT change TM_FORWARD_TARGET yet."
 }
