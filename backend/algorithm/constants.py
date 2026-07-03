@@ -132,11 +132,17 @@ GC_CLAMP_MAX_CONSECUTIVE = 3
 GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2
 
 # miRNA-specific GC clamp scoring (Busk 2014 DOI 10.1186/1471-2105-15-29)
-# Evidence: miRNA forward primers with 1-2 G/C in last 3 nt outperform
-# 0 or 3 G/C; 3 consecutive C at 3' is especially problematic for extension.
-GC_CLAMP_SCORE_OPTIMAL   = 100  # 1-2 G/C in last 3 nt — optimal anchor [Busk14]
-GC_CLAMP_SCORE_WEAK      = 50   # 0 G/C (no anchor) OR 3 G/C (too rigid) [Busk14]
-GC_CLAMP_SCORE_TRIPLE_C  = 25   # 3 consecutive C at 3' — extension penalty [Busk14]
+# Two-tier logic: multi-source locked (a) vs single-source pending calibration (b).
+# (a) LOCKED — multi-source [Busk14+IDT+Kang17 or theoretical]:
+#   2 G/C: optimal anchor+specificity [Busk14+IDT]; CCC: severe extension penalty [Busk14].
+# (b) PENDING — single-source [Busk14 heuristic, sampling bias acknowledged]:
+#   1 G/C as optimal (GC_CLAMP_1GC_AS_OPTIMAL=True) vs conservative (False=default).
+#   IDT prefers 2 G/C for PCR efficiency; Busk14 (miRNA-specific) accepts 1 G/C as optimal.
+GC_CLAMP_SCORE_OPTIMAL          = 100  # 2 G/C in last 3 nt — anchor+specificity [Busk14+IDT]
+GC_CLAMP_SCORE_1GC_CONSERVATIVE = 75   # 1 G/C — good specificity, weaker anchor (conservative)
+GC_CLAMP_SCORE_WEAK             = 50   # 0 G/C (no anchor) OR 3 G/C (too rigid) [Busk14+IDT]
+GC_CLAMP_SCORE_TRIPLE_C         = 25   # 3 consecutive C at 3' — extension penalty [Busk14]
+GC_CLAMP_1GC_AS_OPTIMAL         = False  # [Busk14 single-source, heuristic] — enable after calibration
 
 MAX_HOMOPOLYMER_RUN = 5       # [P3P Advanced Settings] Max Poly-X = 5
 GC_MAX_IN_3PRIME_WINDOW = 5   # [P3P Advanced Settings] Max End GC = 5
