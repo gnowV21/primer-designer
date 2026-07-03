@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "purpose": "Labeled benchmark of PUBLISHED stem-loop RT-qPCR assays with MEASURED performance, used to calibrate SCORING_WEIGHTS via constrained regression (SPEC_phase5 PART B).",
+    "honesty_rules": [
+      "Only entries with verified==true enter the regression fit.",
+      "Do NOT invent efficiency numbers. Per-assay values must be transcribed from the paper's tables/supplements and cited with source_doi + source_pmid.",
+      "Where a paper reports only a RANGE (not per-assay values), leave verified=false and record the range in notes until an individual value is confirmed.",
+      "target for regression = 100 - |efficiency_pct - 100|  (100 = ideal amplification efficiency, MIQE09)."
+    ],
+    "target_field": "efficiency_pct",
+    "n_min_to_adopt": 20,
+    "sources": [
+      "[Wang17] Mol Med Rep 2017;17(3):3690-3696 DOI 10.3892/mmr.2017.8297 (PMID 29257343): let-7 panel amplification efficiencies 0.9288-1.1403 (range reported).",
+      "[Kunwar23] Diagnostics 2023;13(13):2170 DOI 10.3390/diagnostics13132170 (PMID 37443567): 24-miRNA CogniMIR panel, R^2 0.94-0.99, detectable to ~20 copies; stem-loop TaqMan vs LNA.",
+      "[Cao23] Anal Biochem 2023;678:115267 DOI 10.1016/j.ab.2023.115267 (PMID 37516424): 21-miRNA multiplex stem-loop.",
+      "[Chen05] Nucleic Acids Res 2005;33(20):e179: original stem-loop TaqMan miRNA assays.",
+      "[Busk14] BMC Bioinformatics 2014;15:29 DOI 10.1186/1471-2105-15-29 (PMID 24472427): miRprimer; 164 validated primers, 93+-5% worked first try; efficiencies close to 100%; discriminates 1-nt siblings (let-7a/f, miR-200b/c, miR-23a/b) at 0.1-1% off-target.",
+      "[Kang17] RNA 2017;24(3):304-312 DOI 10.1261/rna.061150.117 (PMID 29208706): miPrimer; 120 primer pairs, 95.6%/93.3% success (non-family/family), efficiency 90-110%; dimer dG cutoff -9.0+-1 kcal/mol; Tm 59-60C."
+    ],
+    "note_on_method": "Busk14/Kang17 use non-Chen universal systems, so their PRIMER SEQUENCES are not directly comparable to this tool (Chen stem-loop). But the miRNA TARGETS below were experimentally confirmed as qPCR-friendly and are valid real-world targets for cross-validation of THIS tool's designs (deterministic + plausibility + family discrimination)."
+  },
+  "assays": [
+    {
+      "assay_id": "wang17_let7a_5p",
+      "mirna_id": "hsa-let-7a-5p",
+      "method": "stemloop_sybr",
+      "published_forward": null,
+      "efficiency_pct": null,
+      "specificity_ok": true,
+      "source_pmid": "29257343",
+      "source_doi": "10.3892/mmr.2017.8297",
+      "verified": false,
+      "notes": "let-7 panel efficiency reported as RANGE 0.9288-1.1403; transcribe per-member value from the paper before setting verified=true. Primer sequences are in the paper's primer table (not machine-extractable here)."
+    },
+    {
+      "assay_id": "wang17_let7c_5p",
+      "mirna_id": "hsa-let-7c-5p",
+      "method": "stemloop_sybr",
+      "efficiency_pct": null,
+      "specificity_ok": true,
+      "source_pmid": "29257343",
+      "source_doi": "10.3892/mmr.2017.8297",
+      "verified": false,
+      "notes": "See wang17_let7a_5p. Fill per-member efficiency from paper."
+    },
+    {
+      "assay_id": "kunwar23_example_placeholder",
+      "mirna_id": null,
+      "method": "lna",
+      "efficiency_pct": null,
+      "r_squared": 0.97,
+      "specificity_ok": true,
+      "source_pmid": "37443567",
+      "source_doi": "10.3390/diagnostics13132170",
+      "verified": false,
+      "notes": "24-miRNA panel; R^2 range 0.94-0.99 reported. Extract individual miRNA ids + efficiency/R^2 from the article/supplement, then split into one entry per miRNA with verified=true."
+    }
+  ],
+  "functional_targets": {
+    "_doc": "Real miRNA targets experimentally confirmed as functional qPCR assays in the cited papers. outcome_functional=true is a published fact (assay worked). efficiency_pct is null where the paper reports only an aggregate range (do not fabricate per-assay values). Use these for: (1) deterministic + plausibility cross-validation of THIS tool's designs (copy into validation/reference_mirnas.json), and (2) family-discrimination checks. Promote to the 'assays' fit set only after a per-assay efficiency is transcribed and verified=true.",
+    "targets": [
+      {"mirna_id": "hsa-let-7a-5p", "outcome_functional": true, "discriminates_from": ["hsa-let-7f-5p", "hsa-let-7e-5p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-let-7f-5p", "outcome_functional": true, "discriminates_from": ["hsa-let-7a-5p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-let-7e-5p", "outcome_functional": true, "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-125b-5p", "outcome_functional": true, "discriminates_from": ["hsa-miR-125a-5p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-200b-3p", "outcome_functional": true, "discriminates_from": ["hsa-miR-200c-3p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-200c-3p", "outcome_functional": true, "discriminates_from": ["hsa-miR-200b-3p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-23a-3p", "outcome_functional": true, "discriminates_from": ["hsa-miR-23b-3p"], "note": "differ at position 4 from 3'-end", "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-23b-3p", "outcome_functional": true, "discriminates_from": ["hsa-miR-23a-3p"], "source_doi": "10.1186/1471-2105-15-29", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-16-5p", "outcome_functional": true, "note": "miPrimer example; forward dimer dG -10.44 kcal/mol flagged", "source_doi": "10.1261/rna.061150.117", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-195-5p", "outcome_functional": true, "note": "miPrimer example; dimer dG -10.44 kcal/mol", "source_doi": "10.1261/rna.061150.117", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-18a-5p", "outcome_functional": true, "discriminates_from": ["hsa-miR-18b-5p"], "note": "1-nt family discrimination demonstrated", "source_doi": "10.1261/rna.061150.117", "efficiency_pct": null, "verified": false},
+      {"mirna_id": "hsa-miR-18b-5p", "outcome_functional": true, "discriminates_from": ["hsa-miR-18a-5p"], "source_doi": "10.1261/rna.061150.117", "efficiency_pct": null, "verified": false}
+    ]
+  },
+  "_TODO": "Populate >=20 verified assays (ideally with published_forward sequences) before the adopt gate can pass. Until then calibrate_weights.py will emit only the correlation report and keep SCORING_WEIGHTS_V4. The functional_targets list above gives real, cited targets to seed both the deterministic validator and (once per-assay efficiency is transcribed) the fit set."
+}

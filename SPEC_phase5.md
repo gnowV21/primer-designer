@@ -38,7 +38,11 @@ Thứ tự ưu tiên giá trị-độ-chính-xác: **B → C → A → D**.
 - **[Andreasen10]** Andreasen D et al. "Improved microRNA quantification in total RNA from clinical samples." *Methods.* 2010;50(4):S6–9. PMID 20215018 · DOI [10.1016/j.ymeth.2010.01.006](https://doi.org/10.1016/j.ymeth.2010.01.006). → LNA-enhanced primer cho định lượng chính xác/lặp lại ở mẫu ít RNA (FFPE, huyết tương).
 - **[Kunwar23]** Kunwar A et al. "Analytical Validation of a Novel MicroRNA Panel…" *Diagnostics.* 2023;13(13):2170. PMID 37443567 · DOI [10.3390/diagnostics13132170](https://doi.org/10.3390/diagnostics13132170). → so trực tiếp stem-loop TaqMan vs LNA-qPCR; cả hai tin cậy xuống ~20 copy; LNA "thân thiện" hơn cho lab lâm sàng.
 - **[Lagatie17]** Lagatie O et al. *Parasitol Res.* 2017;116(3):1013–1022. PMID 28111713 · DOI [10.1007/s00436-017-5382-5](https://doi.org/10.1007/s00436-017-5382-5). → ngay cả assay LNA cho tín hiệu KHÔNG đặc hiệu, chỉ lộ qua **melting curve** → bắt buộc xác nhận đặc hiệu.
+- **[Busk14]** Busk PK. *BMC Bioinformatics.* 2014;15:29. PMID 24472427 · DOI [10.1186/1471-2105-15-29](https://doi.org/10.1186/1471-2105-15-29). → miRprimer: luật thiết kế định lượng + score matrix; 93±5% chạy lần đầu (164 primer). **Insight cho scoring** (xem `RESEARCH_INSIGHTS.md`).
+- **[Kang17]** Kang ST et al. *RNA.* 2017;24(3):304–312. PMID 29208706 · DOI [10.1261/rna.061150.117](https://doi.org/10.1261/rna.061150.117). → miPrimer: **ngưỡng dimer ΔG = −9.0 ± 1 kcal/mol**, Tm 59–60 °C, tail adaptive; 120 cặp, efficiency 90–110%.
 - Kế thừa: [Chen05], [Wang17] DOI [10.3892/mmr.2017.8297](https://doi.org/10.3892/mmr.2017.8297), [Cao23] DOI [10.1016/j.ab.2023.115267](https://doi.org/10.1016/j.ab.2023.115267), [Fan19] DOI [10.1080/07391102.2018.1498804](https://doi.org/10.1080/07391102.2018.1498804), [MIQE09] DOI [10.1373/clinchem.2008.112797](https://doi.org/10.1373/clinchem.2008.112797), [Var07], [SL04].
+
+> **Xem `RESEARCH_INSIGHTS.md`** — tổng hợp 8 insight định lượng (I1–I8) từ full-text [Busk14]/[Kang17] ánh xạ trực tiếp vào 15 tiêu chí scoring. Đây là **prior có bằng chứng** cho PART B (vd biên dimer −9 kcal/mol, luật 3′-end 1–2 A/T, chấm điểm dạng nhân) và là hướng tăng độ chính xác **độc lập với** việc thu dữ liệu hồi quy.
 
 *(Thông tin tài liệu trích từ PubMed.)*
 

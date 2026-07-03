@@ -1,0 +1,7 @@
+# Offline calibration tooling — NOT shipped into backend runtime.
+# Do NOT merge into backend/requirements.txt.
+numpy>=1.24
+requests>=2.31
+# scipy is OPTIONAL: if present, an SLSQP cross-check is run; otherwise a
+# numpy-only projected-gradient solver is used.
+# scipy>=1.10

@@ -1,47 +1,68 @@
 {
   "_meta": {
-    "purpose": "Experimental Tm benchmark for validating the tool's SantaLucia 1998 NN Tm prediction (SPEC_phase5 PART C). Each oligo has a published or measured Tm under defined salt conditions.",
-    "honesty_rules": [
-      "Only entries with verified==true are used in validation.",
-      "Tm values must be transcribed from the cited paper's tables or measured in-lab with the listed conditions.",
-      "Do NOT invent or estimate Tm values. Unverified entries are kept for tracking but excluded from MAE/bias calculation."
+    "purpose": "Experimental Tm benchmark to validate the tool's nearest-neighbour Tm model INDEPENDENTLY. Each oligo must have an EXPERIMENTALLY MEASURED duplex Tm (UV-melting / DSC) under stated salt conditions.",
+    "provenance_fixes_2026-07-03": [
+      "REMOVED the two previous entries whose tm_experimental_c was actually the tool's OWN predicted Tm (circular; would give MAE~0). Never validate a model against its own output.",
+      "SEPARATED provenance: sequence_source_doi (where the sequence comes from) vs tm_source_doi (where the measured Tm comes from). The old file attached the Chen-2005 DOI to a Tm value that did not come from Chen 2005.",
+      "CORRECTED recorded tool salt conditions to match backend/algorithm/constants.py (Mg2+ = 1.5 mM = P3_DEFAULT_DV_CONC, NOT 3.0 mM).",
+      "Added the two proper independent experimental datasets (Owczarzy 2004 sodium; Owczarzy 2008 magnesium/dNTP)."
     ],
-    "salt_conditions_note": "Tm depends on [Na+], [Mg2+], [dNTP], primer concentration. Record the exact conditions from the paper. The tool uses: Na+ 50 mM equiv, Mg2+ 3 mM, dNTP 0.8 mM, [oligo] 200 nM.",
-    "sources": [
-      "[SL98] SantaLucia J. Proc Natl Acad Sci USA 1998;95(4):1460-5. DOI 10.1073/pnas.95.4.1460 (PMID 9465037): NN thermodynamic parameters for DNA duplexes.",
-      "[SL04] SantaLucia J, Hicks D. Annu Rev Biophys Biomol Struct 2004;33:415-440. DOI 10.1146/annurev.biophys.32.110601.141800 (PMID 15139820): unified Tm prediction with salt correction.",
-      "[IDT] IDT OligoAnalyzer tool — empirical Tm data for validation oligos."
-    ]
+    "honesty_rules": [
+      "Only entries with verified==true enter MAE/bias. Do NOT invent or estimate Tm values.",
+      "tm_experimental_c must be a MEASURED value transcribed from tm_source_doi tables/supplement (or measured in-lab), NOT a predicted/tool value.",
+      "Record the exact salt conditions of the measurement; if they differ from the tool's, note it (Owczarzy 2008 gives the correction to reconcile Mg2+/monovalent)."
+    ],
+    "CRITICAL_do_not_confuse": [
+      "This benchmark is for OLIGO/PRIMER DUPLEX Tm (what the tool predicts for a primer). It is NOT the amplicon melting-curve (product) Tm that qPCR papers report as 'Tm ~78C'. Do not mix the two.",
+      "Do NOT validate the SantaLucia-1998-based model using the SantaLucia 1998 dataset itself (circular; it is the training set). Owczarzy 2004/2008 are INDEPENDENT UV-melting datasets and are the correct choice."
+    ],
+    "tool_salt_conditions": {
+      "na_mm": 50,
+      "mg_mm": 1.5,
+      "dntp_mm": 0.8,
+      "oligo_nm": 200,
+      "note": "From constants.py: P3_DEFAULT_MV_CONC=50, P3_DEFAULT_DV_CONC=1.5, P3_DEFAULT_DNTP_CONC=0.8, P3_DEFAULT_DNA_CONC=200. Keep in sync with constants.py."
+    },
+    "recommended_datasets": [
+      "[Owczarzy04] Owczarzy R et al. 'Effects of sodium ions on DNA duplex oligomers: improved predictions of melting temperatures.' Biochemistry 2004;43(12):3537-3554. PMID 15035624. DOI 10.1021/bi034621r -- 92 DNA duplex oligomers, UV-melting, [Na+] 69 mM to 1.02 M; independent-set avg error ~1.6 C.",
+      "[Owczarzy08] Owczarzy R et al. 'Predicting stability of DNA duplexes in solutions containing magnesium and monovalent cations.' Biochemistry 2008;47(19):5336-5353. PMID 18422348. DOI 10.1021/bi702363u -- Mg2+/K+/Na+/Tris/dNTP melting datasets; PCR-relevant (1.5-5 mM Mg2+, 20-100 mM monovalent). MATCHES the tool Mg2+/dNTP regime.",
+      "[SL98/SL04] SantaLucia 1998 (DOI 10.1073/pnas.95.4.1460) and SantaLucia & Hicks 2004 (DOI 10.1146/annurev.biophys.32.110601.141800) provide the NN PARAMETERS the tool uses -- do NOT use as a validation set (circular)."
+    ],
+    "how_to_populate": "Transcribe individual oligos (sequence + measured Tm + exact [Na+]/[Mg2+]) from the Owczarzy 2004 sodium series and Owczarzy 2008 magnesium series. Aim for >=15-20 oligos spanning length 8-30 nt and GC 20-80%. Prefer Owczarzy 2008 entries near the tool conditions (1.5 mM Mg2+). Set verified=true only after transcription is checked against the paper."
   },
   "oligos": [
     {
-      "oligo_id": "chen05_rt_example",
-      "sequence_dna": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCAACA",
-      "length_nt": 50,
-      "tm_experimental_c": 76.2,
-      "salt_na_mm": 50,
-      "salt_mg_mm": 3.0,
-      "dntp_mm": 0.8,
-      "primer_conc_nm": 200,
-      "source_doi": "10.1093/nar/gni178",
-      "source_pmid": "16314309",
+      "oligo_id": "TEMPLATE_owczarzy04_naXX",
+      "sequence_dna": "",
+      "length_nt": null,
+      "tm_experimental_c": null,
+      "salt_na_mm": null,
+      "salt_mg_mm": 0,
+      "dntp_mm": 0,
+      "primer_conc_nm": null,
+      "sequence_source_doi": "10.1021/bi034621r",
+      "tm_source_doi": "10.1021/bi034621r",
+      "source_doi": "10.1021/bi034621r",
+      "tm_source_pmid": "15035624",
       "verified": false,
-      "notes": "RT stem-loop primer for hsa-miR-21-5p; Tm estimated from tool output. Needs experimental confirmation under stated conditions."
+      "notes": "TEMPLATE -- fill sequence + measured Tm + [Na+] from Owczarzy 2004 sodium series. Delete this row once real rows are added. (source_doi kept for check_tm.py compatibility = tm_source_doi)"
     },
     {
-      "oligo_id": "universal_reverse",
-      "sequence_dna": "CCAGTGCAGGGTCCGAGGTA",
-      "length_nt": 20,
-      "tm_experimental_c": 60.4,
-      "salt_na_mm": 50,
-      "salt_mg_mm": 3.0,
+      "oligo_id": "TEMPLATE_owczarzy08_mgXX",
+      "sequence_dna": "",
+      "length_nt": null,
+      "tm_experimental_c": null,
+      "salt_na_mm": null,
+      "salt_mg_mm": 1.5,
       "dntp_mm": 0.8,
-      "primer_conc_nm": 200,
-      "source_doi": "10.1093/nar/gni178",
-      "source_pmid": "16314309",
+      "primer_conc_nm": null,
+      "sequence_source_doi": "10.1021/bi702363u",
+      "tm_source_doi": "10.1021/bi702363u",
+      "source_doi": "10.1021/bi702363u",
+      "tm_source_pmid": "18422348",
       "verified": false,
-      "notes": "Fixed universal reverse primer; Tm from tool output. Needs wet-lab confirmation."
+      "notes": "TEMPLATE -- fill from Owczarzy 2008 magnesium series; prefer entries near 1.5 mM Mg2+ to match the tool. Delete once real rows are added."
     }
   ],
-  "_TODO": "Add >=5 verified oligos with experimentally measured Tm to run a meaningful MAE/bias analysis. Transcribe values from published assay validation tables (e.g. [Wang17] Table 1, [Kunwar23] supplementary)."
+  "_TODO": "Populate >=15 verified oligos from Owczarzy 2004 (Na+ series) and Owczarzy 2008 (Mg2+/dNTP series), spanning length 8-30 nt and GC 20-80%, then run: python calibration/check_tm.py. Until then check_tm.py correctly reports 'no verified data'."
 }
