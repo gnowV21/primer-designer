@@ -16,6 +16,8 @@ from routes.blast_check import blast_check_bp
 from routes.export import export_bp
 from routes.multiplex_check import multiplex_check_bp
 from routes.benchmark import benchmark_bp
+from routes.lna_suggest import lna_suggest_bp
+from routes.batch_design import batch_design_bp
 from db import local_db
 
 app = Flask(__name__)
@@ -44,6 +46,8 @@ app.register_blueprint(blast_check_bp,   url_prefix="/api")
 app.register_blueprint(export_bp,        url_prefix="/api")
 app.register_blueprint(multiplex_check_bp, url_prefix="/api")
 app.register_blueprint(benchmark_bp,      url_prefix="/api")
+app.register_blueprint(lna_suggest_bp,    url_prefix="/api")
+app.register_blueprint(batch_design_bp,  url_prefix="/api")
 
 # Apply rate limit to blast-check and multiplex-check: 10 req/min/IP [spec §9.3]
 limiter.limit("10 per minute")(blast_check_bp)

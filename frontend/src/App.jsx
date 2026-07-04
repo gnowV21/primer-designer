@@ -8,6 +8,7 @@ import RoadmapPage from './pages/RoadmapPage.jsx';
 import SearchPage from './pages/SearchPage/index.jsx';
 import ResultsPage from './pages/ResultsPage/index.jsx';
 import BenchmarkPage from './pages/BenchmarkPage.jsx';
+import BatchPage from './pages/BatchPage.jsx';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/benchmark" element={<BenchmarkPage />} />
+              <Route path="/batch" element={<BatchPage />} />
             </Routes>
           </main>
           <ChatbotPanel />

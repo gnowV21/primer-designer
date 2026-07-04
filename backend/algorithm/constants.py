@@ -600,3 +600,25 @@ LOW_COMPLEXITY_TOP2_PCT  = 70.0  # % — top-2 bases ≥ this → low complexity
                                  # T:36%+A:27%=63.6%) triggered spuriously. 70% captures genuine
                                  # low-complexity sequences (e.g. AAAAAA... or ATATAT...) only.
 LOW_COMPLEXITY_DINUC_REP = 5     # × — dinucleotide repeat ≥ this → low complexity [convention]
+
+
+# ----------------------------------------------------------------
+# SECTION U: LNA (Phase 8) — informational only, NOT scored
+# [McTigue04] McTigue 2004, Biochemistry 43(18):5388-5405
+# [Owczarzy11] Owczarzy 2011, Biochemistry 50(43):9352-9367
+# ----------------------------------------------------------------
+
+LNA_MAX_SUBSTITUTIONS     = 4       # max LNA positions to suggest per primer
+LNA_TARGET_TM_DEFAULT     = 60.0    # °C — default Tm target (mode="tm")
+LNA_AVOID_3PRIME_TERMINAL = True    # True → warning (NOT hard-skip) when LNA at 3' terminal
+LNA_EXHAUSTIVE_LIMIT      = 5000    # max combinations for exhaustive search; > → greedy
+LNA_HAIRPIN_RECHECK       = True    # check primer3 hairpin after LNA → warning if worse
+USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8)
+
+# ----------------------------------------------------------------
+# SECTION V: Batch design (Phase 8) — A1
+# ----------------------------------------------------------------
+
+BATCH_ASYNC_THRESHOLD = 10    # ≤10 miRNAs → sync NDJSON; >10 → async job
+BATCH_MAX_SIZE        = 50    # maximum miRNAs per batch request (warn if exceeded)
+BATCH_JOB_TTL_SEC     = 3600  # 1h in-memory job TTL
