@@ -42,9 +42,12 @@ DEFAULT_PARAMS = {
     "tm_max":           63,
     "amplicon_min":     90,
     "amplicon_max":     130,
-    "top_n":            1,
+    "top_n":            3,
     "signalMethod":     "sybr",
 }
+
+# /api/design expects: {"sequence": {"matureSequence": "<DNA>", "mirnaId": "<id>"}, ...params}
+# See routes/design.py line 37: data.get("sequence", {}).get("matureSequence", "")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -53,9 +56,16 @@ def _rna_to_dna(seq: str) -> str:
     return seq.upper().replace("U", "T")
 
 
-def _call_design(base_url: str, mirna_seq: str) -> dict | None:
+def _call_design(base_url: str, mirna_seq: str, mirna_id: str = "") -> dict | None:
     """Call /api/design with SYBR defaults; return parsed JSON or None."""
-    payload = {**DEFAULT_PARAMS, "mirnaSequence": _rna_to_dna(mirna_seq)}
+    # /api/design expects RNA (U not T); panel.json stores RNA sequences
+    payload = {
+        **DEFAULT_PARAMS,
+        "sequence": {
+            "matureSequence": mirna_seq.upper(),
+            "mirnaId": mirna_id,
+        },
+    }
     try:
         resp = requests.post(f"{base_url}/api/design", json=payload, timeout=30)
         if resp.status_code == 200:
@@ -81,31 +91,48 @@ def _call_mirprimer(mirprimer_bin: str, mirna_seq: str) -> dict | None:
         return {"error": str(exc)}
 
 
-def _extract_metrics(result: dict, key: str = "top_primers") -> dict:
-    """Pull forward/RT Tm, GC, dimer risk from /api/design response."""
-    if not result or "error" in result:
-        return {"status": "ERROR", "error": result.get("error", "unknown") if result else "no response"}
+def _extract_metrics(result: dict) -> dict:
+    """Pull forward/RT Tm, GC, dimer risk from /api/design response.
 
-    primers = result.get(key, [])
+    /api/design response shape (routes/design.py):
+      top3[i]: { tm_full, tm_binding, gc_percent, sequence, total_score,
+                 heterodimer_checks: {any_high_risk, ...}, ... }
+      stemloop_rt: { tm (None), gc_percent, length, ... }
+    """
+    if not result or "error" in result:
+        return {
+            "status": "ERROR",
+            "tool_status": "ERROR",
+            "error": result.get("error", "unknown") if result else "no response",
+        }
+
+    primers = result.get("top3") or result.get("top_primers") or []
     if not primers:
-        return {"status": "NO_PRIMER"}
+        return {"status": "NO_PRIMER", "tool_status": "NO_PRIMER"}
 
     top = primers[0]
-    fwd = top.get("forward_primer", {})
-    rt  = top.get("rt_primer", {})
-    dimerinfo = top.get("dimer_check", {})
-    score     = top.get("score", None)
+    rt  = result.get("stemloop_rt") or {}
+    hd  = top.get("heterodimer_checks") or {}
+
+    # Dimer risk: any_high_risk → HIGH, any_moderate_or_above → MEDIUM, else LOW
+    if hd.get("any_high_risk"):
+        dimer_risk = "HIGH"
+    elif hd.get("any_moderate_or_above"):
+        dimer_risk = "MEDIUM"
+    else:
+        dimer_risk = "LOW"
 
     return {
-        "status":          "OK",
-        "fwd_tm":          fwd.get("tm"),
-        "fwd_gc":          fwd.get("gc_content"),
-        "fwd_len":         len(fwd.get("sequence", "")),
-        "rt_tm":           rt.get("tm"),
-        "rt_gc":           rt.get("gc_content"),
-        "rt_len":          len(rt.get("sequence", "")),
-        "dimer_risk":      dimerinfo.get("risk_level", "—"),
-        "score":           score,
+        "status":      "OK",
+        "tool_status": "OK",
+        "fwd_tm":      top.get("tm_full"),
+        "fwd_gc":      top.get("gc_percent"),
+        "fwd_len":     len(top.get("sequence", "")),
+        "rt_tm":       rt.get("tm"),          # often None (RT Tm not exposed)
+        "rt_gc":       rt.get("gc_percent"),
+        "rt_len":      rt.get("length") or len(rt.get("overhang_dna", "")),
+        "dimer_risk":  dimer_risk,
+        "score":       top.get("total_score"),
     }
 
 
@@ -242,25 +269,26 @@ def main():
 
     panel = json.loads(PANEL_FILE.read_text())
     mirnas = panel["mirnas"]
-    print(f"Running benchmark: {len(mirnas)} miRNAs → {args.out}")
+    print(f"Running benchmark: {len(mirnas)} miRNAs -> {args.out}")
 
     rows = []
     for i, m in enumerate(mirnas, 1):
         print(f"  [{i:2d}/{len(mirnas)}] {m['id']} ...", end=" ", flush=True)
         t0  = time.perf_counter()
-        res = _call_design(args.base_url, m["sequence"])
+        res = _call_design(args.base_url, m["sequence"], m["id"])
         elapsed = time.perf_counter() - t0
 
         metrics = _extract_metrics(res)
         row = {
-            "id":         m["id"],
-            "length":     m["length"],
-            "gc_pct":     m["gc_pct"],
-            "elapsed_s":  round(elapsed, 3),
+            "id":          m["id"],
+            "length":      m["length"],
+            "gc_pct":      m["gc_pct"],
+            "elapsed_s":   round(elapsed, 3),
+            "tool_status": metrics.get("status", "ERROR"),
             **metrics,
         }
         rows.append(row)
-        print(f"{metrics['status']}  ({elapsed:.2f}s)")
+        print(f"{metrics.get('status', 'ERROR')}  ({elapsed:.2f}s)")
 
         if args.delay > 0:
             time.sleep(args.delay)
