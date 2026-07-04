@@ -1,8 +1,8 @@
-name: Phase 3 Tests
+name: Tests
 
 on:
   push:
-    branches: [main, "phase3-*"]
+    branches: [main, "phase*"]
   pull_request:
     branches: [main]
 
@@ -16,11 +16,43 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-
+
+      - name: Cache apt packages (ncbi-blast+)
+        uses: actions/cache@v4
+        id: apt-blast-cache
+        with:
+          path: /var/cache/apt/archives
+          key: apt-blast-${{ runner.os }}-${{ hashFiles('.github/workflows/test_phase3.yml') }}
+
+      - name: Install Python dependencies
         run: |
           cd backend
           pip install -r requirements.txt
-          sudo apt-get install -y ncbi-blast+
+
+      - name: Install ncbi-blast+ (apt)
+        run: sudo apt-get install -y --no-install-recommends ncbi-blast+
+
+      - name: Cache BLAST DB
+        uses: actions/cache@v4
+        id: blast-db-cache
+        with:
+          path: backend/data/blast_db
+          key: blast-db-${{ runner.os }}-${{ hashFiles('backend/data/blast_db/metadata.json') }}
+
+      - name: Bootstrap BLAST DB (if cache miss)
+        if: steps.blast-db-cache.outputs.cache-hit != 'true'
+        run: |
+          cd backend
+          python -m scripts.bootstrap_blast_db
+
+      - name: Validate family grouping DB
+        run: python benchmark/validate_family_grouping.py
 
       - name: Unit tests — algorithm (bound_fraction, scoring, blast_offtarget)
         run: |
@@ -48,17 +80,39 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-
+
+      - name: Install Python dependencies
         run: |
           cd backend
           pip install -r requirements.txt
-          sudo apt-get install -y ncbi-blast+
+
+      - name: Install ncbi-blast+ (apt)
+        run: sudo apt-get install -y --no-install-recommends ncbi-blast+
+
+      - name: Cache BLAST DB
+        uses: actions/cache@v4
+        id: blast-db-cache
+        with:
+          path: backend/data/blast_db
+          key: blast-db-${{ runner.os }}-${{ hashFiles('backend/data/blast_db/metadata.json') }}
+
+      - name: Bootstrap BLAST DB (if cache miss)
+        if: steps.blast-db-cache.outputs.cache-hit != 'true'
+        run: |
+          cd backend
+          python -m scripts.bootstrap_blast_db
 
       - name: Start backend
         run: |
           cd backend
           python app.py &
-          sleep 3   # wait for Flask to start
+          sleep 3
 
       - name: Smoke test /api/health
         run: curl -sf http://localhost:5000/api/health
