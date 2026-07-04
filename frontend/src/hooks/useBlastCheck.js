@@ -1,13 +1,32 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const BLAST_TIMEOUT_MS = 70_000;
 
 export default function useBlastCheck() {
-  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'done' | 'error'
-  const [result, setResult] = useState(null);
-  const [error,  setError]  = useState(null);
+  const [status,      setStatus]      = useState('idle'); // 'idle' | 'loading' | 'done' | 'error'
+  const [result,      setResult]      = useState(null);
+  const [error,       setError]       = useState(null);
+  const [dbAvailable, setDbAvailable] = useState(null);  // null = unknown, true/false after status check
+  const [dbMessage,   setDbMessage]   = useState('');
   const abortRef = useRef(null);
+
+  // Check DB availability once on mount (Phase 7 PART A)
+  useEffect(() => {
+    let cancelled = false;
+    axios.get('/api/blast-status', { timeout: 5_000 })
+      .then((r) => {
+        if (!cancelled) {
+          setDbAvailable(r.data.available ?? null);
+          setDbMessage(r.data.message || '');
+        }
+      })
+      .catch(() => {
+        // Network error or server not responding — don't block user (null = unknown)
+        if (!cancelled) setDbAvailable(null);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   async function run(forwardPrimer, reversePrimer, mirnaId) {
     // Cancel any in-flight request
@@ -28,7 +47,7 @@ export default function useBlastCheck() {
       setResult(resp.data);
       setStatus('done');
     } catch (err) {
-      if (axios.isCancel(err) || err.name === 'AbortError') return; // user-cancelled — stay loading
+      if (axios.isCancel(err) || err.name === 'AbortError') return;
       setError(parseBlastError(err));
       setStatus('error');
     }
@@ -41,7 +60,7 @@ export default function useBlastCheck() {
     setError(null);
   }
 
-  return { status, result, error, run, reset };
+  return { status, result, error, run, reset, dbAvailable, dbMessage };
 }
 
 function parseBlastError(err) {

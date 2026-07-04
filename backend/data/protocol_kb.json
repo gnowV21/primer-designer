@@ -1,7 +1,7 @@
 {
-  "kb_version": "1.1",
+  "kb_version": "1.2",
   "updated": "2026-07-04",
-  "description": "Protocol/Evidence Advisor knowledge base — 6 evidence-backed rules (P1-P6). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
+  "description": "Protocol/Evidence Advisor knowledge base — 8 evidence-backed rules (P1-P8) + normalization rules (N1-N4). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
   "rules": [
     {
       "id": "P1",
@@ -170,6 +170,94 @@
         { "tag": "Zhelankin22", "doi": "10.3390/ijms231810340", "pmid": "36142249", "note": "Anticoagulant tube type (EDTA vs serum) affects circulating miRNA yield and profile" }
       ],
       "disclaimer": "For research use only. Validate preanalytical workflow for your sample type before quantification."
+    },
+    {
+      "id": "N1",
+      "title": "Normalization — tissue / cell line: endogenous reference panel",
+      "when": {
+        "sample_types": ["tissue", "cell_line", "cell-line", "cell", "cells"]
+      },
+      "recommendation": "Select ≥3 stable endogenous reference miRNAs using geNorm or NormFinder. Reference stability is tissue-specific — validate in your tissue cohort before quantification.",
+      "match_weights": { "always": 0.5, "tissue_sample": 0.5 },
+      "pros": [
+        "geNorm/NormFinder identify the most stable references in your specific dataset [Hellemans14]",
+        "Multiple reference miRNAs reduce systematic normalization bias"
+      ],
+      "cons": [
+        "Requires a pilot experiment to identify stable references",
+        "Reference stability may differ between disease and healthy tissues"
+      ],
+      "sources": [
+        { "tag": "Hellemans14", "doi": "10.1007/978-1-4939-0733-5_3", "pmid": "24567180", "note": "geNorm normalization strategy for miRNA qPCR" },
+        { "tag": "Hacimoto24", "doi": "10.1371/journal.pone.0306657", "pmid": "39141588", "note": "Selecting 3 most stable miRNAs by multiple algorithms" },
+        { "tag": "Fujimoto18", "doi": "10.1016/j.fsigen.2018.08.010", "pmid": "30149384", "note": "Reference miRNA selection depends on sample type" }
+      ],
+      "disclaimer": "For research use only. Validate reference stability in your sample type before quantification."
+    },
+    {
+      "id": "N2",
+      "title": "Normalization — plasma / serum / biofluid: spike-in + global-mean",
+      "when": {
+        "sample_types": ["plasma", "serum", "cfRNA", "urine", "saliva", "biofluid"]
+      },
+      "recommendation": "Add exogenous cel-miR-39-3p spike-in before RNA extraction to correct extraction efficiency. For panels ≥10 targets, use global-mean normalization. Run hemolysis QC (miR-451a/miR-16 ratio) to exclude hemolyzed samples.",
+      "match_weights": { "biofluid_sample": 1.0 },
+      "pros": [
+        "cel-miR-39-3p spike-in corrects extraction efficiency variation [Tan15]",
+        "Hemolysis check protects against erythrocyte miRNA contamination [McDonald11]"
+      ],
+      "cons": [
+        "Spike-in must be added before lysis/extraction — incorrect timing invalidates correction",
+        "Global-mean normalization requires sufficient panel size (≥10 targets)"
+      ],
+      "sources": [
+        { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization for serum/plasma miRNA" },
+        { "tag": "McDonald11", "doi": "10.1373/clinchem.2010.157198", "pmid": "21439851", "note": "Hemolysis alters plasma miRNA profile" }
+      ],
+      "disclaimer": "For research use only. Validate preanalytical workflow for your sample type."
+    },
+    {
+      "id": "N3",
+      "title": "Normalization — FFPE / low-input: LNA-enhanced + stability validation",
+      "when": {
+        "sample_types": ["ffpe", "low_input", "low-input", "degraded"]
+      },
+      "recommendation": "Use LNA-enhanced primers for improved sensitivity at low RNA input. Validate reference miRNA stability empirically — extraction variability is high in FFPE and low-input samples.",
+      "match_weights": { "difficult_sample": 1.0 },
+      "pros": [
+        "LNA-enhanced primers improve Tm and hybridisation affinity for degraded RNA [Andreasen10]",
+        "Multiple reference miRNAs reduce impact of high extraction variability"
+      ],
+      "cons": [
+        "LNA synthesis is more expensive",
+        "Requires additional pilot experiments"
+      ],
+      "sources": [
+        { "tag": "Andreasen10", "doi": "10.1016/j.ymeth.2010.01.006", "pmid": "20215018", "note": "LNA-enhanced primer for degraded RNA" },
+        { "tag": "Kunwar23", "doi": "10.3390/diagnostics13132170", "pmid": "37443567", "note": "Reliability at low copy number" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use."
+    },
+    {
+      "id": "N4",
+      "title": "Normalization — large panel (≥10 targets): global-mean normalization",
+      "when": {
+        "target_count_min": 10
+      },
+      "recommendation": "For panels ≥10 miRNA targets, global-mean normalization avoids the need to pre-select reference miRNAs. Assumes the majority of miRNAs are unchanged between conditions.",
+      "match_weights": { "large_panel": 1.0 },
+      "pros": [
+        "No need for reference gene pre-selection — suitable for panels >10 targets [Hellemans14]",
+        "Reduces bias from single reference gene instability"
+      ],
+      "cons": [
+        "Assumes majority of miRNAs unchanged — may not hold in highly dysregulated states",
+        "Not suitable for small panels (<10 targets)"
+      ],
+      "sources": [
+        { "tag": "Hellemans14", "doi": "10.1007/978-1-4939-0733-5_3", "pmid": "24567180", "note": "Global-mean normalization for large panels" }
+      ],
+      "disclaimer": "For research use only. Validate normalization approach in your experimental context."
     }
   ]
 }

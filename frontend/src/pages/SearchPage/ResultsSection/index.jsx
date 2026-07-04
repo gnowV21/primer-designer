@@ -5,6 +5,7 @@
 import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
 import Tooltip from '../../../components/ui/Tooltip.jsx';
+import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -112,9 +113,9 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         ))}
       </div>
 
-      {/* ── Cross-reactivity panel ── */}
+      {/* ── Family specificity (Phase 7 PART C): map + table toggle ── */}
       {specificity_warnings?.cross_reactivity && (
-        <CrossReactivityPanel data={specificity_warnings.cross_reactivity} />
+        <FamilySpecificityMap familyCrossReactivity={specificity_warnings.cross_reactivity} />
       )}
 
       {/* ── Rejection log ── */}

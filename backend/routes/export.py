@@ -54,7 +54,11 @@ def _sanitize(mirna_id: str) -> str:
 def export_primers():
     """
     POST /api/export
-    body: { "format": "pdf" | "csv", "results": <object /api/design returned> }
+    body: {
+      "format": "pdf" | "csv",
+      "results": <object /api/design returned>,
+      "include_checklist": true | false   (default: true, Phase 7 PART E)
+    }
     200 → file stream (Content-Disposition: attachment)
     400 → invalid format / missing results
     503 → reportlab not installed (PDF only)
@@ -62,6 +66,7 @@ def export_primers():
     body    = request.get_json(force=True) or {}
     fmt     = (body.get("format") or "").lower().strip()
     results = body.get("results")
+    include_checklist = body.get("include_checklist", True)
 
     # Validate format — whitelist only
     if fmt not in ("pdf", "csv"):
@@ -78,18 +83,18 @@ def export_primers():
     filename = f"primer_report_{mirna_id}.{fmt}"
 
     if fmt == "csv":
-        return _build_csv(results, filename)
+        return _build_csv(results, filename, include_checklist=include_checklist)
     else:
         if not _REPORTLAB_AVAILABLE:
             return jsonify({
                 "error": "PDF export requires 'reportlab'. Run: pip install reportlab>=4.0"
             }), 503
-        return _build_pdf(results, filename)
+        return _build_pdf(results, filename, include_checklist=include_checklist)
 
 
 # ── CSV builder ───────────────────────────────────────────────────
 
-def _build_csv(results: dict, filename: str):
+def _build_csv(results: dict, filename: str, include_checklist: bool = True):
     meta    = results.get("metadata", {})
     top3    = results.get("top3", [])
     sl      = results.get("stemloop_rt", {})
@@ -142,15 +147,102 @@ def _build_csv(results: dict, filename: str):
         "", "", "", "Fixed universal reverse [Chen05][K11]",
     ])
 
+    if include_checklist:
+        _append_checklist_csv(writer, buf, results)
+
     response = make_response(buf.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
 
+def _append_checklist_csv(writer, buf, results: dict):
+    """Append MIQE-aligned validation checklist block to CSV. [MIQE09]"""
+    # Auto-fill specificity data from results
+    spec = results.get("specificity_warnings", {})
+    cr   = spec.get("cross_reactivity", {})
+    cr_risks = [r.get("risk") for r in cr.get("cross_reactivity", [])]
+    worst_family_risk = (
+        "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
+        else ("LOW" if "LOW" in cr_risks else "SAFE")
+    )
+    blast_risk = ""  # populated by user from BLAST results
+
+    buf.write("\r\n# VALIDATION CHECKLIST (MIQE-aligned, Bustin et al. 2009 Clin Chem)\r\n")
+    buf.write("# Fill in Pass (Y/N) and Measured_Value after wet-lab validation.\r\n")
+    buf.write("# For research use only. Validate primers experimentally before use.\r\n")
+    writer.writerow(["Item", "Acceptance_Criterion", "Reference", "Pass", "Measured_Value"])
+
+    checklist = [
+        (
+            "No-template control (NTC)",
+            "No amplification, or Cq ≥5 cycles above lowest standard",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "No-RT control",
+            "No signal (confirms absence of genomic DNA / self-priming)",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "Melting curve (SYBR Green)",
+            "Single peak; no primer-dimer or non-specific product",
+            "MIQE09, Varkonyi-Gasic 2007",
+            "",
+            "",
+        ),
+        (
+            "Standard curve",
+            "≥5 dilution points, ≥1 log range (10-fold serial dilutions)",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "PCR efficiency",
+            "90–110%  [= 10^(−1/slope) − 1]",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "R² (linearity)",
+            "≥ 0.98",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "Technical replicates",
+            "≥3 replicates; report Cq mean and SD",
+            "MIQE09",
+            "",
+            "",
+        ),
+        (
+            "Specificity (in-silico)",
+            (
+                f"Family cross-reactivity: {worst_family_risk} risk "
+                f"(see family_cross_reactivity in design output). "
+                f"BLAST off-target risk: {blast_risk or 'run /api/blast-check to assess'}."
+            ),
+            "Phase 3 specificity_check",
+            "",
+            worst_family_risk,
+        ),
+    ]
+
+    for row in checklist:
+        writer.writerow(list(row))
+
+
 # ── PDF builder ───────────────────────────────────────────────────
 
-def _build_pdf(results: dict, filename: str):
+def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
     from reportlab.lib import colors as rl_colors
     teal     = rl_colors.HexColor(_TEAL)
     teal_bg  = rl_colors.HexColor(_TEAL_BG)
@@ -283,6 +375,10 @@ def _build_pdf(results: dict, filename: str):
             story.append(Paragraph(f"[{esc(ec_item['code'])}] {esc(ec_item.get('message', ''))}", body))
         story.append(Spacer(1, 0.3*cm))
 
+    # ── Validation Checklist (Phase 7 PART E) ────────────────────
+    if include_checklist:
+        story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors))
+
     # ── Footer ────────────────────────────────────────────────────
     story.append(Spacer(1, 0.5*cm))
     story.append(Paragraph(
@@ -302,6 +398,84 @@ def _build_pdf(results: dict, filename: str):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
+
+
+# ── Checklist PDF helper ──────────────────────────────────────────
+
+def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors) -> list:
+    """Build Validation Checklist PDF section (MIQE09-aligned). (Phase 7 PART E)"""
+    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.units import cm
+
+    spec = results.get("specificity_warnings", {})
+    cr   = spec.get("cross_reactivity", {})
+    cr_risks = [r.get("risk") for r in cr.get("cross_reactivity", [])]
+    worst_family = (
+        "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
+        else ("LOW" if "LOW" in cr_risks else "SAFE")
+    )
+
+    checklist_data = [
+        ["Criterion", "Acceptance Target", "Reference", "Pass ☐", "Value / Notes"],
+        ["No-template control (NTC)",
+         "No amplification, or Cq ≥5 cycles above lowest standard",
+         "MIQE09", "", ""],
+        ["No-RT control",
+         "No signal (excludes genomic DNA / self-priming)",
+         "MIQE09", "", ""],
+        ["Melting curve (SYBR Green)",
+         "Single peak; no primer-dimer or non-specific product",
+         "MIQE09\nVarkonyi-Gasic 2007", "", ""],
+        ["Standard curve (≥5 points)",
+         "10-fold serial dilutions, ≥1 log range",
+         "MIQE09", "", ""],
+        ["PCR efficiency",
+         "90–110%  [= 10^(−1/slope) − 1]",
+         "MIQE09", "", ""],
+        ["R² (linearity)",
+         "≥ 0.98",
+         "MIQE09", "", ""],
+        ["Technical replicates",
+         "≥3 replicates; report Cq mean ± SD",
+         "MIQE09", "", ""],
+        ["Specificity (in-silico)",
+         "Family cross-reactivity: reviewed. BLAST off-target: reviewed.",
+         "Phase 3",
+         "",
+         f"Family: {worst_family}"],
+    ]
+
+    col_widths = [4.5*cm, 5.5*cm, 2.5*cm, 1.5*cm, 3*cm]
+    tbl = Table(checklist_data, colWidths=col_widths)
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), teal),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, -1), 8),
+        ("BACKGROUND",    (0, 1), (-1, 1), teal_bg),
+        ("GRID",          (0, 0), (-1, -1), 0.5, rl_colors.grey),
+        ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+         [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
+    ]))
+
+    return [
+        Spacer(1, 0.5*cm),
+        Paragraph("Validation Checklist (MIQE-aligned)", h2),
+        Paragraph(
+            "Complete the checklist below after wet-lab validation. "
+            "Criteria per Bustin et al. 2009 (Clin Chem) MIQE guidelines.",
+            body,
+        ),
+        Spacer(1, 0.3*cm),
+        tbl,
+        Spacer(1, 0.3*cm),
+        Paragraph(
+            "<i>Specificity (in-silico) is pre-filled from the design output. "
+            "All other fields require wet-lab measurement.</i>",
+            body,
+        ),
+    ]
 
 
 # ── Helpers ───────────────────────────────────────────────────────

@@ -125,3 +125,71 @@ def blast_check():
     result["database_info"] = db_info
 
     return jsonify(result)
+
+
+@blast_check_bp.route("/blast-status", methods=["GET"])
+def blast_status():
+    """
+    GET /api/blast-status
+
+    Lightweight DB availability check — reads only os.path.exists + metadata.json.
+    No rate limit (read-only, <10 ms).  Frontend calls this on mount of OffTargetPanel
+    to enable/disable the "Check off-target" button before the user clicks it.
+
+    Response:
+        {
+          available: bool,
+          sequences_count: int | null,
+          build_date: str | null,
+          outdated_warning: bool,
+          message: str
+        }
+    """
+    import json as _json
+    from datetime import datetime as _dt
+
+    db_dir = os.path.normpath(
+        os.path.join(os.path.dirname(__file__), "..", "data", "blast_db")
+    )
+    required = ("mirbase_multi.nhr", "mirbase_multi.nin", "mirbase_multi.nsq")
+    metadata_path = os.path.join(db_dir, "metadata.json")
+
+    available = all(os.path.exists(os.path.join(db_dir, f)) for f in required)
+
+    sequences_count = None
+    build_date = None
+    outdated_warning = False
+
+    if available:
+        try:
+            with open(metadata_path) as f:
+                meta = _json.load(f)
+            counts = meta.get("sequences_count", {})
+            sequences_count = counts.get("mirbase_multi") if isinstance(counts, dict) else None
+            build_date = meta.get("build_date")
+            if build_date:
+                age_days = (_dt.utcnow() - _dt.strptime(build_date, "%Y-%m-%d")).days
+                outdated_warning = age_days > 90
+        except Exception:
+            pass
+
+    if not available:
+        message = "Off-target database is being prepared. Please try again shortly."
+    elif outdated_warning:
+        message = (
+            f"BLAST database may be outdated (built {build_date}). "
+            "Consider rebuilding with scripts/build_blast_db.py."
+        )
+    else:
+        message = (
+            f"BLAST database available ({sequences_count or '?'} sequences, "
+            f"built {build_date})."
+        )
+
+    return jsonify({
+        "available": available,
+        "sequences_count": sequences_count,
+        "build_date": build_date,
+        "outdated_warning": outdated_warning,
+        "message": message,
+    })
