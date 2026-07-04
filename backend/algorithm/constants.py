@@ -105,7 +105,7 @@ MIN_CANDIDATE_3PRIME_DISTANCE = 2  # nt [P3P PRIMER_MIN_LEFT_THREE_PRIME_DISTANC
 TM_FORWARD_TARGET = 60.0    # °C [R2][PAST24]
 TM_FORWARD_TOLERANCE = 2.0  # °C → acceptable 58–62°C
 TM_PAIR_DIFF_MAX = 2.0      # °C [PAST24]
-TM_ANNEALING_TEMP_DEFAULT = 60.0   # °C
+TM_ANNEALING_TEMP_DEFAULT = TM_FORWARD_TARGET  # alias — same optimum; update TM_FORWARD_TARGET only
 TM_BOUND_FRACTION_TARGET = 97.0    # % [SL04] SantaLucia & Hicks 2004 — Phase 3
 
 # Binding-region Tm target (scoring criterion 2) — v2.8 FIX

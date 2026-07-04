@@ -22,6 +22,7 @@ from .constants import (
     STEMLOOP_BODY, STEMLOOP_BODY_LENGTH, UNIVERSAL_REVERSE,
     MIN_CANDIDATE_3PRIME_DISTANCE, TM_ANNEALING_TEMP_DEFAULT, TM_FORWARD_TOLERANCE,
     TAIL_MAX_HOMOPOLYMER_RUN,
+    TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
 )
 from .sequence_utils import rna_to_dna, calculate_gc, check_homopolymer
 from .thermodynamics import calculate_tm_nn, calculate_tm_binding_only
@@ -263,7 +264,7 @@ def _prefilter(candidate: dict, params: dict) -> tuple:
 
     if not (tm_min <= tm <= tm_max):
         hard_reasons.append("tm_out_of_range")
-    if candidate["tm_binding"] < 25.0:
+    if candidate["tm_binding"] < TM_BINDING_TARGET - 2 * TM_BINDING_TOLERANCE:
         hard_reasons.append("tm_binding_too_low")
     if not (float(params.get("gcMin", GC_MIN)) <= gc <= float(params.get("gcMax", GC_MAX))):
         hard_reasons.append("gc_out_of_range")
