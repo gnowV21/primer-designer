@@ -120,6 +120,11 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   useEffect(() => {
     if (status === 'found' && result?.sequence) {
       onChangeRef.current('matureSequence', result.sequence);
+      // When looked up by name/accession, replace the search field with the resolved sequence
+      // so the input reflects the actual RNA used for design
+      if (!isSeqLookup) {
+        onChangeRef.current('searchQuery', result.sequence);
+      }
       onChangeRef.current('mirnaName',      result.id        ?? '');
       onChangeRef.current('mirbaseId',      result.accession ?? '');
       onChangeRef.current('accession',      result.accession ?? '');
@@ -132,7 +137,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
     } else if (status === 'error' || status === 'not_found') {
       prevQuery.current = '';
     }
-  }, [status, result]);
+  }, [status, result, isSeqLookup]);
 
   function validateSequence(seq) {
     const clean = seq.trim().toUpperCase();

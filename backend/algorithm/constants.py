@@ -265,6 +265,12 @@ PROBE_MIN_LENGTH_MGB = 13
 PROBE_OPT_LENGTH_MGB = 16
 PROBE_MAX_LENGTH_MGB = 20
 PROBE_MGB_TM_BOOST = 15.0
+# [RESEARCH_INSIGHTS_probe §2.2] +15°C is too imprecise to filter/reject candidates;
+# use for display only, flag with warning. Set False = skip Tm filter for MGB.
+PROBE_MGB_FILTER_BY_BOOSTED_TM = False
+
+PROBE_MIN_LENGTH_LNA = 13        # [Liu25] LNA probe: shorter + higher Tm per nt
+PROBE_MAX_LENGTH_LNA = 18
 
 PROBE_GC_MIN = 40.0
 PROBE_GC_OPT = 50.0
@@ -525,6 +531,12 @@ MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRB
 # Hard-filter gate (PROMPT 3 — A/B toggle)
 # Set False to disable hard-filter layer and fall back to soft-scoring only (for comparison).
 HARD_FILTER_ENABLED = True
+
+# [RESEARCH_QUESTIONS_UX A2] DNA:RNA hybrid Tm via Sugimoto 1995 (A/B toggle)
+# True  → compute overhang hybrid Tm using algorithm/hybrid_tm.py (pure Python, no dependency)
+# False → fall back to "approximate" label only (DNA:DNA primer3 Tm displayed, no hybrid Tm)
+# Informational only — NOT used in scoring/hard-filter logic.
+USE_HYBRID_TM = True
 
 # primer_size scoring mode (PROMPT 6 — A/B toggle)
 # "specific" (Busk14): score by specific_length only; tail length does not penalize.

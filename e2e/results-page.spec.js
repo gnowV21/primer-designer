@@ -68,7 +68,7 @@ test('algorithm version badge visible on results page', async ({ page }) => {
 
 test('Quality Summary panel is visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText('Quality Summary')).toBeVisible();
+  await expect(page.getByText('Quality Summary').first()).toBeVisible();
 });
 
 test('Off-target BLAST not run shows Run check button', async ({ page }) => {
@@ -82,7 +82,7 @@ test('Off-target BLAST not run shows Run check button', async ({ page }) => {
 test('at least one primer set card renders with score', async ({ page }) => {
   await runDesign(page);
   // Rank #1 badge
-  await expect(page.locator('text=#1')).toBeVisible();
+  await expect(page.locator('text=#1').first()).toBeVisible();
 });
 
 test('stem-loop RT primer section visible', async ({ page }) => {
@@ -99,7 +99,7 @@ test('universal reverse primer section visible', async ({ page }) => {
 
 test('Thermodynamic Parameters section heading visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText('Thermodynamic Parameters')).toBeVisible();
+  await expect(page.getByText('Thermodynamic Parameters').first()).toBeVisible();
 });
 
 test('ThermoTable Tab A shows by default', async ({ page }) => {
@@ -111,9 +111,9 @@ test('ThermoTable Tab A shows by default', async ({ page }) => {
 test('ThermoTable Tab B switch shows per-primer detail', async ({ page }) => {
   await runDesign(page);
   await page.getByRole('button', { name: /Tab B.*Per-primer/i }).click();
-  await expect(page.getByText('Forward Primer')).toBeVisible();
+  await expect(page.getByText('Forward Primer', { exact: true })).toBeVisible();
   await expect(page.getByText('RT Stem-loop Primer')).toBeVisible();
-  await expect(page.getByText('Universal Reverse Primer')).toBeVisible();
+  await expect(page.getByText('Universal Reverse Primer').first()).toBeVisible();
 });
 
 test('ThermoTable Tab B has copy button on sequence', async ({ page }) => {

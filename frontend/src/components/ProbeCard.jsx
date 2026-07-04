@@ -70,16 +70,26 @@ export default function ProbeCard({ probe, probeNote }) {
   const { tm_gap, checks = {} } = quality;
 
   const allCheckEntries = Object.entries(checks);
-  const failedChecks    = allCheckEntries.filter(([, v]) => !v);
+  // checks[key] is {value, pass} object from backend; normalise to boolean for display
+  const checkPass = (v) => (v != null && typeof v === 'object' ? v.pass : Boolean(v));
+  const failedChecks = allCheckEntries.filter(([, v]) => !checkPass(v));
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 space-y-3">
+      {/* [§3.4] Specificity advisory — always shown for any TaqMan probe */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 leading-relaxed">
+        <span className="font-semibold">Specificity note:</span> The probe does not confer
+        miRNA sequence specificity. Discrimination between miRNAs is delivered by the
+        stem-loop RT primer (3′ overhang) and the forward primer. A universal probe generates
+        signal for any amplicon sharing the stem-loop body, including non-specific products.
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm font-semibold text-slate-700">
           TaqMan Probe
           <span className="ml-2 text-xs font-normal text-slate-500 capitalize">
-            ({mode ?? 'custom'} · {probe_type === 'mgb' ? 'MGB' : 'Single-Q'})
+            ({mode ?? 'custom'} · {probe_type === 'mgb' ? 'MGB' : probe_type === 'lna' ? 'LNA' : 'Single-Q'})
           </span>
         </p>
 
@@ -137,7 +147,7 @@ export default function ProbeCard({ probe, probeNote }) {
       {allCheckEntries.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {allCheckEntries.map(([key, val]) => (
-            <Badge key={key} label={key.replace(/_/g, ' ')} pass={val} />
+            <Badge key={key} label={key.replace(/_/g, ' ')} pass={checkPass(val)} />
           ))}
         </div>
       )}
@@ -169,6 +179,14 @@ export default function ProbeCard({ probe, probeNote }) {
               ⚑ {w}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* [§3.2] Double-quenched advisory */}
+      {probe_type === 'single_q' && length >= 20 && (
+        <div className={`rounded-lg border px-3 py-1.5 text-xs ${RISK_COLOR.info}`}>
+          Advisory: For probes ≥20 nt, double-quenched chemistry (e.g. ZEN/Iowa Black, TAO)
+          reduces background fluorescence and improves signal-to-noise ratio.
         </div>
       )}
 

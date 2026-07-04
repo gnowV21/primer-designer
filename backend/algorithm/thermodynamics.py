@@ -41,6 +41,12 @@ def _calc_tm_cached(sequence: str, mv_conc: float, dv_conc: float, dntp_conc: fl
     return round(float(tm), 2)
 
 
+# FUTURE: Sugimoto 1995 DNA:RNA nearest-neighbor table — pure Python, no new dependency.
+# For RT primer overhang × miRNA duplex Tm: use algorithm/hybrid_tm.predict_hybrid_tm().
+# Separated from _calc_tm_cached intentionally — different NN table (DNA:RNA vs DNA:DNA).
+# Do NOT merge into _calc_tm_cached; the two engines must remain independent.
+
+
 def calculate_tm_nn(sequence: str, params: dict) -> float:
     """
     Tm via nearest-neighbor (SantaLucia 1998) + Mg2+ salt correction.
