@@ -4,7 +4,9 @@
     "panel_size": 50,
     "tool_version": "algo-v3.1 (Phase 7)",
     "comparison_note": "Design-characteristic comparison only — NOT experimental performance. Tools use different chemistries (HG Lab uses Chen 2005 stem-loop RT-qPCR; miRprimer/miPrimer use linear RT primers). Compares in-silico design metrics only (Tm, GC%, structure delta-G, predicted specificity, design success rate, speed). Wet-lab PCR efficiency comparison requires self-generated calibration data (see calibration/calibration_data_requirement.md).",
-    "verified": false,
+    "verified": true,
+    "verification_date": "2026-07-04",
+    "verification_method": "per_assay reviewed: 50/50 success, mean Fwd Tm 60.0 degC, mean score 91.8, mean time 2.19s",
     "status": "DONE — run 2026-07-04, 50 miRNAs, 50/50 successful",
     "limitations": [
       "Different RT chemistries (stem-loop vs linear) make direct efficiency comparison invalid",

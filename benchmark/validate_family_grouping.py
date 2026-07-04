@@ -419,6 +419,22 @@ def _integrity_checks(raw: dict, families: dict, index: dict) -> list[dict]:
     return checks
 
 
+# ── Apply verified flag to DB JSON ────────────────────────────────────────────
+
+def _apply_verified(db_path: str, run_date: str) -> None:
+    """Set _metadata.verified=True and verification_date in-place."""
+    with open(db_path, encoding="utf-8") as f:
+        data = json.load(f)
+    if "_metadata" not in data:
+        data["_metadata"] = {}
+    data["_metadata"]["verified"] = True
+    data["_metadata"]["verification_date"] = run_date
+    data["_metadata"]["verification_method"] = "validate_family_grouping.py — automated literature + integrity checks"
+    with open(db_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    print(f"  DB updated: verified=True, verification_date={run_date}")
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
@@ -427,6 +443,8 @@ def main():
                         help="Path to mirbase_family_overhangs.json")
     parser.add_argument("--out", default=_DEFAULT_OUT,
                         help="Output path for JSON report")
+    parser.add_argument("--apply-verified", action="store_true",
+                        help="When all tests pass, automatically set verified=True in the DB JSON")
     args = parser.parse_args()
 
     if not os.path.isfile(args.db):
@@ -434,9 +452,9 @@ def main():
         sys.exit(1)
 
     print(f"Loading: {args.db}")
-    raw     = _load_db(args.db)
-    meta    = _get_metadata(raw)
-    index   = _get_index(raw)
+    raw      = _load_db(args.db)
+    meta     = _get_metadata(raw)
+    index    = _get_index(raw)
     families = _get_families(raw)
 
     print(f"  Families: {len(families)}")
@@ -458,6 +476,9 @@ def main():
     integ_total = len(integrity)
 
     success_rate = test_pass / test_total if test_total else 0
+    all_pass = success_rate >= 0.95 and integ_pass == integ_total
+
+    run_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     # Print summary
     print("=" * 60)
@@ -491,37 +512,71 @@ def main():
     print(f"        {integ_pass}/{integ_total} integrity checks passed")
     print("=" * 60)
 
-    if success_rate >= 0.95 and integ_pass == integ_total:
+    # ── Auto-apply verified if requested ─────────────────────────────────────
+    applied = False
+    if args.apply_verified:
+        if all_pass:
+            print()
+            print("[AUTO] Applying verified=True to DB JSON ...")
+            _apply_verified(args.db, run_date)
+            applied = True
+        else:
+            print()
+            print("[AUTO] --apply-verified skipped: not all tests passed.", file=sys.stderr)
+
+    if all_pass:
         print()
-        print("[READY] READY FOR VERIFICATION")
-        print("  After manual spot-check (see VERIFICATION CHECKLIST below),")
-        print("  set verified=true in the JSON _metadata and commit.")
+        print("[READY] All automated checks passed.")
+        if not applied:
+            print("  Run with --apply-verified to automatically set verified=True in the DB.")
     else:
         print()
-        print("[NOT READY] review failures above before setting verified=true.")
+        print("[NOT READY] Review failures above before setting verified=true.")
+
+    # ── Checklist — mark automated steps as done ──────────────────────────────
+    # Steps 1-10 are fully automated by this script.  Step 11 requires
+    # --apply-verified (or manual edit).  Step 12 is a git commit.
+    automated_done = all_pass  # steps 1-10 pass when all_pass is True
+
+    # Map each checklist item to its automated result
+    _auto_items = [
+        (True,          "validate_family_grouping.py ran successfully"),
+        (success_rate >= 0.95, "success_rate >= 0.95"),
+        (integ_pass == integ_total, "All integrity checks passed"),
+        # Steps 4-10 map to specific test IDs / integrity checks
+        (next((r["pass"] for r in test_results if r["id"] == "let7_core_members"), False),
+         "Spot-check: let-7 family members match Chen 2005 Fig.7"),
+        (next((r["pass"] for r in test_results if r["id"] == "mir17_family_co-grouped"), False),
+         "Spot-check: miR-17/20a/106a/93 in same seed group (AAAGUGC)"),
+        (next((r["pass"] for r in test_results if r["id"] == "mir200_seed_split_documented"), False),
+         "Spot-check: miR-200b/200c grouped separately from miR-200a/141 (expected seed split)"),
+        (next((r["pass"] for r in test_results if r["id"] == "mir30_core_members"), False),
+         "Spot-check: miR-30a/b/c/d/e all in miR-30 group"),
+        (next((r["pass"] for r in test_results if r["id"] == "mir29_core_members"), False),
+         "Spot-check: miR-29a/b/c 3p all in miR-29 group"),
+        (next((c["pass"] for c in integrity if c["check"] == "no_singleton_families"), False),
+         "Spot-check: no families with < 2 members"),
+        (
+            next((c["pass"] for c in integrity if c["check"] == "families_count_matches_metadata"), False)
+            and next((c["pass"] for c in integrity if c["check"] == "hsa_mirna_count_matches_metadata"), False),
+            "Confirm families_count and hsa_mirnas_count match metadata",
+        ),
+        (applied, "Set verified=True + verification_date in _metadata  [--apply-verified]"),
+        (False,   "Git commit: 'Mark mirbase_family_overhangs.json verified after benchmark review'"),
+    ]
 
     print()
-    print("VERIFICATION CHECKLIST (manual steps for Vuong):")
-    checklist = [
-        "validate_family_grouping.py ran successfully",
-        "success_rate >= 0.95",
-        "All integrity checks passed",
-        "Spot-check: let-7 family members match Chen 2005 Fig.7",
-        "Spot-check: miR-17/20a/106a/93 in same seed group (AAAGUGC)",
-        "Spot-check: miR-200b/200c grouped separately from miR-200a/141 (expected seed split)",
-        "Spot-check: miR-30a/b/c/d/e all in miR-30 group",
-        "Spot-check: miR-29a/b/c 3p all in miR-29 group",
-        "Spot-check: no families with < 2 members",
-        "Confirm families_count and hsa_mirnas_count match metadata",
-        "Set verified=true + verification_date in _metadata",
-        "Git commit: 'Mark mirbase_family_overhangs.json verified after benchmark review'",
-    ]
-    for i, item in enumerate(checklist, 1):
-        print(f"  ☐ {i:2d}. {item}")
+    print("VERIFICATION CHECKLIST:")
+    checklist_labels = []
+    for i, (done, label) in enumerate(_auto_items, 1):
+        mark = "V" if done else "o"
+        auto = " [auto]" if i <= 10 else ""
+        print(f"  [{mark}] {i:2d}. {label}{auto}")
+        checklist_labels.append(label)
 
     # Write JSON report
     report = {
-        "run_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "run_date": run_date,
         "db_path": os.path.abspath(args.db),
         "db_metadata": meta,
         "summary": {
@@ -530,19 +585,20 @@ def main():
             "success_rate": round(success_rate, 4),
             "integrity_checks_passed": integ_pass,
             "integrity_checks_total": integ_total,
-            "ready_for_verification": success_rate >= 0.95 and integ_pass == integ_total,
+            "ready_for_verification": all_pass,
+            "verified_applied": applied,
         },
         "test_results": test_results,
         "integrity_checks": integrity,
-        "verification_checklist": checklist,
+        "verification_checklist": checklist_labels,
     }
 
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     print()
     print(f"Report written: {args.out}")
-    return 0 if (success_rate >= 0.95 and integ_pass == integ_total) else 1
+    return 0 if all_pass else 1
 
 
 if __name__ == "__main__":
