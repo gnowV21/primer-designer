@@ -18,6 +18,7 @@ from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
 from algorithm.template_structure import check_template_structure
+from algorithm.probe_design import design_probe
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -251,6 +252,27 @@ def design_primers():
     for r in rejection_log:
         rejection_summary[r["reason"]] = rejection_summary.get(r["reason"], 0) + 1
 
+    # ── PART A (Phase 6): TaqMan probe design ─────────────────────
+    signal_method = params.get("signalMethod", "sybr")
+    probe_result = None
+    probe_note   = None
+    if signal_method == "taqman" and top_n:
+        probe_mode  = params.get("probeMode", "custom")
+        probe_type  = params.get("probeType", "single_q")
+        probe_result = design_probe(
+            mature_seq=seq,
+            stemloop_seq=stemloop["sequence"],
+            forward_primer=top_n[0],
+            params=params,
+            mode=probe_mode,
+            probe_type=probe_type,
+        )
+    else:
+        probe_note = (
+            "No TaqMan probe designed (SYBR Green detection selected). "
+            "Set detectionMethod.signalMethod='taqman' to enable probe design."
+        )
+
     # ── PART A: Protocol advisor (Phase 5) ────────────────────────
     # Build a partial result for the advisor (edge_cases + specificity_warnings already computed)
     _partial = {
@@ -281,6 +303,8 @@ def design_primers():
 
     return jsonify({
         "top3": top_n,
+        "probe": probe_result,
+        "probe_note": probe_note,
         "stemloop_rt": stemloop,
         "universal_reverse": {
             **reverse,

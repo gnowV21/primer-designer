@@ -55,9 +55,13 @@ REFOLDING_PROTOCOL = {
 # ----------------------------------------------------------------
 
 UNIVERSAL_REVERSE = "CCAGTGCAGGGTCCGAGGTA"           # 20 nt — improved [K11]
+UNIVERSAL_REVERSE_PRIMER = UNIVERSAL_REVERSE          # alias for multiplex_check
 UNIVERSAL_REVERSE_CHEN_2005 = "GTGCAGGGTCCGAGGT"     # 16 nt original [C05]
 UNIVERSAL_REVERSE_TM_PRECALC = 60.4   # °C — pre-calculated
 UNIVERSAL_REVERSE_GC_PRECALC = 65.0   # %
+
+# [Bell17] Bell 2017 Methods Mol Biol — max panel size for multiplex stem-loop RT/preamp
+MULTIPLEX_PANEL_MAX = 20   # >20 assays per tube: cross-dimer risk increases significantly
 
 
 # ----------------------------------------------------------------
