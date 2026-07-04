@@ -1,0 +1,18 @@
+{
+  "_metadata": {
+    "run_date": null,
+    "panel_size": 0,
+    "tool_version": "algo-v3.0.0",
+    "comparison_note": "Design-characteristic comparison only — NOT experimental performance. Tools use different chemistries (HG Lab uses Chen 2005 stem-loop RT-qPCR; miRprimer/miPrimer use linear RT primers). Compares in-silico design metrics only (Tm, GC%, structure ΔG, predicted specificity, design success rate, speed). Wet-lab PCR efficiency comparison requires self-generated calibration data (see calibration/calibration_data_requirement.md).",
+    "verified": false,
+    "status": "PENDING — run_benchmark.py has not been executed. Run 'cd benchmark && python run_benchmark.py' offline to populate results. Commit benchmark_results.json after review.",
+    "limitations": [
+      "Different RT chemistries (stem-loop vs linear) make direct efficiency comparison invalid",
+      "miRprimer requires Ruby runtime (may not be installed in CI)",
+      "miPrimer results populated from published paper examples only — not freshly computed",
+      "Panel sequences from benchmark_assays.json (open-access miRNAs) — may not represent full biological diversity"
+    ]
+  },
+  "metrics": null,
+  "per_assay": []
+}

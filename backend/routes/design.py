@@ -19,6 +19,7 @@ from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
 from algorithm.template_structure import check_template_structure
 from algorithm.probe_design import design_probe
+from algorithm.normalization_advisor import advise_normalization
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -274,12 +275,20 @@ def design_primers():
         )
 
     # ── PART A: Protocol advisor (Phase 5) ────────────────────────
-    # Build a partial result for the advisor (edge_cases + specificity_warnings already computed)
     _partial = {
         "edge_cases": edge_cases,
         "specificity_warnings": {"cross_reactivity": cross_reactivity},
     }
     protocol_advice = advise_protocol(_partial, params)
+
+    # ── Normalization advisor (Phase 7 PART D) ────────────────────
+    # Advisory only — does NOT affect scoring. Triggered when sample_type is provided.
+    sample_type = params.get("sampleType") or params.get("sample_type", "")
+    try:
+        panel_size = int(params.get("panelSize") or params.get("panel_size") or 1)
+    except (ValueError, TypeError):
+        panel_size = 1
+    normalization_advice = advise_normalization(sample_type, panel_size) if sample_type else None
 
     # ── PART D: predicted_amplicon_tm + LNA hints ─────────────────
     # Amplicon Tm approximation: use SantaLucia NN on the amplicon sequence (if short enough)
@@ -313,6 +322,7 @@ def design_primers():
         "global_warnings": global_warnings,
         "edge_cases": edge_cases,
         "protocol_advice": protocol_advice,
+        "normalization_advice": normalization_advice,
         "lna_hints": lna_hints,
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,

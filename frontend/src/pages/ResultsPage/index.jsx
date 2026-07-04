@@ -12,6 +12,7 @@ import ProtocolAdvisor from './ProtocolAdvisor.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 import ProbeCard from '../../components/ProbeCard.jsx';
 import MultiplexPanel from '../../components/MultiplexPanel.jsx';
+import NormalizationAdvisor from '../../components/NormalizationAdvisor.jsx';
 
 export default function ResultsPage() {
   const location = useLocation();
@@ -38,7 +39,7 @@ export default function ResultsPage() {
   }
 
   const { results } = state;
-  const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null, probe, probe_note } = results;
+  const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null, probe, probe_note, normalization_advice = null } = results;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
@@ -95,6 +96,11 @@ export default function ResultsPage() {
 
       {/* ── Protocol Advisor (Phase 5 §A) — collapsed by default ── */}
       <ProtocolAdvisor advice={protocol_advice} />
+
+      {/* ── Normalization Advisor (Phase 7 §D) — shown when sample_type provided ── */}
+      {normalization_advice && (
+        <NormalizationAdvisor advice={normalization_advice} />
+      )}
 
       {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
       {lna_hints?.applicable && (

@@ -11,11 +11,14 @@ const BLAST_RISK_STYLE = {
 };
 
 export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }) {
-  const { status, result, error, run, reset } = useBlastCheck();
+  const { status, result, error, run, reset, dbAvailable, dbMessage } = useBlastCheck();
 
   function handleRun() {
     run(forwardPrimer, reversePrimer, mirnaId);
   }
+
+  // DB unavailable (Phase 7 PART A) — show disabled state with explanation
+  const dbNotReady = dbAvailable === false;
 
   return (
     <div className="rounded-lg border border-slate-200 overflow-hidden">
@@ -35,8 +38,26 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
       </div>
 
       <div className="px-3 py-3 space-y-3">
-        {/* ── idle ── */}
-        {status === 'idle' && (
+        {/* ── DB not ready (Phase 7 PART A) ── */}
+        {dbNotReady && status === 'idle' && (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">
+              {dbMessage || 'Off-target database is being prepared. Please try again shortly.'}
+            </p>
+            <button
+              type="button"
+              disabled
+              title="Off-target database is being prepared. Please try again shortly."
+              className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border
+                bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+            >
+              Check off-target
+            </button>
+          </div>
+        )}
+
+        {/* ── idle (DB ready or unknown) ── */}
+        {!dbNotReady && status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
               Checks primer against miRBase (all species) for miRNA family cross-reactivity using Primer-BLAST rules (Ye 2012).

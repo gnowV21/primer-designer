@@ -65,31 +65,80 @@ def check_family_crossreactivity(
         high_risk_siblings, siblings, mature_seq, mirna_name, params, overhang_len
     )
 
+    # Surface provenance from Phase 7 _metadata
+    db_meta = get_family_db_metadata()
+    provenance = db_meta.get("provenance", "unknown")
+    canonical = db_meta.get("canonical", False)
+    if canonical:
+        data_warning = (
+            f"Family grouping: miRBase canonical classification (miFam.dat, provenance={provenance}). "
+            "Re-run scripts/build_family_db.py after each miRBase release update."
+        )
+    else:
+        data_warning = (
+            "Family grouping: seed-based classification (positions 2-8, not canonical miRBase miFam.dat). "
+            "Re-run scripts/build_family_db.py with FTP access for canonical data."
+        )
+
     return {
         "family": family_name,
         "overhang_used": overhang_len,
         "target_overhang": target_overhang,
         "cross_reactivity": results,
         "recommendation": recommendation,
-        "data_warning": (
-            "Family grouping uses miRBase CURRENT seed-based classification (positions 2-8). "
-            "Re-run scripts/build_mirbase_data.py after each miRBase release update."
-        ),
+        "data_warning": data_warning,
+        "data_provenance": {
+            "provenance": provenance,
+            "canonical": canonical,
+            "verified": db_meta.get("verified", False),
+            "build_date": db_meta.get("build_date"),
+        },
     }
 
 
 # ── Internal helpers ──────────────────────────────────────────────
 
+_RAW_CACHE: dict | None = None   # raw JSON (may have _metadata + families wrapper)
+
+
+def _load_raw() -> dict:
+    """Load and cache the raw JSON file (Phase 7 format or legacy flat format)."""
+    global _RAW_CACHE
+    if _RAW_CACHE is not None:
+        return _RAW_CACHE
+    try:
+        with open(_DB_PATH, encoding="utf-8") as f:
+            _RAW_CACHE = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        _RAW_CACHE = {}
+    return _RAW_CACHE
+
+
 def _load_db() -> dict:
+    """
+    Return the families dict (backward-compat with both Phase 7 and legacy formats).
+
+    Phase 7 format: {"_metadata": {...}, "families": {...}}
+    Legacy format:  families at top-level (no "_metadata" key)
+    One-liner fix: data.get("families", data)
+    """
     global _DB_CACHE
     if _DB_CACHE is not None:
         return _DB_CACHE
-    try:
-        with open(_DB_PATH, encoding="utf-8") as f:
-            _DB_CACHE = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        _DB_CACHE = {}
+    raw = _load_raw()
+    # Phase 7 wraps families in "families" key; legacy has them flat at top-level
+    _DB_CACHE = raw.get("families", raw)
     return _DB_CACHE
+
+
+def get_family_db_metadata() -> dict:
+    """
+    Return the _metadata block from the JSON (Phase 7 only).
+    Returns {} for legacy JSON files without _metadata.
+    Used by routes/design.py to surface data_provenance in the response.
+    """
+    raw = _load_raw()
+    return raw.get("_metadata", {})
 
 
 def _find_family(db: dict, mirna_name: str, mature_seq: str) -> tuple:
@@ -307,6 +356,7 @@ def identify_family_by_accession(accession: str) -> dict | None:
 
 
 def _no_family_result(family_name, overhang_len: int) -> dict:
+    db_meta = get_family_db_metadata()
     return {
         "family": family_name,
         "overhang_used": overhang_len,
@@ -319,8 +369,14 @@ def _no_family_result(family_name, overhang_len: int) -> dict:
             "remaining_high_risk_siblings": [],
         },
         "data_warning": (
-            "This miRNA has no seed-family siblings in the current dataset "
-            "(unique seed sequence — no cross-reactivity risk identified). "
-            "If unexpected, re-run scripts/build_mirbase_data.py to refresh from miRBase."
+            "This miRNA has no family siblings in the current dataset "
+            "(may be unique or not covered by the current family DB). "
+            "Re-run scripts/build_family_db.py to refresh."
         ),
+        "data_provenance": {
+            "provenance": db_meta.get("provenance", "unknown"),
+            "canonical": db_meta.get("canonical", False),
+            "verified": db_meta.get("verified", False),
+            "build_date": db_meta.get("build_date"),
+        },
     }
