@@ -6,7 +6,7 @@
  * Retention: MAX_ENTRIES most-recent entries (FIFO eviction).
  *
  * Schema (store "design_history"):
- *   id:         "hist_<timestamp_ms>"   — keyPath
+ *   id:         "hist_<timestamp_ms>_<uuid8>"  — keyPath (unique, collision-safe)
  *   type:       "single" | "batch"
  *   created_at: ISO8601 string
  *   mirnas:     string[]                — 1 for single, N for batch
@@ -28,6 +28,7 @@ function _openDB() {
   if (_dbPromise) return _dbPromise;
   _dbPromise = new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") {
+      _dbPromise = null;
       reject(new Error("IndexedDB not available in this environment"));
       return;
     }
@@ -40,17 +41,13 @@ function _openDB() {
       }
     };
     req.onsuccess  = (e) => resolve(e.target.result);
-    req.onerror    = (e) => reject(e.target.error);
-    req.onblocked  = ()  => reject(new Error("IndexedDB open blocked — close other tabs"));
+    req.onerror    = (e) => { _dbPromise = null; reject(e.target.error); };
+    req.onblocked  = ()  => { _dbPromise = null; reject(new Error("IndexedDB open blocked — close other tabs")); };
   });
   return _dbPromise;
 }
 
 // ── Low-level helpers ──────────────────────────────────────────────────────────
-
-function _tx(db, mode) {
-  return db.transaction(STORE, mode).objectStore(STORE);
-}
 
 function _promisify(req) {
   return new Promise((resolve, reject) => {
@@ -64,13 +61,15 @@ function _promisify(req) {
 /**
  * Persist a design result entry.
  * Enforces MAX_ENTRIES by deleting oldest when limit is exceeded.
+ * All operations (put + getAllKeys + delete) run inside a single readwrite
+ * transaction — atomic, no race between concurrent tab saves.
  *
  * @param {{ type, mirnas, params, results, summary }} entry
  * @returns {Promise<string>} the assigned id
  */
-export async function saveHistory(entry) {
-  const db = await _openDB();
-  const id = `hist_${Date.now()}`;
+export function saveHistory(entry) {
+  // Append 8-char UUID fragment to guard against same-millisecond collisions.
+  const id = `hist_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
   const record = {
     id,
     type:       entry.type,
@@ -81,20 +80,29 @@ export async function saveHistory(entry) {
     summary:    entry.summary ?? {},
   };
 
-  const store = _tx(db, "readwrite");
-  await _promisify(store.put(record));
+  return _openDB().then(db => new Promise((resolve, reject) => {
+    const tx    = db.transaction(STORE, "readwrite");
+    const store = tx.objectStore(STORE);
 
-  // FIFO eviction: count all entries, delete oldest if > MAX_ENTRIES
-  const allKeys = await _promisify(_tx(db, "readonly").getAllKeys());
-  if (allKeys.length > MAX_ENTRIES) {
-    // getAllKeys returns keys in insertion order for keyPath = id (timestamp-based)
-    const sorted = [...allKeys].sort();
-    const toDelete = sorted.slice(0, allKeys.length - MAX_ENTRIES);
-    const delStore = _tx(db, "readwrite");
-    await Promise.all(toDelete.map(k => _promisify(delStore.delete(k))));
-  }
+    const putReq = store.put(record);
+    putReq.onsuccess = () => {
+      const keysReq = store.getAllKeys();
+      keysReq.onsuccess = (e) => {
+        const allKeys = e.target.result;
+        if (allKeys.length > MAX_ENTRIES) {
+          const sorted   = [...allKeys].sort();
+          const toDelete = sorted.slice(0, allKeys.length - MAX_ENTRIES);
+          for (const k of toDelete) store.delete(k);
+        }
+      };
+      keysReq.onerror = (e) => reject(e.target.error);
+    };
+    putReq.onerror = (e) => reject(e.target.error);
 
-  return id;
+    tx.oncomplete = () => resolve(id);
+    tx.onerror    = (e) => reject(e.target.error);
+    tx.onabort    = ()  => reject(new Error("Transaction aborted"));
+  }));
 }
 
 /**
@@ -105,7 +113,7 @@ export async function saveHistory(entry) {
  */
 export async function listHistory() {
   const db      = await _openDB();
-  const records = await _promisify(_tx(db, "readonly").getAll());
+  const records = await _promisify(db.transaction(STORE, "readonly").objectStore(STORE).getAll());
   return records
     .map(({ id, type, created_at, mirnas, summary }) =>
       ({ id, type, created_at, mirnas, summary }))
@@ -120,7 +128,7 @@ export async function listHistory() {
  */
 export async function loadHistory(id) {
   const db = await _openDB();
-  const record = await _promisify(_tx(db, "readonly").get(id));
+  const record = await _promisify(db.transaction(STORE, "readonly").objectStore(STORE).get(id));
   return record ?? null;
 }
 
@@ -131,7 +139,7 @@ export async function loadHistory(id) {
  */
 export async function deleteHistory(id) {
   const db = await _openDB();
-  await _promisify(_tx(db, "readwrite").delete(id));
+  await _promisify(db.transaction(STORE, "readwrite").objectStore(STORE).delete(id));
 }
 
 /**
@@ -139,7 +147,7 @@ export async function deleteHistory(id) {
  */
 export async function clearHistory() {
   const db = await _openDB();
-  await _promisify(_tx(db, "readwrite").clear());
+  await _promisify(db.transaction(STORE, "readwrite").objectStore(STORE).clear());
 }
 
 /**
@@ -149,5 +157,5 @@ export async function clearHistory() {
  */
 export async function countHistory() {
   const db = await _openDB();
-  return _promisify(_tx(db, "readonly").count());
+  return _promisify(db.transaction(STORE, "readonly").objectStore(STORE).count());
 }

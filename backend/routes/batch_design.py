@@ -99,7 +99,9 @@ def _resolve_sequence(mirna_id: str) -> str | None:
                         "species": "", "length": len(seq),
                     })
                     return seq
-        _mirbase_breaker.record_failure()
+        elif r.status_code >= 500:
+            # Only trip the circuit breaker on server-side errors, not 404 (user typo).
+            _mirbase_breaker.record_failure()
         return None
     except Exception:
         _mirbase_breaker.record_failure()

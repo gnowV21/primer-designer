@@ -233,7 +233,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         rejection_summary[r["reason"]] = rejection_summary.get(r["reason"], 0) + 1
 
     # TaqMan probe
-    signal_method = params.get("signalMethod", "sybr")
+    signal_method = params.get("signalMethod", "taqman")
     probe_result = None
     probe_note   = None
     if signal_method == "taqman" and top_n:
