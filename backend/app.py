@@ -14,6 +14,7 @@ from routes.mirbase import mirbase_bp
 from routes.design import design_bp
 from routes.blast_check import blast_check_bp
 from routes.export import export_bp
+from routes.multiplex_check import multiplex_check_bp
 from db import local_db
 
 app = Flask(__name__)
@@ -36,13 +37,15 @@ limiter = Limiter(
     storage_uri="memory://",    # in-process storage (reset on restart)
 )
 
-app.register_blueprint(mirbase_bp,    url_prefix="/api")
-app.register_blueprint(design_bp,     url_prefix="/api")
-app.register_blueprint(blast_check_bp, url_prefix="/api")
-app.register_blueprint(export_bp,     url_prefix="/api")
+app.register_blueprint(mirbase_bp,       url_prefix="/api")
+app.register_blueprint(design_bp,        url_prefix="/api")
+app.register_blueprint(blast_check_bp,   url_prefix="/api")
+app.register_blueprint(export_bp,        url_prefix="/api")
+app.register_blueprint(multiplex_check_bp, url_prefix="/api")
 
-# Apply rate limit to blast-check endpoint: 10 req/min/IP [spec §9.3]
+# Apply rate limit to blast-check and multiplex-check: 10 req/min/IP [spec §9.3]
 limiter.limit("10 per minute")(blast_check_bp)
+limiter.limit("10 per minute")(multiplex_check_bp)
 
 
 @app.route("/api/health")

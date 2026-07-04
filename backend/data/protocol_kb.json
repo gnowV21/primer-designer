@@ -1,6 +1,6 @@
 {
-  "kb_version": "1.0",
-  "updated": "2026-07-03",
+  "kb_version": "1.1",
+  "updated": "2026-07-04",
   "description": "Protocol/Evidence Advisor knowledge base — 6 evidence-backed rules (P1-P6). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
   "rules": [
     {
@@ -118,6 +118,54 @@
         { "tag": "Kunwar23", "doi": "10.3390/diagnostics13132170", "pmid": "37443567", "note": "analytical validation of CogniMIR miRNA panel; LNA-qPCR clinically friendlier" }
       ],
       "disclaimer": "For research use only. NOT validated for clinical in-vitro diagnostic (IVD) use. Requires independent clinical validation."
+    },
+    {
+      "id": "P7",
+      "title": "Multi-target normalization (reference gene selection)",
+      "when": {
+        "multiplex": true,
+        "target_count_min": 3
+      },
+      "recommendation": "Use geNorm or global-mean normalization when quantifying ≥3 miRNAs simultaneously. Single-reference normalization (e.g., U6 alone) introduces systematic bias across samples with variable RNA integrity.",
+      "match_weights": { "multiplex": 0.5, "target_count": 0.5 },
+      "pros": [
+        "geNorm identifies the most stable reference genes from a pool [Hellemans14]",
+        "Global-mean normalization requires no prior gene selection — suitable for panels >10 targets",
+        "Reduces technical bias from pipetting and RT efficiency variation"
+      ],
+      "cons": [
+        "geNorm requires ≥3 reference candidates — not feasible for small panels",
+        "Global-mean assumes the majority of miRNAs are unchanged — may not hold in disease states",
+        "Adds computational analysis step (e.g., NormFinder, geNorm software)"
+      ],
+      "sources": [
+        { "tag": "Hellemans14", "doi": "10.1016/j.ymeth.2013.11.006", "pmid": "24291199", "note": "qBase+ / geNorm algorithm: M-value stability for reference gene selection in qPCR panels" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+    },
+    {
+      "id": "P8",
+      "title": "Circulating miRNA (plasma/serum) — spike-in normalization",
+      "when": {
+        "sample_types": ["plasma", "serum", "cfRNA"],
+        "spike_in": false
+      },
+      "recommendation": "For circulating miRNA quantification in plasma or serum, add exogenous spike-in controls (e.g., cel-miR-39-3p) before RNA extraction. This corrects for variable extraction efficiency and RT inhibitors inherent to biofluids.",
+      "match_weights": { "sample_type_biofluid": 0.7, "no_spike_in": 0.3 },
+      "pros": [
+        "Corrects extraction efficiency variation across samples [Tan15]",
+        "Identifies samples with RT inhibition (low spike-in recovery)",
+        "cel-miR-39-3p is absent in human samples — ideal exogenous control"
+      ],
+      "cons": [
+        "Requires consistent spike-in volume and concentration across all samples",
+        "Does not correct for differences in total RNA input (use synthetic miRNA ladder for that)",
+        "Spike-in must be added before lysis/extraction, not after"
+      ],
+      "sources": [
+        { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization strategy for serum/plasma miRNA qPCR; cel-miR-39 as exogenous control" }
+      ],
+      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
     }
   ]
 }
