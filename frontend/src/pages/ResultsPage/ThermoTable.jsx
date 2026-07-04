@@ -3,6 +3,7 @@
 // Tab B: per-primer detail for a selected set.
 
 import { useState } from 'react';
+import Tooltip from '../../components/ui/Tooltip.jsx';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -280,6 +281,19 @@ function TabB({ top3, stemloopRt, universalReverse }) {
               ? `${set.binding_start_1based}–${set.binding_end_1based}`
               : undefined
           } />
+          {/* [RESEARCH_QUESTIONS_UX A1] Show raw bound fraction % alongside quality score */}
+          <PropRow
+            label="Bound frac. (binding, 42°C)"
+            value={set.scores?.bound_fraction_binding_pct !== undefined
+              ? `${fmt(set.scores.bound_fraction_binding_pct)}%`
+              : undefined}
+          />
+          <PropRow
+            label="Bound frac. (full, 55°C)"
+            value={set.scores?.bound_fraction_full_pct !== undefined
+              ? `${fmt(set.scores.bound_fraction_full_pct)}%`
+              : undefined}
+          />
           <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
         </div>
       </div>
@@ -290,7 +304,9 @@ function TabB({ top3, stemloopRt, universalReverse }) {
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">RT Stem-loop Primer (shared)</p>
           <SeqBlock label="Sequence" sequence={stemloopRt.sequence} tag={`${stemloopRt.length} nt`} />
           <div className="grid grid-cols-2 gap-x-6 px-1">
-            <PropRow label="Tm" value={stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : undefined} />
+            {/* [RESEARCH_QUESTIONS_UX A2] Full-primer Tm: DNA:DNA NN (primer3, indicative).
+                Overhang hybrid Tm: DNA:RNA NN (Sugimoto 1995), if USE_HYBRID_TM enabled. */}
+            <RtTmRow stemloopRt={stemloopRt} />
             <PropRow label="GC%" value={stemloopRt.gc_percent !== undefined ? fmt(stemloopRt.gc_percent) + '%' : undefined} />
             <PropRow label="MFE" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) + ' kcal/mol' : undefined} />
             <PropRow label="MFE method" value={stemloopRt.mfe_method} />
@@ -312,6 +328,60 @@ function TabB({ top3, stemloopRt, universalReverse }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── RT primer Tm rows (Tab B) ──────────────────────────────────────
+// [RESEARCH_QUESTIONS_UX A2] Shows both full-primer Tm (DNA:DNA NN, indicative)
+// and overhang hybrid Tm (DNA:RNA NN, Sugimoto 1995) when USE_HYBRID_TM is enabled.
+
+function RtTmRow({ stemloopRt }) {
+  const hasHybrid = stemloopRt?.tm_hybrid_c != null;
+  const caveats   = stemloopRt?.tm_hybrid?.caveats ?? [];
+
+  const fullTmTooltip =
+    'Full-primer Tm computed by primer3 using DNA:DNA nearest-neighbor (SantaLucia 1998). ' +
+    'The RT primer is DNA; this Tm describes the full 50-nt oligo as a standalone molecule. ' +
+    'NOT the hybridization Tm with the miRNA target. Not used in scoring.';
+
+  const hybridTooltip = hasHybrid
+    ? 'Overhang hybrid Tm: Tm of the 3\' overhang (DNA) annealing to the miRNA (RNA). ' +
+      'Computed via Sugimoto 1995 DNA:RNA nearest-neighbor (Biochemistry 34:11211). ' +
+      'Informational only — NOT scored. ' +
+      (caveats.length > 0 ? 'Caveats: ' + caveats.join('; ') + '.' : '')
+    : '';
+
+  return (
+    <>
+      <div className="flex justify-between text-xs py-0.5">
+        <span className="text-slate-500 flex items-center gap-1">
+          Tm full (DNA:DNA NN)
+          <Tooltip text={fullTmTooltip} />
+        </span>
+        <span className="text-slate-700 tabular-nums font-medium">
+          {stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : '—'}
+          <span className="text-amber-600 ml-1 text-[10px] font-normal">indicative</span>
+        </span>
+      </div>
+      {hasHybrid && (
+        <div className="flex justify-between text-xs py-0.5">
+          <span className="text-slate-500 flex items-center gap-1">
+            Overhang Tm (DNA:RNA, Sugimoto 1995)
+            <Tooltip text={hybridTooltip} />
+          </span>
+          <span className="text-slate-700 tabular-nums font-medium">
+            {stemloopRt.tm_hybrid_c}°C
+            <span className="text-blue-600 ml-1 text-[10px] font-normal">modeled</span>
+          </span>
+        </div>
+      )}
+      {!hasHybrid && (
+        <div className="flex justify-between text-xs py-0.5">
+          <span className="text-slate-500">Overhang Tm (DNA:RNA)</span>
+          <span className="text-amber-600 tabular-nums text-[10px]">approx. — see note</span>
+        </div>
+      )}
+    </>
   );
 }
 

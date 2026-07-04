@@ -4,6 +4,7 @@
 
 import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
+import Tooltip from '../../../components/ui/Tooltip.jsx';
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -63,12 +64,24 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
             {stemloop_rt.sequence}
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            <span>Tm <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong></span>
+            {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
+            <span className="flex items-center gap-1">
+              Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
+              <RtTmBadge stemloopRt={stemloop_rt} />
+            </span>
+            {stemloop_rt.tm_hybrid_c != null && (
+              <span>
+                Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
+              </span>
+            )}
             <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
             <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
             <span className="text-slate-400">({stemloop_rt.mfe_method})</span>
             <span>{stemloop_rt.length} nt</span>
           </div>
+          {stemloop_rt.tm_note && (
+            <p className="text-[11px] text-slate-400 italic">{stemloop_rt.tm_note}</p>
+          )}
           {stemloop_rt.rt_primer_conc_note && (
             <p className="text-xs text-slate-500 border-t border-slate-200 pt-2 mt-1">
               {stemloop_rt.rt_primer_conc_note}
@@ -120,6 +133,36 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         </p>
       )}
     </div>
+  );
+}
+
+// ── RT primer Tm chemistry badge + tooltip ──────────────────────────
+// [RESEARCH_QUESTIONS_UX A2] RT primer anneals to miRNA (RNA) → DNA:RNA hybrid.
+// Full-primer Tm uses primer3 DNA:DNA NN (indicative); overhang hybrid Tm uses Sugimoto 1995.
+
+function RtTmBadge({ stemloopRt }) {
+  const hasHybrid = stemloopRt?.tm_hybrid_c != null;
+  const caveats   = stemloopRt?.tm_hybrid?.caveats ?? [];
+
+  const tooltipText = hasHybrid
+    ? `RT overhang anneals to miRNA (RNA) — DNA:RNA hybrid. `
+      + `Overhang Tm modeled via Sugimoto 1995 nearest-neighbor (Biochemistry 34:11211). `
+      + `Full-primer Tm uses primer3 DNA:DNA NN (SantaLucia 1998) — indicative only, not scored. `
+      + (caveats.length > 0 ? `Caveats: ${caveats.join('; ')}.` : '')
+    : `RT primer anneals to miRNA (RNA) → DNA:RNA hybrid. `
+      + `Tm shown is from primer3 (DNA:DNA nearest-neighbor, SantaLucia 1998) — approximate; `
+      + `true DNA:RNA hybrid Tm may differ by 3–8°C. Not used in scoring.`;
+
+  const label = hasHybrid ? 'Tm: modeled (DNA:RNA, Sugimoto 1995)' : 'Tm: approximate (DNA:RNA)';
+  const color = hasHybrid
+    ? 'bg-blue-50 text-blue-700 border-blue-200'
+    : 'bg-amber-50 text-amber-700 border-amber-200';
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${color}`}>
+      {label}
+      <Tooltip text={tooltipText} />
+    </span>
   );
 }
 

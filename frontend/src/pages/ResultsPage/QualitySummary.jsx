@@ -150,6 +150,13 @@ export default function QualitySummary({ results }) {
         </div>
       )}
 
+      {/* [RESEARCH_QUESTIONS_UX C1] predicted design quality — not efficiency */}
+      {metadata?.output_note && (
+        <p className="text-[11px] text-slate-400 italic border-t border-slate-100 pt-2">
+          {metadata.output_note}
+        </p>
+      )}
+
       {/* Off-target async section */}
       <div className="border-t border-slate-100 pt-3">
         {blastState === 'idle' && (

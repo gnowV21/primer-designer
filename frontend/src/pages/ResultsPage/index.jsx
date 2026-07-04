@@ -10,6 +10,8 @@ import ThermoTable from './ThermoTable.jsx';
 import ExportBar from './ExportBar.jsx';
 import ProtocolAdvisor from './ProtocolAdvisor.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
+import ProbeCard from '../../components/ProbeCard.jsx';
+import MultiplexPanel from '../../components/MultiplexPanel.jsx';
 
 export default function ResultsPage() {
   const location = useLocation();
@@ -36,7 +38,7 @@ export default function ResultsPage() {
   }
 
   const { results } = state;
-  const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null } = results;
+  const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null, probe, probe_note } = results;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
@@ -73,6 +75,16 @@ export default function ResultsPage() {
       {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
       <ResultsSection results={results} error={null} hideHeader />
 
+      {/* ── TaqMan probe (Phase 6 §A) — only shown when signalMethod=taqman or SYBR note ── */}
+      {(probe || probe_note) && (
+        <div>
+          <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+            TaqMan Probe
+          </h2>
+          <ProbeCard probe={probe} probeNote={probe_note} />
+        </div>
+      )}
+
       {/* ── Thermodynamics table (tabs) ── */}
       <div>
         <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
@@ -103,6 +115,14 @@ export default function ResultsPage() {
 
       {/* ── Export bar ── */}
       <ExportBar results={results} />
+
+      {/* ── Multiplex panel check (Phase 6 §B) — standalone tool, always available ── */}
+      <div>
+        <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+          Multiplex Panel Check
+        </h2>
+        <MultiplexPanel />
+      </div>
     </div>
   );
 }

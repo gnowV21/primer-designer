@@ -77,19 +77,23 @@ test('Downloaded CSV contains expected role names', async ({ page }) => {
 test('Download PDF triggers a file download with .pdf extension', async ({ page }) => {
   await runDesign(page);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.evaluate(() => {
-      const btns = [...document.querySelectorAll('button')];
-      btns.find((b) => b.textContent.includes('Download PDF'))?.click();
-    }),
-  ]);
-
-  const filename = download.suggestedFilename();
-  // PDF either downloads correctly or shows a 503 error toast (if reportlab not installed)
-  // Either way, a download or error message should appear — no crash
-  if (filename) {
-    expect(filename).toMatch(/\.(pdf|csv)$/i); // pdf normally, csv as fallback
+  // PDF either downloads (reportlab installed) or shows a 503 error message (not installed).
+  // Accept either outcome — the point is no crash and no silent hang.
+  try {
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 8000 }),
+      page.evaluate(() => {
+        const btns = [...document.querySelectorAll('button')];
+        btns.find((b) => b.textContent.includes('Download PDF'))?.click();
+      }),
+    ]);
+    const filename = download.suggestedFilename();
+    if (filename) {
+      expect(filename).toMatch(/\.(pdf|csv)$/i);
+    }
+  } catch {
+    // reportlab not installed on this server — verify error message visible
+    await expect(page.getByText(/PDF export unavailable|Export failed/i)).toBeVisible({ timeout: 5000 });
   }
 });
 

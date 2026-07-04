@@ -334,6 +334,14 @@ def design_primers():
             "elapsed_seconds": elapsed,
             "algorithm_version": "3.0.0",
             "scoring_version": "V4 (15 criteria)",
+            # [RESEARCH_QUESTIONS_UX C1] score = design quality indicator only;
+            # PCR amplification efficiency requires wet-lab calibration data.
+            "output_label": "predicted design quality",
+            "output_note": (
+                "Score reflects in-silico design quality (Tm, GC%, structure, specificity). "
+                "It does NOT predict PCR amplification efficiency. "
+                "Wet-lab calibration is required (see calibration/calibration_data_requirement.md)."
+            ),
             "sources": [
                 "Chen et al. 2005", "Kramer 2011 Unit 15.10",
                 "Varkonyi-Gasic et al. 2007", "Primer3Plus",

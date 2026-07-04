@@ -24,6 +24,8 @@ _KB_CACHE: dict | None = None
 
 _LOW_INPUT_SAMPLE_TYPES = {"ffpe", "plasma", "serum", "cfrna", "low_input", "exosome", "urine"}
 _CLINICAL_CONTEXTS = {"clinical", "diagnostic", "cap_clia", "regulatory", "ivd"}
+# [RESEARCH_QUESTIONS_UX B1/B2] sample types that trigger normalization/biofluid advisors
+_BIOFLUID_SAMPLE_TYPES = {"plasma", "serum", "cfrna", "urine", "saliva", "csf"}
 
 
 def _load_kb() -> dict:
@@ -118,6 +120,24 @@ def advise_protocol(design_result: dict, form_params: dict) -> list[dict]:
         elif rid == "P6":
             if application in _CLINICAL_CONTEXTS:
                 score += weights.get("clinical_context", 0)
+
+        # [RESEARCH_QUESTIONS_UX B1] normalization advisor — always relevant at medium
+        # priority; elevated to high when panel ≥3 targets or sample_type is biological
+        elif rid == "P7":
+            # Normalization matters for every miRNA qPCR experiment
+            score += weights.get("always", 0)
+            if multiplex or sample_type:
+                score += weights.get("multi_target", 0)
+            if sample_type in _LOW_INPUT_SAMPLE_TYPES:
+                score += weights.get("difficult_sample", 0)
+
+        # [RESEARCH_QUESTIONS_UX B2] biofluid preanalytical advisor
+        elif rid == "P8":
+            if sample_type in _BIOFLUID_SAMPLE_TYPES:
+                score += weights.get("biofluid_sample", 0)
+            elif sample_type in _LOW_INPUT_SAMPLE_TYPES:
+                # FFPE, low_input, exosome — partial overlap
+                score += weights.get("low_input_sample", 0)
 
         if score <= 0:
             continue  # rule not triggered

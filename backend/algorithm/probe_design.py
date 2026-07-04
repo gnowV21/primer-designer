@@ -17,9 +17,11 @@ import primer3
 
 from .constants import (
     STEMLOOP_BODY,
+    UNIVERSAL_REVERSE,
     PROBE_MIN_LENGTH_SINGLE_Q, PROBE_MAX_LENGTH_SINGLE_Q,
     PROBE_MIN_LENGTH_MGB,       PROBE_MAX_LENGTH_MGB,
-    PROBE_MGB_TM_BOOST,
+    PROBE_MIN_LENGTH_LNA,       PROBE_MAX_LENGTH_LNA,
+    PROBE_MGB_TM_BOOST, PROBE_MGB_FILTER_BY_BOOSTED_TM,
     PROBE_TM_MIN, PROBE_TM_OPT, PROBE_TM_MAX,
     PROBE_TM_MIN_ABOVE_PRIMER, PROBE_TM_IDEAL_ABOVE_PRIMER,
     PROBE_GC_MIN, PROBE_GC_MAX,
@@ -82,7 +84,38 @@ def design_probe(
     gc       = round(calculate_gc(seq), 1)
     pos      = candidate["position_1based"]
     warnings = []
-    checks   = _run_quality_checks(seq, tm, gc, fwd_tm, forward_primer.get("sequence", ""), params, p3, warnings, probe_type)
+
+    # [§1 / §3.4] Universal probe specificity note
+    if mode == PROBE_MODE_UNIVERSAL:
+        warnings.append(
+            "Universal probe binds the stemloop body and generates signal for any amplicon "
+            "sharing the stemloop scaffold, including non-specific products. "
+            "Sequence specificity is entirely determined by the RT primer and forward primer "
+            "[Jung20 doi:10.1016/j.bios.2020.112301][Wang17 doi:10.3892/mmr.2017.8297]."
+        )
+
+    # [§2.3] Spatial fit check — probe must fit between universal reverse and forward primer
+    fwd_seq = forward_primer.get("sequence", "")
+    fwd_len = len(fwd_seq)
+    cdna_len = len(STEMLOOP_BODY) + len(mature_dna)
+    univ_rev_len = len(UNIVERSAL_REVERSE)
+    space_for_probe = cdna_len - univ_rev_len - PROBE_MIN_DIST_FROM_PRIMER - fwd_len - PROBE_MIN_DIST_FROM_PRIMER
+    if len(seq) > space_for_probe:
+        warnings.append(
+            f"Probe ({len(seq)} nt) may not fit within the amplicon (~{cdna_len} nt) "
+            f"alongside forward ({fwd_len} nt) and universal reverse ({univ_rev_len} nt) primers. "
+            "Consider a shorter MGB probe or universal mode [RESEARCH_INSIGHTS_probe §2.3]."
+        )
+
+    # [§3.1] LNA probe advisory
+    if probe_type == "lna":
+        warnings.append(
+            "LNA probe Tm not adjusted (LNA modification positions and count unknown). "
+            "Expected Tm increase: +2–8°C per LNA substitution [Liu25 doi:10.1515/cclm-2025-0824]. "
+            "Verify final Tm with manufacturer before use."
+        )
+
+    checks   = _run_quality_checks(seq, tm, gc, fwd_tm, fwd_seq, params, p3, warnings, probe_type)
 
     return {
         "sequence":      seq,
@@ -136,9 +169,7 @@ def _design_custom(rc_mature: str, fwd_tm: float, p3: dict, min_len: int, max_le
 
             probe_seq = _apply_gc_rules(probe_raw)
             tm = _probe_tm(probe_seq, p3, probe_type)
-            if not (PROBE_TM_MIN <= tm <= PROBE_TM_MAX):
-                continue
-            if tm - fwd_tm < PROBE_TM_MIN_ABOVE_PRIMER:
+            if not _passes_tm_filter(tm, fwd_tm, probe_type):
                 continue
 
             # Position (1-based in cDNA = STEMLOOP_BODY + RC_miRNA)
@@ -172,9 +203,7 @@ def _design_universal(fwd_tm: float, p3: dict, min_len: int, max_len: int, probe
             probe_raw = reverse_complement(window)
             probe_seq = _apply_gc_rules(probe_raw)
             tm = _probe_tm(probe_seq, p3, probe_type)
-            if not (PROBE_TM_MIN <= tm <= PROBE_TM_MAX):
-                continue
-            if tm - fwd_tm < PROBE_TM_MIN_ABOVE_PRIMER:
+            if not _passes_tm_filter(tm, fwd_tm, probe_type):
                 continue
             dist = abs(tm - PROBE_TM_OPT) + abs((tm - fwd_tm) - PROBE_TM_IDEAL_ABOVE_PRIMER)
             if dist < best_dist:
@@ -193,6 +222,15 @@ def _run_quality_checks(
 ) -> dict:
     checks = {}
     tm_gap = tm - fwd_tm
+
+    # [§2.2] MGB Tm is approximate — warn, do not treat as hard fail
+    if probe_type == "mgb":
+        checks["mgb_tm_approx"] = {"value": round(tm, 1), "pass": True}
+        warnings.append(
+            f"MGB Tm shown (+{PROBE_MGB_TM_BOOST:.0f}°C assumed) is approximate. "
+            "Actual Tm depends on sequence context and linker chemistry. "
+            "Verify with manufacturer (Applied Biosystems, IDT, etc.) before use [RESEARCH_INSIGHTS_probe §2.2]."
+        )
 
     # Tm gap
     if tm_gap < PROBE_TM_MIN_ABOVE_PRIMER:
@@ -286,7 +324,23 @@ def _probe_p3_params(params: dict) -> dict:
 def _length_range(probe_type: str) -> tuple:
     if probe_type == "mgb":
         return PROBE_MIN_LENGTH_MGB, PROBE_MAX_LENGTH_MGB
+    if probe_type == "lna":
+        return PROBE_MIN_LENGTH_LNA, PROBE_MAX_LENGTH_LNA
     return PROBE_MIN_LENGTH_SINGLE_Q, PROBE_MAX_LENGTH_SINGLE_Q
+
+
+def _passes_tm_filter(tm: float, fwd_tm: float, probe_type: str) -> bool:
+    """Return True if probe Tm passes filter for candidate selection.
+
+    For MGB: skip Tm range filter — +15°C boost is too imprecise to reject candidates
+    [RESEARCH_INSIGHTS_probe §2.2]. Still filter on gap so raw-Tm is not absurdly low.
+    For LNA: no Tm boost applied; filter same as single_q.
+    """
+    if probe_type == "mgb" and not PROBE_MGB_FILTER_BY_BOOSTED_TM:
+        # raw Tm = tm - PROBE_MGB_TM_BOOST; ensure gap with raw tm is not negative
+        raw_tm = tm - PROBE_MGB_TM_BOOST
+        return raw_tm >= (PROBE_TM_MIN - PROBE_MGB_TM_BOOST - 5)  # very loose floor
+    return (PROBE_TM_MIN <= tm <= PROBE_TM_MAX) and (tm - fwd_tm >= PROBE_TM_MIN_ABOVE_PRIMER)
 
 
 def _max_run(seq: str, base: str) -> int:

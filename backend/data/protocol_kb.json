@@ -126,46 +126,50 @@
         "multiplex": true,
         "target_count_min": 3
       },
-      "recommendation": "Use geNorm or global-mean normalization when quantifying ≥3 miRNAs simultaneously. Single-reference normalization (e.g., U6 alone) introduces systematic bias across samples with variable RNA integrity.",
-      "match_weights": { "multiplex": 0.5, "target_count": 0.5 },
+      "recommendation": "Use geNorm or NormFinder to select ≥2 stable reference miRNAs rather than a single U6 housekeeping gene. For panels ≥10 targets, global-mean normalization avoids needing candidate reference genes. Reference stability is sample-type dependent (Fujimoto 2018, Liang 2018).",
+      "match_weights": { "always": 0.3, "multi_target": 0.4, "difficult_sample": 0.3 },
       "pros": [
-        "geNorm identifies the most stable reference genes from a pool [Hellemans14]",
-        "Global-mean normalization requires no prior gene selection — suitable for panels >10 targets",
-        "Reduces technical bias from pipetting and RT efficiency variation"
+        "geNorm/NormFinder identifies stable references from a panel, reducing systematic bias [Hellemans14]",
+        "Global-mean normalization requires no prior gene selection — suitable for panels >10 targets [Hacimoto24]",
+        "Reference choice depends on sample type: tissue ≠ plasma ≠ FFPE (Fujimoto 2018)"
       ],
       "cons": [
-        "geNorm requires ≥3 reference candidates — not feasible for small panels",
-        "Global-mean assumes the majority of miRNAs are unchanged — may not hold in disease states",
-        "Adds computational analysis step (e.g., NormFinder, geNorm software)"
+        "geNorm requires ≥3 reference candidates — not feasible for very small panels",
+        "Global-mean assumes majority of miRNAs are unchanged — may not hold in disease states",
+        "Reference miRNA stability should be validated in your sample cohort before use"
       ],
       "sources": [
-        { "tag": "Hellemans14", "doi": "10.1016/j.ymeth.2013.11.006", "pmid": "24291199", "note": "qBase+ / geNorm algorithm: M-value stability for reference gene selection in qPCR panels" }
+        { "tag": "Hellemans14", "doi": "10.1007/978-1-4939-0733-5_3", "pmid": "24567180", "note": "geNorm normalization strategy for miRNA qPCR" },
+        { "tag": "Hacimoto24", "doi": "10.1371/journal.pone.0306657", "pmid": "39141588", "note": "Selecting 3 most stable miRNAs by multiple algorithms for normalization" },
+        { "tag": "Fujimoto18", "doi": "10.1016/j.fsigen.2018.08.010", "pmid": "30149384", "note": "Reference miRNA selection depends on sample type" }
       ],
-      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+      "disclaimer": "For research use only. Validate reference stability in your sample type before quantification."
     },
     {
       "id": "P8",
-      "title": "Circulating miRNA (plasma/serum) — spike-in normalization",
+      "title": "Circulating miRNA (plasma/serum) — preanalytical QC + spike-in",
       "when": {
-        "sample_types": ["plasma", "serum", "cfRNA"],
+        "sample_types": ["plasma", "serum", "cfRNA", "urine", "saliva"],
         "spike_in": false
       },
-      "recommendation": "For circulating miRNA quantification in plasma or serum, add exogenous spike-in controls (e.g., cel-miR-39-3p) before RNA extraction. This corrects for variable extraction efficiency and RT inhibitors inherent to biofluids.",
-      "match_weights": { "sample_type_biofluid": 0.7, "no_spike_in": 0.3 },
+      "recommendation": "For circulating miRNA in biofluids: (1) add cel-miR-39-3p spike-in before RNA extraction to correct for variable extraction efficiency; (2) assess hemolysis (miR-16/miR-451a ratio, McDonald 2011); (3) use EDTA tubes and process within 2 h to minimize hemolysis-driven miRNA contamination. Hemolysis can introduce erythrocyte miRNAs (miR-92a, miR-451a) at >10-fold, masking true biofluid expression.",
+      "match_weights": { "biofluid_sample": 0.8, "low_input_sample": 0.4 },
       "pros": [
-        "Corrects extraction efficiency variation across samples [Tan15]",
-        "Identifies samples with RT inhibition (low spike-in recovery)",
-        "cel-miR-39-3p is absent in human samples — ideal exogenous control"
+        "cel-miR-39-3p spike-in corrects extraction efficiency variation and RT inhibition [Tan15]",
+        "Hemolysis check (miR-16/451a ratio) protects against erythrocyte miRNA contamination [McDonald11]",
+        "EDTA tubes reduce hemolysis vs. serum — use when study design permits"
       ],
       "cons": [
-        "Requires consistent spike-in volume and concentration across all samples",
-        "Does not correct for differences in total RNA input (use synthetic miRNA ladder for that)",
-        "Spike-in must be added before lysis/extraction, not after"
+        "Spike-in must be added before lysis/extraction, not after — incorrect timing invalidates normalization",
+        "Does not correct for differences in total RNA input — use synthetic miRNA ladder for input normalization",
+        "Hemolysis assessment adds one extra qPCR reaction per sample"
       ],
       "sources": [
-        { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization strategy for serum/plasma miRNA qPCR; cel-miR-39 as exogenous control" }
+        { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization for serum/plasma miRNA; cel-miR-39 as exogenous control" },
+        { "tag": "McDonald11", "doi": "10.1373/clinchem.2010.157198", "pmid": "21439851", "note": "Hemolysis alters plasma miRNA profile — miR-451a/miR-16 ratio as hemolysis marker" },
+        { "tag": "Zhelankin22", "doi": "10.3390/ijms231810340", "pmid": "36142249", "note": "Anticoagulant tube type (EDTA vs serum) affects circulating miRNA yield and profile" }
       ],
-      "disclaimer": "For research use only. Validate experimentally before use in any diagnostic context."
+      "disclaimer": "For research use only. Validate preanalytical workflow for your sample type before quantification."
     }
   ]
 }

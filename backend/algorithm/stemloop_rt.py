@@ -10,7 +10,10 @@ from .constants import (
     MFE_STEMLOOP_MIN_RNA, MFE_STEMLOOP_MAX_RNA,
     GC_STEMLOOP_MIN, GC_STEMLOOP_MAX,
     REFOLDING_PROTOCOL,
+    USE_HYBRID_TM,
+    P3_RT_MV_CONC,
 )
+from .hybrid_tm import predict_hybrid_tm
 from .sequence_utils import rna_to_dna, reverse_complement, calculate_gc
 from .thermodynamics import calculate_tm_nn, calculate_end_stability
 
@@ -99,6 +102,50 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
 
     include_refold = params.get("enableRefoldingProtocol", True)
 
+    # [RESEARCH_QUESTIONS_UX A4] 3' isomiR advisory: RT overhang binds the 3' end of
+    # mature miRNA. Non-templated nucleotide additions (3' isomiRs) at the 3' terminus
+    # can impair RT primer annealing, reducing cDNA yield for isoforms with terminal
+    # additions/truncations. No database coverage for 3' isomiRs yet — general advisory.
+    warnings.append({
+        "field": "three_prime_isomir",
+        "severity": "info",
+        "message": (
+            f"RT overhang binds the 3' end of the miRNA ({binding_len} nt). "
+            "Non-templated 3' additions (3' isomiRs) can reduce RT efficiency for "
+            "terminal-addition isoforms. Verify with melting curve analysis if "
+            "expression levels appear unexpectedly low."
+        ),
+    })
+
+    # [RESEARCH_QUESTIONS_UX A2] Compute DNA:RNA hybrid Tm for the RT overhang.
+    # overhang_rc = DNA 5'→3' strand that anneals to miRNA 3' end (RNA).
+    # USE_HYBRID_TM gate: True → Sugimoto 1995 NN; False → label-only fallback.
+    if USE_HYBRID_TM:
+        _hybrid = predict_hybrid_tm(
+            dna_5to3=overhang_rc,
+            dna_conc_nM=4000.0,       # 4 μM: Sugimoto 1995 measurement conditions
+            mv_conc_mM=float(P3_RT_MV_CONC),  # RT buffer: 75 mM KCl [K11]
+        )
+        _tm_hybrid_c   = _hybrid["tm_c"]
+        _tm_chemistry  = "DNA:RNA"
+        _tm_accuracy   = _hybrid["accuracy"]
+        _tm_note       = (
+            f"RT overhang hybrid Tm (Sugimoto 1995 DNA:RNA NN): "
+            f"{f'{_tm_hybrid_c}°C' if _tm_hybrid_c is not None else 'unavailable'} "
+            f"at 4 μM, 75 mM KCl. "
+            "Full-primer Tm above uses primer3 DNA:DNA NN (SantaLucia 1998) — indicative. "
+            + "; ".join(_hybrid["caveats"])
+        )
+    else:
+        _hybrid        = None
+        _tm_hybrid_c   = None
+        _tm_chemistry  = "DNA:RNA"
+        _tm_accuracy   = "approximate"
+        _tm_note       = (
+            "approximate (DNA:DNA NN model; true DNA:RNA hybrid Tm may differ 3–8°C). "
+            "Enable USE_HYBRID_TM in constants.py for Sugimoto 1995 model."
+        )
+
     return {
         "sequence": primer_seq,
         "length": len(primer_seq),
@@ -108,6 +155,15 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
         "binding_length": binding_len,
         "gc_percent": gc,
         "tm_full": round(tm_full, 1),
+        # tm_full uses primer3 DNA:DNA NN (SantaLucia 1998) — informational for the full primer.
+        "tm_full_chemistry": "DNA:DNA",
+        "tm_full_accuracy":  "informational (primer3, DNA:DNA NN; actual RT step involves DNA:RNA hybrid)",
+        # tm_hybrid: Tm of the RT overhang × miRNA duplex (DNA:RNA, Sugimoto 1995 NN)
+        "tm_hybrid": _hybrid,
+        "tm_hybrid_c": _tm_hybrid_c,
+        "tm_chemistry": _tm_chemistry,
+        "tm_accuracy":  _tm_accuracy,
+        "tm_note": _tm_note,
         "mfe": mfe,
         "mfe_method": mfe_method,
         "hairpin_structure": structure,
