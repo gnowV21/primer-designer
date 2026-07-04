@@ -99,7 +99,10 @@ def lna_suggest():
     mode      = (data.get("mode")     or "tm").strip().lower()
     target_tm = data.get("target_tm")
     sibling   = data.get("sibling_mismatch_positions") or []
-    max_lna   = int(data.get("max_lna", 4))
+    try:
+        max_lna = int(data.get("max_lna", 4))
+    except (TypeError, ValueError):
+        return jsonify({"error": "'max_lna' must be an integer between 1 and 8."}), 400
     params    = data.get("params") or {}
 
     # --- Validate: role ---

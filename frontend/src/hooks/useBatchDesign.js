@@ -7,7 +7,7 @@
  * status: idle | streaming | polling | done | error
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 
 const BATCH_ASYNC_THRESHOLD = 10;   // must match backend constant
@@ -20,6 +20,9 @@ export default function useBatchDesign() {
   const [errors,   setErrors]   = useState([]);
   const [jobId,    setJobId]    = useState(null);
   const pollRef = useRef(null);
+
+  // Clear the polling interval on unmount to prevent memory leaks and stale setState calls.
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   const reset = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
