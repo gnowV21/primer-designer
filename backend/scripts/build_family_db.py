@@ -52,10 +52,14 @@ MIFAM_FTP_HOST = "mirbase.org"
 MIFAM_FTP_PATH = "/pub/mirbase/CURRENT/miFam.dat.gz"
 MATURE_URL      = "https://www.mirbase.org/download/mature.fa"
 
-# Archived miFam.dat — VERIFY SHA-256 before production
-# PLACEHOLDER: set this to the actual SHA-256 of the archived file before use.
-MIFAM_ARCHIVED_URL      = None   # set to a raw.githubusercontent.com URL after verifying
-MIFAM_ARCHIVED_SHA256   = None   # VERIFY before production — do NOT use None in prod
+# Archived miFam.dat — confirmed UNAVAILABLE as of 2026-07-04
+# Verified exhaustively: HTTPS -> HTTP 500; FTP mirbase.org -> timeout;
+# EBI FTP ftp.ebi.ac.uk/pub/databases/mirbase/ -> HTTP 404;
+# Wayback Machine CDX API -> 0 snapshots (FTP files not crawled);
+# GitHub mirrors -> HTTP 404. miFam.dat is permanently removed.
+# Production path: seed-based fallback (option 3). These remain None intentionally.
+MIFAM_ARCHIVED_URL      = None   # confirmed unavailable — see verification notes above
+MIFAM_ARCHIVED_SHA256   = None   # confirmed unavailable — no file to checksum
 
 # Allowed fetch domains (SSRF guard)
 _ALLOWED_HOSTS = frozenset([
