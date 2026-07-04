@@ -12,6 +12,8 @@ from .constants import (
     REFOLDING_PROTOCOL,
     USE_HYBRID_TM,
     P3_RT_MV_CONC,
+    P3_DEFAULT_MV_CONC, P3_DEFAULT_DV_CONC, P3_DEFAULT_DNTP_CONC,
+    P3_DEFAULT_DNA_CONC, P3_DEFAULT_TEMP_C,
 )
 from .hybrid_tm import predict_hybrid_tm
 from .sequence_utils import rna_to_dna, reverse_complement, calculate_gc
@@ -52,7 +54,7 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
     tm_full = calculate_tm_nn(primer_seq, params)
 
     # MFE of hairpin — ViennaRNA preferred; primer3-py fallback
-    mfe, structure, mfe_method = _compute_mfe(primer_seq)
+    mfe, structure, mfe_method = _compute_mfe(primer_seq, params)
 
     end_stab = calculate_end_stability(primer_seq[-5:], params)
 
@@ -176,7 +178,7 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
     }
 
 
-def _compute_mfe(primer_seq: str) -> tuple:
+def _compute_mfe(primer_seq: str, params: dict) -> tuple:
     """
     Compute MFE of the stem-loop RT primer hairpin.
 
@@ -227,8 +229,11 @@ def _compute_mfe(primer_seq: str) -> tuple:
     try:
         result    = primer3.calc_hairpin(
             seq=primer_seq,
-            mv_conc=50.0, dv_conc=1.5, dntp_conc=0.8, dna_conc=200.0,
-            temp_c=37.0,
+            mv_conc=float(params.get("saltConcentration",       P3_DEFAULT_MV_CONC)),
+            dv_conc=float(params.get("magnesiumConcentration",  P3_DEFAULT_DV_CONC)),
+            dntp_conc=float(params.get("dntpTotal",             P3_DEFAULT_DNTP_CONC)),
+            dna_conc=float(params.get("primerConcentration",    P3_DEFAULT_DNA_CONC)),
+            temp_c=P3_DEFAULT_TEMP_C,
         )
         mfe_proxy = round(float(result.dg) / 1000, 2)
         return mfe_proxy, "N/A (primer3 proxy)", "primer3-py (ViennaRNA unavailable)"

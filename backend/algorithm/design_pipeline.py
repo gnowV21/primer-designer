@@ -60,8 +60,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         })
 
     # Off-label overhang warning
-    binding_len = int(params.get("bindingRegion3prime", 6))
-    if binding_len != 6:
+    binding_len = int(params.get("bindingRegion3prime", OVERHANG_LENGTH_DEFAULT))
+    if binding_len != OVERHANG_LENGTH_DEFAULT:
         global_warnings.append({
             "field": "bindingRegion3prime",
             "severity": "warning",
@@ -259,9 +259,9 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
     protocol_advice = advise_protocol(_partial, params)
 
     # Normalization advisor
-    sample_type = params.get("sampleType") or params.get("sample_type", "")
+    sample_type = params.get("sampleType", "")
     try:
-        panel_size = int(params.get("panelSize") or params.get("panel_size") or 1)
+        panel_size = int(params.get("panelSize") or 1)
     except (ValueError, TypeError):
         panel_size = 1
     normalization_advice = advise_normalization(sample_type, panel_size) if sample_type else None

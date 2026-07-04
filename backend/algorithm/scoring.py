@@ -81,7 +81,7 @@ def score_candidate(
         f"Source: IDT guidelines, PrimerAST 2024."
     )
 
-    # ── 4. GC-skew (0.02 V3 / 0.01 V4) [PAST24] ─────────────────
+    # ── 4. GC-skew (0.02 V3 / 0.02 V4) [PAST24] ─────────────────
     skew = calculate_gc_skew(forward["sequence"])
     if skew <= 0:
         skew_score = 100
@@ -149,11 +149,14 @@ def score_candidate(
     worst_full    = min(sd_full, hd_full)
     full_critical = worst_full < DIMER_FULL_DG_CRITICAL
 
-    if critical or full_critical:  dimer_score = 0
-    elif worst > -4.0:             dimer_score = 100
-    elif worst > -5.0:             dimer_score = 75
-    elif worst > -6.0:             dimer_score = 40
-    else:                          dimer_score = 0
+    # Breakpoints derived from SELF_DIMER_DG_3PRIME_MAX so a single constant change
+    # keeps scoring tiers and the explanation text in sync.
+    _dt = SELF_DIMER_DG_3PRIME_MAX  # -5.0 kcal/mol
+    if critical or full_critical:      dimer_score = 0
+    elif worst > _dt + 1.0:           dimer_score = 100   # > -4.0: well clear of threshold
+    elif worst > _dt:                 dimer_score = 75    # > -5.0: approaching threshold
+    elif worst > _dt - 1.0:           dimer_score = 40    # > -6.0: exceeded threshold
+    else:                              dimer_score = 0
     scores["dimer_penalty"] = dimer_score
     explanations["dimer_penalty"] = (
         f"3'-end dimer ΔG = {worst:.2f} kcal/mol (threshold: > {SELF_DIMER_DG_3PRIME_MAX} kcal/mol). "
@@ -215,7 +218,7 @@ def score_candidate(
         f"Source: IDT qPCR primer design guidelines."
     )
 
-    # ── 11. Tm pair match (0.05 V3 / 0.03 V4) ───────────────────
+    # ── 11. Tm pair match (0.05 V3 / 0.01 V4) ───────────────────
     tm_rev       = reverse["tm"]
     tm_pair_diff = abs(tm - tm_rev)
     if tm_pair_diff <= 1.0:               pair_score = 100
@@ -258,7 +261,7 @@ def score_candidate(
 
     if use_v4:
         # ── 13. Bound fraction — binding region (0.05) [SL04] ────
-        specific_region = forward.get("specific_sequence") or forward["sequence"][-forward.get("specific_length", len(forward["sequence"])):]
+        specific_region = forward.get("specific_region") or forward["sequence"][-forward.get("specific_length", len(forward["sequence"])):]
         bf_binding = calculate_bound_fraction_binding(specific_region, params)
         bf_binding_result = score_bound_fraction(bf_binding)
         scores["bound_fraction_binding"] = bf_binding_result["score"]
