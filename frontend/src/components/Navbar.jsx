@@ -5,7 +5,7 @@ const tabs = [
   { to: '/home',      label: 'Home'      },
   { to: '/roadmap',   label: 'Roadmap'   },
   { to: '/search',    label: 'Designer'  },
-  { to: '/batch',     label: 'Batch'     },
+  { to: '/assistant', label: 'Assistant' },
 ];
 
 export default function Navbar() {
