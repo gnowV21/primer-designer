@@ -28,6 +28,13 @@ npm-debug.log*
 
 # Test output
 playwright-report/
+.playwright-mcp/
+
+# Phase 1 chatbot knowledge base — rebuilt from PubMed via POST /api/ingest.
+# Generated data, not source: papers.db is user-specific and chroma/ holds ~440 MB
+# of embeddings that are cheaper to regenerate than to version.
+backend/data/papers.db
+backend/data/chroma/
 test-results/
 .playwright-mcp/
 

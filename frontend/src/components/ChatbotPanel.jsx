@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import ChatPanel from './ChatPanel.jsx';
+import { fetchChatHealth } from '../api/chatApi.js';
+import { useHrmSession } from '../contexts/HrmSessionContext.jsx';
+
+/**
+ * ChatbotPanel — the always-present sidebar assistant.
+ *
+ * This was a "coming soon" stub with a disabled input. It is now the real Phase 1
+ * assistant: same backend, same guardrails, same HRM session as the /assistant page — it
+ * just renders ChatPanel in compact mode rather than duplicating the chat logic, so the two
+ * surfaces can never drift apart in behaviour.
+ *
+ * The panel is only useful once Ollama is up, so when it is not, the panel says exactly
+ * what is missing and how to fix it instead of failing on the first question.
+ */
 
 const AIAvatar = ({ size = 'md' }) => {
-  const sizeMap = {
-    sm: 'w-5 h-5',
-    md: 'w-8 h-8',
-    lg: 'w-14 h-14',
-  };
-  const ringMap = {
-    sm: 'ring-1',
-    md: 'ring-2',
-    lg: 'ring-2',
-  };
+  const sizeMap = { sm: 'w-5 h-5', md: 'w-8 h-8', lg: 'w-14 h-14' };
+  const ringMap = { sm: 'ring-1', md: 'ring-2', lg: 'ring-2' };
   return (
     <img
       src="/HuynhLuanAI.jpg"
@@ -20,38 +28,44 @@ const AIAvatar = ({ size = 'md' }) => {
   );
 };
 
-
-const PREVIEW_CAPABILITIES = [
-  { icon: '🔬', text: 'Explain thermodynamic parameters' },
-  { icon: '⚗️',  text: 'Interpret primer quality scores'  },
-  { icon: '📊', text: 'Suggest optimizations for your sample type' },
-  { icon: '📚', text: 'Answer questions about miRNA RT-qPCR protocol' },
-];
-
 export default function ChatbotPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [health, setHealth] = useState(null);
+  const { hasHrm, loading, messages } = useHrmSession();
+
+  // Probed only when the panel is first opened — /api/health on every page load would cost
+  // a request the collapsed panel has no use for.
+  useEffect(() => {
+    if (isOpen && health === null) {
+      fetchChatHealth()
+        .then(setHealth)
+        .catch(() => setHealth({ ready: false, unreachable: true }));
+    }
+  }, [isOpen, health]);
 
   return (
     <aside
-      className={`hidden lg:flex flex-col bg-white shrink-0
+      className={`hidden lg:flex flex-col bg-white shrink-0 border-l border-gray-100
         transition-[width] duration-300 ease-in-out overflow-hidden
-        ${isOpen ? 'w-80' : 'w-16'}`}
+        ${isOpen ? 'w-96' : 'w-16'}`}
     >
       {/* ── Toggle / header ── */}
       {isOpen ? (
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <AIAvatar size="sm" />
-            <span className="text-sm font-semibold text-gray-700">LuanHuynhAI Assistant</span>
-            <span className="text-[10px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded-full leading-none">
-              SOON
-            </span>
+            <span className="text-sm font-semibold text-gray-700 truncate">HuynhLuanAI</span>
+            {hasHrm && (
+              <span className="text-[9px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full leading-none shrink-0">
+                HRM
+              </span>
+            )}
           </div>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
             title="Collapse"
-            className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-xs font-bold"
+            className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-xs font-bold shrink-0"
           >
             ✕
           </button>
@@ -61,78 +75,99 @@ export default function ChatbotPanel() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            title="Open HuynhLuanAI Assistant"
-            className="flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-2xl bg-pink-50 border border-pink-200
+            title={loading
+              ? 'The assistant is writing an answer — click to watch'
+              : 'Open HuynhLuanAI Assistant'}
+            className="relative flex flex-col items-center gap-1.5 px-2 py-2.5 rounded-2xl bg-pink-50 border border-pink-200
               hover:bg-pink-100 hover:border-pink-300 hover:shadow-md transition-all duration-150 active:scale-95 group"
           >
             <AIAvatar size="md" />
-            <span className="text-[9px] font-bold text-pink-700 leading-tight group-hover:text-pink-800">HuynhLuanAI</span>
+            <span className="text-[9px] font-bold text-pink-700 leading-tight group-hover:text-pink-800">
+              HuynhLuanAI
+            </span>
+
+            {/* An answer takes minutes. The user is free to walk to another page while it runs,
+                so the collapsed panel has to show that something is still happening — otherwise
+                the answer lands silently in a panel they are not looking at. */}
+            {loading ? (
+              <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500" />
+              </span>
+            ) : messages.length > 0 && (
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-teal-500 border border-white" />
+            )}
           </button>
         </div>
       )}
 
       {/* ── Panel content ── */}
       <div
-        className={`flex flex-col flex-1 overflow-hidden transition-opacity duration-200 delay-100 ${
+        className={`flex flex-col flex-1 min-h-0 overflow-hidden transition-opacity duration-200 delay-100 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Coming-soon hero */}
-        <div className="flex flex-col items-center text-center px-5 py-6 space-y-3 border-b border-gray-100">
-          <div className="relative">
-            <AIAvatar size="lg" />
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-pink-500 rounded-full border-2 border-white flex items-center justify-center">
-              <svg viewBox="0 0 8 8" fill="white" className="w-2 h-2"><path d="M4 1l.7 2.1H7l-1.9 1.4.7 2.1L4 5.2 2.2 6.6l.7-2.1L1 3.1h2.3z"/></svg>
-            </span>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-gray-700">LuanHuynhAI Assistant</p>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              If u have any questions, contact Dr.LuanHuynh,pls.
+        {health && !health.ready ? (
+          <NotReady health={health} />
+        ) : (
+          <>
+            <ChatPanel compact />
+            <p className="px-3 pb-2 text-[10px] text-gray-300 text-center leading-snug shrink-0">
+              Explains results only — it never designs primers.{' '}
+              <Link to="/assistant" className="text-gray-400 hover:text-teal-700 underline">
+                Upload HRM data
+              </Link>
             </p>
-          </div>
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-2.5 py-1 rounded-full">
-            ✨ In development
-          </span>
-        </div>
-
-        {/* Planned capabilities */}
-        <div className="px-4 py-4 space-y-2 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-3">
-            Planned capabilities
-          </p>
-          {PREVIEW_CAPABILITIES.map(({ icon, text }) => (
-            <div
-              key={text}
-              className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
-            >
-              <span className="text-sm leading-none mt-0.5">{icon}</span>
-              <span className="text-xs text-gray-500 leading-snug">{text}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Disabled input */}
-        <div className="px-4 py-3 border-t border-gray-100 shrink-0">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Ask about your primers…"
-              disabled
-              className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-2 bg-gray-50 text-gray-400 placeholder-gray-300 cursor-not-allowed"
-            />
-            <button
-              disabled
-              className="px-3 py-2 rounded-lg bg-gray-100 text-gray-300 text-xs cursor-not-allowed font-semibold"
-            >
-              Send
-            </button>
-          </div>
-          <p className="text-[10px] text-gray-300 text-center mt-2">
-            Available after primer design engine is complete
-          </p>
-        </div>
+          </>
+        )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * Ollama must be installed and the model pulled before the assistant can answer, and that is
+ * a step only the user can take. Name the missing piece and the exact command — a bare
+ * "unavailable" would leave them guessing.
+ */
+function NotReady({ health }) {
+  const problems = [];
+
+  if (health.unreachable) {
+    problems.push({
+      what: 'The backend is not reachable',
+      how:  'Start Flask:  cd backend && python app.py',
+    });
+  } else if (!health.ollama?.alive) {
+    problems.push({
+      what: 'Ollama is not running',
+      how:  'Install from ollama.com/download, then start it.',
+    });
+  } else if (!health.ollama?.model_ready) {
+    problems.push({
+      what: `Model "${health.ollama.model}" is not pulled`,
+      how:  `ollama pull ${health.ollama.model}`,
+    });
+  }
+
+  if (health.chroma && !health.chroma.alive) {
+    problems.push({ what: 'Vector store unavailable', how: 'pip install chromadb' });
+  }
+
+  return (
+    <div className="flex flex-col items-center text-center px-5 py-8 space-y-3">
+      <AIAvatar size="lg" />
+      <p className="text-xs font-semibold text-gray-700">Assistant not ready</p>
+      <ul className="space-y-2 w-full">
+        {problems.map((p) => (
+          <li key={p.what} className="text-left border border-amber-200 bg-amber-50 rounded-lg px-2.5 py-2">
+            <p className="text-[11px] font-medium text-amber-800 leading-snug">{p.what}</p>
+            <code className="block mt-1 text-[10px] text-amber-900 bg-amber-100 px-1.5 py-1 rounded break-all">
+              {p.how}
+            </code>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
