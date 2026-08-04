@@ -90,7 +90,7 @@ export default function ChatPanel({ compact = false }) {
         {messages.length === 0 && (
           <div className="text-center py-6 space-y-3">
             {compact && <HrmBadge hasHrm={hasHrm} />}
-            <p className="text-[11px] text-gray-400 max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
               {hasHrm
                 ? 'Answers are grounded in your ingested papers and the numeric table computed from your melt-curve file — never invented. Click a well in the table to ask about it.'
                 : 'No melt-curve file loaded. Answers will come from your ingested papers only. Upload a file on the Assistant page to ask about your own results.'}
@@ -183,7 +183,7 @@ function Message({ m, showSources }) {
   if (m.role === 'user') {
     return (
       <div className="flex justify-end">
-        <p className="max-w-[85%] text-xs bg-teal-600 text-white rounded-xl rounded-br-sm px-3 py-2 leading-relaxed">
+        <p className="max-w-[85%] text-sm bg-teal-600 text-white rounded-xl rounded-br-sm px-3 py-2 leading-relaxed">
           {m.text}
         </p>
       </div>
@@ -227,7 +227,7 @@ function Message({ m, showSources }) {
   return (
     <div className="max-w-[92%] space-y-1.5">
       <div className="bg-gray-50 border border-gray-100 rounded-xl rounded-bl-sm px-3 py-2">
-        <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
           {m.text}
           {m.streaming && (
             <span className="inline-block w-1.5 h-3 ml-0.5 -mb-0.5 bg-teal-500 animate-pulse" />

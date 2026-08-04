@@ -6,11 +6,12 @@ import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
 import { DEFAULTS, LIMITS } from '../../constants/defaults.js';
 
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function WarnBox({ text }) {
   return (
-    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
       ⚠ {text}
     </p>
   );
@@ -60,17 +61,11 @@ const OFF_LABEL_WARNINGS = {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PrimerConstraintsGroup({
-  // Primer constraints
   data, onChange, seqAnalysis, mirnaFamily,
-  // Thermodynamic
   thermoData, thermoErrors, onThermoChange, onThermoError,
-  // Advanced specificity (lives in detectionMethod state)
-  specData, onSpecChange,
-  // CollapsibleSection
   onFirstOpen, openRequested,
 }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const resetTimerRef = useRef(null);
 
   // ── Thermodynamic reset ───────────────────────────────────────────────────
@@ -244,21 +239,18 @@ export default function PrimerConstraintsGroup({
               </button>
             ))}
           </div>
-          {/* Off-label warning — shown whenever binding length ≠ 6 nt */}
+          {/* Off-label note — shown whenever binding length ≠ 6 nt */}
           {offLabelWarn && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 space-y-1">
-              <p className="text-xs font-semibold text-red-700">
-                ⚠ Off-label use ({data.bindingRegion3prime} nt) — no published experimental validation
-              </p>
-              <p className="text-xs text-red-600 leading-relaxed">{offLabelWarn}</p>
+            <p className="text-xs text-amber-700 leading-snug">
+              ⚠ Off-label ({data.bindingRegion3prime} nt) — not validated by Chen 2005.{' '}
               <button
                 type="button"
                 onClick={() => onChange('bindingRegion3prime', 6)}
-                className="text-xs font-medium text-red-700 underline hover:no-underline"
+                className="underline hover:no-underline font-medium"
               >
-                Revert to 6 nt (Chen et al. 2005 standard)
+                Revert to 6 nt
               </button>
-            </div>
+            </p>
           )}
           {/* Family-specific suggestion (informational, not a blocker) */}
           {familyHint && data.bindingRegion3prime !== familyHint.suggestNt && (
@@ -375,8 +367,8 @@ export default function PrimerConstraintsGroup({
             : 'bg-teal-50 border-teal-200 text-teal-700'
         }`}>
           <span className="font-medium shrink-0">Effective free [Mg²⁺]</span>
-          <span className="font-mono font-bold">{freeMg.toFixed(2)} mM</span>
-          <span className="text-gray-400 font-normal">({mg} total − {dNTP} mM dNTP)</span>
+          <span className="font-mono font-bold tabular-nums">{freeMg.toFixed(2)} mM</span>
+          <span className="text-gray-400 font-normal tabular-nums">({mg} total − {dNTP} mM dNTP)</span>
           <span className="ml-auto shrink-0 font-medium">
             {freeMg >= 1.0 ? '✓ Acceptable (≥ 1.0 mM)' : freeMg >= 0.5 ? '⚠ Below optimal' : '✕ Critically low'}
           </span>
@@ -397,56 +389,6 @@ export default function PrimerConstraintsGroup({
       {showFwdTmWarn && (
         <WarnBox text={`Tm target may be difficult to achieve: the 12-nt miRNA binding region contributes only ~${seqAnalysis.fwdRegionTm}°C. Reaching ${thermoData.tmMin}°C requires the 5′ tail to add ~${fwdTmDeficit}°C. Consider lowering Tm min to ${thermoData.tmMin - 5}–${thermoData.tmMin - 3}°C.`} />
       )}
-
-      {/* ══ 3. ADVANCED SPECIFICITY ════════════════════════════════════════ */}
-
-      <SubDivider label="Specificity" />
-
-      <div className="space-y-2">
-        <button
-          type="button"
-          onClick={() => setShowAdvanced((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-teal-700 transition-colors"
-        >
-          <span className={`text-teal-600 font-bold text-sm leading-none transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}>
-            ▸
-          </span>
-          Advanced specificity options
-        </button>
-
-        <Reveal show={showAdvanced}>
-          <div className="space-y-2 pl-3 border-l-2 border-teal-100 mt-1">
-            {[
-              {
-                key: 'enableFamilyDiscrimination',
-                label: 'Penalize off-target in same miRNA family',
-                tooltip: 'The algorithm penalizes primer candidates whose 3′ overhang could cross-react with a related family member. Especially important for the let-7 family (13 members, many differing by only 1–2 nt).',
-              },
-              {
-                key: 'enablePrecursorCheck',
-                label: 'Check cross-reactivity with pre-miRNA',
-                tooltip: 'Normally, steric hindrance of the stem-loop structure prevents binding to pre-miRNA. Enable only when there is specific reason to expect high pre-miRNA levels.',
-              },
-              {
-                key: 'enableRefoldingProtocol',
-                label: 'Generate re-folding protocol in output',
-                tooltip: 'The output will include a thermal re-folding protocol to ensure the stem-loop primer adopts the correct hairpin conformation: 95°C 10 min → slow cool → hold at 60°C.',
-              },
-            ].map(({ key, label, tooltip }) => (
-              <label key={key} className="flex items-start gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={specData[key]}
-                  onChange={(e) => onSpecChange(key, e.target.checked)}
-                  className="mt-0.5 accent-teal-600"
-                />
-                <span className="text-sm text-gray-700 flex-1">{label}</span>
-                <Tooltip text={tooltip} />
-              </label>
-            ))}
-          </div>
-        </Reveal>
-      </div>
 
     </CollapsibleSection>
   );

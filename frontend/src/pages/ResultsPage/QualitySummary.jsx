@@ -141,7 +141,7 @@ export default function QualitySummary({ results }) {
           {items.map((item, i) => (
             <div
               key={i}
-              className={`rounded-lg border px-3 py-2 text-xs ${SEV_STYLE[item.severity] ?? SEV_STYLE.info}`}
+              className={`rounded-lg border px-3 py-2 text-sm ${SEV_STYLE[item.severity] ?? SEV_STYLE.info}`}
             >
               <span className="mr-1.5">{SEV_ICON[item.severity]}</span>
               {item.message}

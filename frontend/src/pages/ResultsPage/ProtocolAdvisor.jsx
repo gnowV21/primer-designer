@@ -136,10 +136,6 @@ function AdviceCard({ item }) {
               </div>
             </div>
           )}
-          {/* Disclaimer */}
-          {item.disclaimer && (
-            <p className="text-xs italic opacity-70">{item.disclaimer}</p>
-          )}
         </div>
       )}
     </div>

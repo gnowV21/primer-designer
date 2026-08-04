@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import useHistory from '../../hooks/useHistory';
 import { DEFAULTS } from '../../constants/defaults.js';
 import { computeSeqAnalysis } from '../../utils/seqAnalysis.js';
 import SequenceGroup from './SequenceGroup.jsx';
+import DetectionMethodGroup from './DetectionMethodGroup.jsx';
 import PrimerConstraintsGroup from './PrimerConstraintsGroup.jsx';
 import QpcrConditionsGroup from './QpcrConditionsGroup.jsx';
 import ExperimentalContextGroup from './ExperimentalContextGroup.jsx';
@@ -12,6 +12,7 @@ import ResultsSection from './ResultsSection/index.jsx';
 
 const NAV_SECTIONS = [
   { id: 'seq',         label: 'Sequence' },
+  { id: 'method',      label: 'Method'   },
   { id: 'constraints', label: 'Primer'   },
   { id: 'qpcr',        label: 'qPCR'     },
   { id: 'context',     label: 'Context'  },
@@ -21,7 +22,6 @@ export default function SearchPage() {
   useEffect(() => { document.title = 'HG Lab | Primer Designer'; }, []);
 
   const navigate = useNavigate();
-  const { save: saveHistory } = useHistory();
 
   const [formData, setFormData] = useState({
     sequence:            { ...DEFAULTS.sequence },
@@ -142,16 +142,6 @@ export default function SearchPage() {
     try {
       const postBody = { ...formData, _computed: computedFields };
       const response = await axios.post('/api/design', postBody, { timeout: 15000 });
-      // Auto-save to history (non-blocking)
-      const mirnaId  = formData.sequence?.mirnaId || formData.sequence?.matureSequence?.slice(0, 20) || 'unknown';
-      const bestScore = response.data?.top3?.[0]?.total_score ?? null;
-      saveHistory({
-        type:    'single',
-        mirnas:  [mirnaId],
-        params:  formData.thermodynamic,
-        results: [{ mirna: mirnaId, status: 'ok', data: response.data }],
-        summary: { count: 1, succeeded: 1, failed: 0, best_score: bestScore },
-      }).catch(() => { /* history is non-critical */ });
       navigate('/results', { state: { results: response.data, params: formData } });
     } catch (err) {
       if (err.response?.status === 422) {
@@ -255,7 +245,18 @@ export default function SearchPage() {
           />
         </section>
 
-        {/* ── Primer Design Constraints (merged: primer + thermo + specificity) ── */}
+        {/* ── Detection Method ── */}
+        <section id="method" className="scroll-mt-4">
+          <DetectionMethodGroup
+            data={formData.detectionMethod}
+            onChange={(field, value) => handleChange('detectionMethod', field, value)}
+            seqAnalysis={seqAnalysis}
+            onFirstOpen={() => markVisited('method')}
+            openRequested={sectionOpenRequests.method || 0}
+          />
+        </section>
+
+        {/* ── Primer Design Constraints ── */}
         <section id="constraints" className="scroll-mt-4">
           <PrimerConstraintsGroup
             data={formData.primerConstraints}
@@ -273,8 +274,6 @@ export default function SearchPage() {
             }}
             onThermoChange={(field, value) => handleChange('thermodynamic', field, value)}
             onThermoError={handleError}
-            specData={formData.detectionMethod}
-            onSpecChange={(field, value) => handleChange('detectionMethod', field, value)}
             onFirstOpen={() => markVisited('constraints')}
             openRequested={sectionOpenRequests.constraints || 0}
           />

@@ -38,7 +38,9 @@ export default function ResultsPage() {
     );
   }
 
-  const { results } = state;
+  const { results, params } = state;
+  const signalMethod = params?.detectionMethod?.signalMethod ?? 'taqman';
+  const isTaqMan = signalMethod === 'taqman';
   const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null, probe, probe_note, normalization_advice = null } = results;
 
   return (
@@ -48,7 +50,7 @@ export default function ResultsPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Design Results</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5 tabular-nums">
             {metadata?.mirna_id && <span className="font-medium">{metadata.mirna_id} · </span>}
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
@@ -76,13 +78,24 @@ export default function ResultsPage() {
       {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
       <ResultsSection results={results} error={null} hideHeader />
 
-      {/* ── TaqMan probe (Phase 6 §A) — only shown when signalMethod=taqman or SYBR note ── */}
-      {(probe || probe_note) && (
+      {/* ── Detection mode section ── */}
+      {isTaqMan && probe && (
         <div>
           <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
             TaqMan Probe
           </h2>
           <ProbeCard probe={probe} probeNote={probe_note} />
+        </div>
+      )}
+      {!isTaqMan && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+          <span className="text-xl mt-0.5">🧪</span>
+          <div>
+            <p className="text-sm font-semibold text-amber-800">SYBR Green mode — no probe designed</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Amplicon size is constrained to ≤ 120 bp. Melting curve analysis is mandatory after every run to confirm product specificity.
+            </p>
+          </div>
         </div>
       )}
 

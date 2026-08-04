@@ -19,7 +19,7 @@ def design_primers():
     if not is_valid:
         return jsonify({"error": err_msg}), 400
 
-    # Flatten params from all form groups (same schema as batch_design._flatten_params)
+    # Flatten params from all form groups
     params = {
         **data.get("thermodynamic", {}),
         **data.get("primerConstraints", {}),

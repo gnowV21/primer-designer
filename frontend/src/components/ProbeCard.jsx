@@ -46,6 +46,7 @@ function SeqDisplay({ sequence, mode }) {
 
 export default function ProbeCard({ probe, probeNote }) {
   const [showChecks, setShowChecks] = useState(false);
+  const [showSpecNote, setShowSpecNote] = useState(false);
 
   // No TaqMan (SYBR or not designed)
   if (!probe && probeNote) {
@@ -76,12 +77,23 @@ export default function ProbeCard({ probe, probeNote }) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 space-y-3">
-      {/* [§3.4] Specificity advisory — always shown for any TaqMan probe */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 leading-relaxed">
-        <span className="font-semibold">Specificity note:</span> The probe does not confer
-        miRNA sequence specificity. Discrimination between miRNAs is delivered by the
-        stem-loop RT primer (3′ overhang) and the forward primer. A universal probe generates
-        signal for any amplicon sharing the stem-loop body, including non-specific products.
+      {/* [§3.4] Specificity advisory — collapsible */}
+      <div className="text-xs text-blue-700">
+        <button
+          onClick={() => setShowSpecNote(v => !v)}
+          className="flex items-center gap-1 hover:text-blue-900 transition-colors"
+        >
+          <span>ℹ Specificity note</span>
+          <span className="text-blue-400">{showSpecNote ? '▲' : '▼'}</span>
+        </button>
+        {showSpecNote && (
+          <p className="mt-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 leading-relaxed text-blue-800">
+            The probe does not confer miRNA sequence specificity. Discrimination between miRNAs
+            is delivered by the stem-loop RT primer (3′ overhang) and the forward primer. A
+            universal probe generates signal for any amplicon sharing the stem-loop body,
+            including non-specific products.
+          </p>
+        )}
       </div>
 
       {/* Header */}
@@ -190,10 +202,6 @@ export default function ProbeCard({ probe, probeNote }) {
         </div>
       )}
 
-      {/* Disclaimer */}
-      {disclaimer && (
-        <p className="text-xs text-slate-400 border-t border-slate-100 pt-2">{disclaimer}</p>
-      )}
     </div>
   );
 }

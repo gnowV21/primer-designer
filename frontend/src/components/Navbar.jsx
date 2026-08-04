@@ -3,7 +3,6 @@ import { useTheme, THEMES } from '../contexts/ThemeContext.jsx';
 
 const tabs = [
   { to: '/home',      label: 'Home'      },
-  { to: '/roadmap',   label: 'Roadmap'   },
   { to: '/search',    label: 'Designer'  },
   { to: '/assistant', label: 'Assistant' },
 ];

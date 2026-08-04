@@ -87,7 +87,7 @@ test('at least one primer set card renders with score', async ({ page }) => {
 
 test('stem-loop RT primer section visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/STEM-LOOP RT PRIMER/i)).toBeVisible();
+  await expect(page.getByText(/STEM-LOOP RT PRIMER/i).first()).toBeVisible();
 });
 
 test('universal reverse primer section visible', async ({ page }) => {

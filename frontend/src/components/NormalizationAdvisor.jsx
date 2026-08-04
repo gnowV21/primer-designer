@@ -8,7 +8,7 @@ const ROLE_STYLE = {
   'hemolysis marker': 'bg-red-50 border-red-200 text-red-700',
 };
 
-function ReferenceChip({ ref: r }) {
+function ReferenceChip({ item: r }) {
   const style = ROLE_STYLE[r.role] || 'bg-slate-50 border-slate-200 text-slate-600';
   return (
     <div className={`rounded-lg border px-3 py-2 space-y-0.5 ${style}`}>
@@ -80,7 +80,7 @@ export default function NormalizationAdvisor({ advice }) {
           </p>
           <div className="grid grid-cols-1 gap-2">
             {reference_candidates.map((ref) => (
-              <ReferenceChip key={ref.name} ref={ref} />
+              <ReferenceChip key={ref.name} item={ref} />
             ))}
           </div>
         </div>
