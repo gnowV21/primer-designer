@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import Tooltip from '../../components/ui/Tooltip.jsx';
+import LnaPanel from '../../components/LnaPanel/index.jsx';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -237,11 +238,17 @@ function PropRow({ label, value }) {
   );
 }
 
-function TabB({ top3, stemloopRt, universalReverse }) {
+function TabB({ top3, stemloopRt, universalReverse, params }) {
   const [selRank, setSelRank] = useState(1);
+  const [showLna, setShowLna] = useState(false);
   const set = top3?.find((s) => s.rank === selRank) ?? top3?.[0];
 
   if (!set) return null;
+
+  // LNA suggester operates on the forward primer (DNA). Ion conditions and the
+  // target Tm come from the form params the design was run with.
+  const ionParams = params?.thermodynamic ?? {};
+  const targetTm  = params?.thermodynamic?.tmMax ?? 60;
 
   return (
     <div className="space-y-4">
@@ -295,6 +302,29 @@ function TabB({ top3, stemloopRt, universalReverse }) {
               : undefined}
           />
           <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
+        </div>
+
+        {/* LNA Tm suggester (informational only) — on-demand for the forward primer */}
+        <div className="pt-1">
+          {!showLna ? (
+            <button
+              type="button"
+              onClick={() => setShowLna(true)}
+              className="text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
+            >
+              Suggest LNA (Tm) ↓
+            </button>
+          ) : (
+            <LnaPanel
+              key={selRank}
+              sequence={set.sequence}
+              role="forward"
+              params={ionParams}
+              mode="tm"
+              targetTm={targetTm}
+              onClose={() => setShowLna(false)}
+            />
+          )}
         </div>
       </div>
 
@@ -387,7 +417,7 @@ function RtTmRow({ stemloopRt }) {
 
 // ── Main export ────────────────────────────────────────────────────
 
-export default function ThermoTable({ results }) {
+export default function ThermoTable({ results, params }) {
   const [tab, setTab] = useState('A');
   const { top3, stemloop_rt, universal_reverse } = results ?? {};
 
@@ -416,7 +446,7 @@ export default function ThermoTable({ results }) {
       <div className="p-4">
         {tab === 'A' && <TabA top3={top3} />}
         {tab === 'B' && (
-          <TabB top3={top3} stemloopRt={stemloop_rt} universalReverse={universal_reverse} />
+          <TabB top3={top3} stemloopRt={stemloop_rt} universalReverse={universal_reverse} params={params} />
         )}
       </div>
     </div>

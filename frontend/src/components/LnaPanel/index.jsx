@@ -48,7 +48,26 @@ export default function LnaPanel({
         params,
       };
       const res = await axios.post('/api/lna-suggest', body);
-      setResult(res.data);
+      // Backend returns a nested shape; flatten it to what this panel renders.
+      const d    = res.data ?? {};
+      const lna  = d.lna_result ?? {};
+      const calc = d.calc_at_suggestion ?? {};
+      setResult({
+        tm_dna:               calc.tm_dna,
+        tm_lna:               calc.tm_lna,
+        delta_tm:             calc.delta_tm,
+        suggested_positions:  lna.suggested_positions ?? calc.lna_positions ?? [],
+        search:               lna.search,
+        target_met:           lna.target_met,
+        discrimination_gain:  lna.discrimination_gain,
+        method:               calc.method ?? [],
+        tm_reference_primer3: d.tm_reference_primer3,
+        warnings: [
+          ...(lna.warnings  ?? []),
+          ...(calc.warnings ?? []),
+          ...(d.warnings    ?? []),
+        ],
+      });
     } catch (err) {
       setError(err.response?.data?.error ?? err.message ?? 'Request failed');
     } finally {
