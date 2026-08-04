@@ -104,7 +104,7 @@ export default function ResultsPage() {
         <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
           Thermodynamic Parameters
         </h2>
-        <ThermoTable results={results} />
+        <ThermoTable results={results} params={params} />
       </div>
 
       {/* ── Protocol Advisor (Phase 5 §A) — collapsed by default ── */}
