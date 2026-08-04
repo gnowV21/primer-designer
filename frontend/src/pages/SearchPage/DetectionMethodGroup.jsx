@@ -10,15 +10,9 @@ const REFERENCE_GENE_OPTIONS = [
   { value: 'custom',    label: 'Custom',    desc: 'enter miRBase ID manually' },
 ];
 
-// Reusable animated reveal: expands to true content height (no magic max-h numbers).
-// Same grid-rows technique used by CollapsibleSection.
 function Reveal({ show, children }) {
   return (
-    <div
-      className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-        show ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-      }`}
-    >
+    <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${show ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
       <div className="overflow-hidden">{children}</div>
     </div>
   );
@@ -26,61 +20,83 @@ function Reveal({ show, children }) {
 
 export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFirstOpen, openRequested }) {
   const [showSpecificity, setShowSpecificity] = useState(false);
-
   const isCustomRef = data.referenceGene === 'custom';
+  const isTaqMan = data.signalMethod === 'taqman';
+  const isSYBR   = data.signalMethod === 'sybr';
 
   return (
     <CollapsibleSection
       title="Detection Method"
-      tooltip="Determines the primer design algorithm and output format. TaqMan requires a probe; SYBR Green requires melting curve analysis. This selection directly affects weeks 2–3 design logic."
+      tooltip="Choose TaqMan (hydrolysis probe) or SYBR Green (intercalating dye). This controls which primers and outputs are generated."
       accent="purple"
-      defaultOpen
       onFirstOpen={onFirstOpen}
       openRequested={openRequested}
     >
       {/* Non-canonical 5' end warning */}
       {seqAnalysis && !seqAnalysis.startsWithU && (
-        <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-          ⚠ <strong>Non-canonical 5′ end:</strong> This miRNA does not start with U. Most mature miRNAs start with U for preferential loading into the Ago2 complex. Detection efficiency may be lower than expected — consider increasing RNA input amount.
+        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+          ⚠ <strong>Non-canonical 5′ end:</strong> This miRNA does not start with U — detection efficiency may be lower. Consider increasing RNA input.
         </div>
       )}
 
-      {/* Signal detection */}
+      {/* ── Signal detection — card picker ── */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">Signal detection</label>
-        <div className="flex gap-4">
-          {[
-            { value: 'taqman', label: 'TaqMan probe' },
-            { value: 'sybr',   label: 'SYBR Green' },
-          ].map(({ value, label }) => (
-            <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="radio"
-                name="signalMethod"
-                value={value}
-                checked={data.signalMethod === value}
-                onChange={() => onChange('signalMethod', value)}
-                className="accent-teal-600"
-              />
-              <span className="text-sm text-gray-700">{label}</span>
-            </label>
-          ))}
+        <div className="grid grid-cols-2 gap-3">
+          {/* TaqMan card */}
+          <button
+            type="button"
+            onClick={() => onChange('signalMethod', 'taqman')}
+            className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
+              isTaqMan
+                ? 'border-teal-500 bg-teal-50 shadow-sm'
+                : 'border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🔬</span>
+              <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-gray-700'}`}>
+                TaqMan Probe
+              </span>
+              {isTaqMan && <span className="ml-auto text-teal-600 text-sm font-bold">✓</span>}
+            </div>
+            <p className={`text-xs leading-snug ${isTaqMan ? 'text-teal-700' : 'text-gray-400'}`}>
+              Hydrolysis probe · high specificity · probe designed automatically
+            </p>
+          </button>
+
+          {/* SYBR Green card */}
+          <button
+            type="button"
+            onClick={() => onChange('signalMethod', 'sybr')}
+            className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
+              isSYBR
+                ? 'border-amber-400 bg-amber-50 shadow-sm'
+                : 'border-gray-200 bg-white hover:border-amber-200 hover:bg-amber-50/30'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🧪</span>
+              <span className={`text-sm font-semibold ${isSYBR ? 'text-amber-800' : 'text-gray-700'}`}>
+                SYBR Green
+              </span>
+              {isSYBR && <span className="ml-auto text-amber-600 text-sm font-bold">✓</span>}
+            </div>
+            <p className={`text-xs leading-snug ${isSYBR ? 'text-amber-700' : 'text-gray-400'}`}>
+              Intercalating dye · no probe · melting curve required
+            </p>
+          </button>
         </div>
 
-        <Reveal show={data.signalMethod === 'taqman'}>
-          <div className="text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 leading-relaxed pt-0.5">
-            <strong>TaqMan mode:</strong> The algorithm will design a probe binding site at the miRNA–stem-loop junction. The probe requires a Minor Groove Binder (MGB) group to achieve Tm ≥ 70°C on a short 12–17 nt sequence.
-          </div>
-        </Reveal>
-
-        <Reveal show={data.signalMethod === 'sybr'}>
-          <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed pt-0.5">
-            <strong>SYBR Green mode:</strong> No probe will be designed. Amplicon size is constrained to ≤ 120 bp to minimize primer dimers. Melting curve analysis is mandatory after every run to confirm product specificity.
-          </div>
+        {/* SYBR mandatory note */}
+        <Reveal show={isSYBR}>
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mt-0.5">
+            ⚠ Melting curve analysis is mandatory after every run to confirm product specificity.
+          </p>
         </Reveal>
       </div>
 
-      {/* Quantification mode */}
+      {/* ── Quantification mode ── */}
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
           <label className="text-sm font-medium text-gray-700">Quantification mode</label>
@@ -105,17 +121,11 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
           ))}
         </div>
 
-        <Reveal show={data.quantMode === 'absolute'}>
-          <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 leading-relaxed pt-0.5">
-            <strong>Absolute quantification:</strong> The output will include a recommendation for a standard curve covering 10²–10⁹ copies/µl using a recombinant plasmid as the calibration standard.
-          </div>
-        </Reveal>
-
         <Reveal show={data.quantMode === 'relative'}>
-          <div className="space-y-2 pt-0.5">
+          <div className="space-y-1.5 pt-0.5">
             <div className="flex items-center gap-1.5">
               <label className="text-sm font-medium text-gray-700">Reference gene</label>
-              <Tooltip text="Housekeeping reference used to normalize RNA input across samples. miR-16 is stable in most tissues. Use cel-miR-39 (spike-in) for serum or plasma where endogenous reference genes are unreliable." />
+              <Tooltip text="Housekeeping reference used to normalize RNA input across samples. miR-16 is stable in most tissues. Use cel-miR-39 (spike-in) for serum or plasma." />
             </div>
             <select
               value={data.referenceGene}
@@ -134,47 +144,42 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
                 value={data.customReferenceGene}
                 onChange={(e) => onChange('customReferenceGene', e.target.value)}
                 placeholder="e.g. hsa-miR-103a-3p"
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 mt-0.5"
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100"
               />
             </Reveal>
           </div>
         </Reveal>
       </div>
 
-      {/* Advanced specificity options */}
+      {/* ── Advanced specificity ── */}
       <div className="space-y-2">
         <button
           type="button"
           onClick={() => setShowSpecificity((v) => !v)}
           className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-teal-700 transition-colors"
         >
-          <span
-            className={`text-teal-600 font-bold text-sm leading-none transition-transform duration-200 ${
-              showSpecificity ? 'rotate-90' : ''
-            }`}
-          >
+          <span className={`text-teal-600 font-bold text-sm leading-none transition-transform duration-200 ${showSpecificity ? 'rotate-90' : ''}`}>
             ▸
           </span>
           Advanced specificity options
         </button>
-
         <Reveal show={showSpecificity}>
           <div className="space-y-2 pl-3 border-l-2 border-teal-100 mt-1">
             {[
               {
                 key: 'enableFamilyDiscrimination',
                 label: 'Penalize off-target in same miRNA family',
-                tooltip: 'When enabled: the algorithm penalizes any primer candidate whose 6 nt overhang could cross-react with a related family member. Especially important for the let-7 family (13 members, many differing by only 1–2 nt).',
+                tooltip: 'The algorithm penalizes candidates whose 6 nt overhang could cross-react with a family member. Especially important for the let-7 family.',
               },
               {
                 key: 'enablePrecursorCheck',
                 label: 'Check cross-reactivity with pre-miRNA',
-                tooltip: 'Normally, steric hindrance of the stem-loop structure prevents binding to pre-miRNA. Enable only when there is specific reason to expect high pre-miRNA levels.',
+                tooltip: 'Enable only when high pre-miRNA levels are expected. Steric hindrance normally prevents stem-loop primers from binding pre-miRNA.',
               },
               {
                 key: 'enableRefoldingProtocol',
                 label: 'Generate re-folding protocol in output',
-                tooltip: 'When enabled: the output will include a thermal re-folding protocol to ensure the stem-loop primer adopts the correct hairpin conformation: 95°C 10 min → slow cool → hold at 60°C.',
+                tooltip: 'Adds a thermal re-folding step to the output: 95°C 10 min → slow cool → hold 60°C.',
               },
             ].map(({ key, label, tooltip }) => (
               <label key={key} className="flex items-start gap-2 cursor-pointer select-none">

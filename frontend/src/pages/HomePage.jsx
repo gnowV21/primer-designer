@@ -179,7 +179,7 @@ export default function HomePage() {
             key={label}
             className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-center space-y-1 shadow-sm"
           >
-            <p className="text-lg font-black text-teal-600 leading-none">{value}</p>
+            <p className="text-lg font-black text-teal-600 leading-none tabular-nums">{value}</p>
             <p className="text-xs text-slate-400 leading-snug">{label}</p>
           </div>
         ))}

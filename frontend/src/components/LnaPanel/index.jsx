@@ -8,11 +8,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const DISCLAIMER =
-  'LNA Tm predicted by doublet nearest-neighbor model (SantaLucia 1998 + McTigue 2004 + ' +
-  'Owczarzy 2011, LNA·DNA:DNA). Salt correction approximate for LNA away from ~100 mM Na⁺. ' +
-  'Informational — confirm with synthesis provider (IDT). Not used in scoring. ' +
-  'RT overhang (DNA:RNA context) is out of scope.';
+const DISCLAIMER = 'Informational only — confirm Tm with synthesis provider. Not used in scoring.';
 
 /**
  * @param {{

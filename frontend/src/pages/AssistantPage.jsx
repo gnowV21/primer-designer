@@ -102,7 +102,7 @@ function SetupBanner({ health }) {
       </p>
       <ul className="mt-2 space-y-1.5">
         {problems.map((p) => (
-          <li key={p.what} className="text-[11px] text-amber-700 leading-snug">
+          <li key={p.what} className="text-xs text-amber-700 leading-snug">
             <span className="font-medium">{p.what}.</span>{' '}
             <code className="text-amber-900 bg-amber-100 px-1 py-0.5 rounded">{p.how}</code>
           </li>

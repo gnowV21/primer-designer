@@ -43,7 +43,7 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
           )}
           <div>
             <p className="text-sm font-semibold text-gray-800 font-mono">{set.sequence}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5 tabular-nums">
               {set.length} nt · Tm {set.tm_full?.toFixed(1)}°C · GC {set.gc_percent}%
               {set.amplicon_size && ` · ~${set.amplicon_size} bp amplicon`}
             </p>
@@ -143,7 +143,7 @@ function HeterodimersPanel({ checks }) {
                 <p className="text-xs text-slate-400">{subtitle}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-mono text-slate-600">
+                <span className="text-xs font-mono text-slate-600 tabular-nums">
                   ΔG {h.dg?.toFixed(2)} kcal/mol
                 </span>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${style}`}>

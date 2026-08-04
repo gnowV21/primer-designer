@@ -5,7 +5,6 @@ import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import ChatbotPanel from './components/ChatbotPanel.jsx';
 import HomePage from './pages/HomePage.jsx';
-import RoadmapPage from './pages/RoadmapPage.jsx';
 import SearchPage from './pages/SearchPage/index.jsx';
 import ResultsPage from './pages/ResultsPage/index.jsx';
 import BenchmarkPage from './pages/BenchmarkPage.jsx';
@@ -24,7 +23,6 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/search" replace />} />
                 <Route path="/home" element={<HomePage />} />
-                <Route path="/roadmap" element={<RoadmapPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/results" element={<ResultsPage />} />
                 <Route path="/benchmark" element={<BenchmarkPage />} />

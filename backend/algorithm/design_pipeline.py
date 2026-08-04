@@ -1,6 +1,6 @@
 """
 design_pipeline.py — Core design logic extracted from routes/design.py.
-Called by both /api/design (single) and /api/batch-design (batch).
+Called by /api/design.
 
 Input:  seq (str), params (dict), mirna_name (str)
 Output: full result dict matching the /api/design JSON schema
