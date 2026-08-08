@@ -35,6 +35,15 @@ export default function LnaPanel({
   const [error,   setError]     = useState(null);
 
   async function handleSuggest() {
+    // The LNA NN model covers DNA only; guard here so a bad input shows a clear
+    // message instead of a raw 400 from /api/lna-suggest (which rejects non-DNA
+    // bases and sequences > 60 nt).
+    const seq = (sequence ?? '').toUpperCase();
+    if (!/^[ATGC]{2,60}$/.test(seq)) {
+      setResult(null);
+      setError('LNA suggestion needs a DNA sequence of 2–60 nt (A/T/G/C only).');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
