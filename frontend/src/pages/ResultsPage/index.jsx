@@ -2,7 +2,7 @@
 // State arrives via useLocation().state from SearchPage after POST /api/design.
 // Empty-state fallback when accessed directly without state.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EdgeCaseBanner from './EdgeCaseBanner.jsx';
 import QualitySummary from './QualitySummary.jsx';
@@ -18,6 +18,9 @@ export default function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state;
+  // Lifted so the page-level BLAST result (run inside QualitySummary) can be
+  // handed to ExportBar and embedded in the exported report.
+  const [blastResult, setBlastResult] = useState(null);
 
   useEffect(() => { document.title = 'HG Lab | Primer Design Results'; }, []);
 
@@ -73,7 +76,7 @@ export default function ResultsPage() {
       <EdgeCaseBanner edgeCases={edge_cases} />
 
       {/* ── Quality summary ── */}
-      <QualitySummary results={results} />
+      <QualitySummary results={results} onBlastResult={setBlastResult} />
 
       {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
       <ResultsSection results={results} error={null} hideHeader />
@@ -133,7 +136,7 @@ export default function ResultsPage() {
       )}
 
       {/* ── Export bar ── */}
-      <ExportBar results={results} />
+      <ExportBar results={results} blastResult={blastResult} />
 
       {/* ── Multiplex panel check (Phase 6 §B) — standalone tool, always available ── */}
       <div>

@@ -1,5 +1,6 @@
-// ExportBar — Download PDF / Download CSV buttons (Phase 4 §8.6).
-// Calls POST /api/export with results blob, triggers browser download.
+// ExportBar — Download PDF / CSV / FASTA buttons (Phase 4 §8.6).
+// Calls POST /api/export with the results (and the BLAST result, if the
+// off-target check was run) as a blob, then triggers a browser download.
 
 import { useState } from 'react';
 import axios from 'axios';
@@ -11,25 +12,27 @@ function filenameFromDisposition(cd, fallback) {
   return match[1].replace(/^"|"$/g, '');
 }
 
-export default function ExportBar({ results }) {
-  const [pdfState, setPdfState] = useState('idle'); // idle | busy | error
-  const [csvState, setCsvState] = useState('idle');
-  const [pdfErr, setPdfErr] = useState(null);
-  const [csvErr, setCsvErr] = useState(null);
+const FALLBACK_NAME = {
+  pdf:   'primer_report.pdf',
+  csv:   'primers.csv',
+  fasta: 'primer_order.fasta',
+};
+
+export default function ExportBar({ results, blastResult }) {
+  const [busyFmt, setBusyFmt] = useState(null); // 'pdf' | 'csv' | 'fasta' | null
+  const [error, setError]     = useState(null);
 
   async function download(format) {
-    const setS = format === 'pdf' ? setPdfState : setCsvState;
-    const setE = format === 'pdf' ? setPdfErr   : setCsvErr;
-    setS('busy');
-    setE(null);
+    setBusyFmt(format);
+    setError(null);
     try {
       const resp = await axios.post(
         '/api/export',
-        { format, results },
+        { format, results, blast_result: blastResult ?? null },
         { responseType: 'blob', timeout: 30000 },
       );
       const cd = resp.headers['content-disposition'] ?? '';
-      const filename = filenameFromDisposition(cd, format === 'pdf' ? 'primer_report.pdf' : 'primers.csv');
+      const filename = filenameFromDisposition(cd, FALLBACK_NAME[format] ?? 'export.txt');
       const url = URL.createObjectURL(resp.data);
       const a = document.createElement('a');
       a.href = url;
@@ -38,15 +41,15 @@ export default function ExportBar({ results }) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      setS('idle');
+      setBusyFmt(null);
     } catch (err) {
       const status = err.response?.status;
       let msg = 'Export failed.';
       if (status === 503) msg = 'PDF export unavailable (reportlab not installed on server).';
       else if (status === 400) msg = 'Export request invalid.';
       else if (err.code === 'ECONNABORTED') msg = 'Export timed out.';
-      setE(msg);
-      setS('error');
+      setError(msg);
+      setBusyFmt(null);
     }
   }
 
@@ -54,25 +57,17 @@ export default function ExportBar({ results }) {
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 space-y-2">
       <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Export</p>
       <div className="flex flex-wrap gap-2 items-center">
-        <ExportButton
-          label="Download PDF"
-          busy={pdfState === 'busy'}
-          onClick={() => download('pdf')}
-          icon="⬇"
-        />
-        <ExportButton
-          label="Download CSV"
-          busy={csvState === 'busy'}
-          onClick={() => download('csv')}
-          icon="⬇"
-          secondary
-        />
+        <ExportButton label="Download PDF"   busy={busyFmt === 'pdf'}   onClick={() => download('pdf')}   icon="⬇" />
+        <ExportButton label="Download CSV"   busy={busyFmt === 'csv'}   onClick={() => download('csv')}   icon="⬇" secondary />
+        <ExportButton label="FASTA (order)"  busy={busyFmt === 'fasta'} onClick={() => download('fasta')} icon="⬇" secondary />
       </div>
-      {pdfErr && <p className="text-xs text-red-700">{pdfErr}</p>}
-      {csvErr && <p className="text-xs text-red-700">{csvErr}</p>}
-      <p className="text-xs text-slate-400">
-        CSV: MIQE-aligned columns, Excel-compatible UTF-8.
-        PDF: includes comparison table + quality summary.
+      {error && <p className="text-sm text-red-700">{error}</p>}
+      <p className="text-xs text-slate-400 leading-relaxed">
+        PDF: full report (comparison, scientific notes, off-target, MIQE checklist).
+        CSV: Excel-compatible data + specificity + checklist. FASTA: synthesis-order-ready.
+        {!blastResult && (
+          <span className="text-amber-600"> Run the Off-target (BLAST) check above to include it in the report.</span>
+        )}
       </p>
     </div>
   );

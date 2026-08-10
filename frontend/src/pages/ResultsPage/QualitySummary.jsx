@@ -12,7 +12,7 @@ const SEV_STYLE = {
 
 const SEV_ICON = { critical: '⚠', warning: '⚑', info: 'ℹ' };
 
-export default function QualitySummary({ results }) {
+export default function QualitySummary({ results, onBlastResult }) {
   const {
     global_warnings = [],
     edge_cases      = [],
@@ -94,6 +94,7 @@ export default function QualitySummary({ results }) {
       }, { timeout: 30000 });
       setBlastResult(resp.data);
       setBlastState('done');
+      onBlastResult?.(resp.data);  // lift to ResultsPage so ExportBar can embed it
     } catch (err) {
       const status = err.response?.status;
       if (status === 429) {
