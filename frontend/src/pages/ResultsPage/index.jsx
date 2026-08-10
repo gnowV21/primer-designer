@@ -91,7 +91,7 @@ export default function ResultsPage() {
         </div>
       )}
       {!isTaqMan && (
-        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
           <span className="text-xl mt-0.5">🧪</span>
           <div>
             <p className="text-sm font-semibold text-amber-800">SYBR Green mode — no probe designed</p>

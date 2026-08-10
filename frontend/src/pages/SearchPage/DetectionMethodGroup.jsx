@@ -35,7 +35,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
       {/* Non-canonical 5' end warning */}
       {seqAnalysis && !seqAnalysis.startsWithU && (
         <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-          ⚠ <strong>Non-canonical 5′ end:</strong> This miRNA does not start with U — detection efficiency may be lower. Consider increasing RNA input.
+          <strong>Non-canonical 5′ end:</strong> This miRNA does not start with U — detection efficiency may be lower. Consider increasing RNA input.
         </div>
       )}
 
@@ -54,7 +54,6 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-base">🔬</span>
               <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-gray-700'}`}>
                 TaqMan Probe
               </span>
@@ -76,7 +75,6 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-base">🧪</span>
               <span className={`text-sm font-semibold ${isSYBR ? 'text-amber-800' : 'text-gray-700'}`}>
                 SYBR Green
               </span>
@@ -90,8 +88,8 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
 
         {/* SYBR mandatory note */}
         <Reveal show={isSYBR}>
-          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mt-0.5">
-            ⚠ Melting curve analysis is mandatory after every run to confirm product specificity.
+          <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mt-0.5">
+            Melting curve analysis is mandatory after every run to confirm product specificity.
           </p>
         </Reveal>
       </div>

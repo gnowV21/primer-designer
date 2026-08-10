@@ -55,9 +55,9 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
   const cyclesWarning =
     !errors.totalCycles && cycles >= LIMITS.qpcr.cyclesMin && cycles <= LIMITS.qpcr.cyclesMax
       ? cycles < 35
-        ? '⚠ Fewer than 35 cycles may be insufficient to detect low-abundance targets.'
+        ? 'Fewer than 35 cycles may be insufficient to detect low-abundance targets.'
         : cycles > 45
-          ? '⚠ Too many cycles increases the risk of non-specific amplification.'
+          ? 'Too many cycles increases the risk of non-specific amplification.'
           : ''
       : '';
 
@@ -94,7 +94,7 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
             error={errors.annealingTemp}
           />
           {showTaWarning && (
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">⚠ Ta should be 2–5°C below Tm to avoid mispriming.</p>
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">Ta should be 2–5°C below Tm to avoid mispriming.</p>
           )}
         </div>
 
@@ -112,7 +112,7 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
             unit="cycles"
             error={errors.totalCycles}
           />
-          {cyclesWarning && <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">{cyclesWarning}</p>}
+          {cyclesWarning && <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">{cyclesWarning}</p>}
         </div>
 
         {/* PCR efficiency range */}
@@ -148,7 +148,7 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
             </div>
           </div>
           {showEffRangeWarning && (
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">⚠ A wide efficiency range will accept more low-quality primer candidates.</p>
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">A wide efficiency range will accept more low-quality primer candidates.</p>
           )}
         </div>
       </div>

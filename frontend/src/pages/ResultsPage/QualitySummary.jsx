@@ -10,8 +10,6 @@ const SEV_STYLE = {
   info:     'bg-teal-50 border-teal-200 text-teal-800',
 };
 
-const SEV_ICON = { critical: '⚠', warning: '⚑', info: 'ℹ' };
-
 export default function QualitySummary({ results, onBlastResult }) {
   const {
     global_warnings = [],
@@ -144,7 +142,6 @@ export default function QualitySummary({ results, onBlastResult }) {
               key={i}
               className={`rounded-lg border px-3 py-2 text-sm ${SEV_STYLE[item.severity] ?? SEV_STYLE.info}`}
             >
-              <span className="mr-1.5">{SEV_ICON[item.severity]}</span>
               {item.message}
             </div>
           ))}
@@ -162,7 +159,7 @@ export default function QualitySummary({ results, onBlastResult }) {
       <div className="border-t border-slate-100 pt-3">
         {blastState === 'idle' && (
           <div className="flex items-center justify-between text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
-            <span>ℹ Off-target (BLAST) not run yet.</span>
+            <span>Off-target (BLAST) not run yet.</span>
             <button
               onClick={runBlast}
               className="ml-3 font-semibold underline underline-offset-2 hover:text-teal-900 transition"
@@ -178,7 +175,7 @@ export default function QualitySummary({ results, onBlastResult }) {
         )}
         {blastState === 'error' && (
           <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            ⚑ {blastError}
+            {blastError}
             <button
               onClick={runBlast}
               className="ml-2 underline underline-offset-2 hover:text-amber-900"

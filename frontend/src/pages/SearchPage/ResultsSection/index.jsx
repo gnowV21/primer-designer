@@ -50,7 +50,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
                   : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}
             >
-              <span className="font-semibold mr-2">{w.severity === 'critical' ? '⚠ Critical:' : 'ℹ Note:'}</span>
+              <span className="font-semibold mr-2">{w.severity === 'critical' ? 'Critical:' : 'Note:'}</span>
               {w.message}
             </div>
           ))}
@@ -244,7 +244,7 @@ function CrossReactivityPanel({ data }) {
           <p className="text-xs font-semibold text-slate-600">Recommendation</p>
           <p className="text-xs text-slate-600">{rec.reason}</p>
           {rec.off_label_warning && (
-            <p className="text-xs text-amber-700 mt-1">⚠ {rec.off_label_warning}</p>
+            <p className="text-xs text-amber-800 mt-1">{rec.off_label_warning}</p>
           )}
           {!rec.resolved && rec.remaining_high_risk_siblings?.length > 0 && (
             <p className="text-xs text-red-700">

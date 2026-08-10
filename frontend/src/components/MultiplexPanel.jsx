@@ -13,7 +13,7 @@ const RISK_COLOR = {
 };
 
 const RISK_BORDER = {
-  HIGH:   'border-red-400 bg-red-50 text-red-800',
+  HIGH:   'border-red-200 bg-red-50 text-red-800',
   MEDIUM: 'border-amber-400 bg-amber-50 text-amber-800',
   LOW:    'border-yellow-300 bg-yellow-50 text-yellow-800',
   SAFE:   'border-teal-300 bg-teal-50 text-teal-700',

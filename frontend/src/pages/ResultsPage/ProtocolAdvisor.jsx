@@ -5,7 +5,7 @@
 import { useState } from 'react';
 
 const MATCH_STYLE = {
-  high:   'bg-amber-50 border-amber-300 text-amber-800',
+  high:   'bg-amber-50 border-amber-200 text-amber-800',
   medium: 'bg-blue-50  border-blue-200  text-blue-800',
   low:    'bg-slate-50 border-slate-200  text-slate-700',
 };
@@ -28,7 +28,6 @@ export default function ProtocolAdvisor({ advice = [] }) {
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition"
       >
         <div className="flex items-center gap-2">
-          <span className="text-base">💡</span>
           <span className="text-sm font-semibold text-slate-700">Protocol Advisor</span>
           <span className="text-xs text-slate-400 font-normal">
             {advice.length} suggestion{advice.length !== 1 ? 's' : ''} based on your assay parameters

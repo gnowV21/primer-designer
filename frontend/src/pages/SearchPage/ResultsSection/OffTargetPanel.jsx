@@ -203,7 +203,7 @@ function ResultDisplay({ result }) {
       <div className="text-xs text-slate-400 border-t border-slate-100 pt-2">
         {result.cache?.hit ? 'Cached result · ' : ''}
         DB: miRBase {dbInfo.mirbase_version} (all species)
-        {dbInfo.outdated_warning && ' · ⚠ DB may be outdated'}
+        {dbInfo.outdated_warning && ' · DB may be outdated'}
         {' · built '}{dbInfo.build_date}
       </div>
     </div>
