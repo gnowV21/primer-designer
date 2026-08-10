@@ -25,7 +25,7 @@ try:
         SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer,
     )
     from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib import colors
     from reportlab.lib.units import cm
     _REPORTLAB_AVAILABLE = True
@@ -55,8 +55,9 @@ def export_primers():
     """
     POST /api/export
     body: {
-      "format": "pdf" | "csv",
+      "format": "pdf" | "csv" | "fasta",
       "results": <object /api/design returned>,
+      "blast_result": <object /api/blast-check returned>   (optional),
       "include_checklist": true | false   (default: true, Phase 7 PART E)
     }
     200 → file stream (Content-Disposition: attachment)
@@ -66,11 +67,12 @@ def export_primers():
     body    = request.get_json(force=True) or {}
     fmt     = (body.get("format") or "").lower().strip()
     results = body.get("results")
+    blast_result = body.get("blast_result")  # optional — off-target analysis, if run
     include_checklist = body.get("include_checklist", True)
 
     # Validate format — whitelist only
-    if fmt not in ("pdf", "csv"):
-        return jsonify({"error": "format must be 'pdf' or 'csv'"}), 400
+    if fmt not in ("pdf", "csv", "fasta"):
+        return jsonify({"error": "format must be 'pdf', 'csv' or 'fasta'"}), 400
 
     # Validate results structure
     if not results or not isinstance(results, dict):
@@ -80,21 +82,25 @@ def export_primers():
 
     meta    = results.get("metadata", {})
     mirna_id = _sanitize(meta.get("mirna_id", "unknown"))
-    filename = f"primer_report_{mirna_id}.{fmt}"
+    ext      = "fasta" if fmt == "fasta" else fmt
+    stem     = "primer_order" if fmt == "fasta" else "primer_report"
+    filename = f"{stem}_{mirna_id}.{ext}"
 
+    if fmt == "fasta":
+        return _build_fasta(results, filename)
     if fmt == "csv":
-        return _build_csv(results, filename, include_checklist=include_checklist)
+        return _build_csv(results, filename, blast_result=blast_result, include_checklist=include_checklist)
     else:
         if not _REPORTLAB_AVAILABLE:
             return jsonify({
                 "error": "PDF export requires 'reportlab'. Run: pip install reportlab>=4.0"
             }), 503
-        return _build_pdf(results, filename, include_checklist=include_checklist)
+        return _build_pdf(results, filename, blast_result=blast_result, include_checklist=include_checklist)
 
 
 # ── CSV builder ───────────────────────────────────────────────────
 
-def _build_csv(results: dict, filename: str, include_checklist: bool = True):
+def _build_csv(results: dict, filename: str, blast_result=None, include_checklist: bool = True):
     meta    = results.get("metadata", {})
     top3    = results.get("top3", [])
     sl      = results.get("stemloop_rt", {})
@@ -126,7 +132,11 @@ def _build_csv(results: dict, filename: str, include_checklist: bool = True):
             _fmt(s.get("tm_full")), _fmt(s.get("gc_percent")),
             _fmt(hp), _fmt(sd),
             s.get("amplicon_size", ""), _fmt(s.get("total_score")),
-            s.get("grade", ""), f"Binding region {s.get('specific_length', '?')} nt",
+            s.get("grade", ""),
+            "; ".join(filter(None, [
+                f"Binding region {s.get('specific_length', '?')} nt",
+                _isomir_note(s),
+            ])),
         ])
 
     # RT stem-loop — same for all sets, written once
@@ -135,7 +145,7 @@ def _build_csv(results: dict, filename: str, include_checklist: bool = True):
         "", "RT_StemLoop", sl.get("sequence", ""), sl.get("length", ""),
         _fmt(sl.get("tm_full")), _fmt(sl.get("gc_percent")),
         _fmt(sl_sc.get("hairpin_dg")), "", "", "", "",
-        f"MFE {_fmt(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})",
+        _rt_tm_note(sl),
     ])
 
     # Universal reverse — same for all sets, written once
@@ -147,8 +157,24 @@ def _build_csv(results: dict, filename: str, include_checklist: bool = True):
         "", "", "", "Fixed universal reverse [Chen05][K11]",
     ])
 
+    # ── Specificity summary — its own clearly-delimited 2-column block ──
+    buf.write("\r\n# SPECIFICITY SUMMARY\r\n")
+    prov = _family_provenance_note(results)
+    if prov:
+        buf.write(f"# {prov}\r\n")
+    writer.writerow(["Off_target_Metric", "Value"])
+    blines = _blast_lines(blast_result)
+    if blines:
+        for label, val in blines:
+            writer.writerow([label, val])
+    else:
+        writer.writerow([
+            "BLAST off-target",
+            "not assessed — run the Off-target (BLAST) check before ordering",
+        ])
+
     if include_checklist:
-        _append_checklist_csv(writer, buf, results)
+        _append_checklist_csv(writer, buf, results, blast_result)
 
     response = make_response(buf.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
@@ -156,7 +182,7 @@ def _build_csv(results: dict, filename: str, include_checklist: bool = True):
     return response
 
 
-def _append_checklist_csv(writer, buf, results: dict):
+def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
     """Append MIQE-aligned validation checklist block to CSV. [MIQE09]"""
     # Auto-fill specificity data from results
     spec = results.get("specificity_warnings", {})
@@ -166,7 +192,9 @@ def _append_checklist_csv(writer, buf, results: dict):
         "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
         else ("LOW" if "LOW" in cr_risks else "SAFE")
     )
-    blast_risk = ""  # populated by user from BLAST results
+    # Fill in the BLAST off-target risk if the check was run and passed in.
+    _bsumm = (blast_result or {}).get("summary", {}) if isinstance(blast_result, dict) else {}
+    blast_risk = _bsumm.get("overall_risk", "")
 
     buf.write("\r\n# VALIDATION CHECKLIST (MIQE-aligned, Bustin et al. 2009 Clin Chem)\r\n")
     buf.write("# Fill in Pass (Y/N) and Measured_Value after wet-lab validation.\r\n")
@@ -242,7 +270,21 @@ def _append_checklist_csv(writer, buf, results: dict):
 
 # ── PDF builder ───────────────────────────────────────────────────
 
-def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
+def _seq_with_seed_markup(seq: str) -> str:
+    """Reportlab markup for a mature miRNA sequence with the seed (nt 2-8) picked
+    out in brand teal bold — the app's signature visual motif. Seed = positions
+    2-8 from the 5' end (0-indexed 1:8), which define target recognition."""
+    seq = _html.escape(str(seq))
+    if len(seq) < 8:
+        return f"<font name='Courier'>{seq}</font>"
+    pre, seed, post = seq[:1], seq[1:8], seq[8:]
+    return (
+        f"<font name='Courier'>{pre}"
+        f"<font color='{_TEAL}'><b>{seed}</b></font>{post}</font>"
+    )
+
+
+def _build_pdf(results: dict, filename: str, blast_result=None, include_checklist: bool = True):
     from reportlab.lib import colors as rl_colors
     teal     = rl_colors.HexColor(_TEAL)
     teal_bg  = rl_colors.HexColor(_TEAL_BG)
@@ -282,7 +324,8 @@ def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
     story.append(Paragraph(
         f"miRNA: <b>{mirna_id_safe}</b> "
         f"({meta.get('mirna_length', '?')} nt) &nbsp;|&nbsp; "
-        f"Sequence: <font name='Courier'>{mirna_seq_safe}</font>",
+        f"Sequence 5′→3′: {_seq_with_seed_markup(meta.get('mirna_sequence', ''))} "
+        f"&nbsp;<font size=7 color='#64748B'>(seed nt 2-8 highlighted)</font>",
         body,
     ))
     story.append(Paragraph(
@@ -303,16 +346,21 @@ def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
             body,
         ))
 
+        # Wrap sequence cells in a mono Paragraph so long (50-nt) strings wrap
+        # inside the cell instead of overflowing into the next column.
+        seq_cell = ParagraphStyle("seqcell", fontName="Courier", fontSize=7, leading=8.5, wordWrap="CJK")
+        def _sq(x):
+            return Paragraph(esc(str(x or "")), seq_cell)
         seq_table_data = [
             ["Role", "Sequence (5′→3′)", "Length", "Tm", "GC%"],
-            ["Forward", best.get("sequence", ""), f"{best.get('length', '?')} nt",
+            ["Forward", _sq(best.get("sequence", "")), f"{best.get('length', '?')} nt",
              f"{_fmt(best.get('tm_full'))}°C", f"{_fmt(best.get('gc_percent'))}%"],
-            ["RT Stem-loop", sl.get("sequence", ""), f"{sl.get('length', '?')} nt",
+            ["RT Stem-loop", _sq(sl.get("sequence", "")), f"{sl.get('length', '?')} nt",
              f"{_fmt(sl.get('tm_full'))}°C", f"{_fmt(sl.get('gc_percent'))}%"],
-            ["Universal Reverse", rev.get("sequence", ""), f"{rev.get('length', '?')} nt",
+            ["Universal Reverse", _sq(rev.get("sequence", "")), f"{rev.get('length', '?')} nt",
              f"{_fmt(rev.get('tm'))}°C", f"{_fmt(rev.get('gc_percent'))}%"],
         ]
-        col_widths = [3.5*cm, 8.5*cm, 2*cm, 2*cm, 1.5*cm]
+        col_widths = [3.3*cm, 7.7*cm, 1.8*cm, 2.2*cm, 1.5*cm]
         seq_tbl = Table(seq_table_data, colWidths=col_widths)
         seq_tbl.setStyle(TableStyle([
             ("BACKGROUND",    (0, 0), (-1, 0), teal),
@@ -327,7 +375,28 @@ def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
         ]))
         story.append(seq_tbl)
-        story.append(Spacer(1, 0.5*cm))
+        story.append(Spacer(1, 0.3*cm))
+
+        # Scientific caveats a reader must not miss (mirror the app's careful labelling)
+        notes = []
+        rt_note = _rt_tm_note(sl)
+        if rt_note:
+            notes.append(
+                f"<b>RT stem-loop Tm:</b> {rt_note}. The full-primer Tm is DNA:DNA and "
+                f"INDICATIVE only — it is not the overhang:miRNA hybridization Tm and is "
+                f"not used in scoring."
+            )
+        iso = _isomir_note(best)
+        if iso:
+            notes.append(f"<b>{esc(iso)}</b>")
+        prov = _family_provenance_note(results)
+        if prov:
+            notes.append(esc(prov))
+        if notes:
+            story.append(Paragraph("Scientific notes", h3))
+            for n in notes:
+                story.append(Paragraph(f"• {n}", body))
+        story.append(Spacer(1, 0.4*cm))
 
     # ── Comparison table (Tab A summary) ─────────────────────────
     story.append(Paragraph("Primer Set Comparison", h2))
@@ -375,9 +444,38 @@ def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
             story.append(Paragraph(f"[{esc(ec_item['code'])}] {esc(ec_item.get('message', ''))}", body))
         story.append(Spacer(1, 0.3*cm))
 
+    # ── Off-target specificity (BLAST) ───────────────────────────
+    story.append(Paragraph("Off-target Specificity (BLAST)", h2))
+    blines = _blast_lines(blast_result)
+    if blines:
+        bl_data = [["Metric", "Value"]] + [[e(lbl), e(val)] for lbl, val in blines]
+        bl_tbl = Table(bl_data, colWidths=[7*cm, 5*cm])
+        bl_tbl.setStyle(TableStyle([
+            ("BACKGROUND",     (0, 0), (-1, 0), teal),
+            ("TEXTCOLOR",      (0, 0), (-1, 0), rl_colors.white),
+            ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",       (0, 0), (-1, -1), 9),
+            ("GRID",           (0, 0), (-1, -1), 0.5, rl_colors.grey),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
+        ]))
+        story.append(bl_tbl)
+        story.append(Paragraph(
+            "<i>Overall risk reflects OUT-of-family off-targets only. Same-family "
+            "cross-reactivity is expected for this miRNA family and is assessed "
+            "separately (family cross-reactivity).</i>",
+            body,
+        ))
+    else:
+        story.append(Paragraph(
+            "Not assessed. Run the Off-target (BLAST) check on the Results page, then "
+            "re-export to include the analysis in this report.",
+            body,
+        ))
+    story.append(Spacer(1, 0.4*cm))
+
     # ── Validation Checklist (Phase 7 PART E) ────────────────────
     if include_checklist:
-        story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors))
+        story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result))
 
     # ── Footer ────────────────────────────────────────────────────
     story.append(Spacer(1, 0.5*cm))
@@ -402,10 +500,15 @@ def _build_pdf(results: dict, filename: str, include_checklist: bool = True):
 
 # ── Checklist PDF helper ──────────────────────────────────────────
 
-def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors) -> list:
+def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result=None) -> list:
     """Build Validation Checklist PDF section (MIQE09-aligned). (Phase 7 PART E)"""
     from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
     from reportlab.lib.units import cm
+    from reportlab.lib.styles import ParagraphStyle
+
+    _cell = ParagraphStyle("chkcell", fontName="Helvetica", fontSize=8, leading=9.5)
+    def _P(t):
+        return Paragraph(_html.escape(str(t)).replace("\n", "<br/>"), _cell)
 
     spec = results.get("specificity_warnings", {})
     cr   = spec.get("cross_reactivity", {})
@@ -414,6 +517,9 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors) ->
         "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
         else ("LOW" if "LOW" in cr_risks else "SAFE")
     )
+    _bsumm = (blast_result or {}).get("summary", {}) if isinstance(blast_result, dict) else {}
+    blast_risk = _bsumm.get("overall_risk", "")
+    spec_value = f"Family: {worst_family}" + (f" · BLAST: {blast_risk}" if blast_risk else "")
 
     checklist_data = [
         ["Criterion", "Acceptance Target", "Reference", "Pass ☐", "Value / Notes"],
@@ -442,11 +548,17 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors) ->
          "Family cross-reactivity: reviewed. BLAST off-target: reviewed.",
          "Phase 3",
          "",
-         f"Family: {worst_family}"],
+         spec_value],
     ]
 
-    col_widths = [4.5*cm, 5.5*cm, 2.5*cm, 1.5*cm, 3*cm]
-    tbl = Table(checklist_data, colWidths=col_widths)
+    # Wrap the long text columns in Paragraphs so they wrap inside the cell
+    # rather than overflowing into (and overprinting) the neighbouring column.
+    wrapped = [checklist_data[0]] + [
+        [row[0], _P(row[1]), _P(row[2]), row[3], _P(row[4])]
+        for row in checklist_data[1:]
+    ]
+    col_widths = [4*cm, 5.5*cm, 2.7*cm, 1.3*cm, 3.5*cm]
+    tbl = Table(wrapped, colWidths=col_widths)
     tbl.setStyle(TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), teal),
         ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
@@ -476,6 +588,94 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors) ->
             body,
         ),
     ]
+
+
+# ── Scientific-content helpers (shared by CSV + PDF) ──────────────
+
+def _rt_tm_note(sl: dict) -> str:
+    """
+    Describe the RT stem-loop primer Tm honestly. tm_full is the DNA:DNA
+    nearest-neighbor Tm of the whole 50-nt oligo (primer3) — INDICATIVE only, NOT
+    the hybridization Tm of the 6-nt overhang with the miRNA. When available, the
+    DNA:RNA overhang hybrid Tm (Sugimoto 1995) is the biologically relevant value.
+    """
+    parts = []
+    if sl.get("tm_full") is not None:
+        parts.append(f"full-primer Tm {_fmt(sl.get('tm_full'))}°C (DNA:DNA, indicative)")
+    if sl.get("tm_hybrid_c") is not None:
+        parts.append(f"overhang hybrid Tm {_fmt(sl.get('tm_hybrid_c'))}°C (DNA:RNA, Sugimoto 1995)")
+    if sl.get("mfe") is not None:
+        parts.append(f"MFE {_fmt(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})")
+    return "; ".join(parts)
+
+
+def _isomir_note(s: dict) -> str:
+    """Return an isoMiR co-amplification caveat for a set, or '' if not flagged."""
+    flag = s.get("isomir_flag") or {}
+    if flag.get("isomir_discrimination_risk"):
+        return f"isoMiR co-amplification risk: {flag.get('note', 'yes')}"
+    return ""
+
+
+def _family_provenance_note(results: dict) -> str:
+    """Surface the family-DB provenance caveat (seed-based vs canonical miFam.dat)."""
+    cr = results.get("specificity_warnings", {}).get("cross_reactivity", {})
+    return cr.get("data_warning", "") or ""
+
+
+def _blast_lines(blast_result) -> list[tuple[str, str]]:
+    """
+    Flatten a /api/blast-check result into (label, value) rows. Returns [] when no
+    BLAST was run so callers can render a clear "not assessed" placeholder instead.
+    """
+    if not isinstance(blast_result, dict):
+        return []
+    summ = blast_result.get("summary", {}) or {}
+    return [
+        ("Overall off-target risk", str(summ.get("overall_risk", "?"))),
+        ("Critical (out-of-family)", str(summ.get("critical_count", 0))),
+        ("High",                     str(summ.get("high_risk_count", 0))),
+        ("Medium",                   str(summ.get("medium_risk_count", 0))),
+        ("Same-family (expected)",   str(summ.get("same_family_count", 0))),
+        ("Cross-species excluded",   str(summ.get("cross_species_excluded", 0))),
+    ]
+
+
+# ── FASTA builder (order-ready) ───────────────────────────────────
+
+def _build_fasta(results: dict, filename: str):
+    """
+    Clean, synthesis-order-ready FASTA of the three primers. One record per
+    forward primer (all ranked sets) plus the shared RT stem-loop and universal
+    reverse primer. Sequences are DNA 5'→3' exactly as ordered.
+    """
+    meta = results.get("metadata", {})
+    top3 = results.get("top3", [])
+    sl   = results.get("stemloop_rt", {})
+    rev  = results.get("universal_reverse", {})
+    mid  = _sanitize(meta.get("mirna_id", "unknown"))
+
+    lines = [
+        f"; HG Lab Stem-loop RT-qPCR primers for {meta.get('mirna_id', 'unknown')}",
+        f"; algorithm v{meta.get('algorithm_version', '?')} · exported {date.today().isoformat()}",
+        "; DNA 5'->3', ready to order. For research use only — validate experimentally.",
+    ]
+    for s in top3:
+        seq = (s.get("sequence") or "").strip()
+        if seq:
+            lines.append(f">{mid}_Forward_rank{s.get('rank', '?')} len={s.get('length', len(seq))} Tm={_fmt(s.get('tm_full'))}C")
+            lines.append(seq)
+    if sl.get("sequence"):
+        lines.append(f">{mid}_RT_StemLoop len={sl.get('length', '')}")
+        lines.append(sl.get("sequence").strip())
+    if rev.get("sequence"):
+        lines.append(f">Universal_Reverse len={rev.get('length', '')} [Chen05][Kramer11]")
+        lines.append(rev.get("sequence").strip())
+
+    response = make_response("\n".join(lines) + "\n")
+    response.headers["Content-Type"] = "text/plain; charset=utf-8"
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
 
 
 # ── Helpers ───────────────────────────────────────────────────────
