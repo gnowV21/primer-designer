@@ -235,6 +235,11 @@ function OverallRiskRow({ summary }) {
         {summary.safe_count > 0 && (
           <span className="text-slate-400">{summary.safe_count.toLocaleString()} safe</span>
         )}
+        {summary.same_family_count > 0 && (
+          <span className="text-purple-600" title="Same seed-family members that share the primer's binding region. This cross-reactivity is expected for this miRNA family and is analysed separately in the Family Cross-reactivity panel — it is not counted as an out-of-family off-target here.">
+            {summary.same_family_count.toLocaleString()} same-family
+          </span>
+        )}
         {summary.cross_species_excluded > 0 && (
           <span className="text-slate-400" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
             {summary.cross_species_excluded.toLocaleString()} excluded

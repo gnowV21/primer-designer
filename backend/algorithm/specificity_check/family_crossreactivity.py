@@ -141,6 +141,20 @@ def get_family_db_metadata() -> dict:
     return raw.get("_metadata", {})
 
 
+def get_family_id(mirna_name: str) -> str | None:
+    """
+    Return the seed-family id for a mature miRNA name (e.g. 'hsa-let-7a-5p'),
+    or None if the name is not in the family DB index.
+
+    Public helper reused by the BLAST off-target module (blast_offtarget.py) to
+    fold same-family hits into one aggregated bucket instead of listing each
+    family member as a separate critical off-target. Uses the O(1)
+    `_mirna_to_family` index built by build_family_db.py.
+    """
+    index = _load_db().get("_mirna_to_family", {})
+    return index.get(mirna_name)
+
+
 def _find_family(db: dict, mirna_name: str, mature_seq: str) -> tuple:
     """
     Look up miRNA family. Returns (family_name, {member: seq}).
