@@ -525,6 +525,15 @@ PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specifi
 PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
 PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
+# Off-target priming requires the primer's 3' terminus to anneal so the polymerase
+# can extend. BLAST reports the local alignment only, so the number of primer 3' nt
+# left OUTSIDE that alignment (dangling) tells us whether the 3' end is annealed.
+BLAST_3PRIME_DANGLE_SAFE = 2   # ≥2 primer 3' nt unaligned → 3' end cannot prime → SAFE
+# Even a perfectly-matched 3' anchor cannot seed extension if it is too short: a
+# <10 bp duplex has a Tm far below a typical qPCR annealing temperature (≈60°C),
+# so it never anneals during cycling. Guards against a short 3'-terminal k-mer
+# match to an unrelated miRNA being scored as a critical off-target.
+PRIMER_BLAST_MIN_3PRIME_ANCHOR = 10   # nt — shorter 3'-anchored match → SAFE
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
 

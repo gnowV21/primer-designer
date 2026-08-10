@@ -32,9 +32,11 @@ from algorithm.constants import (
     PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES,
     PRIMER_BLAST_3PRIME_WINDOW, PRIMER_BLAST_3PRIME_MIN_MISMATCHES,
     PRIMER_BLAST_MIN_TOTAL_MISMATCHES,
+    BLAST_3PRIME_DANGLE_SAFE, PRIMER_BLAST_MIN_3PRIME_ANCHOR,
     BLAST_MAX_HITS_RETURNED, MIRBASE_HUMAN_PREFIX,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
+from .family_crossreactivity import get_family_id
 
 _DB_DIR      = os.path.join(os.path.dirname(__file__), "..", "..", "data", "blast_db")
 _MIRBASE_DB  = os.path.join(_DB_DIR, "mirbase_multi")
@@ -124,6 +126,7 @@ def nw_align(seq1: str, seq2: str) -> dict:
         "primer_3prime_base":   primer_3p.upper(),
         "template_3prime_base": template_3p.upper(),
         "coverage_pct":         round(len(seq1) / max(len(aln1.replace("-", "")), 1) * 100, 1),
+        "aln_cols":             len(aln1),
     }
 
 
@@ -146,6 +149,7 @@ def _column_compare(s1: str, s2: str) -> dict:
         "primer_3prime_base": s1[-1].upper() if s1 else "N",
         "template_3prime_base": s2[-1].upper() if s2 else "N",
         "coverage_pct": 100.0,
+        "aln_cols": n,
     }
 
 
@@ -156,7 +160,18 @@ def classify_hit_risk(primer: str, alignment: dict) -> tuple[str, str]:
     Return (risk_level, reason) for one BLAST hit after NW realignment.
     risk_level: 'SAFE' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
 
-    Rules:
+    3'-anchoring gate (applied FIRST): off-target priming requires the primer's
+    3' terminus to anneal so the polymerase can extend. BLAST reports only the
+    local alignment, so `three_prime_dangling` (primer 3' nt left OUTSIDE the
+    alignment) tells us whether the 3' end is annealed:
+        ≥2 dangling → 3' end cannot prime          → SAFE
+        =1 dangling → 3'-terminal base unpaired      → MEDIUM (capped)
+        =0 dangling → 3' end annealed                → full Ye12/Kwok90 rules
+    The synthetic 5' tail of a forward primer legitimately does NOT align to the
+    miRNA template, so a 5' overhang is EXPECTED and is not penalised — this is
+    why we key off the 3' end, not overall coverage.
+
+    Rules (when the 3' end is annealed):
     1. [Ye12] ≥6 total mismatches → SAFE (ignore threshold)
     2. [Kwok90] BLOCKING 3'-terminal (A:G, G:A, C:C) → SAFE (~1% PCR yield)
     3. 3' terminal MATCH + ≤2 total mm → CRITICAL
@@ -166,14 +181,41 @@ def classify_hit_risk(primer: str, alignment: dict) -> tuple[str, str]:
     7. [Kwok90] TOLERANT + ≥2 mm in 3' window → MEDIUM; else HIGH
     """
     total_mm = alignment["mismatches"]
+    dangling3 = alignment.get("three_prime_dangling", 0)
+
+    # 3'-anchoring gate — the strongest determinant of off-target priming.
+    if dangling3 >= BLAST_3PRIME_DANGLE_SAFE:
+        return "SAFE", (
+            f"primer 3′ end ({dangling3} nt) does not anneal to this target — "
+            f"the polymerase cannot extend, so no off-target product [Ye12]"
+        )
 
     # Rule 1: Ye12 ignore threshold
     if total_mm >= PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES:
         return "SAFE", f"≥{PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES} total mismatches — off-target PCR very unlikely [Ye12]"
 
-    primer_len = len(primer)
+    # A single dangling 3' base means the true 3'-terminal base is unpaired (a 3'
+    # overhang, or a mismatch BLAST trimmed off the end): extension is reduced.
+    if dangling3 == 1:
+        return "MEDIUM", (
+            "primer 3′-terminal base is unpaired (3′ overhang or mismatch) — "
+            "extension substantially reduced [Kwok90]"
+        )
+
+    # 3' end is annealed (dangling3 == 0): the aligned fragment ends exactly at the
+    # primer 3' terminus, so its last columns ARE the 3' window. Count 3'-window
+    # mismatches relative to the alignment columns, not the full primer length (the
+    # 5' tail may legitimately be unaligned).
     mm_positions = alignment["mismatch_positions"]
-    mm_in_3prime = sum(1 for pos in mm_positions if pos >= primer_len - PRIMER_BLAST_3PRIME_WINDOW)
+    n_cols = alignment.get("aln_cols") or len(primer)
+    mm_in_3prime = sum(1 for pos in mm_positions if pos >= n_cols - PRIMER_BLAST_3PRIME_WINDOW)
+
+    # Even a perfect 3' anchor is inert if too short to anneal at the annealing temp.
+    if n_cols < PRIMER_BLAST_MIN_3PRIME_ANCHOR:
+        return "SAFE", (
+            f"3′-anchored match is only {n_cols} nt — its duplex Tm is far below the "
+            f"qPCR annealing temperature, so it cannot seed extension [Ye12]"
+        )
 
     terminal_cat = classify_3prime_mismatch(
         alignment["primer_3prime_base"],
@@ -285,15 +327,17 @@ def check_offtarget(
     species_prefix = _extract_species_prefix(mirna_id)
     # Pre-compute once; passed into every _is_self_hit call to avoid per-hit recomputation
     m_norm = _normalize_mirna_name(mirna_id.lower()) if mirna_id else None
+    # Seed-family of the target — used to fold same-family hits into one bucket (Fix B)
+    target_family = get_family_id(mirna_id) if mirna_id else None
 
     # Run forward and reverse BLAST concurrently — they are fully independent
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout)
-        rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, species_prefix, timeout) if reverse_primer else None
-        fwd_hits, fwd_safe, fwd_cs = fwd_future.result()
-        rev_hits, rev_safe, rev_cs = rev_future.result() if rev_future else ([], 0, 0)
+        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family)
+        rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family) if reverse_primer else None
+        fwd_hits, fwd_safe, fwd_cs, fwd_fam = fwd_future.result()
+        rev_hits, rev_safe, rev_cs, rev_fam = rev_future.result() if rev_future else ([], 0, 0, 0)
 
-    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs)
+    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs, fwd_fam + rev_fam)
     summary["hits_truncated"] = (
         len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
     )
@@ -312,18 +356,26 @@ def _check_primer(
     m_norm: Optional[str],
     species_prefix: str,
     timeout: int,
-) -> tuple[list[dict], int, int]:
-    """Return (non_safe_hits, safe_count, cross_species_excluded).
+    target_family: Optional[str] = None,
+) -> tuple[list[dict], int, int, int]:
+    """Return (non_safe_hits, safe_count, cross_species_excluded, same_family_count).
 
-    SAFE hits (≥6 mm) are counted but not included in the hit list.
-    Cross-species miRBase hits (not matching species_prefix) are excluded entirely —
-    they are biologically irrelevant for same-species qPCR and would otherwise
+    SAFE hits (3' end not annealed, or ≥6 mm) are counted but not included in the
+    hit list. Cross-species miRBase hits (not matching species_prefix) are excluded
+    entirely — biologically irrelevant for same-species qPCR and would otherwise
     dominate the hit cap with conserved miRNA orthologs from other organisms.
-    species_prefix is derived from mirna_id (e.g., 'hsa-' for hsa-miR-21-5p).
+
+    same_family_count (Fix B): hits that are the target miRNA's own seed-family
+    members are the EXPECTED, already-surfaced cross-reactivity case (see the
+    Family Cross-reactivity panel). They are folded into one aggregated count
+    instead of listed as separate critical off-targets, so the real out-of-family
+    signal is not drowned. target_family is the seed-family id of mirna_id (or None).
     """
     non_safe_hits: list[dict] = []
     safe_count = 0
     cross_species_excluded = 0
+    same_family_count = 0
+    primer_len = len(primer)
     for db in db_paths:
         is_mirbase = os.path.basename(db).startswith("mirbase")
         try:
@@ -339,7 +391,15 @@ def _check_primer(
             if is_mirbase and not h["subject_id"].lower().startswith(species_prefix):
                 cross_species_excluded += 1
                 continue
-            # NW global realign — more accurate than BLAST local
+
+            # How much of the primer's 3'/5' end lies OUTSIDE the BLAST local
+            # alignment. q_start/q_end are 1-based query (primer) coordinates.
+            q_start = h.get("q_start")
+            q_end   = h.get("q_end")
+            dangling3 = max(primer_len - q_end, 0) if isinstance(q_end, int) else 0
+            dangling5 = max(q_start - 1, 0) if isinstance(q_start, int) else 0
+
+            # NW global realign of the matched fragment — more accurate than BLAST local
             subject_seq = h.get("subject_seq", "")
             query_seq   = h.get("query_seq", "")
             if subject_seq and query_seq:
@@ -350,13 +410,24 @@ def _check_primer(
                     "mismatch_positions": [],
                     "primer_3prime_base": primer[-1].upper(),
                     "template_3prime_base": "N",
-                    "coverage_pct": round(h["length"] / len(primer) * 100, 1),
+                    "coverage_pct": round(h["length"] / primer_len * 100, 1),
+                    "aln_cols": h["length"],
                 }
+            # Anchoring info drives classify_hit_risk's 3'-end gate.
+            aln["three_prime_dangling"] = dangling3
+            aln["five_prime_dangling"]  = dangling5
+
             risk, reason = classify_hit_risk(primer, aln)
-            # SAFE hits (≥6 mm) are counted in summary but omitted from hit list [Ye12]
+            # SAFE hits are counted in summary but omitted from hit list [Ye12]
             if risk == "SAFE":
                 safe_count += 1
                 continue
+            # Fix B: fold same-seed-family members into one aggregated count.
+            if target_family is not None:
+                subj_family = get_family_id(h["subject_id"])
+                if subj_family is not None and subj_family == target_family:
+                    same_family_count += 1
+                    continue
             non_safe_hits.append({
                 "subject_id":   h["subject_id"],
                 "database":     os.path.basename(db),
@@ -367,6 +438,7 @@ def _check_primer(
                     "mismatch_positions":  aln["mismatch_positions"],
                     "primer_3prime_base":  aln["primer_3prime_base"],
                     "template_3prime_base": aln["template_3prime_base"],
+                    "three_prime_dangling": dangling3,
                     "terminal_category":   classify_3prime_mismatch(
                         aln["primer_3prime_base"], aln["template_3prime_base"]
                     ),
@@ -377,25 +449,33 @@ def _check_primer(
             })
     # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
     non_safe_hits.sort(key=lambda h: (_RISK_ORDER.get(h["risk"], 9), h["evalue"]))
-    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded
+    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded, same_family_count
 
 
-def _summarise(non_safe_hits: list[dict], safe_count: int = 0, cross_species_excluded: int = 0) -> dict:
+def _summarise(
+    non_safe_hits: list[dict],
+    safe_count: int = 0,
+    cross_species_excluded: int = 0,
+    same_family_count: int = 0,
+) -> dict:
     counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0}
     for h in non_safe_hits:
         risk = h.get("risk", "MEDIUM")
         counts[risk] = counts.get(risk, 0) + 1
+    # overall_risk reflects OUT-of-family off-targets only — same-family cross-
+    # reactivity is expected and surfaced separately (see same_family_count).
     if counts["CRITICAL"] > 0:    overall = "CRITICAL"
     elif counts["HIGH"] > 0:      overall = "HIGH"
     elif counts["MEDIUM"] > 0:    overall = "MEDIUM"
     else:                          overall = "SAFE"
     return {
-        "total_hits":              len(non_safe_hits) + safe_count,
+        "total_hits":              len(non_safe_hits) + safe_count + same_family_count,
         "critical_count":          counts["CRITICAL"],
         "high_risk_count":         counts["HIGH"],
         "medium_risk_count":       counts["MEDIUM"],
         "safe_count":              safe_count,
         "cross_species_excluded":  cross_species_excluded,
+        "same_family_count":       same_family_count,
         "overall_risk":            overall,
     }
 
