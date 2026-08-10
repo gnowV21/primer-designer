@@ -92,7 +92,7 @@ export default function BenchmarkPage() {
 
       {/* MANDATORY limitation banner — must always be visible */}
       <div
-        className="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 space-y-1"
+        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1"
         data-testid="benchmark-limitation-banner"
       >
         <p className="text-sm font-semibold text-amber-800">

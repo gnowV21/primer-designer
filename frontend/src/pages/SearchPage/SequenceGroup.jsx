@@ -402,8 +402,8 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
         </div>
 
         {!isSeqLookup && (status === 'not_found' || status === 'error') && (
-          <p className="text-xs text-red-600 bg-red-50 border border-red-400 rounded px-2 py-1">
-            ✗ {errorMessage}
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+            {errorMessage}
           </p>
         )}
         {errors.matureSequence && (
@@ -453,43 +453,43 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
           {/* Warnings */}
           <div className="space-y-1.5 pt-1 border-t border-teal-100">
             {seqAnalysis.lengthCategory === 'short' && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Short sequence ({seqAnalysis.length} nt):</strong> Mature miRNAs are typically 18–25 nt. This may be a fragment or an incompletely processed miRNA — verify before designing primers.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Short sequence ({seqAnalysis.length} nt):</strong> Mature miRNAs are typically 18–25 nt. This may be a fragment or an incompletely processed miRNA — verify before designing primers.
               </p>
             )}
             {seqAnalysis.lengthCategory === 'long' && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Long sequence ({seqAnalysis.length} nt):</strong> This may be a pre-miRNA fragment or an extended isomiR. The algorithm can still proceed, but results should be carefully reviewed.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Long sequence ({seqAnalysis.length} nt):</strong> This may be a pre-miRNA fragment or an extended isomiR. The algorithm can still proceed, but results should be carefully reviewed.
               </p>
             )}
             {seqAnalysis.gcContent < 30 && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Low GC ({seqAnalysis.gcContent}%):</strong> The sequence is AU-rich — both the RT primer overhang and the forward primer will have low Tm. Consider increasing the RT temperature and Mg²⁺ concentration to compensate.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Low GC ({seqAnalysis.gcContent}%):</strong> The sequence is AU-rich — both the RT primer overhang and the forward primer will have low Tm. Consider increasing the RT temperature and Mg²⁺ concentration to compensate.
               </p>
             )}
             {seqAnalysis.gcContent > 70 && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>High GC ({seqAnalysis.gcContent}%):</strong> The sequence is GC-rich — risk of secondary structure within the primer. Ensure a thorough denaturation step before RT and check for self-complementarity.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>High GC ({seqAnalysis.gcContent}%):</strong> The sequence is GC-rich — risk of secondary structure within the primer. Ensure a thorough denaturation step before RT and check for self-complementarity.
               </p>
             )}
             {seqAnalysis.bindingRegionGC < 33 && (
-              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
-                ✗ <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≤ 2 G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≤ 2 G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
               </p>
             )}
             {seqAnalysis.bindingRegionGC > 83 && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≥ 5 G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≥ 5 G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
               </p>
             )}
             {seqAnalysis.bindingRegionHasRepeat && (
-              <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
-                ✗ <strong>Repeat in binding region ({seqAnalysis.bindingRegion}):</strong> The RT primer annealing site contains ≥ 3 identical consecutive nt — this directly affects cDNA fidelity and makes designing a specific overhang very difficult.
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Repeat in binding region ({seqAnalysis.bindingRegion}):</strong> The RT primer annealing site contains ≥ 3 identical consecutive nt — this directly affects cDNA fidelity and makes designing a specific overhang very difficult.
               </p>
             )}
 {seqAnalysis.hasContinuousRepeat && (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Homopolymer run detected:</strong> ≥ 4 identical consecutive nucleotides found. The algorithm will avoid using this region in primers if possible; if the run falls within the binding region it cannot be avoided.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Homopolymer run detected:</strong> ≥ 4 identical consecutive nucleotides found. The algorithm will avoid using this region in primers if possible; if the run falls within the binding region it cannot be avoided.
               </p>
             )}
           </div>

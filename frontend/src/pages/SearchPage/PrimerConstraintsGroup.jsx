@@ -11,8 +11,8 @@ import { DEFAULTS, LIMITS } from '../../constants/defaults.js';
 
 function WarnBox({ text }) {
   return (
-    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-      ⚠ {text}
+    <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+      {text}
     </p>
   );
 }
@@ -241,8 +241,8 @@ export default function PrimerConstraintsGroup({
           </div>
           {/* Off-label note — shown whenever binding length ≠ 6 nt */}
           {offLabelWarn && (
-            <p className="text-xs text-amber-700 leading-snug">
-              ⚠ Off-label ({data.bindingRegion3prime} nt) — not validated by Chen 2005.{' '}
+            <p className="text-xs text-amber-800 leading-snug">
+              <strong>Off-label ({data.bindingRegion3prime} nt)</strong> — not validated by Chen 2005.{' '}
               <button
                 type="button"
                 onClick={() => onChange('bindingRegion3prime', 6)}
@@ -255,7 +255,7 @@ export default function PrimerConstraintsGroup({
           {/* Family-specific suggestion (informational, not a blocker) */}
           {familyHint && data.bindingRegion3prime !== familyHint.suggestNt && (
             <p className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-700 bg-teal-50 border border-teal-100">
-              💡 {familyHint.text}
+              {familyHint.text}
               <button
                 type="button"
                 onClick={() => onChange('bindingRegion3prime', familyHint.suggestNt)}
@@ -266,8 +266,8 @@ export default function PrimerConstraintsGroup({
             </p>
           )}
           {seqAnalysis && !seqAnalysis.fwdEndGC && data.gcClamp3prime && (
-            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 leading-relaxed">
-              ⚠ Position 10–12 of the miRNA ends with A/U. The algorithm will adjust the 5′ tail to ensure a GC clamp.
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 leading-relaxed">
+              Position 10–12 of the miRNA ends with A/U. The algorithm will adjust the 5′ tail to ensure a GC clamp.
             </p>
           )}
         </div>

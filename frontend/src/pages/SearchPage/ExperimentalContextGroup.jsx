@@ -128,15 +128,15 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
 
       {/* Sample warning (no preset adjustments, just a note) */}
       {!hasPresetChanges && sampleWarning && (
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-          ⚠ {sampleWarning}
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+          {sampleWarning}
         </p>
       )}
 
       {/* System note */}
       {systemNote && (
-        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded px-3 py-2 leading-relaxed">
-          ℹ {systemNote}
+        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 leading-relaxed">
+          {systemNote}
         </p>
       )}
 
