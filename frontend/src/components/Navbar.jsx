@@ -2,9 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { useTheme, THEMES } from '../contexts/ThemeContext.jsx';
 
 const tabs = [
-  { to: '/home',      label: 'Home'      },
-  { to: '/search',    label: 'Designer'  },
-  { to: '/assistant', label: 'Assistant' },
+  { to: '/home',   label: 'Home'     },
+  { to: '/search', label: 'Designer' },
 ];
 
 export default function Navbar() {

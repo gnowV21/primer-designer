@@ -28,28 +28,3 @@ reportlab>=4.0
 # Pure-Python PDF generation (no binary system deps vs WeasyPrint)
 # Rate limiting for /api/blast-check (10 req/min/IP) [spec §9.3]
 # blastn BLAST+ binary NOT installed via pip — use: sudo apt-get install -y ncbi-blast+
-
-# ── Phase 1 AI Chatbot (SPEC_Phase1_AI_Chatbot.md §2) ─────────────────────────
-chromadb>=0.5
-# Embedded vector store for paper chunks — no separate server process [§2]
-
-sentence-transformers>=3.0
-# Local embedding via llm.embed(). Default model: BAAI/bge-small-en-v1.5 (~130 MB, 384-dim).
-# Downloaded on first use, cached in ~/.cache/huggingface.
-#
-# NOT the biomedical model SPEC_Phase1 §2 named (pritamdeka/S-PubMedBert-MS-MARCO): measured on
-# this corpus, its embedding space is collapsed — an off-topic sentence about ordering pizza
-# scored 0.211 against an HRM query while a genuinely relevant HRM paper scored 0.101. With
-# every distance inside a 0.10-0.21 band no threshold can separate signal from noise, so the
-# §0 "grounded or silent" guard could never fire. See the note in llm.py.
-
-pandas>=2.0
-scipy>=1.11
-# HRM pipeline: bilinear normalization, Savitzky-Golay smoothing, -dF/dT peaks [§4.2]
-
-openpyxl>=3.1
-# Reads .xlsx melt-curve exports uploaded to /api/hrm/analyze
-
-# LLM runtime is Ollama — NOT a pip package. Install separately:
-#   https://ollama.com/download   then:   ollama pull llama3.2:3b
-# Backend talks to it over its local REST API (http://localhost:11434) via llm.ask_llm().
