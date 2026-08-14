@@ -106,9 +106,8 @@ primer-designer/
 │       ├── utils/
 │       │   └── seqAnalysis.js       ← computeSeqAnalysis: length, gc, end3
 │       ├── components/
-│       │   ├── Navbar.jsx           ← 4 tabs + theme swatches
+│       │   ├── Navbar.jsx           ← Home + Designer tabs + theme swatches
 │       │   ├── Footer.jsx
-│       │   ├── ChatbotPanel.jsx     ← collapsed/expanded, "SOON"
 │       │   ├── ProbeCard.jsx        ← TaqMan probe display
 │       │   ├── MultiplexPanel.jsx   ← multiplex cross-dimer check
 │       │   ├── FamilySpecificityMap.jsx ← family overhang heatmap
