@@ -186,6 +186,13 @@ AMPLICON_MIN_QPCR = 60    # bp
 AMPLICON_MAX_QPCR = 150   # bp [IDT: 70–150 bp]
 AMPLICON_IDEAL = 80       # bp
 
+# primer3 thermodynamic-alignment hard limit: at least one strand must be <= 60 bp,
+# so amplicon NN ΔH via calc_heterodimer is only available up to this length.
+P3_HETERODIMER_MAX_BP = 60           # bp [primer3-py thermoanalysis limit]
+# SYBR: product and primer-dimer melt peaks closer than this may be mistaken for
+# one another on a single melt curve (P3 discrimination rule). [Lagatie17]
+AMPLICON_DIMER_TM_GAP_WARN = 10.0    # °C [Lagatie17] DOI 10.1371/journal.pone.0163435
+
 
 # ----------------------------------------------------------------
 # SECTION H: SCORING WEIGHTS (deprecated — use V3)
@@ -239,6 +246,17 @@ P3_DEFAULT_DV_CONC = 1.5      # mM Mg2+ [P3P]
 P3_DEFAULT_DNTP_CONC = 0.8    # mM total dNTP (4 × 0.2 mM) [P3P][IDT] — BUG FIX v2.1
 P3_DEFAULT_DNA_CONC = 200.0   # nM — IDT PrimerQuest default
 P3_DEFAULT_TEMP_C = 37.0      # °C for ΔG calculation
+
+# Monovalent-cation model for the Tm salt correction. Na+ and K+ are both
+# monovalent and stabilize the duplex equivalently, so the effective monovalent
+# concentration = [Na+] + [K+] + protonated Tris (Tris+). primer3 then applies
+# the SantaLucia 1998 monovalent correction + von Ahsen 2001 divalent (Mg2+).
+# NOTE: K+ has NO backend default — effective_monovalent_mM() uses params.get(
+# "kPlusConc", 0.0), i.e. absent K+ contributes 0 ("do not invent ions"). The
+# design form always sends kPlusConc; validator/API callers that omit it stay on
+# the Na+-only baseline by design. (Deliberately no P3_DEFAULT_KPLUS_CONC.)
+TRIS_PKA_25C          = 8.06  # Tris pKa at 25 °C (Good buffers); Tris+ = protonated fraction
+TRIS_CONC_DEFAULT_MM  = 10.0  # mM total Tris — standard 1× PCR buffer (10 mM Tris-HCl)
 
 P3_TM_FORMULA = 1                          # SantaLucia 1998 [P3P Advanced Settings]
 P3_SALT_CORRECTIONS = 1                    # SantaLucia 1998 [P3P Advanced Settings]
@@ -503,14 +521,9 @@ SCORING_WEIGHTS_V4 = {
 # Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.04+0.02+0.02+0.02 = 1.00
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
-# Family discrimination risk → score mapping [Chen05]
-FAMILY_DISCRIMINATION_RISK_SCORE = {
-    "SAFE":           100,
-    "LOW":             70,
-    "HIGH":            30,
-    "IDENTICAL":        0,
-    "no_family_data": 100,  # score 100 but explanation notes data absence
-}
+# (Removed FAMILY_DISCRIMINATION_RISK_SCORE — legacy seed-axis mapping. Family
+# discrimination is scored on the primer-binding axis via COMBINED_RISK_SCORE
+# (Week2 C5); the seed axis is biological context only, never scored.)
 
 # BLAST off-target parameters [Ye12] Ye et al. 2012 BMC Bioinformatics 13:134
 BLAST_WORD_SIZE        = 7       # [Ye12] — vs standard 11
@@ -570,12 +583,14 @@ KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
 KWOK_REDUCING_PAIRS  = {("A","A")}                          # ~5% yield
 # All other pairs → TOLERANT (~100% yield or context-dependent)
 
-# [Kwok90] Position-weighted distance for family cross-reactivity discrimination.
-# Weight[i] = contribution of a mismatch at position i from the 3' end (0 = 3'-terminal).
-# 3'-proximal mismatches block extension far more than 5'-proximal ones [Kwok90 Fig.3].
-# Used in check_family_crossreactivity() to reclassify 1-mismatch siblings whose mismatch
-# sits at the 3' end — such siblings are much less likely to be co-amplified.
-KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]  # positions 0–5 from 3' end
+# [Kwok90] Position-weighted mismatch distance, indexed from the PRIMER 3' TERMINUS.
+# Weight[i] = contribution of a mismatch i positions away from the primer 3' end
+# (0 = the 3'-terminal base pair). A 3'-terminal mismatch blocks extension [Kwok90 Fig.3].
+# WARNING: for the stem-loop RT primer the primer 3' terminus pairs with the 5'-MOST
+# nucleotide of the miRNA 3' overhang window (the RT primer is the reverse complement).
+# Always go through specificity_check.kwok.kwok_weighted_distance() — never index this
+# list directly.
+KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]
 KWOK_DIST_DISCRIMINATING = 3.0   # weighted dist ≥ this → 3'-proximal mismatch; classify as LOW
 
 # BLAST cache / infra
@@ -622,12 +637,60 @@ LNA_TARGET_TM_DEFAULT     = 60.0    # °C — default Tm target (mode="tm")
 LNA_AVOID_3PRIME_TERMINAL = True    # True → warning (NOT hard-skip) when LNA at 3' terminal
 LNA_EXHAUSTIVE_LIMIT      = 5000    # max combinations for exhaustive search; > → greedy
 LNA_HAIRPIN_RECHECK       = True    # check primer3 hairpin after LNA → warning if worse
-USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8)
+USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8). ON: NN tables are the VERIFIED
+                                    # Owczarzy 2011 Table 2 values (McTigue 2004 32NN), and
+                                    # tests/test_lna_benchmark.py passes the empirical
+                                    # McTigue Table 1 benchmark (ΔTm RMSD 0.78 °C, absolute
+                                    # Tm RMSD 1.54 °C, ≤ 2 °C). [A2]
 
 # ----------------------------------------------------------------
-# SECTION V: Batch design (Phase 8) — A1
+# SECTION V: Batch design (Phase 8) — REMOVED
+# Batch design was deliberately dropped when the project refocused on
+# single primer design (branch feat/design-focus). The A1 batch constants
+# (BATCH_ASYNC_THRESHOLD / BATCH_MAX_SIZE / BATCH_JOB_TTL_SEC) were removed
+# with it. Restore from commit 269a4c9 if batch is ever reinstated.
 # ----------------------------------------------------------------
 
-BATCH_ASYNC_THRESHOLD = 10    # ≤10 miRNAs → sync NDJSON; >10 → async job
-BATCH_MAX_SIZE        = 50    # maximum miRNAs per batch request (warn if exceeded)
-BATCH_JOB_TTL_SEC     = 3600  # 1h in-memory job TTL
+
+# ================================================================
+# Primer-axis collision analysis (Week 2 P1)
+# Specificity of stem-loop RT-qPCR = RT capture (3' overhang) x forward
+# discrimination (5' prefix). An off-target co-amplifies only when BOTH axes
+# fail. See specificity_check/overhang_collision.py.
+# ================================================================
+RT_MM_REPORT_MAX        = 2      # report RT-axis colliders with <= 2 mismatches in the window
+FWD_MM_REPORT_MAX       = 2      # report FWD-axis colliders with <= 2 mismatches in the prefix
+FWD_PREFIX_LEN_FALLBACK = 12     # used when forward specific_length is unavailable (lower bound of [12..17])
+COLLISION_MAX_REPORT    = 25     # cap rows returned to the client
+# The recommender's RT-overhang ceiling reuses OVERHANG_LENGTH_MAX (=8) from Section A.
+
+# Combined risk keyed by (rt_risk, fwd_risk). CRITICAL only when the RT primer
+# fails to discriminate (IDENTICAL/HIGH) AND the forward primer also fails.
+COMBINED_RISK_MATRIX = {
+    ("IDENTICAL", "IDENTICAL"): "CRITICAL",
+    ("IDENTICAL", "HIGH"):      "CRITICAL",
+    ("IDENTICAL", "LOW"):       "LOW",
+    ("IDENTICAL", "SAFE"):      "SAFE",
+    ("HIGH", "IDENTICAL"):      "CRITICAL",
+    ("HIGH", "HIGH"):           "CRITICAL",
+    ("HIGH", "LOW"):            "LOW",
+    ("HIGH", "SAFE"):           "SAFE",
+    ("LOW", "IDENTICAL"):       "LOW",
+    ("LOW", "HIGH"):            "LOW",
+    ("LOW", "LOW"):             "SAFE",
+    ("LOW", "SAFE"):            "SAFE",
+    ("SAFE", "IDENTICAL"):      "SAFE",
+    ("SAFE", "HIGH"):           "SAFE",
+    ("SAFE", "LOW"):            "SAFE",
+    ("SAFE", "SAFE"):           "SAFE",
+}
+
+# Score contribution of the worst combined risk (used by scoring.py, Week 2 C5).
+# no_index_data → 100 (criterion cannot contribute; must be stated in the explanation).
+COMBINED_RISK_SCORE = {"SAFE": 100, "LOW": 70, "CRITICAL": 0, "no_index_data": 100}
+
+# ---- Short-duplex reporting (Week 2 P4) --------------------------
+# NN parameters are calibrated on longer duplexes; below this length the initiation
+# term and terminal fraying dominate, so a point Tm is not a defensible display value.
+SHORT_DUPLEX_NT_THRESHOLD     = 8     # nt — report dG37 + a Tm band below this, not a point Tm
+TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; NOT a statistical CI)

@@ -41,12 +41,18 @@
 | Phase 6 | BLAST off-target, family specificity map | ✅ HOÀN THÀNH |
 | Phase 7 | Family benchmark (50 miRNAs), isoMiR flag | ✅ HOÀN THÀNH |
 | Phase 8 | Batch design, LNA Tm calculator, session history | ⚠️ GỠ / RÚT GỌN — xem ghi chú dưới |
+| Nhóm A | A1 Batch · A2 LNA · A3 Species (`PLAN_GapA_ScientificCompleteness.md`) | 🔧 A1 BỎ · A2 XONG (benchmarked) · A3 XONG — xem ghi chú |
 
-> **⚠️ Phase 8 — GỠ / RÚT GỌN (cập nhật 2026-08-04)**
-> Phase 8 đã được rút gọn khỏi sản phẩm. Các phần dưới (14, 15, 17 batch, 18, 22 tests batch, 23) mô tả tính năng **không còn tồn tại** — giữ lại làm lịch sử thiết kế, không phản ánh code hiện tại.
-> - **Batch design — GỠ HOÀN TOÀN:** BatchPage, BatchDesignPanel, useBatchDesign, backend `batch_design.py` + test đã xóa; route `/batch` và tab Navbar "Batch" đã bỏ; blueprint `batch_design_bp` không còn đăng ký trong `app.py`.
+> **⚠️ Phase 8 — GỠ / RÚT GỌN (cập nhật 2026-08-14)**
+> Phase 8 đã được rút gọn khỏi sản phẩm. Các phần dưới (14, 15, 17 batch, 22 tests batch, 23) mô tả tính năng **không còn tồn tại** — giữ lại làm lịch sử thiết kế, không phản ánh code hiện tại.
+> - **Batch design — GỠ HOÀN TOÀN:** BatchPage, BatchDesignPanel, useBatchDesign, backend `batch_design.py` + test đã xóa; route `/batch` và tab Navbar "Batch" đã bỏ; blueprint `batch_design_bp` không còn đăng ký trong `app.py`. Constants `BATCH_*` cũng đã dọn khỏi `constants.py`.
 > - **Session history — GỠ:** HistoryPanel (UI), hook `useHistory.js` và `lib/historyDB.js` (IndexedDB) đã xóa; auto-save trong SearchPage đã gỡ. Không còn lưu/duyệt lịch sử phiên.
-> - **LNA Tm calculator — CÒN CODE, CHƯA DÙNG:** `LnaPanel/index.jsx` và backend `/api/lna-suggest` (`lna_suggest_bp`) vẫn tồn tại nhưng `LnaPanel` **chưa được import/render ở đâu** (dead code từ trước). Chưa quyết định giữ hay xóa.
+> - **LNA Tm calculator — BẬT + ĐÃ BENCHMARK (2026-08-14):** `USE_LNA_SUGGESTIONS=True`. Bảng NN trong `lna_tm.py` nay là **số thật đã kiểm chứng** — Owczarzy 2011 Table 2 (`_MCTIGUE04` = single-LNA full params suy từ McTigue 2004 32NN; `_OWCZARZY11` = consecutive-LNA). Đã sửa bug initiation (áp SantaLucia init cho **cả 2 đầu** duplex). `tests/test_lna_benchmark.py` đối chiếu McTigue 2004 Table 1 (39 oligo đo thực, 1 M Na⁺): **ΔTm RMSD 0.78 °C** (paper 0.85), **absolute Tm RMSD 1.54 °C** (paper method-4 1.47), per-oligo ΔTm ≤ 2.5 °C. `/api/health` expose `features.lna_suggestions`; frontend `useLnaEnabled` hiện/ẩn nút LNA theo flag. LnaPanel render trong `ResultsPage/ThermoTable` + Analyzer.
+
+> **🔧 Nhóm A — Scientific Completeness (cập nhật 2026-08-14, `PLAN_GapA_ScientificCompleteness.md`)**
+> - **A1 Batch — BỎ (quyết định của chủ dự án).** Batch mâu thuẫn với hướng `feat/design-focus`; giữ nguyên trạng thái đã gỡ. Khôi phục từ commit `269a4c9` nếu cần.
+> - **A2 LNA — XONG + BENCHMARKED (2026-08-14).** Chủ dự án cung cấp 2 paper gốc (McTigue 2004, Owczarzy 2011). Đã thay placeholder bằng số thật (Owczarzy Table 2), sửa bug initiation 2 đầu, và viết `tests/test_lna_benchmark.py` đối chiếu 39 oligo đo thực trong McTigue Table 1: ΔTm RMSD 0.78 °C, absolute Tm RMSD 1.54 °C (≤ 2 °C). Bật lại `USE_LNA_SUGGESTIONS=True`. Xem ghi chú Phase 8.
+> - **A3 Species — XONG.** Family DB `mirbase_family_overhangs.json` rebuild đa loài `hsa,mmu,rno` (300 KB, seed-based) bằng `scripts/build_mirbase_data.py --species hsa,mmu,rno`. `check_family_crossreactivity(..., species=None)` nay scope theo species (prefix từ `mirna_name`, reuse `_extract_species_prefix`; loại same-family ortholog khác loài → `cross_species_excluded`, nhất quán logic BLAST). UI `FamilySpecificityMap` hiển thị species + số cross-species excluded. Test `tests/test_family_species.py` (6 pass) gồm `test_let7a_family_loaded_from_miFam` (hsa + mmu). **Lưu ý:** `_find_family` là name-based → chuỗi dán không có tên miRNA không tra được family (form `species` chỉ là fallback); species scoping thực chất do prefix trong tên miRNA quyết định.
 
 ---
 

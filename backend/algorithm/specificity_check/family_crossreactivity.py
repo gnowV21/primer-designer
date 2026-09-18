@@ -21,9 +21,14 @@
 
 import json
 import os
+import re
 from ..thermodynamics import calculate_tm_nn
 from ..sequence_utils import rna_to_dna
-from ..constants import KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING
+from ..constants import KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX
+from .kwok import kwok_weighted_distance, PRIMER_3P_AT_WINDOW_START
+
+# UI species value → miRBase 3-letter prefix
+_SPECIES_TO_PREFIX = {"human": "hsa", "mouse": "mmu", "rat": "rno"}
 
 _DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "mirbase_family_overhangs.json")
 _DB_CACHE: dict | None = None
@@ -32,11 +37,36 @@ _DB_CACHE: dict | None = None
 _OVERHANG_MAX_NT = 8
 
 
+def _resolve_species_prefix(mirna_name: str, species: str | None = None) -> str:
+    """
+    Return the miRBase species prefix (e.g. 'hsa-') used to scope family
+    cross-reactivity to a single organism. [A3]
+
+    Priority:
+      1. A real prefix parsed from `mirna_name` — authoritative for what the
+         miRNA actually is (reuses blast_offtarget._extract_species_prefix; the
+         import is deferred to avoid a circular import, since that module
+         imports get_family_id from here).
+      2. The form-selected `species` ('human'|'mouse'|'rat' or a raw prefix),
+         used when the sequence was pasted without a miRBase name.
+      3. Human default.
+    """
+    if mirna_name and re.match(r"^[a-z]{3}-", mirna_name.strip().lower()):
+        from .blast_offtarget import _extract_species_prefix
+        return _extract_species_prefix(mirna_name)
+    if species:
+        s = species.strip().lower()
+        s = _SPECIES_TO_PREFIX.get(s, s)
+        return s if s.endswith("-") else s + "-"
+    return MIRBASE_HUMAN_PREFIX
+
+
 def check_family_crossreactivity(
     mature_seq: str,
     mirna_name: str,
     params: dict,
     overhang_len: int = 6,
+    species: str | None = None,
 ) -> dict:
     """
     Analyse cross-reactivity of a stemloop RT primer with family members.
@@ -46,16 +76,39 @@ def check_family_crossreactivity(
         mirna_name:  miRNA identifier, e.g. 'hsa-let-7a-5p' or 'hsa-miR-21-5p'.
         params:      User formData (for Tm calculation salt conditions).
         overhang_len: Stemloop RT primer binding length (default 6 nt per Chen 2005).
+        species:     Optional species override ('human'|'mouse'|'rat' or a raw
+                     miRBase prefix). Used only when `mirna_name` carries no
+                     prefix. Family cross-reactivity is scoped to one species —
+                     same-family orthologs in other species are NOT off-targets
+                     for a single-organism sample (consistent with the BLAST
+                     `cross_species_excluded` logic). [A3]
 
     Returns dict with keys:
-        family, overhang_used, target_overhang, cross_reactivity,
-        recommendation, data_warning.
+        family, species, overhang_used, target_overhang, cross_reactivity,
+        cross_species_excluded, recommendation, data_warning.
     """
     db = _load_db()
     family_name, siblings = _find_family(db, mirna_name, mature_seq)
 
     if not siblings:
         return _no_family_result(family_name, overhang_len)
+
+    # ── A3: scope siblings to the target species ────────────────────
+    target_prefix = _resolve_species_prefix(mirna_name, species)
+    same_species = {k: v for k, v in siblings.items() if k.lower().startswith(target_prefix)}
+    cross_species_excluded = len(siblings) - len(same_species)
+    siblings = same_species
+
+    if not siblings:
+        res = _no_family_result(family_name, overhang_len)
+        res["species"] = target_prefix.rstrip("-")
+        res["cross_species_excluded"] = cross_species_excluded
+        res["data_warning"] = (
+            f"Family '{family_name}' has no {target_prefix.rstrip('-')} sibling in the current "
+            f"dataset — {cross_species_excluded} same-family ortholog(s) in other species were "
+            "excluded (not off-targets for a single-species sample)."
+        )
+        return res
 
     target_overhang = _get_overhang(mature_seq, overhang_len)
     results = _evaluate(target_overhang, mature_seq, mirna_name, siblings, overhang_len, params)
@@ -82,9 +135,11 @@ def check_family_crossreactivity(
 
     return {
         "family": family_name,
+        "species": target_prefix.rstrip("-"),
         "overhang_used": overhang_len,
         "target_overhang": target_overhang,
         "cross_reactivity": results,
+        "cross_species_excluded": cross_species_excluded,
         "recommendation": recommendation,
         "data_warning": data_warning,
         "data_provenance": {
@@ -205,21 +260,14 @@ def _hamming(s1: str, s2: str) -> int:
 
 
 def _kwok_distance(s1: str, s2: str) -> float:
-    """Position-weighted mismatch distance: mismatches closer to the 3' end score higher.
+    """Thin wrapper for the RT-primer axis (SPEC_week2 C2).
 
-    A higher kwok_distance means the mismatches are located where they discriminate best
-    (3'-proximal), making co-amplification less likely [Kwok90].
-    Uses KWOK_POSITION_WEIGHTS[i] for mismatch at position i from the 3' end (0 = terminal).
+    The two windows are the miRNA 3'-overhang (mature[-N:]); the RT primer is their
+    reverse complement, so the RT primer 3' terminus pairs with window[0] (the 5'-most
+    nucleotide of the overhang). Weights must therefore be indexed from the window START,
+    not the window end. See specificity_check.kwok for the geometry rationale [Kwok90].
     """
-    if len(s1) != len(s2):
-        return 0.0
-    n = len(s1)
-    total = 0.0
-    for i, (c1, c2) in enumerate(zip(reversed(s1), reversed(s2))):
-        if c1 != c2:
-            w = KWOK_POSITION_WEIGHTS[i] if i < len(KWOK_POSITION_WEIGHTS) else 1.0
-            total += w
-    return total
+    return kwok_weighted_distance(s1, s2, PRIMER_3P_AT_WINDOW_START)
 
 
 def _calc_tm(seq_rna: str, params: dict) -> float:

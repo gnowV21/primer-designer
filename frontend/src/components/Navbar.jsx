@@ -2,8 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { useTheme, THEMES } from '../contexts/ThemeContext.jsx';
 
 const tabs = [
-  { to: '/home',   label: 'Home'     },
-  { to: '/search', label: 'Designer' },
+  { to: '/home',    label: 'Home'     },
+  // Not `end` — stays highlighted on /design/advanced too.
+  { to: '/design',  label: 'Designer' },
+  { to: '/analyze', label: 'Analyzer' },
 ];
 
 export default function Navbar() {

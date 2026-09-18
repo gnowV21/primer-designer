@@ -27,6 +27,11 @@ _DB_PATH = os.path.join(
 )
 _DB_CACHE: dict | None = None
 
+_DB3_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", "known_3prime_isomir_mirnas.json"
+)
+_DB3_CACHE: dict | None = None
+
 
 def check_isomir_flag(
     mirna_name: str,
@@ -96,7 +101,61 @@ def check_isomir_flag(
     }
 
 
+def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
+    """
+    Flag whether a miRNA has documented 3' isomiRs that land on the RT-primer binding
+    window (Week2 C11). The stem-loop RT primer binds the 3'-terminal `overhang_len` nt,
+    so 3' heterogeneity (templated shift, non-templated uridylation/adenylation) reduces
+    RT capture of the affected isoforms. Informational only — not scored.
+    """
+    db = _load_db3()
+    entry = _find_entry(db, mirna_name)
+    coverage = db.get("_metadata", {}).get("coverage_warning", "")
+
+    if entry is None:
+        return {
+            "three_prime_isomir_risk": False,
+            "mirna_name": mirna_name,
+            "overhang_len": overhang_len,
+            "note": (
+                "No 3' isomiR entry for this miRNA in the current reference set. "
+                "Absence of evidence is not evidence of absence — 3' isomiRs are common."
+            ),
+            "coverage_note": "no entry in the 3' isomiR reference set",
+            "data_warning": coverage,
+        }
+
+    return {
+        "three_prime_isomir_risk": True,
+        "mirna_name": mirna_name,
+        "overhang_len": overhang_len,
+        "dominant_3prime_variants": entry.get("dominant_3prime_variants", []),
+        "rt_capture_impact": entry.get("rt_capture_impact", "unknown"),
+        "evidence_level": entry.get("evidence_level", "unknown"),
+        "warning": (
+            "This miRNA has documented 3' isomiRs. The stem-loop RT primer binds the "
+            f"3'-terminal {overhang_len} nt, so 3'-variant isoforms are captured with reduced "
+            "efficiency; measured abundance reflects the canonical 3' form more than total "
+            "miRNA. Consider a 3'-tolerant chemistry or report the target as 'canonical 3' isoform'."
+        ),
+        "source": entry.get("source", "see known_3prime_isomir_mirnas.json"),
+        "data_warning": coverage,
+    }
+
+
 # ── Internal helpers ──────────────────────────────────────────────
+
+def _load_db3() -> dict:
+    global _DB3_CACHE
+    if _DB3_CACHE is not None:
+        return _DB3_CACHE
+    try:
+        with open(_DB3_PATH, encoding="utf-8") as f:
+            _DB3_CACHE = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        _DB3_CACHE = {}
+    return _DB3_CACHE
+
 
 def _load_db() -> dict:
     global _DB_CACHE

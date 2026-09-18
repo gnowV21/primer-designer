@@ -7,7 +7,7 @@
 
 from .constants import (
     SCORING_WEIGHTS_V3, SCORING_WEIGHTS_V4,
-    FAMILY_DISCRIMINATION_RISK_SCORE,
+    COMBINED_RISK_SCORE,
     TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
     TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
@@ -36,12 +36,15 @@ def score_candidate(
     params: dict,
     cross_reactivity: dict | None = None,
     use_v4: bool = True,
+    overhang_collision: dict | None = None,
 ) -> dict:
     """
     Score a complete primer set.
     use_v4=True (default): 15 criteria (SCORING_WEIGHTS_V4, Phase 3).
     use_v4=False: 12 criteria (SCORING_WEIGHTS_V3, Phase 2 compat).
-    cross_reactivity: output from check_family_crossreactivity (needed for V4).
+    cross_reactivity: seed-family output (kept for the biological-context panel; NOT scored).
+    overhang_collision: primer-axis output from check_overhang_collision — drives the
+        family_discrimination criterion (RT 3' overhang x forward 5' prefix). [Week2 C5]
     """
     scores = {}
     explanations = {}
@@ -287,20 +290,30 @@ def score_candidate(
             f"Formula: [SL04] SantaLucia & Hicks 2004."
         )
 
-        # ── 15. Family discrimination (0.05) [Chen05] ────────────
-        worst_risk = _extract_worst_family_risk(cross_reactivity)
-        fam_score = FAMILY_DISCRIMINATION_RISK_SCORE.get(worst_risk, 50)
+        # ── 15. Family discrimination — PRIMER-BINDING axis (0.05) [Chen05][Kwok90] ──
+        # Scored on the RT 3'-overhang x forward 5'-prefix collision analysis, NOT the seed
+        # family (which is the mRNA-targeting axis). [Week2 C5]
+        worst_risk = _extract_worst_primer_axis_risk(overhang_collision)
+        fam_score = COMBINED_RISK_SCORE.get(worst_risk, 100)
         scores["family_discrimination"] = fam_score
-        family_name = cross_reactivity.get("family") if cross_reactivity else None
-        overhang_used = cross_reactivity.get("overhang_used", 6) if cross_reactivity else 6
-        explanations["family_discrimination"] = (
-            f"Family cross-reactivity risk: {worst_risk} "
-            f"(family: {family_name or 'unknown'}, overhang: {overhang_used} nt). "
-            f"Score 100=SAFE/no data, 70=LOW, 30=HIGH, 0=IDENTICAL. "
-            f"Risk uses Kwok 1990 position-weighted distance: 3'-proximal mismatches "
-            f"block extension and are reclassified from HIGH→LOW [Kwok90 NAR 18:999]. "
-            f"Source: Chen et al. 2005 Fig.7; Kwok et al. 1990."
-        )
+        if worst_risk == "no_index_data":
+            explanations["family_discrimination"] = (
+                "No overhang index available — this criterion did not contribute discriminating "
+                "information (scored 100). Run scripts/build_overhang_index.py to enable it."
+            )
+        else:
+            oc = overhang_collision or {}
+            n_crit = oc.get("summary", {}).get("CRITICAL", 0)
+            worst_name = next((e.get("mirna") for e in oc.get("collisions", [])
+                               if e.get("combined_risk") == "CRITICAL"), None)
+            explanations["family_discrimination"] = (
+                f"Primer-binding specificity — worst combined risk: {worst_risk}. "
+                f"Axis: RT 3' overhang ({oc.get('overhang_len', 6)} nt) x forward 5' prefix "
+                f"({oc.get('forward_specific_len', '?')} nt). {n_crit} CRITICAL collider(s)"
+                + (f"; worst = {worst_name}" if worst_name else "") + ". "
+                "Score 100=SAFE, 70=LOW, 0=CRITICAL. Seed-family membership (positions 2-8) is "
+                "the mRNA-targeting axis and is NOT used for scoring. Source: Chen 2005; Kwok 1990."
+            )
 
     # ── Total weighted score ──────────────────────────────────────
     total = round(sum(scores[k] * weights[k] for k in weights if k in scores), 1)
@@ -317,16 +330,16 @@ def score_candidate(
     }
 
 
-def _extract_worst_family_risk(cross_reactivity: dict | None) -> str:
-    """Return the worst risk label from cross_reactivity result dict."""
-    if not cross_reactivity:
-        return "no_family_data"
-    hits = cross_reactivity.get("cross_reactivity", [])
-    if not hits:
-        return "no_family_data"
-    rank = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
-    worst = min(hits, key=lambda h: rank.get(h.get("risk", "SAFE"), 3))
-    return worst.get("risk", "no_family_data")
+def _extract_worst_primer_axis_risk(overhang_collision: dict | None) -> str:
+    """Worst combined RT+forward risk from check_overhang_collision (Week2 C5).
+
+    Returns 'no_index_data' when the overhang index is unavailable so the criterion stays
+    neutral (100) instead of silently penalising or crediting a design.
+    """
+    if not overhang_collision:
+        return "no_index_data"
+    worst = overhang_collision.get("worst_combined_risk", "no_index_data")
+    return worst if worst in ("SAFE", "LOW", "CRITICAL") else "no_index_data"
 
 
 def _grade(total: float) -> str:

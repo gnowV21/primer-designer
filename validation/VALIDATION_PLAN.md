@@ -52,8 +52,10 @@ python validation/validate_primers.py \
     --base-url http://localhost:5000 \
     --dataset validation/reference_mirnas.json \
     --out validation/results.csv
+# Regenerate the Benchmark page's validation block from results.json (committed script):
+python validation/build_benchmark_validation.py --in-place
 ```
-Kết quả: bảng PASS/FAIL trên console + `results.csv` (chi tiết từng target, overhang expected vs actual, Tm/GC/amplicon, siblings flagged).
+Kết quả: bảng PASS/FAIL trên console + `results.csv` + `results.json` (chi tiết từng target, overhang expected vs actual, Tm/GC/amplicon, siblings flagged), và khối `validation` trong `benchmark/benchmark_results.json` được **tái sinh bằng script** (không sửa tay). CI chạy `build_benchmark_validation.py --check` (qua `test_validation_block_matches_generator`) để chặn drift.
 
 ## 6. Mở rộng (tuỳ chọn)
 - **Exact-match với primer công bố:** khi có bảng primer từ paper (vd [Wang17] Table, [Var07]), thêm field `published_forward`/`published_rt` vào dataset để so trùng khớp tuyệt đối.

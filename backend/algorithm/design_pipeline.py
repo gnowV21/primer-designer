@@ -17,9 +17,11 @@ from algorithm.structure_check.heterodimer import (
     check_stemloop_reverse_heterodimer,
 )
 from algorithm.specificity_check.family_crossreactivity import check_family_crossreactivity
+from algorithm.specificity_check.overhang_collision import check_overhang_collision
 from algorithm.specificity_check.isomir_flag import check_isomir_flag
 from algorithm.scoring import score_candidate
-from algorithm.sequence_utils import validate_rna_sequence
+from algorithm.sequence_utils import validate_rna_sequence, rna_to_dna, reverse_complement
+from algorithm.thermodynamics import predicted_amplicon_tm, calc_dimer_tm
 from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
@@ -30,6 +32,8 @@ from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
     OVERHANG_LENGTH_DEFAULT, HARD_FILTER_ENABLED,
+    STEMLOOP_BODY, UNIVERSAL_REVERSE, AMPLICON_DIMER_TM_GAP_WARN,
+    FORWARD_SPECIFIC_LENGTHS,
 )
 
 
@@ -51,11 +55,14 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
 
     global_warnings = []
 
-    # SYBR Green warning
+    # SYBR Green note — a supported detection mode the user deliberately chose,
+    # not an error. Informational severity: the melting-curve requirement is
+    # surfaced in-context (results-page note + protocol advisor P3), so this must
+    # not inflate the critical count.
     if params.get("signalMethod", "taqman") == "sybr":
         global_warnings.append({
             "field": "signalMethod",
-            "severity": "critical",
+            "severity": "info",
             "message": SYBR_GREEN_WARNING_MESSAGE,
         })
 
@@ -82,7 +89,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             })
 
     # Stem-loop RT primer
-    stemloop = design_stemloop_rt(seq, params)
+    stemloop = design_stemloop_rt(seq, params, mirna_name=mirna_name)
 
     # Universal reverse primer
     reverse = get_universal_reverse(params)
@@ -180,18 +187,57 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         mirna_name=mirna_name,
         params=params,
         overhang_len=binding_len,
+        species=params.get("species"),
     )
-    scored = []
-    for c in candidates:
-        result = score_candidate(
-            c, stemloop, reverse, params,
-            cross_reactivity=cross_reactivity_shared,
-            use_v4=True,
+    def _score_all(oc):
+        out = []
+        for c in candidates:
+            result = score_candidate(
+                c, stemloop, reverse, params,
+                cross_reactivity=cross_reactivity_shared,
+                overhang_collision=oc,
+                use_v4=True,
+            )
+            out.append({**c, **result})
+        return out
+
+    # Iterative primer-axis collision (Week2 C5): forward_specific_len feeds the
+    # collision analysis, which feeds the winner's family_discrimination score — so
+    # the winner and the length it is scored against are mutually dependent. Iterate
+    # to a fixpoint so the REPORTED winner is scored on ITS OWN forward length, not a
+    # neighbour's (a single pass can pick a winner whose length ≠ the length used to
+    # score it). Bounded: specific_length ∈ {12..17}; a `seen` guard stops the rare
+    # oscillation deterministically at its first repeat.
+    overhang_collision = check_overhang_collision(
+        mature_seq=seq, mirna_name=mirna_name, params=params,
+        overhang_len=binding_len, forward_specific_len=None,
+        species=params.get("species"),
+    )
+    scored = _score_all(overhang_collision)
+    _seen_L = set()
+    for _ in range(len(FORWARD_SPECIFIC_LENGTHS) + 1):
+        best_L = max(scored, key=lambda x: x["total_score"]).get("specific_length")
+        if not best_L or best_L == overhang_collision.get("forward_specific_len") or best_L in _seen_L:
+            break
+        _seen_L.add(best_L)
+        overhang_collision = check_overhang_collision(
+            mature_seq=seq, mirna_name=mirna_name, params=params,
+            overhang_len=binding_len, forward_specific_len=best_L,
+            species=params.get("species"),
         )
-        scored.append({**c, **result})
+        scored = _score_all(overhang_collision)
 
     # Rank → Top N
     top_n = sorted(scored, key=lambda x: x["total_score"], reverse=True)[:CANDIDATES_TOP_N]
+
+    # Amplicon melting Tm + SYBR dimer proximity warning (SPEC_phase5 PART D).
+    # The amplicon top strand = tail + miRNA + rc(stem-loop body), cut at the 5' end of
+    # the universal primer — same geometry as the visualization coordinate model.
+    _m_dna = rna_to_dna(seq).upper()
+    _rc_body = reverse_complement(STEMLOOP_BODY)
+    _univ_seq = (reverse.get("sequence") or UNIVERSAL_REVERSE).upper()
+    _rc_univ = reverse_complement(_univ_seq)
+
     for i, p in enumerate(top_n):
         p["rank"] = i + 1
         p["binding_start_1based"] = (p.get("tail_length", 0)) + OUTPUT_BASE_INDEX
@@ -201,15 +247,66 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             forward_3prime_position=p.get("specific_length", 0),
         )
 
-    # Cross-reactivity warning
+        # Predicted amplicon Tm (product melt peak) + dimer-proximity warning.
+        _tail = p["sequence"][: p.get("tail_length", 0)]
+        _sense = _tail + _m_dna + _rc_body
+        _j = _sense.find(_rc_univ)
+        if _j >= 0:
+            _amplicon = _sense[: _j + len(_univ_seq)]
+            _atm = predicted_amplicon_tm(_amplicon, params)
+            p["predicted_amplicon_tm"] = _atm
+            _dimer_tms = [
+                t for t in (
+                    calc_dimer_tm(p["sequence"], None, params),        # forward self-dimer
+                    calc_dimer_tm(p["sequence"], _univ_seq, params),   # forward × universal
+                ) if t is not None
+            ]
+            if _atm is not None and _dimer_tms:
+                _dtm = max(_dimer_tms)
+                _gap = abs(_atm - _dtm)
+                p["dimer_tm_warning"] = (
+                    {"dimer_tm": _dtm, "delta_c": round(_gap, 1),
+                     "threshold_c": AMPLICON_DIMER_TM_GAP_WARN}
+                    if _gap < AMPLICON_DIMER_TM_GAP_WARN else None
+                )
+            else:
+                p["dimer_tm_warning"] = None
+        else:
+            p["predicted_amplicon_tm"] = None
+            p["dimer_tm_warning"] = None
+
+    # Primer-axis collision warning — this is the specificity/scoring axis (Week2 C5).
+    _oc_sum = overhang_collision.get("summary", {})
+    if _oc_sum.get("CRITICAL", 0) >= 1:
+        global_warnings.append({
+            "field": "overhang_collision",
+            "severity": "critical",
+            "message": (
+                f"{_oc_sum['CRITICAL']} miRNA(s) share BOTH the RT 3'-overhang and the forward "
+                f"binding site (combined risk CRITICAL; worst = {overhang_collision.get('worst_combined_risk')}). "
+                "This assay may co-amplify them. See specificity_warnings.overhang_collision."
+            ),
+        })
+    elif _oc_sum.get("rt_identical", 0) > 0:
+        global_warnings.append({
+            "field": "overhang_collision",
+            "severity": "warning",
+            "message": (
+                f"{_oc_sum['rt_identical']} miRNA(s) share the RT 3'-overhang (byte-identical RT "
+                "primer) but are resolved by the forward primer. Relevant for multiplex / RT-primer pooling."
+            ),
+        })
+
+    # Seed-family cross-reactivity — biological (mRNA-targeting) context ONLY; demoted to info.
     cross_reactivity = cross_reactivity_shared
     if any(r.get("risk") in ("IDENTICAL", "HIGH") for r in cross_reactivity.get("cross_reactivity", [])):
         global_warnings.append({
             "field": "cross_reactivity",
-            "severity": "warning",
+            "severity": "info",
             "message": (
-                f"Cross-reactivity risk detected: {cross_reactivity['family']} family members "
-                f"share ≤1 nt difference in the {binding_len}-nt stemloop overhang region."
+                f"Seed family {cross_reactivity.get('family')} shares the mRNA-targeting seed "
+                "(positions 2-8). This is NOT the primer specificity axis — see overhang_collision "
+                "for RT/forward binding-site analysis."
             ),
         })
 
@@ -300,18 +397,45 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         "normalization_advice": normalization_advice,
         "lna_hints": lna_hints,
         "specificity_warnings": {
-            "cross_reactivity": cross_reactivity,
+            "cross_reactivity": cross_reactivity,          # UNCHANGED schema (biological context)
+            "overhang_collision": overhang_collision,      # primer-binding axes (RT + forward)
+            "axis_note": (
+                "cross_reactivity = seed-based grouping (mRNA-targeting axis, biological context). "
+                "overhang_collision = primer binding axes (RT 3' overhang + forward 5' prefix). "
+                "Only overhang_collision drives warnings and scoring."
+            ),
             "data_note": (
                 "Family data: miRBase CURRENT, seed-based grouping (positions 2-8). "
+                "Overhang index: scripts/build_overhang_index.py (full per-species mature set). "
                 "isoMiR data: curated from literature (7 entries, partial coverage). "
-                "Re-run scripts/build_mirbase_data.py after miRBase updates."
+                "Re-run the build scripts after miRBase updates."
             ),
         },
         "metadata": {
             "mirna_id": mirna_name,
+            "mirna_accession": params.get("mirna_accession", ""),
+            "species": params.get("species") or "",
             "mirna_sequence": seq,
             "mirna_length": len(seq),
             "binding_region_nt": binding_len,
+            "forward_axis_refined": True,
+            # MIQE 2.0 §1: "Bioinformatics tools and versions and settings used to
+            # design assays" — the effective settings this run used, echoed so the
+            # exporter can surface them for the report (self-reporting the tool).
+            "design_settings": {
+                "detection_method": params.get("signalMethod", "taqman"),
+                "rt_overhang_nt": binding_len,
+                "tm_target_c": [params.get("tmMin"), params.get("tmMax")],
+                "primer_length_nt": [params.get("lengthMin"), params.get("lengthMax")],
+                "gc_percent": [params.get("gcMin"), params.get("gcMax")],
+                "amplicon_bp": [params.get("ampliconMin"), params.get("ampliconMax")],
+                "na_mm": params.get("saltConcentration"),
+                "k_mm": params.get("kPlusConc"),
+                "mg_mm": params.get("magnesiumConcentration"),
+                "dntp_mm": params.get("dntpTotal"),
+                "primer_nm": params.get("primerConcentration"),
+                "buffer_ph": params.get("bufferPH"),
+            },
             "candidates_generated": len(candidates) + len(rejection_log),
             "candidates_passed_prefilter": len(candidates),
             "candidates_rejected": len(rejection_log),

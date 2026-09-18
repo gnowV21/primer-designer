@@ -17,6 +17,10 @@ from routes.export import export_bp
 from routes.multiplex_check import multiplex_check_bp
 from routes.benchmark import benchmark_bp
 from routes.lna_suggest import lna_suggest_bp
+from routes.analyze import analyze_bp
+from routes.docs import docs_bp
+from routes.visualize import visualize_bp
+from algorithm.constants import USE_LNA_SUGGESTIONS
 from db import local_db
 
 app = Flask(__name__)
@@ -46,6 +50,9 @@ app.register_blueprint(export_bp,          url_prefix="/api")
 app.register_blueprint(multiplex_check_bp, url_prefix="/api")
 app.register_blueprint(benchmark_bp,       url_prefix="/api")
 app.register_blueprint(lna_suggest_bp,     url_prefix="/api")
+app.register_blueprint(analyze_bp,         url_prefix="/api")
+app.register_blueprint(docs_bp,            url_prefix="/api")
+app.register_blueprint(visualize_bp,       url_prefix="/api")
 
 # Apply rate limit to blast-check and multiplex-check: 10 req/min/IP [spec §9.3]
 limiter.limit("10 per minute")(blast_check_bp)
@@ -59,6 +66,10 @@ def health():
         "status":  "ok",
         "message": "Backend is running",
         "version": "3.1.0",
+        "features": {
+            # LNA Tm suggestions are gated until the NN tables are verified. [A2]
+            "lna_suggestions": USE_LNA_SUGGESTIONS,
+        },
     }
 
 

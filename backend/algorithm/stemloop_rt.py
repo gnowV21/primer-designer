@@ -11,11 +11,13 @@ from .constants import (
     GC_STEMLOOP_MIN, GC_STEMLOOP_MAX,
     REFOLDING_PROTOCOL,
     USE_HYBRID_TM,
+    SHORT_DUPLEX_NT_THRESHOLD, TM_SHORT_DUPLEX_UNCERTAINTY_C,
     P3_RT_MV_CONC,
     P3_DEFAULT_MV_CONC, P3_DEFAULT_DV_CONC, P3_DEFAULT_DNTP_CONC,
     P3_DEFAULT_DNA_CONC, P3_DEFAULT_TEMP_C,
 )
 from .hybrid_tm import predict_hybrid_tm
+from .specificity_check.isomir_flag import check_3prime_isomir_flag
 from .sequence_utils import rna_to_dna, reverse_complement, calculate_gc
 from .thermodynamics import calculate_tm_nn, calculate_end_stability
 
@@ -29,7 +31,7 @@ except ImportError:
 import primer3
 
 
-def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
+def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "") -> dict:
     """
     Design the stem-loop RT primer for a given mature miRNA.
 
@@ -104,40 +106,81 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
 
     include_refold = params.get("enableRefoldingProtocol", True)
 
-    # [RESEARCH_QUESTIONS_UX A4] 3' isomiR advisory: RT overhang binds the 3' end of
-    # mature miRNA. Non-templated nucleotide additions (3' isomiRs) at the 3' terminus
-    # can impair RT primer annealing, reducing cDNA yield for isoforms with terminal
-    # additions/truncations. No database coverage for 3' isomiRs yet — general advisory.
-    warnings.append({
-        "field": "three_prime_isomir",
-        "severity": "info",
-        "message": (
-            f"RT overhang binds the 3' end of the miRNA ({binding_len} nt). "
-            "Non-templated 3' additions (3' isomiRs) can reduce RT efficiency for "
-            "terminal-addition isoforms. Verify with melting curve analysis if "
-            "expression levels appear unexpectedly low."
-        ),
-    })
+    # 3' isomiR advisory (Week2 C11): the RT overhang binds the 3' end, so 3' isomiRs
+    # (templated shift, non-templated uridylation/adenylation) reduce RT capture of the
+    # affected isoforms. Data-driven now — only miRNAs with a documented entry raise a
+    # warning; others get a neutral info note (absence of evidence != evidence of absence).
+    three_prime_isomir = check_3prime_isomir_flag(mirna_name, binding_len)
+    if three_prime_isomir["three_prime_isomir_risk"]:
+        warnings.append({
+            "field": "three_prime_isomir",
+            "severity": "warning",
+            "message": three_prime_isomir["warning"],
+            "evidence_level": three_prime_isomir.get("evidence_level"),
+        })
+    else:
+        warnings.append({
+            "field": "three_prime_isomir",
+            "severity": "info",
+            "message": (
+                f"The RT overhang binds the 3' end of the miRNA ({binding_len} nt). "
+                "3' isomiRs (non-templated additions/truncations) can reduce RT efficiency "
+                "for affected isoforms."
+            ),
+            "coverage_note": three_prime_isomir.get("coverage_note"),
+        })
 
     # [RESEARCH_QUESTIONS_UX A2] Compute DNA:RNA hybrid Tm for the RT overhang.
     # overhang_rc = DNA 5'→3' strand that anneals to miRNA 3' end (RNA).
     # USE_HYBRID_TM gate: True → Sugimoto 1995 NN; False → label-only fallback.
+    # Week2 P4: the RT overhang is 6 nt — below SHORT_DUPLEX_NT_THRESHOLD (8), a point Tm
+    # from an NN model is not defensible (initiation + terminal fraying dominate). Report
+    # dG37 and an indicative Tm band instead of a point value.
+    _reportable_as_tm = binding_len >= SHORT_DUPLEX_NT_THRESHOLD
+    _tm_hybrid_band_c = None
+    _dg37_kcal_mol = None
     if USE_HYBRID_TM:
         _hybrid = predict_hybrid_tm(
             dna_5to3=overhang_rc,
             dna_conc_nM=4000.0,       # 4 μM: Sugimoto 1995 measurement conditions
             mv_conc_mM=float(P3_RT_MV_CONC),  # RT buffer: 75 mM KCl [K11]
         )
-        _tm_hybrid_c   = _hybrid["tm_c"]
+        _tm_raw        = _hybrid["tm_c"]
         _tm_chemistry  = "DNA:RNA"
         _tm_accuracy   = _hybrid["accuracy"]
-        _tm_note       = (
-            f"RT overhang hybrid Tm (Sugimoto 1995 DNA:RNA NN): "
-            f"{f'{_tm_hybrid_c}°C' if _tm_hybrid_c is not None else 'unavailable'} "
-            f"at 4 μM, 75 mM KCl. "
-            "Full-primer Tm above uses primer3 DNA:DNA NN (SantaLucia 1998) — indicative. "
-            + "; ".join(_hybrid["caveats"])
-        )
+        # dG37 (kcal/mol) = dH − T·dS, T = 310.15 K, dS in cal/mol·K.
+        if _hybrid.get("dH") is not None and _hybrid.get("dS") is not None:
+            _dg37_kcal_mol = round(_hybrid["dH"] - 310.15 * _hybrid["dS"] / 1000.0, 2)
+        if _reportable_as_tm:
+            _tm_hybrid_c = _tm_raw
+            _tm_note = (
+                f"RT overhang hybrid Tm (Sugimoto 1995 DNA:RNA NN): {_tm_raw}°C at 4 μM, "
+                "75 mM KCl. Full-primer Tm above uses primer3 DNA:DNA NN (SantaLucia 1998) — "
+                "indicative. " + "; ".join(_hybrid["caveats"])
+            )
+        else:
+            _tm_hybrid_c = None   # do not present a point Tm for a <8 bp duplex
+            if _tm_raw is not None:
+                _tm_hybrid_band_c = [round(_tm_raw - TM_SHORT_DUPLEX_UNCERTAINTY_C, 1),
+                                     round(_tm_raw + TM_SHORT_DUPLEX_UNCERTAINTY_C, 1)]
+            if _dg37_kcal_mol is not None:
+                # Normal path: hybrid NN succeeded → report ΔG37 + indicative band.
+                _tm_note = (
+                    f"RT overhang is {binding_len} nt (< {SHORT_DUPLEX_NT_THRESHOLD} bp): a point Tm "
+                    "is not reportable — nearest-neighbour initiation and terminal fraying dominate at "
+                    f"this length. Reported instead: ΔG37 = {_dg37_kcal_mol} kcal/mol (Sugimoto 1995 "
+                    f"DNA:RNA NN, 4 μM, 75 mM KCl) and an indicative Tm band "
+                    f"{_tm_hybrid_band_c if _tm_hybrid_band_c else 'n/a'} (± "
+                    f"{TM_SHORT_DUPLEX_UNCERTAINTY_C:.0f} °C, not a statistical CI). Use ΔG37 for "
+                    "relative ranking, not the Tm as an absolute value. " + "; ".join(_hybrid["caveats"])
+                )
+            else:
+                # Hybrid NN could not be computed (e.g. unsupported base) — never print "None".
+                _tm_note = (
+                    f"RT overhang is {binding_len} nt (< {SHORT_DUPLEX_NT_THRESHOLD} bp): a point Tm "
+                    "is not reportable, and the DNA:RNA hybrid thermodynamics could not be computed "
+                    "for this overhang. " + "; ".join(_hybrid["caveats"])
+                )
     else:
         _hybrid        = None
         _tm_hybrid_c   = None
@@ -163,9 +206,13 @@ def design_stemloop_rt(mature_sequence: str, params: dict) -> dict:
         # tm_hybrid: Tm of the RT overhang × miRNA duplex (DNA:RNA, Sugimoto 1995 NN)
         "tm_hybrid": _hybrid,
         "tm_hybrid_c": _tm_hybrid_c,
+        "tm_hybrid_band_c": _tm_hybrid_band_c,
+        "dg37_kcal_mol": _dg37_kcal_mol,
+        "reportable_as_tm": _reportable_as_tm,
         "tm_chemistry": _tm_chemistry,
         "tm_accuracy":  _tm_accuracy,
         "tm_note": _tm_note,
+        "three_prime_isomir": three_prime_isomir,
         "mfe": mfe,
         "mfe_method": mfe_method,
         "hairpin_structure": structure,

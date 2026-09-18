@@ -75,9 +75,9 @@ def blast_check():
 
     # ── 3. Cache lookup ─────────────────────────────────────────
     db_version = db_info.get("build_date", "unknown")
-    cached = _cache.get_result(fwd, rev, db_version)
+    cached = _cache.get_result(fwd, rev, db_version, mirna_id)
     if cached is not None:
-        cached["cache"] = {"hit": True, "cache_key": BlastCache._compute_key(fwd, rev, db_version)}
+        cached["cache"] = {"hit": True, "cache_key": BlastCache._compute_key(fwd, rev, db_version, mirna_id)}
         cached["database_info"] = db_info
         return jsonify(cached)
 
@@ -119,9 +119,9 @@ def blast_check():
         return jsonify({"error": f"Internal error: {e}"}), 500
 
     # ── 6. Cache result ──────────────────────────────────────────
-    _cache.set_result(fwd, rev, result, db_version)
+    _cache.set_result(fwd, rev, result, db_version, mirna_id)
 
-    result["cache"]         = {"hit": False, "cache_key": BlastCache._compute_key(fwd, rev, db_version)}
+    result["cache"]         = {"hit": False, "cache_key": BlastCache._compute_key(fwd, rev, db_version, mirna_id)}
     result["database_info"] = db_info
 
     return jsonify(result)

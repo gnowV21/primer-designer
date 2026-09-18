@@ -107,3 +107,43 @@ if __name__ == "__main__":
     test_output_boolean_type()
     test_co_amplification_warning_present_for_known()
     print("\nAll isomir_flag tests passed.")
+
+
+# ── Week2 C11: 3' isomiR flag ─────────────────────────────────────
+from algorithm.specificity_check import isomir_flag as _iso3
+
+
+def test_3prime_no_entry_returns_false():
+    # The shipped 3' reference set is initialized empty (curation pending).
+    _iso3._DB3_CACHE = None
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-21-5p", overhang_len=6)
+    assert res["three_prime_isomir_risk"] is False
+    assert res["coverage_note"] == "no entry in the 3' isomiR reference set"
+    assert "not evidence of absence" in res["note"]
+
+
+def test_3prime_with_entry_raises_warning(monkeypatch):
+    fake = {
+        "_metadata": {"coverage_warning": "Partial coverage."},
+        "hsa-miR-TEST-3p": {
+            "dominant_3prime_variants": ["+U", "+A"],
+            "rt_capture_impact": "moderate",
+            "evidence_level": "review_supported",
+            "source": "TestRef PMID:00000000",
+        },
+    }
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", fake)
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-TEST-3p", overhang_len=6)
+    assert res["three_prime_isomir_risk"] is True
+    assert res["rt_capture_impact"] == "moderate"
+    assert res["dominant_3prime_variants"] == ["+U", "+A"]
+    assert "reduced" in res["warning"]
+
+
+def test_3prime_entry_missing_optional_fields(monkeypatch):
+    fake = {"_metadata": {}, "hsa-miR-X-3p": {}}   # entry present but no optional fields
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", fake)
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-X-3p")
+    assert res["three_prime_isomir_risk"] is True
+    assert res["rt_capture_impact"] == "unknown"
+    assert res["dominant_3prime_variants"] == []

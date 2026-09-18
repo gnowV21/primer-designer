@@ -100,6 +100,60 @@ def export_primers():
 
 # ── CSV builder ───────────────────────────────────────────────────
 
+# ── MIQE 2.0 §1 "Assay Design" self-report ────────────────────────
+
+def _fmt_range(pair, unit=""):
+    """Format a [min, max] pair like '58–62 °C', tolerant of None/missing."""
+    if not isinstance(pair, (list, tuple)) or len(pair) != 2:
+        return "—"
+    lo, hi = pair
+    if lo is None and hi is None:
+        return "—"
+    suffix = f" {unit}" if unit else ""
+    return f"{lo}{suffix}" if lo == hi else f"{lo}–{hi}{suffix}"
+
+
+def _miqe_modifications(top3):
+    """Report oligo modifications (e.g. LNA) if any were used (MIQE 2.0 §1)."""
+    for s in (top3 or []):
+        lna = s.get("lna_positions") or s.get("lna") or []
+        if lna:
+            return f"LNA at forward positions {lna}"
+    return "None (standard DNA oligonucleotides)"
+
+
+def _miqe_design_rows(meta, top3):
+    """MIQE 2.0 §1 rows the design tool can self-report (reagent prep / assay design)."""
+    ds = meta.get("design_settings", {}) or {}
+    tool = (
+        f"HG Lab Stem-loop RT-qPCR Primer Designer "
+        f"(algorithm v{meta.get('algorithm_version', '?')}, "
+        f"scoring {meta.get('scoring_version', 'V4')})"
+    )
+    ident = " · ".join(filter(None, [
+        meta.get("mirna_id") or "—",
+        meta.get("species") or None,
+        (f"accession {meta['mirna_accession']}" if meta.get("mirna_accession") else None),
+        (f"{meta.get('mirna_length')} nt" if meta.get("mirna_length") else None),
+    ]))
+    return [
+        ("Design tool + version + settings", tool),
+        ("Target (symbol · species · accession · length)", ident),
+        ("Detection method", str(ds.get("detection_method", "—")).upper()),
+        ("RT 3' overhang (binding region)",
+         f"{ds.get('rt_overhang_nt', meta.get('binding_region_nt', '?'))} nt (Chen 2005 stem-loop)"),
+        ("Primer Tm target", _fmt_range(ds.get("tm_target_c"), "°C")),
+        ("Primer length", _fmt_range(ds.get("primer_length_nt"), "nt")),
+        ("Primer GC", _fmt_range(ds.get("gc_percent"), "%")),
+        ("Amplicon length target", _fmt_range(ds.get("amplicon_bp"), "bp")),
+        ("Reaction ions Na+/K+/Mg2+/dNTP (mM)",
+         f"{ds.get('na_mm','?')} / {ds.get('k_mm','?')} / {ds.get('mg_mm','?')} / {ds.get('dntp_mm','?')}"),
+        ("Primer concentration", f"{ds.get('primer_nm','?')} nM"),
+        ("Buffer pH", str(ds.get("buffer_ph", "—"))),
+        ("Oligo modifications", _miqe_modifications(top3)),
+    ]
+
+
 def _build_csv(results: dict, filename: str, blast_result=None, include_checklist: bool = True):
     meta    = results.get("metadata", {})
     top3    = results.get("top3", [])
@@ -157,6 +211,12 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         "", "", "", "Fixed universal reverse [Chen05][K11]",
     ])
 
+    # ── Assay design (MIQE 2.0 §1) — the tool self-reports itself + settings ──
+    buf.write("\r\n# ASSAY DESIGN (MIQE 2.0 §1: bioinformatics tool, version, settings)\r\n")
+    writer.writerow(["Design_Parameter", "Value"])
+    for _label, _val in _miqe_design_rows(meta, top3):
+        writer.writerow([_label, _val])
+
     # ── Specificity summary — its own clearly-delimited 2-column block ──
     buf.write("\r\n# SPECIFICITY SUMMARY\r\n")
     prov = _family_provenance_note(results)
@@ -173,6 +233,17 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
             "not assessed — run the Off-target (BLAST) check before ordering",
         ])
 
+    # Primer-binding (RT 3'-overhang x forward 5'-prefix) collision axes — the scoring axis.
+    oc_rows, _oc_interp = _overhang_axis_summary(results)
+    for label, val in oc_rows:
+        writer.writerow([label, val])
+
+    # 3' isomiR capture caveat (affects the RT overhang binding site).
+    tpi = results.get("stemloop_rt", {}).get("three_prime_isomir", {}) or {}
+    if tpi:
+        writer.writerow(["three_prime_isomir_risk", str(tpi.get("three_prime_isomir_risk", False))])
+        writer.writerow(["rt_capture_impact", str(tpi.get("rt_capture_impact", "n/a"))])
+
     if include_checklist:
         _append_checklist_csv(writer, buf, results, blast_result)
 
@@ -183,7 +254,7 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
 
 
 def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
-    """Append MIQE-aligned validation checklist block to CSV. [MIQE09]"""
+    """Append MIQE 2.0-aligned validation checklist block to CSV. [Bustin 2025]"""
     # Auto-fill specificity data from results
     spec = results.get("specificity_warnings", {})
     cr   = spec.get("cross_reactivity", {})
@@ -196,7 +267,7 @@ def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
     _bsumm = (blast_result or {}).get("summary", {}) if isinstance(blast_result, dict) else {}
     blast_risk = _bsumm.get("overall_risk", "")
 
-    buf.write("\r\n# VALIDATION CHECKLIST (MIQE-aligned, Bustin et al. 2009 Clin Chem)\r\n")
+    buf.write("\r\n# VALIDATION CHECKLIST (MIQE 2.0-aligned, Bustin et al. 2025 Clin Chem 71:634)\r\n")
     buf.write("# Fill in Pass (Y/N) and Measured_Value after wet-lab validation.\r\n")
     buf.write("# For research use only. Validate primers experimentally before use.\r\n")
     writer.writerow(["Item", "Acceptance_Criterion", "Reference", "Pass", "Measured_Value"])
@@ -205,49 +276,84 @@ def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
         (
             "No-template control (NTC)",
             "No amplification, or Cq ≥5 cycles above lowest standard",
-            "MIQE09",
+            "MIQE 2.0",
             "",
             "",
         ),
         (
             "No-RT control",
             "No signal (confirms absence of genomic DNA / self-priming)",
-            "MIQE09",
+            "MIQE 2.0",
             "",
             "",
         ),
         (
             "Melting curve (SYBR Green)",
             "Single peak; no primer-dimer or non-specific product",
-            "MIQE09, Varkonyi-Gasic 2007",
+            "MIQE 2.0, Varkonyi-Gasic 2007",
             "",
             "",
         ),
         (
             "Standard curve",
             "≥5 dilution points, ≥1 log range (10-fold serial dilutions)",
-            "MIQE09",
+            "MIQE 2.0",
             "",
             "",
         ),
         (
-            "PCR efficiency",
-            "90–110%  [= 10^(−1/slope) − 1]",
-            "MIQE09",
+            "PCR efficiency (report with CI)",
+            "90–110%  [E = 10^(−1/slope) − 1]; report ±95% confidence interval",
+            "MIQE 2.0",
             "",
             "",
         ),
         (
             "R² (linearity)",
             "≥ 0.98",
-            "MIQE09",
+            "MIQE 2.0",
+            "",
+            "",
+        ),
+        (
+            "LOD and LLOQ/ULOQ (dynamic range)",
+            "Determine and report LOD, lower/upper limits of quantification",
+            "MIQE 2.0",
+            "",
+            "",
+        ),
+        (
+            "Efficiency-corrected quantification",
+            "Report efficiency-corrected quantities with prediction intervals; avoid Cq/ΔΔCq alone",
+            "MIQE 2.0",
+            "",
+            "",
+        ),
+        (
+            "Reference-gene normalization",
+            "≥2 reference genes, geometric-mean normalization, stability validated in-context",
+            "MIQE 2.0",
             "",
             "",
         ),
         (
             "Technical replicates",
-            "≥3 replicates; report Cq mean and SD",
-            "MIQE09",
+            "≥3 replicates; report Cq mean and SD (repeatability)",
+            "MIQE 2.0",
+            "",
+            "",
+        ),
+        (
+            "Reproducibility (inter-assay)",
+            "Report variation across days / operators / instruments",
+            "MIQE 2.0",
+            "",
+            "",
+        ),
+        (
+            "Raw fluorescence data",
+            "Deposit/submit raw fluorescence data (RDML or RDES format)",
+            "MIQE 2.0",
             "",
             "",
         ),
@@ -295,6 +401,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
     rev   = results.get("universal_reverse", {})
     gw    = results.get("global_warnings", [])
     ec    = results.get("edge_cases", [])
+    pa    = results.get("protocol_advice", [])
 
     # Escape meta strings used in reportlab XML Paragraphs
     esc = _html.escape
@@ -389,6 +496,15 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         iso = _isomir_note(best)
         if iso:
             notes.append(f"<b>{esc(iso)}</b>")
+        oc_rows, oc_interp = _overhang_axis_summary(results)
+        if oc_interp:
+            oc = results.get("specificity_warnings", {}).get("overhang_collision", {})
+            worst = oc.get("worst_combined_risk", "")
+            n_crit = oc.get("summary", {}).get("CRITICAL", 0)
+            notes.append(
+                f"<b>Primer-binding specificity:</b> worst combined risk {esc(str(worst))}, "
+                f"{n_crit} CRITICAL collider(s). {esc(oc_interp)}"
+            )
         prov = _family_provenance_note(results)
         if prov:
             notes.append(esc(prov))
@@ -426,6 +542,32 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
     ]))
     story.append(cmp_tbl)
     story.append(Spacer(1, 0.5*cm))
+
+    # ── Assay design (MIQE 2.0 §1) — the tool self-reports itself + settings ──
+    from reportlab.lib.styles import ParagraphStyle as _PS
+    _dcell = _PS("miqedesign", parent=body, fontSize=8, leading=10)
+    story.append(Paragraph("Assay Design (MIQE 2.0 §1)", h2))
+    dr_data = [["Parameter", "Value"]] + [
+        [Paragraph(e(lbl), _dcell), Paragraph(e(val), _dcell)]
+        for lbl, val in _miqe_design_rows(meta, top3)
+    ]
+    dr_tbl = Table(dr_data, colWidths=[6.5*cm, 9.5*cm])
+    dr_tbl.setStyle(TableStyle([
+        ("BACKGROUND",     (0, 0), (-1, 0), teal),
+        ("TEXTCOLOR",      (0, 0), (-1, 0), rl_colors.white),
+        ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",       (0, 0), (-1, 0), 9),
+        ("GRID",           (0, 0), (-1, -1), 0.5, rl_colors.grey),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
+        ("VALIGN",         (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(dr_tbl)
+    story.append(Paragraph(
+        "<i>Self-reported by the design tool for MIQE 2.0 §1 (Reagent preparation / "
+        "assay design). Manufacturer of oligonucleotides and optimization details are "
+        "supplied by the user.</i>", body,
+    ))
+    story.append(Spacer(1, 0.4*cm))
 
     # ── Quality summary ───────────────────────────────────────────
     issues = [w for w in gw if w.get("severity") in ("critical", "warning")]
@@ -473,6 +615,26 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ))
     story.append(Spacer(1, 0.4*cm))
 
+    # ── Protocol Advisor (moved off the results page into the report) ──
+    if pa:
+        story.append(Paragraph("Protocol Advisor", h2))
+        story.append(Paragraph(
+            "<i>Evidence-backed protocol suggestions based on your assay parameters. "
+            "Descriptive only — validate experimentally before use.</i>", body))
+        for item in pa:
+            match = str(item.get("match", "")).upper()
+            iid   = esc(str(item.get("id", "")))
+            title = esc(str(item.get("title", "")))
+            rec   = esc(str(item.get("recommendation", "")))
+            head  = f"<b>[{iid}] {title}</b>" + (f" — {match} match" if match else "")
+            story.append(Paragraph(head, body))
+            if rec:
+                story.append(Paragraph(rec, body))
+            doi = item.get("doi") or item.get("source_doi")
+            if doi:
+                story.append(Paragraph(f"<i>doi:{esc(str(doi))}</i>", body))
+        story.append(Spacer(1, 0.4*cm))
+
     # ── Validation Checklist (Phase 7 PART E) ────────────────────
     if include_checklist:
         story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result))
@@ -485,7 +647,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
     ))
     story.append(Paragraph(
         "Sources: Chen et al. 2005 (Nucleic Acids Res.); Kramer 2011 (Curr Protoc Mol Biol); "
-        "MIQE guidelines Bustin et al. 2009 (Clin Chem); SantaLucia & Hicks 2004.",
+        "MIQE 2.0 guidelines Bustin et al. 2025 (Clin Chem 71:634); SantaLucia & Hicks 2004.",
         body,
     ))
 
@@ -501,7 +663,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
 # ── Checklist PDF helper ──────────────────────────────────────────
 
 def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result=None) -> list:
-    """Build Validation Checklist PDF section (MIQE09-aligned). (Phase 7 PART E)"""
+    """Build Validation Checklist PDF section (MIQE 2.0-aligned). (Phase 7 PART E)"""
     from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
     from reportlab.lib.units import cm
     from reportlab.lib.styles import ParagraphStyle
@@ -525,25 +687,40 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, bl
         ["Criterion", "Acceptance Target", "Reference", "Pass ☐", "Value / Notes"],
         ["No-template control (NTC)",
          "No amplification, or Cq ≥5 cycles above lowest standard",
-         "MIQE09", "", ""],
+         "MIQE 2.0", "", ""],
         ["No-RT control",
          "No signal (excludes genomic DNA / self-priming)",
-         "MIQE09", "", ""],
+         "MIQE 2.0", "", ""],
         ["Melting curve (SYBR Green)",
          "Single peak; no primer-dimer or non-specific product",
-         "MIQE09\nVarkonyi-Gasic 2007", "", ""],
+         "MIQE 2.0\nVarkonyi-Gasic 2007", "", ""],
         ["Standard curve (≥5 points)",
          "10-fold serial dilutions, ≥1 log range",
-         "MIQE09", "", ""],
-        ["PCR efficiency",
-         "90–110%  [= 10^(−1/slope) − 1]",
-         "MIQE09", "", ""],
+         "MIQE 2.0", "", ""],
+        ["PCR efficiency (report with CI)",
+         "90–110%  [E = 10^(−1/slope) − 1]; ±95% CI",
+         "MIQE 2.0", "", ""],
         ["R² (linearity)",
          "≥ 0.98",
-         "MIQE09", "", ""],
-        ["Technical replicates",
+         "MIQE 2.0", "", ""],
+        ["LOD and LLOQ/ULOQ",
+         "Determine + report LOD and limits of quantification (dynamic range)",
+         "MIQE 2.0", "", ""],
+        ["Efficiency-corrected quantification",
+         "Report efficiency-corrected quantities + prediction intervals; avoid ΔΔCq alone",
+         "MIQE 2.0", "", ""],
+        ["Reference-gene normalization",
+         "≥2 reference genes, geometric-mean, validated in-context",
+         "MIQE 2.0", "", ""],
+        ["Technical replicates (repeatability)",
          "≥3 replicates; report Cq mean ± SD",
-         "MIQE09", "", ""],
+         "MIQE 2.0", "", ""],
+        ["Reproducibility (inter-assay)",
+         "Variation across days / operators / instruments",
+         "MIQE 2.0", "", ""],
+        ["Raw fluorescence data",
+         "Deposit/submit raw data (RDML or RDES)",
+         "MIQE 2.0", "", ""],
         ["Specificity (in-silico)",
          "Family cross-reactivity: reviewed. BLAST off-target: reviewed.",
          "Phase 3",
@@ -573,10 +750,10 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, bl
 
     return [
         Spacer(1, 0.5*cm),
-        Paragraph("Validation Checklist (MIQE-aligned)", h2),
+        Paragraph("Validation Checklist (MIQE 2.0-aligned)", h2),
         Paragraph(
             "Complete the checklist below after wet-lab validation. "
-            "Criteria per Bustin et al. 2009 (Clin Chem) MIQE guidelines.",
+            "Criteria per the MIQE 2.0 guidelines (Bustin et al. 2025, Clin Chem 71:634).",
             body,
         ),
         Spacer(1, 0.3*cm),
@@ -618,9 +795,40 @@ def _isomir_note(s: dict) -> str:
 
 
 def _family_provenance_note(results: dict) -> str:
-    """Surface the family-DB provenance caveat (seed-based vs canonical miFam.dat)."""
+    """Clarify that seed grouping is biological context, not the primer specificity axis."""
     cr = results.get("specificity_warnings", {}).get("cross_reactivity", {})
-    return cr.get("data_warning", "") or ""
+    note = (
+        "Seed-family grouping (positions 2-8) is the mRNA-targeting axis, shown for biological "
+        "context only. Primer specificity is assessed on the RT 3'-overhang and forward 5'-prefix "
+        "axes (see the primer-binding specificity summary)."
+    )
+    base = cr.get("data_warning", "") or ""
+    return f"{note} {base}".strip()
+
+
+def _overhang_axis_summary(results: dict):
+    """Return ([(label, value), ...], interpretation) for the dual primer-binding axes."""
+    oc = results.get("specificity_warnings", {}).get("overhang_collision", {}) or {}
+    if not oc:
+        return [], ""
+    summ = oc.get("summary", {})
+    fwd_order = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
+    fwd_worst = min(
+        (e.get("fwd_risk", "SAFE") for e in oc.get("collisions", [])),
+        key=lambda r: fwd_order.get(r, 3), default="SAFE",
+    )
+    top_crit = next(
+        (e.get("mirna") for e in oc.get("collisions", []) if e.get("combined_risk") == "CRITICAL"),
+        "none",
+    )
+    rows = [
+        ("rt_axis_worst_risk",   str(oc.get("worst_rt_risk", ""))),
+        ("fwd_axis_worst_risk",  str(fwd_worst)),
+        ("combined_worst_risk",  str(oc.get("worst_combined_risk", ""))),
+        ("n_critical_colliders", str(summ.get("CRITICAL", 0))),
+        ("top_critical_collider", str(top_crit)),
+    ]
+    return rows, oc.get("interpretation", "")
 
 
 def _blast_lines(blast_result) -> list[tuple[str, str]]:

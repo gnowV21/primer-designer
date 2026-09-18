@@ -6,6 +6,12 @@ import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
 import Tooltip from '../../../components/ui/Tooltip.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
+import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
+import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
+
+// Warnings shown in-context elsewhere (design-page slider / results-page note) —
+// not repeated in the generic list. Still recorded in the exported report.
+const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime']);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -39,9 +45,11 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       </div>}
 
       {/* ── Global warnings — suppressed when hideHeader=true (shown by QualitySummary in ResultsPage) ── */}
-      {!hideHeader && global_warnings.length > 0 && (
+      {/* Off-label overhang + SYBR choice are shown in-context (design page / results note),
+          so they are not repeated here. They remain in the exported report. */}
+      {!hideHeader && global_warnings.filter((w) => !DEDICATED_WARNING_FIELDS.has(w.field)).length > 0 && (
         <div className="space-y-2">
-          {global_warnings.map((w, i) => (
+          {global_warnings.filter((w) => !DEDICATED_WARNING_FIELDS.has(w.field)).map((w, i) => (
             <div
               key={i}
               className={`rounded-xl border px-4 py-3 text-sm ${
@@ -113,10 +121,39 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         ))}
       </div>
 
-      {/* ── Family specificity (Phase 7 PART C): map + table toggle ── */}
-      {specificity_warnings?.cross_reactivity && (
-        <FamilySpecificityMap familyCrossReactivity={specificity_warnings.cross_reactivity} />
-      )}
+      {/* ── Primer-binding specificity (Week 2 P1): the RT + forward axes drive scoring ──
+           Collapsed by default; the worst risk stays visible in the header so a
+           CRITICAL result is never hidden behind a closed panel. */}
+      {specificity_warnings?.overhang_collision && (() => {
+        const oc = specificity_warnings.overhang_collision;
+        const risk = oc.worst_combined_risk || 'SAFE';
+        const nCollide = (oc.collisions || []).length;
+        const tone = risk === 'CRITICAL' ? 'danger' : risk === 'LOW' ? 'warn' : 'ok';
+        return (
+          <CollapsibleCard
+            title="Primer Binding Specificity"
+            tone={tone}
+            summary={`${risk}${nCollide ? ` · ${nCollide} screened collision${nCollide !== 1 ? 's' : ''}` : ''}`}
+          >
+            <OverhangCollisionPanel overhangCollision={oc} />
+          </CollapsibleCard>
+        );
+      })()}
+
+      {/* ── Seed family (biological context only): map + table toggle ── */}
+      {specificity_warnings?.cross_reactivity && (() => {
+        const cr = specificity_warnings.cross_reactivity;
+        const fam = cr.family || 'ungrouped';
+        const nSib = (cr.cross_reactivity || []).length;
+        return (
+          <CollapsibleCard
+            title="Seed Family (biological context)"
+            summary={`${fam} · ${nSib} sibling${nSib !== 1 ? 's' : ''}`}
+          >
+            <FamilySpecificityMap familyCrossReactivity={cr} />
+          </CollapsibleCard>
+        );
+      })()}
 
       {/* ── Rejection log ── */}
       {metadata?.candidates_rejected > 0 && (
@@ -155,9 +192,11 @@ function RtTmBadge({ stemloopRt }) {
       + `true DNA:RNA hybrid Tm may differ by 3–8°C. Not used in scoring.`;
 
   const label = hasHybrid ? 'Tm: modeled (DNA:RNA, Sugimoto 1995)' : 'Tm: approximate (DNA:RNA)';
+  // The "approximate" state is a modeling caveat shown on every result, not a
+  // problem — neutral slate (not amber) so it does not read as an alarm.
   const color = hasHybrid
     ? 'bg-blue-50 text-blue-700 border-blue-200'
-    : 'bg-amber-50 text-amber-700 border-amber-200';
+    : 'bg-slate-50 text-slate-500 border-slate-200';
 
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${color}`}>

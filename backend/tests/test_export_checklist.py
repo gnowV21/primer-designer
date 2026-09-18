@@ -74,12 +74,12 @@ class TestCSVChecklist:
         body = resp.data.decode("utf-8")
         assert "VALIDATION CHECKLIST" in body
 
-    def test_csv_has_8_checklist_items(self, client, sample_results):
+    def test_csv_has_miqe2_checklist_items(self, client, sample_results):
         resp = client.post("/api/export", json={
             "format": "csv", "results": sample_results, "include_checklist": True,
         })
         body = resp.data.decode("utf-8")
-        # Find the checklist block
+        # Find the checklist block (the design block above it uses its own markers)
         checklist_start = body.find("# VALIDATION CHECKLIST")
         assert checklist_start != -1
         checklist_block = body[checklist_start:]
@@ -88,7 +88,36 @@ class TestCSVChecklist:
             line for line in checklist_block.splitlines()
             if line and not line.startswith("#") and not line.startswith("Item,")
         ]
-        assert len(rows) == 8, f"Expected 8 checklist rows, got {len(rows)}: {rows}"
+        # MIQE 2.0 checklist: original 8 + LOD/LLOQ, efficiency-corrected,
+        # reference-gene, reproducibility, raw-fluorescence = 13
+        assert len(rows) == 13, f"Expected 13 checklist rows, got {len(rows)}: {rows}"
+        # New MIQE 2.0 items are present
+        for token in ("LOD", "geometric-mean", "RDML", "Reproducibility", "prediction intervals"):
+            assert token in checklist_block, f"missing MIQE 2.0 item: {token}"
+
+    def test_csv_has_miqe_design_block(self, client, sample_results):
+        # MIQE 2.0 §1: the tool self-reports itself + settings
+        sample_results["metadata"] = {
+            **sample_results["metadata"],
+            "species": "Homo sapiens",
+            "mirna_accession": "MIMAT0000076",
+            "design_settings": {
+                "detection_method": "taqman", "rt_overhang_nt": 6,
+                "tm_target_c": [58, 62], "gc_percent": [40, 60],
+                "primer_length_nt": [20, 27], "amplicon_bp": [60, 120],
+                "na_mm": 50, "k_mm": 50, "mg_mm": 1.5, "dntp_mm": 0.8,
+                "primer_nm": 200, "buffer_ph": 8.4,
+            },
+        }
+        resp = client.post("/api/export", json={
+            "format": "csv", "results": sample_results, "include_checklist": True,
+        })
+        assert resp.status_code == 200
+        body = resp.data.decode("utf-8")
+        assert "ASSAY DESIGN (MIQE 2.0" in body
+        assert "Design tool + version + settings" in body
+        assert "MIMAT0000076" in body          # accession surfaced
+        assert "Homo sapiens" in body           # species surfaced
 
     def test_csv_specificity_autofill(self, client, sample_results):
         resp = client.post("/api/export", json={
@@ -110,6 +139,61 @@ class TestCSVChecklist:
             "format": "html", "results": sample_results,
         })
         assert resp.status_code == 400
+
+
+@pytest.fixture
+def results_with_overhang(sample_results):
+    r = dict(sample_results)
+    r["specificity_warnings"] = {
+        **sample_results["specificity_warnings"],
+        "overhang_collision": {
+            "worst_rt_risk": "HIGH",
+            "worst_combined_risk": "CRITICAL",
+            "summary": {"CRITICAL": 1, "LOW": 2, "rt_identical": 0, "n_reported": 3, "truncated": False},
+            "collisions": [
+                {"mirna": "hsa-let-7c-5p", "combined_risk": "CRITICAL", "rt_risk": "HIGH", "fwd_risk": "IDENTICAL"},
+                {"mirna": "hsa-let-7f-5p", "combined_risk": "LOW", "rt_risk": "IDENTICAL", "fwd_risk": "LOW"},
+            ],
+            "interpretation": "Specificity is the product of the RT 3' overhang and forward 5' prefix axes.",
+        },
+    }
+    return r
+
+
+class TestDualAxisExport:
+    _COLS = [
+        "rt_axis_worst_risk", "fwd_axis_worst_risk", "combined_worst_risk",
+        "n_critical_colliders", "top_critical_collider",
+    ]
+
+    def test_csv_has_dual_axis_columns(self, client, results_with_overhang):
+        resp = client.post("/api/export", json={
+            "format": "csv", "results": results_with_overhang, "include_checklist": True,
+        })
+        assert resp.status_code == 200
+        body = resp.data.decode("utf-8")
+        for col in self._COLS:
+            assert col in body, f"CSV missing dual-axis column '{col}'"
+        assert "hsa-let-7c-5p" in body   # top_critical_collider value
+        assert "CRITICAL" in body
+
+    def test_csv_dual_axis_absent_when_no_overhang(self, client, sample_results):
+        resp = client.post("/api/export", json={
+            "format": "csv", "results": sample_results, "include_checklist": True,
+        })
+        body = resp.data.decode("utf-8")
+        assert "combined_worst_risk" not in body   # no overhang_collision → no rows
+
+    def test_pdf_ok_with_overhang(self, client, results_with_overhang):
+        try:
+            import reportlab  # noqa: F401
+        except ImportError:
+            pytest.skip("reportlab not installed")
+        resp = client.post("/api/export", json={
+            "format": "pdf", "results": results_with_overhang, "include_checklist": True,
+        })
+        assert resp.status_code == 200
+        assert resp.data[:4] == b"%PDF"
 
 
 class TestPDFChecklist:

@@ -9,6 +9,17 @@
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ]
   },
+  "_published_primer_exact_match": {
+    "purpose": "OPTIONAL exact-match layer vs a real published primer table. Absent by default — sequences are NEVER fabricated; add them only from a cited paper table.",
+    "how_to_add": "On any entry in `mirnas`, add one or more of: `published_rt` (full stem-loop RT primer), `published_rt_overhang` (3' 6-nt overhang only), `published_forward` (forward qPCR primer), `published_source` (citation). U/T and case are normalized before comparison.",
+    "checks_emitted": [
+      "published_rt_exact_match — tool RT primer == published_rt",
+      "published_rt_overhang_match — tool RT 3' end == published_rt_overhang",
+      "published_forward_exact_match — tool forward == published_forward",
+      "published_forward_contains_specific — published forward contains the tool's miRNA-specific region (tolerant of differing 5' tails)"
+    ],
+    "caveat": "Exact forward-primer match only holds vs papers using the SAME universal stem-loop tail (Chen 2005 system). For different tails, rely on `published_forward_contains_specific`."
+  },
   "expected_constants": {
     "stemloop_body": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC",
     "universal_reverse": "CCAGTGCAGGGTCCGAGGTA",
@@ -45,8 +56,12 @@
     },
     {
       "id": "hsa-miR-16-5p",
-      "role": "common reference/normalizer miRNA",
-      "expected_family": null
+      "role": "common reference/normalizer miRNA; EXACT-MATCH anchor vs a published stem-loop primer set using the identical Chen-2005 universal body + reverse",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCAA",
+      "published_rt_overhang": "CGCCAA",
+      "published_forward": "CACGTATAGCAGCACGTAAATA",
+      "published_source": "'Designing a stem-loop RT-qPCR method for measuring miRNA-16 expression in human plasma samples' — Table 1 'Sequence and characteristics of the stem-loop RT-qPCR primers set'. Uses the same Chen-2005 universal stem-loop body and universal reverse as this tool; the tool's RT primer and reverse are byte-identical to this published set."
     },
     {
       "id": "hsa-miR-155-5p",
@@ -59,9 +74,73 @@
       "expected_family": null
     },
     {
+      "id": "hsa-miR-150-5p",
+      "role": "cross-system forward-primer concordance vs a DIFFERENT universal stem-loop system (Yang 2014 USLP) — validates the miRNA-specific forward-primer principle across independent chemistries",
+      "expected_family": null,
+      "published_forward": "GCTCTCCCAACCCTTGTACC",
+      "published_source": "Yang L-h, et al. Universal Stem-Loop Primer Method. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293 — miR-150 forward qPCR primer (5' GC tail added to raise Tm). NOTE: Yang 2014 uses a different stem-loop body and reverse (random 3' end), so only the forward miRNA-specific core is comparable; no RT exact-match applies."
+    },
+    {
       "id": "cel-miR-39-3p",
       "role": "spike-in control (non-human); cross-species sanity",
       "expected_family": null
+    },
+    {
+      "id": "hsa-miR-1-3p",
+      "role": "cross-system RT-overhang + forward concordance vs a DIFFERENT universal stem-loop system (Czimmerer 2013). The 6-nt RT overhang (the miRNA-specific biological invariant) matches across systems even though the stem-loop bodies differ.",
+      "expected_family": null,
+      "published_rt_overhang": "ATACAT",
+      "published_forward": "GTTGGGTGGAATGTAAAGAAGT",
+      "published_source": "Czimmerer Z, et al. A Versatile Method to Design Stem-Loop Primer-Based Quantitative PCR Assays. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (mmu-mir-1; sequence identical to hsa-miR-1-3p). NOTE: different universal body (GTTGGCTCTGG...CCAGAGCCAAC) and reverse (GTGCAGGGTCCGAGGT), so no full-RT exact-match applies — only the 6-nt overhang and the forward miRNA-specific core are comparable."
+    },
+    {
+      "id": "hsa-miR-181a-5p",
+      "role": "cross-system RT-overhang + forward concordance vs Czimmerer 2013 (different universal body). Confirms the deterministic overhang rule holds for a 23-nt miRNA in an independent published assay.",
+      "expected_family": null,
+      "published_rt_overhang": "ACTCAC",
+      "published_forward": "GGAACATTCAACGCTGTCG",
+      "published_source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181a). Different universal body/reverse — overhang + forward-core comparison only."
+    },
+    {
+      "id": "hsa-miR-125b-5p",
+      "role": "SECOND full-RT EXACT-MATCH anchor. Uses the identical Chen-2005 universal body as this tool; RT primer is byte-identical. Verified: 3' UUGUGA -> revcomp TCACAA matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAA",
+      "published_rt_overhang": "TCACAA",
+      "published_forward": "GACTCCCTGAGACCCTAAC",
+      "published_source": "Ngo Thi Mai Vy (student ID 20187223). 'Development of the Quantification Procedure for miR-125b-5p in Human Plasma Samples Using Stemloop RT-qPCR.' Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18 nt, a different loop window than this tool's fixed 20-nt reverse, so reverse is not exact-matched). RT overhang TCACAA = revcomp of 3'-terminal UUGUGA (independently verified)."
+    },
+    {
+      "id": "hsa-miR-195-5p",
+      "role": "forward-core concordance + demonstrates the Chen 6-8 nt binding range. The published RT used a 7-nt overhang (GCCAATA = revcomp of 3' UAUUGGC... last 7 nt), whereas this tool uses a fixed 6-nt overhang (GCCAAT). No 6-nt RT exact-match is asserted; only the forward-specific core is scored.",
+      "expected_family": null,
+      "published_forward": "TAGCAGCACAGAAATAT",
+      "published_source": "Zhao F-L, Dou Y-C, Wang X-F, Han D-C, Lv Z-G, Ge S-L, Zhang Y-K. 'Serum microRNA-195 is down-regulated in breast cancer: a potential marker for the diagnosis of breast cancer.' Mol Biol Rep. 2014;41(9):5913-5922. DOI 10.1007/s11033-014-3466-1, Table 2 ('The sequences of miR-16 and miR-195 stem-loop RT and PCR primers'). Same Chen-2005 universal stem-loop body (GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC) and universal reverse GCAGGGTCCGAGGTATTC. NOTE: the published RT hybridizes 7 nt (GCCAATA = revcomp of 3'-terminal UAUUGGC); this tool's fixed 6-nt overhang (GCCAAT) is the 6-nt prefix of it — a deliberate design choice within Chen's 6-8 nt binding range, not a mismatch. Forward-specific core comparison only."
+    },
+    {
+      "id": "hsa-miR-9-3p",
+      "role": "forward-core concordance. Published forward (GGCGCC tail + ATAAAGCTAGATAAC) anchors the miRNA 5' prefix. Qualitative support for the short-duplex Tm caveat: the published table lists the 50-nt stem-loop primer Tm as 16 C, illustrating why a point Tm on the 6-nt binding duplex is not meaningful.",
+      "expected_family": null,
+      "published_forward": "GGCGCCATAAAGCTAGATAAC",
+      "published_source": "Truong Gia Hung. 'Xay dung quy trinh dinh luong miR-9-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-9-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished), 'Bang 3.2'. Universal reverse GCAGGGTCCGAGGTATTC. Forward-specific core comparison only (stem-loop 3' overhang in the source table was not machine-legible)."
+    },
+    {
+      "id": "hsa-miR-222-3p",
+      "role": "THIRD full-RT EXACT-MATCH anchor. Identical Chen-2005 universal body; RT primer byte-identical. Verified: 3' CUGGGU -> revcomp ACCCAG matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACCCAG",
+      "published_rt_overhang": "ACCCAG",
+      "published_forward": "GGCAGCTACATCTGGCT",
+      "published_source": "Le Tran Bao Bao. 'Xay dung quy trinh dinh luong miR-222-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-222-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18-nt loop window, not exact-matched vs this tool's 20-nt reverse). RT overhang ACCCAG = revcomp of 3'-terminal CUGGGU (independently verified). Published amplicon 56 bp."
+    },
+    {
+      "id": "hsa-miR-221-3p",
+      "role": "FOURTH full-RT EXACT-MATCH anchor (sibling of miR-222-3p; family 221-3p/222-3p). Identical Chen-2005 universal body; RT primer byte-identical. Verified: 3' GGUUUC -> revcomp GAAACC matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAAACC",
+      "published_rt_overhang": "GAAACC",
+      "published_forward": "GGCGAGCTACATTGTCTG",
+      "published_source": "Tran Thuy Linh. 'Xay dung quy trinh dinh luong miR-221-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-221-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18-nt loop window, not exact-matched vs this tool's 20-nt reverse). RT overhang GAAACC = revcomp of 3'-terminal GGUUUC (independently verified)."
     }
   ],
   "edge_cases": [

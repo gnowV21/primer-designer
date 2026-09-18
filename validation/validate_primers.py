@@ -43,6 +43,20 @@ def revcomp(dna: str) -> str:
     return "".join(COMP.get(b, "N") for b in reversed(dna.upper()))
 
 
+def specific_region(primer: str, mirna_dna: str) -> str:
+    """Longest 3' suffix of `primer` that is a 5' prefix of `mirna_dna`.
+
+    Both stem-loop-qPCR forward primers = [5' Tm-raising tail] + [miRNA 5' prefix].
+    This recovers the miRNA-specific part, letting us compare the biologically
+    meaningful core across tools/protocols that use different tails.
+    """
+    primer = primer.upper()
+    for length in range(len(primer), 0, -1):
+        if mirna_dna.startswith(primer[-length:]):
+            return primer[-length:]
+    return ""
+
+
 def to_dna(rna: str) -> str:
     return rna.upper().replace("U", "T")
 
@@ -166,6 +180,50 @@ def validate_one(base, entry, consts, windows):
     checks += [("forward_specific_is_5prime_prefix", c_spec_prefix),
                ("forward_ends_with_specific", c_fwd_tail)]
 
+    # --- Optional EXACT-MATCH vs published primer sequences ---------------------
+    # Only runs when the dataset entry carries real published sequences. We never
+    # fabricate these — fields are absent until a paper table is supplied.
+    #   published_rt            : full stem-loop RT primer as published
+    #   published_rt_overhang   : just the 3' overhang (6 nt) as published
+    #   published_forward       : forward qPCR primer as published
+    #   published_source        : citation string (recorded, not checked)
+    def _norm(s):
+        return (s or "").upper().replace("U", "T").replace(" ", "")
+
+    pub_rt = _norm(entry.get("published_rt"))
+    if pub_rt:
+        c = _norm(rt) == pub_rt
+        checks.append(("published_rt_exact_match", c))
+        row["published_rt_match"] = ok(c)
+
+    pub_over = _norm(entry.get("published_rt_overhang"))
+    if pub_over:
+        c = _norm(rt).endswith(pub_over)
+        checks.append(("published_rt_overhang_match", c))
+        row["published_rt_overhang_match"] = ok(c)
+
+    pub_fwd = _norm(entry.get("published_forward"))
+    if pub_fwd:
+        # Rich forward comparison. Forward EXACT match is a design choice (the 5'
+        # Tm-raising tail and specific-region length differ between protocols/Tm
+        # targets), so it is recorded but NOT scored. The SCORED check is that the
+        # tool's miRNA-specific region is byte-identical to the published one over
+        # their full overlap — i.e. both anchor the same nucleotides of the miRNA.
+        tool_spec = specific_region(_norm(fwd), dna)
+        pub_spec = specific_region(pub_fwd, dna)
+        ov = min(len(tool_spec), len(pub_spec))
+        c_agree = ov >= 10 and tool_spec[:ov] == pub_spec[:ov]
+        checks.append(("published_forward_specific_agrees", c_agree))
+        row["published_forward_exact"] = ok(_norm(fwd) == pub_fwd)
+        row["published_forward_specific_shared"] = ok(c_agree)
+        row["published_forward_tool"] = fwd
+        row["published_forward_ref"] = entry.get("published_forward")
+        row["forward_tool_specific"] = tool_spec
+        row["forward_pub_specific"] = pub_spec
+        row["forward_specific_overlap_nt"] = ov
+    if entry.get("published_source"):
+        row["published_source"] = entry["published_source"]
+
     # --- Plausibility: Tm / GC / amplicon ---
     tm = top.get("tm_full")
     gc = top.get("gc_percent")
@@ -202,6 +260,8 @@ def main():
     ap.add_argument("--base-url", default="http://localhost:5000")
     ap.add_argument("--dataset", default="validation/reference_mirnas.json")
     ap.add_argument("--out", default="validation/results.csv")
+    ap.add_argument("--json-out", default="validation/results.json",
+                    help="machine-readable summary (mergeable into benchmark_results.json)")
     args = ap.parse_args()
 
     with open(args.dataset, encoding="utf-8") as f:
@@ -210,7 +270,7 @@ def main():
     windows = ds["plausibility_windows"]
     entries = list(ds.get("mirnas", [])) + list(ds.get("edge_cases", []))
 
-    all_rows, total_pass, total_checks = [], 0, 0
+    all_rows, json_records, total_pass, total_checks = [], [], 0, 0
     print(f"\n=== Primer designer validation — {args.base_url} ===\n")
     for e in entries:
         row, checks = validate_one(args.base_url, e, consts, windows)
@@ -222,6 +282,31 @@ def main():
         failed = [name for name, c in checks if not c]
         row["failed_checks"] = ",".join(failed) if failed else ""
         all_rows.append(row)
+        json_records.append({
+            "target": row["target"],
+            "checks_pass": p,
+            "checks_total": n,
+            "passed": bool(n and p == n),
+            "rt_overhang_expected": row.get("rt_overhang_expected"),
+            "rt_overhang_actual": row.get("rt_overhang_actual"),
+            "forward_tm_c": row.get("tm_full"),
+            "forward_gc_pct": row.get("gc_pct"),
+            "amplicon_bp": row.get("amplicon_bp"),
+            "siblings_flagged": row.get("siblings_flagged"),
+            "edge_expected": row.get("edge_expected"),
+            "edge_found": row.get("edge_found"),
+            "published_rt_match": row.get("published_rt_match"),
+            "published_rt_overhang_match": row.get("published_rt_overhang_match"),
+            "published_forward_exact": row.get("published_forward_exact"),
+            "published_forward_specific_shared": row.get("published_forward_specific_shared"),
+            "published_forward_tool": row.get("published_forward_tool"),
+            "published_forward_ref": row.get("published_forward_ref"),
+            "forward_tool_specific": row.get("forward_tool_specific"),
+            "forward_pub_specific": row.get("forward_pub_specific"),
+            "forward_specific_overlap_nt": row.get("forward_specific_overlap_nt"),
+            "published_source": row.get("published_source"),
+            "failed_checks": failed,
+        })
         flag = "OK " if (n and p == n) else ("--- " if not n else "!!! ")
         print(f"{flag}{row['target']:<20} {row['checks_pass']:<8} "
               f"{('FAILED: ' + row['failed_checks']) if failed else row.get('status','')}")
@@ -230,7 +315,10 @@ def main():
     cols = ["target", "source", "length", "status", "checks_pass", "failed_checks",
             "rt_overhang_expected", "rt_overhang_actual", "tm_full", "gc_pct",
             "amplicon_bp", "grade", "score", "siblings_flagged",
-            "edge_expected", "edge_found", "edge_check"]
+            "published_rt_match", "published_rt_overhang_match",
+            "published_forward_exact", "published_forward_specific_shared",
+            "forward_specific_overlap_nt",
+            "published_source", "edge_expected", "edge_found", "edge_check"]
     with open(args.out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
@@ -239,7 +327,30 @@ def main():
 
     print(f"\n--- Summary: {total_pass}/{total_checks} checks passed "
           f"({100*total_pass/total_checks:.1f}%) ---")
-    print(f"CSV written: {args.out}\n")
+    print(f"CSV written: {args.out}")
+
+    # Machine-readable summary (mergeable into benchmark_results.json)
+    from datetime import datetime, timezone
+    summary = {
+        "method": (
+            "Deterministic ground truth from the Chen 2005 stem-loop method "
+            "(RT primer = fixed universal body + revcomp of 3'-terminal 6 nt; "
+            "universal reverse = fixed constant; forward specific region = 5' prefix "
+            "of the miRNA), recomputed independently from the sequence the tool used. "
+            "Plus thermodynamic-plausibility windows and let-7 specificity concordance "
+            "with Wang 2017."
+        ),
+        "sources": ds.get("_meta", {}).get("sources", []),
+        "run_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "checks_passed": total_pass,
+        "checks_total": total_checks,
+        "success_rate": round(total_pass / total_checks, 4) if total_checks else None,
+        "targets": json_records,
+    }
+    with open(args.json_out, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+    print(f"JSON written: {args.json_out}\n")
+
     # Non-zero exit if any deterministic check failed (useful for CI)
     sys.exit(0 if total_pass == total_checks else 1)
 

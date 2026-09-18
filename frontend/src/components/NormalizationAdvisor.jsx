@@ -1,6 +1,9 @@
 // NormalizationAdvisor — Phase 7 PART D (UX B1 ★★★)
 // Displays normalization advisory from /api/design response.normalization_advice.
 // Advisory only — does NOT affect primer scoring.
+// Collapsed by default (toggle on/off), consistent with the Protocol Advisor.
+
+import { useState } from 'react';
 
 const ROLE_STYLE = {
   'exogenous spike-in': 'bg-violet-50 border-violet-200 text-violet-700',
@@ -32,6 +35,8 @@ function ReferenceChip({ item: r }) {
 }
 
 export default function NormalizationAdvisor({ advice }) {
+  const [open, setOpen] = useState(false);
+
   if (!advice) return null;
 
   const {
@@ -47,9 +52,12 @@ export default function NormalizationAdvisor({ advice }) {
   } = advice;
 
   return (
-    <div className="rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 space-y-3">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded-xl border border-purple-200 bg-purple-50 overflow-hidden">
+      {/* Header (toggle) */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-purple-100/40 transition"
+      >
         <div>
           <p className="text-xs font-semibold text-purple-800 uppercase tracking-wide">
             Normalization Advisor
@@ -61,11 +69,17 @@ export default function NormalizationAdvisor({ advice }) {
             </p>
           )}
         </div>
-        <span className="text-[10px] px-2 py-0.5 rounded border border-purple-200 bg-white text-purple-600 font-medium shrink-0">
-          Advisory only
-        </span>
-      </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] px-2 py-0.5 rounded border border-purple-200 bg-white text-purple-600 font-medium">
+            Advisory only
+          </span>
+          <span className="text-purple-400 text-sm">{open ? '▲' : '▼'}</span>
+        </div>
+      </button>
 
+      {/* Body (collapsed by default) */}
+      {open && (
+      <div className="px-4 pb-3 space-y-3 border-t border-purple-200 pt-3">
       {/* Recommended strategy */}
       <div className="rounded-lg bg-white border border-purple-200 px-3 py-2">
         <p className="text-xs font-semibold text-purple-700 mb-1">Recommended Strategy</p>
@@ -152,10 +166,22 @@ export default function NormalizationAdvisor({ advice }) {
         </div>
       )}
 
+      {/* MIQE 2.0 normalization requirement */}
+      <div className="rounded-lg bg-white border border-purple-200 px-3 py-2">
+        <p className="text-[11px] font-semibold text-purple-700">MIQE 2.0 — normalization</p>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Use <span className="font-semibold">≥ 2 reference genes</span> and normalize by their{' '}
+          <span className="font-semibold">geometric mean</span>; validate their expression stability
+          in your own experimental context (do not take reference genes from the literature alone).
+        </p>
+      </div>
+
       {/* Disclaimer */}
       <p className="text-[10px] italic text-purple-500 border-t border-purple-200 pt-2">
         {disclaimer}
       </p>
+      </div>
+      )}
     </div>
   );
 }

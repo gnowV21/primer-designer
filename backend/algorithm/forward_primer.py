@@ -8,6 +8,7 @@
 #   - Exact amplicon formula derived from cDNA/primer geometry [Fix L4]
 # ================================================================
 
+import hashlib
 import itertools
 import random
 
@@ -37,8 +38,14 @@ from .thermodynamics import calculate_tm_nn, calculate_tm_binding_only
 _UNIV_REV_POS   = STEMLOOP_BODY.find(UNIVERSAL_REVERSE)   # = 7
 _AMPLICON_OFFSET = STEMLOOP_BODY_LENGTH - _UNIV_REV_POS    # = 37
 
-# Fixed seed for reproducible random tail sampling across requests
-_RNG = random.Random(42)
+# Determinism: the len-7..12 tail pools use weighted-random sampling. A module-global
+# RNG would carry state ACROSS design calls, so the same miRNA designed twice would
+# yield different primers (state-order dependence). Instead we build a LOCAL RNG per
+# call, seeded deterministically from the mature sequence — same input → same primers,
+# every time, independent of call order or process. [determinism invariant]
+def _rng_for(sequence: str) -> random.Random:
+    seed = int(hashlib.sha256(sequence.encode("utf-8")).hexdigest()[:12], 16)
+    return random.Random(seed)
 
 
 def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
@@ -57,6 +64,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     """
     dna_seq    = rna_to_dna(mature_sequence).upper()
     miRNA_len  = len(dna_seq)
+    rng        = _rng_for(dna_seq)   # per-call, deterministic from the sequence
     excludes   = int(params.get("bindingRegion3prime", FORWARD_EXCLUDES_LAST_NT))
     available  = dna_seq[: miRNA_len - excludes]
 
@@ -70,7 +78,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     # Previously called _generate_tail_pool inside _find_tails_for_target_tm which
     # was called 6 times — resulting in 60 pool builds instead of 10.
     _tail_pool_cache = {
-        tl: _generate_tail_pool(tl)
+        tl: _generate_tail_pool(tl, rng=rng)
         for tl in range(FORWARD_TAIL_MIN, FORWARD_TAIL_MAX + 1)
     }
 
@@ -190,7 +198,7 @@ def _find_tails_for_target_tm(
     return selected[:200]
 
 
-def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
+def _generate_tail_pool(tail_len: int, max_pool: int = 400, rng: random.Random | None = None) -> list:
     """
     Build a pool of GC-rich (≥50 %), no-homopolymer-run (< 4) tail sequences.
 
@@ -232,7 +240,7 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
         while len(result) < max_pool and attempts < max_att:
             attempts += 1
             # Weight G/C 2× over A/T to bias toward GC-rich tails
-            tail = "".join(_RNG.choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
+            tail = "".join((rng or random.Random(0)).choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
             if tail in seen:
                 continue
             seen.add(tail)

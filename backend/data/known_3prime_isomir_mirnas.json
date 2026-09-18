@@ -1,0 +1,18 @@
+{
+  "_metadata": {
+    "description": "miRNAs with documented abundant 3'-isomiRs (templated 3' extension/truncation and non-templated uridylation/adenylation). The stem-loop RT primer binds the 3'-terminal 6 nt, so 3' heterogeneity directly reduces RT capture efficiency for the affected isoforms.",
+    "version": "1.0.0",
+    "isomir_type": "3prime - templated shift and/or non-templated addition at the 3' end",
+    "sources": {
+      "Neilsen12": {"pmid": "22883467", "doi": "10.1016/j.tig.2012.07.005", "citation": "Neilsen CT, Goodall GJ, Bracken CP. IsomiRs - the overlooked repertoire of regulatory microRNAs. Trends Genet 2012;28(11):544-549."},
+      "Wyman11":   {"pmid": "21855800", "doi": "10.1101/gr.118059.110",       "citation": "Wyman SK, et al. Post-transcriptional generation of miRNA variants by multiple nucleotidyl transferases contributes to miRNA transcriptome complexity. Genome Res 2011;21(9):1450-1461."},
+      "Landgraf07":{"pmid": "17604727", "doi": "10.1016/j.cell.2007.04.040",   "citation": "Landgraf P, et al. A mammalian microRNA expression atlas based on small RNA library sequencing. Cell 2007;129(7):1401-1414."}
+    },
+    "evidence_levels": {
+      "study_specific": "Per-miRNA 3'-isomiR abundance reported in a specific dataset/table.",
+      "review_supported": "3'-isomiR existence supported by a review or the general literature but without a per-miRNA abundance value here."
+    },
+    "coverage_warning": "Partial coverage. Absence of an entry does NOT mean the miRNA lacks 3' isomiRs.",
+    "_curation_status": "INITIALIZED EMPTY (Week2 C11). Per-miRNA entries require values transcribed from a cited paper/table with a real PMID/DOI and (where reported) an isoform_fraction_estimate; fabricated entries are NOT permitted. Add entries in the same shape as known_5prime_isomir_mirnas.json once a verified source is available."
+  }
+}

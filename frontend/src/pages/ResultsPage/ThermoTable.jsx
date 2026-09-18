@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import LnaPanel from '../../components/LnaPanel/index.jsx';
+import useLnaEnabled from '../../hooks/useLnaEnabled.js';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -241,6 +242,7 @@ function PropRow({ label, value }) {
 function TabB({ top3, stemloopRt, universalReverse, params }) {
   const [selRank, setSelRank] = useState(1);
   const [showLna, setShowLna] = useState(false);
+  const lnaEnabled = useLnaEnabled();
   const set = top3?.find((s) => s.rank === selRank) ?? top3?.[0];
 
   if (!set) return null;
@@ -304,28 +306,31 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
         </div>
 
-        {/* LNA Tm suggester (informational only) — on-demand for the forward primer */}
-        <div className="pt-1">
-          {!showLna ? (
-            <button
-              type="button"
-              onClick={() => setShowLna(true)}
-              className="text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
-            >
-              Suggest LNA (Tm) ↓
-            </button>
-          ) : (
-            <LnaPanel
-              key={selRank}
-              sequence={set.sequence}
-              role="forward"
-              params={ionParams}
-              mode="tm"
-              targetTm={targetTm}
-              onClose={() => setShowLna(false)}
-            />
-          )}
-        </div>
+        {/* LNA Tm suggester (informational only) — on-demand for the forward primer.
+            Gated: hidden while the backend LNA NN tables are unverified. */}
+        {lnaEnabled && (
+          <div className="pt-1">
+            {!showLna ? (
+              <button
+                type="button"
+                onClick={() => setShowLna(true)}
+                className="text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
+              >
+                Suggest LNA (Tm) ↓
+              </button>
+            ) : (
+              <LnaPanel
+                key={selRank}
+                sequence={set.sequence}
+                role="forward"
+                params={ionParams}
+                mode="tm"
+                targetTm={targetTm}
+                onClose={() => setShowLna(false)}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* RT stem-loop primer */}
@@ -341,6 +346,12 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
             <PropRow label="MFE" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) + ' kcal/mol' : undefined} />
             <PropRow label="MFE method" value={stemloopRt.mfe_method} />
           </div>
+          {stemloopRt.three_prime_isomir?.three_prime_isomir_risk && (
+            <p className="text-[11px] text-amber-700 px-1 leading-relaxed">
+              ⚠ 3′ isomiR ({stemloopRt.three_prime_isomir.rt_capture_impact} RT-capture impact):{' '}
+              {stemloopRt.three_prime_isomir.warning}
+            </p>
+          )}
         </div>
       )}
 
@@ -390,7 +401,7 @@ function RtTmRow({ stemloopRt }) {
         </span>
         <span className="text-slate-700 tabular-nums font-medium">
           {stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : '—'}
-          <span className="text-amber-600 ml-1 text-[10px] font-normal">indicative</span>
+          <span className="text-slate-400 ml-1 text-[10px] font-normal">indicative</span>
         </span>
       </div>
       {hasHybrid && (
@@ -405,10 +416,27 @@ function RtTmRow({ stemloopRt }) {
           </span>
         </div>
       )}
-      {!hasHybrid && (
+      {/* Week2 P4: <8 bp duplex → report ΔG37 + a band, never a point Tm. */}
+      {!hasHybrid && stemloopRt?.dg37_kcal_mol != null && (
+        <div className="flex justify-between text-xs py-0.5">
+          <span className="text-slate-500 flex items-center gap-1">
+            Overhang ΔG₃₇ (DNA:RNA)
+            <Tooltip text={hybridTooltip || (stemloopRt?.tm_note ?? '')} />
+          </span>
+          <span className="tabular-nums text-right">
+            <span className="text-slate-700 font-medium">{stemloopRt.dg37_kcal_mol} kcal/mol</span>
+            {Array.isArray(stemloopRt.tm_hybrid_band_c) && (
+              <span className="text-slate-400 ml-1 text-[10px] font-normal">
+                Tm ≈ {stemloopRt.tm_hybrid_band_c[0]}–{stemloopRt.tm_hybrid_band_c[1]}°C (not reportable)
+              </span>
+            )}
+          </span>
+        </div>
+      )}
+      {!hasHybrid && stemloopRt?.dg37_kcal_mol == null && (
         <div className="flex justify-between text-xs py-0.5">
           <span className="text-slate-500">Overhang Tm (DNA:RNA)</span>
-          <span className="text-amber-600 tabular-nums text-[10px]">approx. — see note</span>
+          <span className="text-slate-400 tabular-nums text-[10px]">approx. — see note</span>
         </div>
       )}
     </>

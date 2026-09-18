@@ -68,6 +68,22 @@ export default function ProbeCard({ probe, probeNote }) {
     disclaimer,
   } = probe;
 
+  // A probe was requested but none could be designed (no candidate met Tm/GC in
+  // the length range). Show a clean advisory instead of an empty metrics card
+  // full of "—" and a red "Fails QC" badge, which reads like a bug.
+  if (!sequence) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+        <p className="text-sm font-medium text-slate-700">No TaqMan probe designed</p>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          {warnings[0] || disclaimer || 'No probe candidate met the Tm/GC criteria within the length range.'}
+          {' '}Specificity still comes from the stem-loop RT and forward primers — you can run the
+          assay with SYBR Green (melting-curve), or relax the probe length/Tm constraints and re-run.
+        </p>
+      </div>
+    );
+  }
+
   const { tm_gap, checks = {} } = quality;
 
   const allCheckEntries = Object.entries(checks);

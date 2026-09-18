@@ -1,8 +1,13 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { DEFAULTS } from '../../constants/defaults.js';
-import { computeSeqAnalysis } from '../../utils/seqAnalysis.js';
+/**
+ * SearchPage — /design/advanced
+ *
+ * The full designer: every thermodynamic, constraint and protocol parameter is
+ * editable. Form state and submit logic live in useDesignForm, shared with the
+ * Basic page (/design), so switching modes preserves everything already entered.
+ */
+import { useState, useEffect, useCallback } from 'react';
+import useDesignForm from '../../hooks/useDesignForm.js';
+import DesignModeToggle from '../../components/DesignModeToggle.jsx';
 import SequenceGroup from './SequenceGroup.jsx';
 import DetectionMethodGroup from './DetectionMethodGroup.jsx';
 import PrimerConstraintsGroup from './PrimerConstraintsGroup.jsx';
@@ -19,49 +24,24 @@ const NAV_SECTIONS = [
 ];
 
 export default function SearchPage() {
-  useEffect(() => { document.title = 'HG Lab | Primer Designer'; }, []);
+  useEffect(() => { document.title = 'HG Lab | Primer Designer (Advanced)'; }, []);
 
-  const navigate = useNavigate();
+  const {
+    formData, setFormData,
+    errors, handleChange, handleError, hasErrors,
+    seqAnalysis,
+    isSubmitting, canSubmit, handleSubmit,
+    designError, errorRef,
+  } = useDesignForm('advanced');
 
-  const [formData, setFormData] = useState({
-    sequence:            { ...DEFAULTS.sequence },
-    thermodynamic:       { ...DEFAULTS.thermodynamic },
-    primerConstraints:   { ...DEFAULTS.primerConstraints },
-    qpcr:                { ...DEFAULTS.qpcr },
-    detectionMethod:     { ...DEFAULTS.detectionMethod },
-    experimentalContext: { ...DEFAULTS.experimentalContext },
-  });
-
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeSection, setActiveSection] = useState('seq');
   const [visitedSections, setVisitedSections] = useState(new Set());
-  const [resetKey, setResetKey] = useState(0);
+  const [resetKey] = useState(0);
   const [sectionOpenRequests, setSectionOpenRequests] = useState({});
-  const [designError, setDesignError] = useState(null);
-  const errorRef = useRef(null);
 
   const markVisited = useCallback((id) => {
     setVisitedSections((prev) => prev.has(id) ? prev : new Set([...prev, id]));
   }, []);
-
-  function handleChange(group, field, value) {
-    setFormData((prev) => ({
-      ...prev,
-      [group]: { ...prev[group], [field]: value },
-    }));
-  }
-
-  function handleError(field, message) {
-    setErrors((prev) => {
-      if (!message) {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      }
-      return { ...prev, [field]: message };
-    });
-  }
 
   function handleApplyPreset(preset) {
     setFormData((prev) => {
@@ -82,24 +62,6 @@ export default function SearchPage() {
       };
     });
   }
-
-  const seqAnalysis = useMemo(
-    () => computeSeqAnalysis(formData.sequence.matureSequence),
-    [formData.sequence.matureSequence]
-  );
-
-  const computedFields = useMemo(() => {
-    const mg   = formData.thermodynamic.magnesiumConcentration;
-    const dntp = formData.thermodynamic.dntpTotal;
-    const freeMg = Math.max(0, mg - dntp);
-    const naEq = dntp < mg
-      ? formData.thermodynamic.saltConcentration + 120 * Math.sqrt(mg - dntp)
-      : formData.thermodynamic.saltConcentration;
-    return {
-      freeMagnesium: parseFloat(freeMg.toFixed(3)),
-      naEquivalent:  parseFloat(naEq.toFixed(2)),
-    };
-  }, [formData.thermodynamic]);
 
   const configured = Object.fromEntries(
     NAV_SECTIONS.map(({ id }) => [id, id === 'seq' ? seqAnalysis !== null : visitedSections.has(id)])
@@ -131,41 +93,6 @@ export default function SearchPage() {
     setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
-  }
-
-  const hasErrors = Object.keys(errors).length > 0;
-
-  async function handleSubmit() {
-    if (hasErrors || isSubmitting || !seqAnalysis) return;
-    setIsSubmitting(true);
-    setDesignError(null);
-    try {
-      const postBody = { ...formData, _computed: computedFields };
-      const response = await axios.post('/api/design', postBody, { timeout: 15000 });
-      navigate('/results', { state: { results: response.data, params: formData } });
-    } catch (err) {
-      if (err.response?.status === 422) {
-        setDesignError({
-          type: 'no_candidates',
-          message: err.response.data?.error || 'No valid candidates found.',
-          suggestion: err.response.data?.suggestion,
-          rejection_summary: err.response.data?.rejection_summary,
-          edge_cases: err.response.data?.edge_cases,
-          global_warnings: err.response.data?.global_warnings,
-        });
-      } else if (err.response?.data?.error) {
-        setDesignError({ type: 'validation', message: err.response.data.error });
-      } else if (err.code === 'ECONNABORTED') {
-        setDesignError({ type: 'timeout', message: 'Request timed out. The backend may be overloaded.' });
-      } else {
-        setDesignError({ type: 'network', message: 'Could not reach the backend. Is the Flask server running?' });
-      }
-      setTimeout(() => {
-        errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    } finally {
-      setIsSubmitting(false);
-    }
   }
 
   const seqTrimmed = formData.sequence.matureSequence.trim();
@@ -214,11 +141,16 @@ export default function SearchPage() {
 
         {/* Header + progress */}
         <div className="space-y-3">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-700">Design your primers</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Enter miRNA information and adjust technical parameters.
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-700">Design your primers</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Enter miRNA information and adjust technical parameters.
+              </p>
+            </div>
+            <div className="shrink-0 pt-1">
+              <DesignModeToggle current="advanced" />
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -308,9 +240,9 @@ export default function SearchPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || hasErrors || !seqAnalysis}
+            disabled={!canSubmit}
             className={`w-full py-3 px-6 rounded-xl text-sm font-semibold transition-all shadow-md
-              ${isSubmitting || hasErrors
+              ${!canSubmit
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                 : 'bg-gradient-to-r from-teal-600 to-teal-800 text-white hover:opacity-90 hover:shadow-lg active:scale-[0.99]'
               }`}

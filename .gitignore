@@ -59,5 +59,6 @@ backend/data/blast_db/*.not
 backend/data/blast_db/*.ntf
 backend/data/blast_db/*.nto
 
-# BLAST SQLite cache (ephemeral, not committed)
+# Ephemeral SQLite caches (regenerated at runtime, not committed)
 backend/data/blast_cache.sqlite
+backend/data/visualize_cache.sqlite

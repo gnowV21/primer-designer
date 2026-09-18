@@ -53,6 +53,11 @@ export const DEFAULTS = {
     qpcrSystem: 'other',
     rtEnzyme: 'mmlv',
     exportFormat: ['copy'],
+    // Which designer produced the request: 'basic' (/design) or 'advanced'
+    // (/design/advanced). Set by useDesignForm on submit; ResultsPage reads it to
+    // decide whether the deep-science panels start collapsed. Does NOT affect the
+    // algorithm. Defaults to 'advanced' so any caller that omits it sees the full
+    // report rather than a trimmed one.
     userLevel: 'advanced',
   },
 };

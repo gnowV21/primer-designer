@@ -152,7 +152,7 @@ export default function HomePage() {
         </p>
         <div className="flex items-center justify-center gap-3 pt-1">
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/design')}
             className="px-7 py-2.5 bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-medium rounded-xl shadow-sm hover:opacity-90 transition-all active:scale-[0.98]"
           >
             Start designing →
@@ -170,6 +170,41 @@ export default function HomePage() {
             </svg>
           </a>
         </div>
+      </div>
+
+      {/* Two entry points */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/design')}
+          className="group text-left rounded-xl border border-teal-200 bg-white px-5 py-4 flex items-start gap-3 shadow-sm hover:shadow-md hover:border-teal-300 transition-all"
+        >
+          <span className="mt-0.5 shrink-0"><ForwardPrimerIcon className="w-7 h-7 text-teal-600" /></span>
+          <div className="flex-1 space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-800">Design new primers</span>
+              <span className="text-teal-600 transition-transform group-hover:translate-x-0.5">→</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Start from a miRBase ID or mature sequence and generate the three optimized primers.
+            </p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => navigate('/analyze')}
+          className="group text-left rounded-xl border border-slate-200 bg-white px-5 py-4 flex items-start gap-3 shadow-sm hover:shadow-md hover:border-teal-300 transition-all"
+        >
+          <span className="mt-1 shrink-0 inline-flex w-7 h-7 items-center justify-center scale-[1.6] origin-center"><IconThermo /></span>
+          <div className="flex-1 space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-800">Analyze existing primers</span>
+              <span className="text-teal-600 transition-transform group-hover:translate-x-0.5">→</span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Already have a primer set? Paste the three primers + miRNA to compute Tm, dimers, and specificity.
+            </p>
+          </div>
+        </button>
       </div>
 
       {/* Stats bar */}
