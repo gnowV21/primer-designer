@@ -455,8 +455,16 @@ def _stage3(node, y, model, oscale):
 
     # rows 3-4: R anneals to the universal site of the strand F made
     y_s = y_c + VIZ_BAR_HEIGHT + 30
-    _bar(node, col(0), y_s, model.sense_strand, p, "5to3", fill="url(#g-surface)",
-         mono_size=mono)
+    # coloured like the cDNA it copies (mint under the RT copy, lavender under S), plus the tail
+    sense, n_ext = model.sense_strand, len(ext)
+    if tail:
+        _bar(node, col(0), y_s, tail, p, "5to3", fill=_grad("viz-tail"), mono_size=mono,
+             text_fill=_BG, show_ends=False, pad_r=0)
+    _bar(node, col(t), y_s, sense[t:t + n_ext], p, "5to3", fill=_CD_FILL, mono_size=mono,
+         show_ends=False, pad_l=0 if tail else _TXT_PAD, pad_r=0)
+    _bar(node, col(t + n_ext), y_s, sense[t + n_ext:], p, "5to3", fill=_HP_FILL,
+         mono_size=mono, show_ends=False, pad_l=0)
+    _end_labels(node, col(0) - _TXT_PAD, y_s, len(sense) * p + 2 * _TXT_PAD, "5to3")
     y_u = y_s + VIZ_BAR_HEIGHT + _PAIR_GAP
     _bar(node, col(j), y_u, U, p, "3to5", fill=_grad("viz-universal"), mono_size=mono,
          text_fill=_BG)

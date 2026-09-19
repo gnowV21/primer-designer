@@ -202,7 +202,15 @@ def test_stage3_reverse_primer_pairs_with_cycle1_strand():
     and the amplicon ends at R's 5' end."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 3")
-    ys, se = _row(rows, model.sense_strand)
+    t, n_ext = len(model.tail), len(model.cdna) - len(model.stemloop_rt)
+    sense = model.sense_strand                          # tail | RT-copy | S-copy segments
+    parts = [_row(rows, seg) for seg in (sense[t:t + n_ext], sense[t + n_ext:])]
+    ys = parts[0][0]
+    assert parts[1][0] == ys
+    # the tail text also appears on F's row, so pick the one on this row
+    parts += [(y, c) for y, c in rows if y == ys and "".join(c[x] for x in sorted(c)) == sense[:t]]
+    se = {x: c for _, cols in parts for x, c in cols.items()}
+    assert "".join(se[x] for x in sorted(se)) == sense
     yr, rv = _row(rows, model.universal_reverse[::-1])  # R displayed 3'->5'
     assert ys < yr
     for x, base in rv.items():
