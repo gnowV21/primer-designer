@@ -106,6 +106,16 @@ export default function ResultsPage() {
         </div>
       )}
 
+      {/* ── Reaction / Melting / Gel visualization (SPEC_visualization) ──
+           Outside the scientific-details toggle so it opens in one click; still
+           collapsed by default because three large SVGs otherwise dominate the page. */}
+      <CollapsibleCard
+        title="Reaction & Product Visualization"
+        summary="reaction · melting curve · gel"
+      >
+        <VisualizationPanel results={results} params={params} />
+      </CollapsibleCard>
+
       {/*
         Scientific detail. Identical content in both modes — only the initial
         open/closed state differs, so a Basic user is never shown less data,
@@ -122,22 +132,13 @@ export default function ResultsPage() {
           <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           {showDetails ? 'Hide scientific details' : 'Show scientific details'}
           <span className="text-xs font-normal text-slate-500">
-            visualization · thermodynamics · normalization
+            thermodynamics · normalization · multiplex
           </span>
         </button>
       )}
 
       {showDetails && (
         <>
-          {/* ── Reaction / Melting / Gel visualization (SPEC_visualization) ──
-               Collapsed by default: three large SVGs otherwise dominate the page. */}
-          <CollapsibleCard
-            title="Reaction & Product Visualization"
-            summary="reaction · melting curve · gel"
-          >
-            <VisualizationPanel results={results} params={params} />
-          </CollapsibleCard>
-
           {/* ── Thermodynamics table (tabs) ── */}
           <div>
             <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
