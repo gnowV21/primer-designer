@@ -316,7 +316,7 @@ def _stage0(node, y, model, oscale):
         (model.mirna_dna, "miRNA"),
         (model.stemloop_rt, "Stem-loop RT (S)"),
         (model.forward, "Forward (F)"),
-        (model.universal_reverse, "Universal reverse (U)"),
+        (model.universal_reverse, "Universal reverse (R)"),
     ]
     # label column sized to the longest label, plus room for the 5' end label
     label_w = max(len(n) for _, n in rows) * (VIZ_LABEL_SIZE + 1) * 0.62 + 28
@@ -342,13 +342,13 @@ def _stage0(node, y, model, oscale):
         ("viz-hairpin-edge", "S", "hairpin RT primer: its single-stranded 3' overhang recognises the "
                                   "miRNA 3' end; the stem-loop carries the universal site."),
         ("viz-tail", "F", "forward primer: a copy of the miRNA 5' end plus a GC tail that raises Tm."),
-        ("viz-universal", "U", "universal reverse primer: binds the site inside the stem-loop, "
+        ("viz-universal", "R", "universal reverse primer: binds the site inside the stem-loop, "
                                "the same for every miRNA."),
     ])
 
 
 def _duplex_rows(model, extra_left_cols=0):
-    """Shared geometry for stages 1-3: pitch, mono, miRNA column 0 x, overhang x."""
+    """Shared geometry for stages 1-2: pitch, mono, miRNA column 0 x, overhang x."""
     L, o = len(model.mirna_dna), len(model.overhang)
     p = _fit_pitch(_OX, extra_left_cols + L + VIZ_STEM_BP)
     x0 = _OX + extra_left_cols * p
@@ -417,82 +417,85 @@ def _stage2(node, y, model, oscale):
 
 
 def _stage3(node, y, model, oscale):
-    y = _title(node, y, "Stage 3 · PCR cycle 1 (forward primer)")
+    """PCR on the linearised strands: F on the cDNA (rows 1-2), R on the strand F
+    made (rows 3-4), then the amplicon both primer 5' ends define. Column c is
+    cycle-1-strand index c throughout, so every row and the amplicon line up."""
+    y = _title(node, y, "Stage 3 · PCR — stem-loop unfolded, F + R → amplicon")
     F, tail, k = model.forward, model.tail, model.forward_binding_length
-    S, o = model.stemloop_rt, len(model.overhang)
+    S, U, j = model.stemloop_rt, model.universal_reverse, model.universal_offset
     ext = model.cdna[len(S):]
-    p, mono, x0, x_ov = _duplex_rows(model, extra_left_cols=len(tail))
-    y_top = y + max(_hp_margin(mono), 18)
-    # F takes the place of the miRNA 5' end in the top row; tail hangs off the cDNA end
+    t, p = len(tail), oscale
+    mono = _mono(p)
+    col = lambda c: _OX + c * p                              # noqa: E731
+    mid = VIZ_BAR_HEIGHT / 2
+
+    # rows 1-2: F anneals to the 3' end of the linear cDNA
+    y_f = y + 18
     if tail:
-        _bar(node, x0 - len(tail) * p, y_top, tail, p, "5to3", fill=_grad("viz-tail"),
-             mono_size=mono, dash=True, text_fill=_BG, show_ends=False, pad_r=0)
-    _bar(node, x0, y_top, F[len(tail):], p, "5to3", fill=_grad("viz-mirna"), mono_size=mono,
+        _bar(node, col(0), y_f, tail, p, "5to3", fill=_grad("viz-tail"), mono_size=mono,
+             dash=True, text_fill=_BG, show_ends=False, pad_r=0)
+    _bar(node, col(t), y_f, F[t:], p, "5to3", fill=_grad("viz-mirna"), mono_size=mono,
          text_fill=_BG, show_ends=False, pad_l=0 if tail else _TXT_PAD)
-    _end_labels(node, x0 - len(tail) * p - _TXT_PAD, y_top, len(F) * p + 2 * _TXT_PAD, "5to3")
-    _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext, a_label="left")
-    _rungs(node, x0, k, p, y_top + VIZ_BAR_HEIGHT, y_bot)
-    xf = x0 + k * p + _TXT_PAD + 34                      # after F's 3' label
-    xa = x_ov + o * p
-    _arrow(node, xf, y_top + VIZ_BAR_HEIGHT / 2, xa - _TXT_PAD - 42)   # clear of arm A's 5' label
-    node.text(xf, y_top - 9, "F extends → copies the cDNA, then the unfolded stem-loop",
-              size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="start")
+    _end_labels(node, col(0) - _TXT_PAD, y_f, len(F) * p + 2 * _TXT_PAD, "5to3")
+    xf = col(len(F)) + _TXT_PAD + 30
+    _arrow(node, xf, y_f + mid, xf + 80, label="F extends")
     if tail:
-        node.text(x0 - len(tail) * p / 2, y_top - 9, "GC tail", size=VIZ_LABEL_SIZE,
-                  fill=_MUTED, anchor="middle")
-    cap_y = y_bot + VIZ_BAR_HEIGHT + 16
-    node.text(x0 + len(ext) * p / 2, cap_y, "cDNA template (miRNA removed at 95 °C)",
-              size=VIZ_LABEL_SIZE, fill=color("viz-cdna-edge"), anchor="middle", weight="700")
-    y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 22) + 12
-    node.text(_M, y + 4, "Resulting cycle-1 strand", size=VIZ_LABEL_SIZE + 1, fill=_FG, weight="600")
-    y += 16
-    _bar(node, _OX, y, model.sense_strand, oscale, "5to3", fill="url(#g-surface)")
-    y += VIZ_BAR_HEIGHT + 16
-    y = _wrap_note(node, _M, y, model.stages[3].annotation_en, _CONTENT_W)
-    return _roles(node, y, [
-        ("viz-mirna", "miRNA", "no longer needed — separated from the cDNA at 95 °C."),
-        ("viz-cdna-edge", "cDNA", "template for the first PCR strand."),
-        ("viz-tail", "F", f"its {k}-nt specific region pairs with the cDNA where the miRNA 5' end "
-                          "was (the step that makes the assay miRNA-specific); the tail hangs free."),
-        ("viz-hairpin-edge", "S", "copied into the new strand, which now contains the universal site."),
-    ])
+        node.text(col(t / 2), y_f - 9, "GC tail", size=VIZ_LABEL_SIZE, fill=_MUTED,
+                  anchor="middle")
+    node.text(col(len(model.sense_strand)), y_f + mid + 4,
+              "cDNA — stem-loop unfolded at 95 °C", size=VIZ_LABEL_SIZE,
+              fill=_MUTED, anchor="end", weight="600")
+    y_c = y_f + VIZ_BAR_HEIGHT + _PAIR_GAP
+    _bar(node, col(t), y_c, ext, p, "3to5", fill=_CD_FILL, mono_size=mono,
+         show_ends=False, pad_r=0)
+    _bar(node, col(t + len(ext)), y_c, S, p, "3to5", fill=_HP_FILL, mono_size=mono,
+         show_ends=False, pad_l=0)
+    _end_labels(node, col(t) - _TXT_PAD, y_c, len(model.cdna) * p + 2 * _TXT_PAD, "3to5")
+    _rungs(node, col(t), k, p, y_f + VIZ_BAR_HEIGHT, y_c)
 
-
-def _stage4(node, y, model, oscale):
-    y = _title(node, y, "Stage 4 · PCR cycle 2+ (universal reverse) → amplicon")
-    sense = model.sense_strand
-    j = model.universal_offset
-    U = model.universal_reverse
-    _bar(node, _OX, y, sense, oscale, "5to3", fill="url(#g-surface)")
-    ux = _OX + j * oscale
-    node.rect(ux, y - 4, len(U) * oscale, VIZ_BAR_HEIGHT + 8, rx=_BAR_RX,
-              fill="none", stroke=color("viz-universal"), stroke_width=2.5)
-    cut = _OX + (j + len(U)) * oscale
-    node.line(cut, y - 14, cut, y + VIZ_BAR_HEIGHT + 8, stroke=color("viz-universal"),
+    # rows 3-4: R anneals to the universal site of the strand F made
+    y_s = y_c + VIZ_BAR_HEIGHT + 30
+    _bar(node, col(0), y_s, model.sense_strand, p, "5to3", fill="url(#g-surface)",
+         mono_size=mono)
+    y_u = y_s + VIZ_BAR_HEIGHT + _PAIR_GAP
+    _bar(node, col(j), y_u, U, p, "3to5", fill=_grad("viz-universal"), mono_size=mono,
+         text_fill=_BG)
+    _rungs(node, col(j), len(U), p, y_s + VIZ_BAR_HEIGHT, y_u)
+    xr = col(j) - _TXT_PAD - 40                              # clear of R's 3' label
+    _arrow(node, xr, y_u + mid, xr - 80, label="R extends")
+    node.text(col(0), y_u + mid + 4, "cycle-1 strand, made by F", size=VIZ_LABEL_SIZE,
+              fill=_MUTED, weight="600")
+    cut = col(j + len(U))                                    # R 5' end = amplicon end
+    node.line(cut, y_s - 6, cut, y_s + VIZ_BAR_HEIGHT + 6, stroke=color("viz-universal"),
               stroke_width=1.5, dash="5 3")
-    node.text(min(cut, _W - _M), y - 18, "product stop (primer 5' end)",
-              size=VIZ_LABEL_SIZE, fill=color("viz-universal"), anchor="end", weight="600")
-    y += VIZ_BAR_HEIGHT + 34
-    node.text(_M, y, f"Amplicon · {len(model.amplicon)} bp · GC {model.gc_percent}%",
-              size=VIZ_LABEL_SIZE + 2, fill=_FG, weight="700")
+
+    # final product
+    y = y_u + VIZ_BAR_HEIGHT + 30
+    node.text(_M, y, f"Final product · amplicon {len(model.amplicon)} bp · GC {model.gc_percent}% "
+              "(F 5' end → R 5' end)", size=VIZ_LABEL_SIZE + 2, fill=_FG, weight="700")
     y += 14
     for reg in model.regions:
-        rx = _OX + reg.start * oscale
-        rw = reg.length * oscale
-        node.rect(rx, y, rw, VIZ_BAR_HEIGHT, rx=6, fill=_grad(reg.color_token),
+        rw = reg.length * p
+        node.rect(col(reg.start), y, rw, VIZ_BAR_HEIGHT, rx=6, fill=_grad(reg.color_token),
                   stroke=_BG, stroke_width=1.5, filter=_SHADOW)
-        node.text(rx + rw / 2, y + VIZ_BAR_HEIGHT + VIZ_LABEL_SIZE + 2,
+        node.text(col(reg.start) + rw / 2, y + VIZ_BAR_HEIGHT + VIZ_LABEL_SIZE + 2,
                   f"{reg.length}", size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="middle")
-    _end_labels(node, _OX, y, len(model.amplicon) * oscale, "5to3")
+    _end_labels(node, _OX, y, len(model.amplicon) * p, "5to3")
     y += VIZ_BAR_HEIGHT + VIZ_LABEL_SIZE + 12
     if model.size_warning:
         node.text(_M, y + 10, "⚠ Amplicon size outside the qPCR range",
                   size=VIZ_LABEL_SIZE + 1, fill=color("viz-warn"), weight="600")
         y += 20
-    y = _wrap_note(node, _M, y, model.stages[4].annotation_en, _CONTENT_W)
+    y = _wrap_note(node, _M, y, model.stages[3].annotation_en, _CONTENT_W)
     return _roles(node, y, [
-        ("viz-universal", "U", "binds the universal site copied from S; synthesis stops at its 5' end."),
-        ("viz-tail", "F", "keeps priming the other strand — F and U amplify exponentially."),
+        ("viz-cdna-edge", "cDNA", "linear template once the miRNA is gone and the stem-loop "
+                                  "has melted."),
+        ("viz-tail", "F", f"its {k}-nt specific region pairs where the miRNA 5' end was (the "
+                          "miRNA-specific step); extends to make the cycle-1 strand."),
+        ("viz-universal", "R", "binds the universal site that strand copied from S; the "
+                               "product stops at its 5' end."),
+        ("viz-hairpin-edge", "S", "no longer a hairpin — its sequence is now the stem-loop and "
+                                  "universal part of every amplicon."),
     ])
 
 
@@ -500,24 +503,23 @@ _STAGE_FNS = [
     ("Stage 0: Components", _stage0),
     ("Stage 1: RT annealing", _stage1),
     ("Stage 2: RT product (cDNA)", _stage2),
-    ("Stage 3: PCR cycle 1 (forward primer)", _stage3),
-    ("Stage 4: PCR cycle 2+ (universal reverse)", _stage4),
+    ("Stage 3: PCR (forward + universal reverse) → amplicon", _stage3),
 ]
 
 
 # ── PART B: reaction panel ──────────────────────────────────────────────────────
 
 def render_reaction(model, mirna_id: str = "") -> str:
-    """Panel 1 — the 5-stage stem-loop RT-qPCR reaction (SPEC §B)."""
+    """Panel 1 — the 4-stage stem-loop RT-qPCR reaction (SPEC §B)."""
     longest = max(len(model.sense_strand), len(model.cdna), len(model.amplicon),
                   len(model.stemloop_rt), len(model.mirna_dna))
     oscale = _OW / longest
 
     svg = Svg(_W, 0, title=f"Reaction schematic — {mirna_id or 'miRNA'}",
               desc=(
-                  "Schematic of the five-stage stem-loop RT-qPCR reaction: components, "
-                  "RT annealing, cDNA synthesis, first PCR cycle with the forward primer, "
-                  "and later cycles with the universal reverse primer forming the amplicon. "
+                  "Schematic of the four-stage stem-loop RT-qPCR reaction: components, "
+                  "RT annealing, cDNA synthesis, and PCR in which the forward and universal "
+                  "reverse primers bind the linearised strands to form the amplicon. "
                   "Sequence geometry is derived from the design output, not from experimental data."
               ))
     svg.raw(_defs())

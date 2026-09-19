@@ -31,10 +31,11 @@ def test_reaction_is_wellformed_xml():
     assert svg.rstrip().endswith("</svg>")
 
 
-def test_all_five_stages_have_aria_labels():
+def test_all_four_stages_have_aria_labels():
     svg = render_reaction(_golden_model(), "hsa-miR-16-5p")
-    for i in range(5):
+    for i in range(4):
         assert f'aria-label="Stage {i}:' in svg
+    assert 'aria-label="Stage 4:' not in svg
 
 
 def test_simulated_label_present_and_not_toggleable():
@@ -180,21 +181,39 @@ def test_stage2_cdna_pairs_with_whole_mirna():
         assert base == _COMP[mi[x]]
 
 
-def test_stage3_forward_primer_pairs_with_cdna_copy():
-    """Stage 3: F takes the miRNA 5' end's place (top row), pairing with the cDNA."""
+def test_stage3_forward_primer_pairs_with_linear_cdna():
+    """Stage 3: the stem-loop is unfolded — the whole cDNA is one straight row, and
+    F's specific region pairs with its 3' end."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 3")
-    ext = model.cdna[len(model.stemloop_rt):]
-    ye, ex = _row(rows, ext[::-1])
+    S = model.stemloop_rt                              # cDNA = RT copy + primer, 3'->5'
+    ye, ex = _row(rows, model.cdna[len(S):][::-1])
+    yc, sp = _row(rows, S[::-1])
+    assert ye == yc and min(sp) > max(ex)               # one straight row, no hairpin
+    cd = {**ex, **sp}
     yf, fs = _row(rows, model.forward[len(model.tail):])
-    assert yf < ye
+    assert yf < yc
     for x, base in fs.items():
-        assert ex[x] == _COMP[base], f"x={x}: primer {base} against cDNA {ex[x]}"
+        assert cd[x] == _COMP[base], f"x={x}: primer {base} against cDNA {cd[x]}"
 
 
-@pytest.mark.parametrize("stage", ["Stage 0", "Stage 1", "Stage 2", "Stage 3"])
+def test_stage3_reverse_primer_pairs_with_cycle1_strand():
+    """Stage 3: R sits under the strand F made, pairing with its universal site,
+    and the amplicon ends at R's 5' end."""
+    model = _golden_model()
+    rows = _char_rows(render_reaction(model), "Stage 3")
+    ys, se = _row(rows, model.sense_strand)
+    yr, rv = _row(rows, model.universal_reverse[::-1])  # R displayed 3'->5'
+    assert ys < yr
+    for x, base in rv.items():
+        assert se[x] == _COMP[base], f"x={x}: R {base} against strand {se[x]}"
+    xs = sorted(se)
+    assert xs.index(max(rv)) + 1 == len(model.amplicon)
+
+
+@pytest.mark.parametrize("stage", ["Stage 0", "Stage 1", "Stage 2"])
 def test_stemloop_drawn_as_paired_hairpin(stage):
-    """The RT primer is a hairpin in stages 0-3: arm A (nt 1-14) on top, base-paired
+    """The RT primer is a hairpin in stages 0-2: arm A (nt 1-14) on top, base-paired
     column by column with arm B (nt 31-44) below it, and all 16 loop nt drawn."""
     model = _golden_model()
     svg = render_reaction(model)
@@ -224,7 +243,7 @@ def test_rungs_do_not_touch_bars():
 @pytest.mark.parametrize("o", [5, 6, 7])
 @pytest.mark.parametrize("tail", [0, 4, 8])
 def test_hairpin_fits_the_card(L, o, tail):
-    """Hairpin incl. loop never runs past the right content edge (stages 1-3)."""
+    """Hairpin incl. loop never runs past the right content edge (stages 1-2)."""
     import visualization.renderer as R
     from visualization.svg_builder import _Node
     p = R._fit_pitch(R._OX, tail + L + R.VIZ_STEM_BP)

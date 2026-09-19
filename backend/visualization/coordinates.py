@@ -5,9 +5,9 @@
 # GEOMETRY only — it never designs primers, never scores, never recomputes Tm.
 # Sequence helpers come from algorithm.sequence_utils (not reimplemented).
 #
-# Biology (SPEC §A.1), 5 stages:
+# Biology (SPEC §A.1), 4 stages:
 #   0 Components · 1 RT annealing · 2 RT product (cDNA) ·
-#   3 PCR cycle 1 (forward) · 4 PCR cycle 2+ (universal) → stable amplicon
+#   3 PCR: forward + universal reverse on the linearised strands → stable amplicon
 # ================================================================
 
 from dataclasses import dataclass, field
@@ -100,7 +100,7 @@ class AmpliconModel:
     amplicon: str
     universal_offset: int      # j
     regions: list              # list[Region] (exactly 4)
-    stages: list               # list[Stage] (exactly 5)
+    stages: list               # list[Stage] (exactly 4)
     gc_percent: float
     size_warning: bool
 
@@ -239,7 +239,7 @@ def build_amplicon_model(
 
 
 def _build_stages(m, L, S, body, overhang, F, tail, k, ext, cdna, sense, U, j) -> list:
-    """Build the 5 reaction stages (SPEC §A.1). Sequences/directions/pairings are
+    """Build the 4 reaction stages (SPEC §A.1). Sequences/directions/pairings are
     logical; pixel layout is PART B's job."""
 
     # Stage 0 — components
@@ -253,7 +253,7 @@ def _build_stages(m, L, S, body, overhang, F, tail, k, ext, cdna, sense, U, j) -
             Strand(U, "5to3", 0, None),
         ],
         pairings=[],
-        annotation_en="Mature miRNA and three primers: stem-loop RT, forward, and universal reverse.",
+        annotation_en="Mature miRNA and three primers: stem-loop RT (S), forward (F) and universal reverse (R).",
     )
 
     # Stage 1 — RT annealing. miRNA on top (5'→3'); stem-loop RT below (3'→5') so the
@@ -292,44 +292,30 @@ def _build_stages(m, L, S, body, overhang, F, tail, k, ext, cdna, sense, U, j) -
         ),
     )
 
-    # Stage 3 — PCR cycle 1. cDNA is the template (3'→5' on top); forward primer below
-    # (5'→3'); its 5' GC tail has no template (dashed in the renderer). Forward specific
-    # base m[i] (F index len(F)-k+i) pairs with cDNA index len(cdna)-1-i.
+    # Stage 3 — PCR. 95 °C unfolds the stem-loop, so the cDNA is a linear template.
+    # F binds the cDNA (F specific base m[i], F index len(F)-k+i, pairs with cDNA index
+    # len(cdna)-1-i) and makes the cycle-1 strand; the universal reverse primer binds
+    # that strand at [j, j+len(U)) and fixes the amplicon end at its 5' end.
     stage3_pairings = [(len(cdna) - 1 - i, len(F) - k + i) for i in range(k)]
     stage3 = Stage(
         id=3,
-        label_en="PCR cycle 1 (forward primer)",
+        label_en="PCR (forward + universal reverse)",
         strands=[
             Strand(cdna, "3to5", 0, None),
             Strand(F, "5to3", 0, REGION_TAIL),
             Strand(sense, "5to3", 0, None),
+            Strand(U, "3to5", j, REGION_UNIVERSAL),
         ],
         pairings=stage3_pairings,
         annotation_en=(
-            f"The forward primer anneals to the cDNA 3' end via its {k}-nt specific region "
-            f"(the miRNA 5' end); its 5' GC tail overhangs with no template. Polymerase "
-            "extends rightward, producing the cycle-1 strand."
+            "At 95 °C the miRNA leaves and the stem-loop unfolds, so the cDNA is a linear "
+            f"template. The forward primer anneals to its 3' end via its {k}-nt specific region "
+            "(the miRNA 5' end; the GC tail hangs free) and extends rightward, making the "
+            "cycle-1 strand. The universal reverse primer binds that strand's copy of the "
+            "stem-loop site and extends leftward. Product ends are fixed by the two primer "
+            "5' ends — every later molecule is the same stable amplicon."
         ),
         synthesis_direction="right",
     )
 
-    # Stage 4 — PCR cycle 2+. Universal primer binds the cycle-1 strand at [j, j+len(U));
-    # product stops at the primer 5' end, fixing the stable amplicon. U[i] pairs with
-    # sense[j + len(U) - 1 - i].
-    stage4_pairings = [(j + len(U) - 1 - i, i) for i in range(len(U))]
-    stage4 = Stage(
-        id=4,
-        label_en="PCR cycle 2+ (universal reverse)",
-        strands=[
-            Strand(sense, "5to3", 0, None),
-            Strand(U, "3to5", j, REGION_UNIVERSAL),
-        ],
-        pairings=stage4_pairings,
-        annotation_en=(
-            "The universal reverse primer binds the cycle-1 strand; synthesis stops at the "
-            "primer 5' end. From here every molecule shares the same length — the stable amplicon."
-        ),
-        synthesis_direction="right",
-    )
-
-    return [stage0, stage1, stage2, stage3, stage4]
+    return [stage0, stage1, stage2, stage3]

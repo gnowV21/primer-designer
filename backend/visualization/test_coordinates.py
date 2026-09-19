@@ -81,7 +81,7 @@ def test_golden_mir16():
 
 def test_golden_stages():
     model = build_amplicon_model(**make_valid("TAGCAGCACGTAAATATTGGCG"))
-    assert [s.id for s in model.stages] == [0, 1, 2, 3, 4]
+    assert [s.id for s in model.stages] == [0, 1, 2, 3]
     stage1 = model.stages[1]
     assert len(stage1.pairings) == 6            # 6-nt overhang duplex
     assert stage1.synthesis_direction == "left"  # RT extends leftward
