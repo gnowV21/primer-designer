@@ -31,7 +31,7 @@ _CACHE_TTL_DAYS = 30                                      # SPEC §E.2
 # SVG for up to the full TTL.
 #   2 — fixed stage-1/stage-3 base pairing (strands must be passed 5'->3'),
 #       melting-curve headroom, gel header/lane overlap.
-_RENDER_VERSION = 8
+_RENDER_VERSION = 9
 
 _CACHE = SQLiteKVCache(
     db_path=os.path.join(os.path.dirname(__file__), "..", "data", "visualize_cache.sqlite"),
