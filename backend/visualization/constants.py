@@ -76,6 +76,11 @@ VIZ_COLOR_FALLBACK = {
     "viz-stemloop-hi": "#8A99EA",
     "viz-universal":  "#9059C0",  # violet — universal-reverse site
     "viz-universal-hi": "#B78BDC",
+    # soft fills for the hairpin schematic (stages 0-3): light tint + mid edge, dark text
+    "viz-hairpin":      "#E7EAFB",  # stem-loop RT primer
+    "viz-hairpin-edge": "#8F9DE3",
+    "viz-cdna":         "#DDF2EE",  # cDNA made by RT
+    "viz-cdna-edge":    "#4FB3A5",
     # chart/structure tokens (used by PART C/D)
     "viz-axis":       "#94A3B8",
     "viz-curve":      "#2563EB",

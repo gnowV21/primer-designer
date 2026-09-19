@@ -146,61 +146,70 @@ def _paired_rows(rows, n):
     return best[1], best[2]
 
 
+def _row(rows, seq):
+    """The single row whose left-to-right text is `seq`: (y, {x: char})."""
+    hits = [(y, c) for y, c in rows if "".join(c[x] for x in sorted(c)) == seq]
+    assert len(hits) == 1, f"expected one row reading {seq}, got {len(hits)}"
+    return hits[0]
+
+
 def test_stage1_overhang_base_pairs_with_mirna_3prime():
-    """The 6-nt RT overhang must sit complementary under the miRNA 3' end."""
+    """The RT overhang sits directly ABOVE the miRNA 3' end, complementary column by column."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 1")
-    mirna_cols, overhang_cols = _paired_rows(rows, 6)
-
-    for x, base in overhang_cols.items():
-        assert base == _COMP[mirna_cols[x]], (
-            f"x={x}: {mirna_cols[x]} paired with {base}, "
-            f"expected {_COMP[mirna_cols[x]]}"
-        )
-
-    # displayed left-to-right is the real overhang read 3'->5'
-    displayed = "".join(overhang_cols[x] for x in sorted(overhang_cols))
-    assert displayed == model.overhang[::-1]
-
-    # and it pairs with the miRNA 3' terminal 6 nt
-    top = "".join(mirna_cols[x] for x in sorted(overhang_cols))
-    assert top == model.mirna_dna[-6:]
+    yo, ov = _row(rows, model.overhang[::-1])          # overhang displayed 3'->5'
+    ym, mi = _row(rows, model.mirna_dna)
+    assert yo < ym                                      # miRNA drawn below the primer
+    for x, base in ov.items():
+        assert base == _COMP[mi[x]], f"x={x}: {mi[x]} paired with {base}"
+    assert "".join(mi[x] for x in sorted(ov)) == model.mirna_dna[-len(ov):]
 
 
-def test_stage3_template_base_pairs_with_forward_primer():
-    """The cDNA template row must be complementary to the forward primer row."""
+def test_stage2_cdna_pairs_with_whole_mirna():
+    """Stage 2: RT-made cDNA + overhang pair with every miRNA nucleotide below them."""
+    model = _golden_model()
+    rows = _char_rows(render_reaction(model), "Stage 2")
+    ext = model.cdna[len(model.stemloop_rt):]
+    ye, ex = _row(rows, ext[::-1])
+    yo, ov = _row(rows, model.overhang[::-1])
+    ym, mi = _row(rows, model.mirna_dna)
+    assert ye == yo < ym
+    paired = {**ex, **ov}
+    assert sorted(paired) == sorted(mi)
+    for x, base in paired.items():
+        assert base == _COMP[mi[x]]
+
+
+def test_stage3_forward_primer_pairs_with_cdna_copy():
+    """Stage 3: F's specific region sits under the cDNA 3' end and is complementary."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 3")
-    k = model.forward_binding_length
-    template_cols, specific_cols = _paired_rows(rows, k)
-
-    for x, base in specific_cols.items():
-        assert template_cols[x] == _COMP[base], (
-            f"x={x}: primer {base} against template {template_cols[x]}, "
-            f"expected {_COMP[base]}"
-        )
+    ext = model.cdna[len(model.stemloop_rt):]
+    ye, ex = _row(rows, ext[::-1])
+    yf, fs = _row(rows, model.forward[len(model.tail):])
+    assert ye < yf
+    for x, base in fs.items():
+        assert ex[x] == _COMP[base], f"x={x}: primer {base} against cDNA {ex[x]}"
 
 
-@pytest.mark.parametrize("stage", ["Stage 0", "Stage 1"])
+@pytest.mark.parametrize("stage", ["Stage 0", "Stage 1", "Stage 2", "Stage 3"])
 def test_stemloop_drawn_as_paired_hairpin(stage):
-    """Stages 0-1 draw the RT primer as a hairpin: arm A (nt 1-14) sits under arm B
-    (nt 31-44) base-paired column by column, and all 16 loop nt are drawn."""
+    """The RT primer is a hairpin in stages 0-3: arm A (nt 1-14) on top, base-paired
+    column by column with arm B (nt 31-44) below it, and all 16 loop nt drawn."""
     model = _golden_model()
     svg = render_reaction(model)
     rows = _char_rows(svg, stage)
-    text = lambda c: "".join(c[x] for x in sorted(c))            # noqa: E731
     S = model.stemloop_rt
-    (ya, arm_a_cols), = [(y, c) for y, c in rows if text(c) == S[:14]]
-    (yb, arm_b_cols), = [(y, c) for y, c in rows if text(c) == S[30:44][::-1]]
-    assert yb < ya and set(arm_a_cols) == set(arm_b_cols)     # arm B directly above arm A
-    for x, base in arm_a_cols.items():
-        assert base == _COMP[arm_b_cols[x]]
-    loop = model.stemloop_rt[14:30]
+    ya, arm_a = _row(rows, S[:14])
+    yb, arm_b = _row(rows, S[30:44][::-1])
+    assert ya < yb and set(arm_a) == set(arm_b)
+    for x, base in arm_a.items():
+        assert base == _COMP[arm_b[x]]
     root = next(g for g in ET.fromstring(svg).iter(f"{_NS}g")
                 if (g.get("aria-label") or "").startswith(stage))
     singles = [t.text for t in root.iter(f"{_NS}text") if t.text and len(t.text) == 1
                and t.text in "ACGT"]
-    assert "".join(singles) == loop
+    assert "".join(singles) == S[14:30]
 
 
 def test_rungs_do_not_touch_bars():
@@ -213,12 +222,13 @@ def test_rungs_do_not_touch_bars():
 
 @pytest.mark.parametrize("L", [17, 22, 25, 30])
 @pytest.mark.parametrize("o", [5, 6, 7])
-def test_stage1_hairpin_fits_the_card(L, o):
-    """The smooth hairpin (incl. loop ring) never runs past the right content edge."""
+@pytest.mark.parametrize("tail", [0, 4, 8])
+def test_hairpin_fits_the_card(L, o, tail):
+    """Hairpin incl. loop never runs past the right content edge (stages 1-3)."""
     import visualization.renderer as R
     from visualization.svg_builder import _Node
-    w = min(L, R.VIZ_MAX_ZOOM_COLUMNS)
-    p = min(R.VIZ_CHAR_PITCH, (R._W - R._M - R._OX) / (w + R.VIZ_STEM_BP + 10))
-    right, _ = R._stemloop(_Node(), R._OX + (w - o) * p, 100, STEMLOOP_BODY + "A" * o, o, p,
-                           min(R.VIZ_MONO_SIZE, p * 1.45))
+    p = R._fit_pitch(R._OX, tail + L + R.VIZ_STEM_BP)
+    x_ov = R._OX + (tail + L - o) * p
+    right, _ = R._stemloop(_Node(), x_ov, 100, STEMLOOP_BODY + "A" * o, o, p, R._mono(p),
+                           ext="C" * (L - o))
     assert right <= R._W - R._M
