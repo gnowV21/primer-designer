@@ -147,3 +147,11 @@ def test_3prime_tiers_below_majority_are_informational(monkeypatch, f, level):
     assert res["three_prime_isomir_risk"] is False
     assert res["level"] == level and res["warning"] is None and res["summary"]
 
+
+
+def test_3prime_abundance_only_entry_is_no_data(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META,
+                                              "hsa-miR-A-5p": {"median_total_rpm": 5.0,
+                                                               "abundance_percentile": 50.0}})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-A-5p")
+    assert res["level"] == "no_data" and res["three_prime_isomir_risk"] is False

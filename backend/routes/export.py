@@ -536,6 +536,11 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         iso = _isomir_note(best)
         if iso:
             notes.append(f"<b>{esc(iso)}</b>")
+        tpi = sl.get("three_prime_isomir") or {}
+        if tpi.get("warning") or tpi.get("summary"):
+            # 3' isomiRs (isomiRdb): a warning when the canonical 3' form is a minority.
+            text = tpi.get("warning") or tpi.get("summary")
+            notes.append(f"<b>3' isomiRs:</b> {esc(text)} Source: {esc(str(tpi.get('source', '')))}.")
         oc_rows, oc_interp = _overhang_axis_summary(results)
         if oc_interp:
             oc = results.get("specificity_warnings", {}).get("overhang_collision", {})

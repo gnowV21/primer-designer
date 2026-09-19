@@ -119,6 +119,14 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
               {stemloop_rt.rt_primer_conc_note && (
                 <p className="text-xs text-slate-500">{stemloop_rt.rt_primer_conc_note}</p>
               )}
+              {/* A finding, not methodology: when most of this miRNA is 3′ isoforms the
+                  assay measures a minority of it — must be visible without expanding. */}
+              {stemloop_rt.three_prime_isomir?.three_prime_isomir_risk && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  <span className="font-semibold">3′ isomiRs:</span> {stemloop_rt.three_prime_isomir.warning}{' '}
+                  <span className="text-amber-700">Source: {stemloop_rt.three_prime_isomir.source}.</span>
+                </p>
+              )}
             </div>
           )}
 

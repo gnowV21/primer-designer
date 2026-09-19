@@ -121,7 +121,8 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
         "source": f"{source.get('name', '?')} (PMID {source.get('pmid', '?')})" if source else None,
     }
 
-    if entry is None:
+    # Entries may carry abundance only (no 3' isoform data) — same as no data here.
+    if entry is None or "median_3prime_fraction" not in entry:
         return {
             **base,
             "three_prime_isomir_risk": False,
@@ -139,7 +140,8 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
              else "moderate" if f >= ISOMIR_3P_FRACTION_MODERATE else "low")
     summary = (
         f"In isomiRdb, a median {f:.0%} of {mirna_name} reads are 3'-end isoforms "
-        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples)."
+        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples; "
+        "serum/plasma are under-represented in this data)."
     )
     top = entry.get("top_3prime_variants", [])
     return {
@@ -154,9 +156,10 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
         "summary": summary,
         "warning": (
             summary + f" The stem-loop RT primer pairs with the canonical 3'-terminal "
-            f"{overhang_len} nt, so these isoforms are captured poorly: the assay measures the "
-            "canonical 3' form — here a minority of this miRNA. Report the target as the "
-            "canonical 3' isoform, or consider a 3'-tolerant chemistry (e.g. poly(A)-tailing RT)."
+            f"{overhang_len} nt, so 3'-variant isoforms are captured less efficiently (±1-nt "
+            "variants partly, longer shifts poorly) [Nejad18]. The signal therefore reflects "
+            "mainly the canonical 3' form — here a minority of this miRNA. Report the target "
+            "as the canonical 3' isoform, or consider a 3'-tolerant chemistry (e.g. poly(A)-tailing RT)."
         ) if level == "high" else None,
     }
 
