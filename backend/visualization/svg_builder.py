@@ -63,10 +63,11 @@ class _Node:
         )
 
     def path(self, d, *, stroke=None, fill=None, stroke_width=None,
-             dash=None, class_=None, opacity=None, linecap=None):
+             dash=None, class_=None, opacity=None, linecap=None, linejoin=None,
+             filter=None):
         # `d` is built from numeric coords by the caller; treated as trusted geometry.
         self._children.append(
-            f'<path d="{d}" {_attrs({"stroke": stroke, "fill": fill, "stroke-width": stroke_width, "stroke-dasharray": dash, "class": class_, "opacity": opacity, "stroke-linecap": linecap})} />'
+            f'<path d="{d}" {_attrs({"stroke": stroke, "fill": fill, "stroke-width": stroke_width, "stroke-dasharray": dash, "class": class_, "opacity": opacity, "stroke-linecap": linecap, "stroke-linejoin": linejoin, "filter": filter})} />'
         )
 
     def text(self, x, y, content, *, size=None, fill=None, anchor=None,

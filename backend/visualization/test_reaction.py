@@ -209,3 +209,16 @@ def test_rungs_do_not_touch_bars():
     for ln in ET.fromstring(svg).iter(f"{_NS}line"):
         if ln.get("stroke-width") == "2.4":
             assert float(ln.get("y2")) - float(ln.get("y1")) > 0
+
+
+@pytest.mark.parametrize("L", [17, 22, 25, 30])
+@pytest.mark.parametrize("o", [5, 6, 7])
+def test_stage1_hairpin_fits_the_card(L, o):
+    """The smooth hairpin (incl. loop ring) never runs past the right content edge."""
+    import visualization.renderer as R
+    from visualization.svg_builder import _Node
+    w = min(L, R.VIZ_MAX_ZOOM_COLUMNS)
+    p = min(R.VIZ_CHAR_PITCH, (R._W - R._M - R._OX) / (w + R.VIZ_STEM_BP + 10))
+    right, _ = R._stemloop(_Node(), R._OX + (w - o) * p, 100, STEMLOOP_BODY + "A" * o, o, p,
+                           min(R.VIZ_MONO_SIZE, p * 1.45))
+    assert right <= R._W - R._M

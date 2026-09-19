@@ -157,56 +157,68 @@ def _rungs(node, x_start, count, pitch, y_top, y_bot):
 
 
 def _stemloop(node, x, y, S, o, pitch, mono_size):
-    """Stem-loop RT primer drawn as a hairpin.
+    """Stem-loop RT primer drawn as one smooth hairpin.
 
-    Row 1 (y): 3' overhang + stem arm B, read 3'->5' left to right, so the overhang
-    sits at the left exactly where it pairs with the miRNA in stage 1. Row 2: stem
-    arm A (the primer 5' end) paired under arm B. The loop runs round a ring on the
-    right. Returns (right_x, bottom_y).
+    The whole primer is a single stroked path (same thickness as a sequence bar):
+    row 1 (3' overhang + stem arm B, read 3'->5' left to right) -> Bezier neck ->
+    circular loop -> Bezier neck -> row 2 (stem arm A, the 5' end). Tangents match
+    at every joint, so there are no corners. Row 1's overhang sits exactly where it
+    pairs with the miRNA in stage 1. Returns (right_x, bottom_y).
     """
     stem = VIZ_STEM_BP
     body = len(S) - o
     arm_b, loop, arm_a = S[body - stem:body], S[stem:body - stem], S[:stem]
-    y2 = y + VIZ_BAR_HEIGHT + _PAIR_GAP
-    fill = _grad("viz-stemloop")
     n1 = o + stem
-    # row 1: one bar, two text runs (overhang | arm B) so each stays addressable
-    node.rect(x - _TXT_PAD, y, n1 * pitch + 2 * _TXT_PAD, VIZ_BAR_HEIGHT, rx=_BAR_RX, fill=fill,
-              stroke=_BORDER, stroke_width=1, filter=_SHADOW)
+    y2 = y + VIZ_BAR_HEIGHT + _PAIR_GAP
+    xa = x + o * pitch                          # arm A's 5' nt sits under the last body nt
+    half = VIZ_BAR_HEIGHT / 2
+    y1c, y2c = y + half, y2 + half
+    h = (y2c - y1c) / 2
+    cy = y1c + h
+
+    # loop radius: enough arc for the loop letters, and a visible hole in the ring
+    need = (len(loop) + 1) * max(pitch, mono_size * 1.2)
+    r = max(h + 1, half + 16)
+    while (2 * math.pi - 2 * math.asin(h / r)) * r < need:
+        r += 1
+    alpha = math.asin(h / r)                    # the ring meets both arm centre-lines
+    neck = 26
+    xe = x + n1 * pitch + _TXT_PAD              # straight arms end past the last letter
+    ex = xe + neck                              # ring entry / exit x
+    cx = ex + r * math.cos(alpha)
+    k = neck * 0.55
+    sa, ca = math.sin(alpha), math.cos(alpha)
+    d = (
+        f"M {x - _TXT_PAD + half:.2f} {y1c:.2f} L {xe:.2f} {y1c:.2f} "
+        # neck into the ring, tangent (sin a, -cos a) at entry (clockwise travel)
+        f"C {xe + k:.2f} {y1c:.2f} {ex - k * sa:.2f} {y1c + k * ca:.2f} {ex:.2f} {y1c:.2f} "
+        f"A {r:.2f} {r:.2f} 0 1 1 {ex:.2f} {y2c:.2f} "
+        # neck out of the ring, tangent (-sin a, -cos a) at exit
+        f"C {ex - k * sa:.2f} {y2c - k * ca:.2f} {xe + k:.2f} {y2c:.2f} {xe:.2f} {y2c:.2f} "
+        f"L {xa - _TXT_PAD + half:.2f} {y2c:.2f}"
+    )
+    node.path(d, fill="none", stroke=color("viz-stemloop"), stroke_width=VIZ_BAR_HEIGHT,
+              linecap="round", linejoin="round", filter=_SHADOW)
+
     _bar_text(node, x, y, S[body:], pitch, "3to5", mono_size, _BG)
-    _bar_text(node, x + o * pitch, y, arm_b, pitch, "3to5", mono_size, _BG)
-    # row 2: arm A; its 5' nt pairs with the last body nt (first column of arm B)
-    xa = x + o * pitch
-    node.rect(xa - _TXT_PAD, y2, stem * pitch + 2 * _TXT_PAD, VIZ_BAR_HEIGHT, rx=_BAR_RX,
-              fill=fill, stroke=_BORDER, stroke_width=1, filter=_SHADOW)
+    _bar_text(node, xa, y, arm_b, pitch, "3to5", mono_size, _BG)
     _bar_text(node, xa, y2, arm_a, pitch, "5to3", mono_size, _BG)
     _rungs(node, xa, stem, pitch, y + VIZ_BAR_HEIGHT, y2)
-    lab = VIZ_BAR_HEIGHT / 2 + VIZ_LABEL_SIZE * 0.35
+    lab = half + VIZ_LABEL_SIZE * 0.35
     node.text(x - _TXT_PAD - 10, y + lab, "3'", size=VIZ_LABEL_SIZE, fill=_MUTED,
               anchor="end", weight="600")
     node.text(xa - _TXT_PAD - 10, y2 + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
               anchor="end", weight="600")
 
-    # loop: a ring through both arm ends, letters ~0.8 pitch apart along it
-    band = mono_size + 12
-    x_end = x + n1 * pitch + _TXT_PAD + 2        # ring meets the arms past their padding
-    h = (y2 - y) / 2
-    cy = y + VIZ_BAR_HEIGHT / 2 + h
-    need = (len(loop) + 1) * max(pitch, mono_size * 1.15)
-    r = h + 1
-    while (2 * math.pi - 2 * math.asin(h / r)) * r < need:
-        r += 1
-    phi = math.asin(h / r)
-    cx = x_end + r * math.cos(phi)
-    # large arc from the arm-A end (below) round the right side to the arm-B end
-    node.path(f"M {x_end:.2f} {cy + h:.2f} A {r:.2f} {r:.2f} 0 1 0 {x_end:.2f} {cy - h:.2f}",
-              fill="none", stroke=color("viz-stemloop"), stroke_width=band, opacity=0.85)
-    a0, span = math.pi + phi, 2 * math.pi - 2 * phi
+    # loop letters on the ring centre-line, in sequence order from arm A (bottom)
+    # round the right side to arm B (top)
+    t_start, span = math.pi - alpha, -(2 * math.pi - 2 * alpha)   # counter-clockwise
     for i, ch in enumerate(loop):
-        a = a0 + (i + 1) * span / (len(loop) + 1)
-        node.text(round(cx + r * math.cos(a), 2), round(cy - r * math.sin(a) + mono_size * 0.35, 2),
+        t = t_start + (i + 1) * span / (len(loop) + 1)
+        node.text(round(cx + r * math.cos(t), 2),
+                  round(cy + r * math.sin(t) + mono_size * 0.35, 2),
                   ch, size=mono_size, fill=_BG, anchor="middle", weight="600")
-    return cx + r + band / 2, y2 + VIZ_BAR_HEIGHT
+    return cx + r + half, y2 + VIZ_BAR_HEIGHT
 
 
 def _arrow(node, x1, y, x2, *, label=None):
@@ -254,7 +266,7 @@ def _stage1(node, y, model, oscale):
     o = len(model.overhang)   # 5–7 nt, read from the RT primer
     x0 = _OX
     # Shrink the pitch only when the miRNA + hairpin would not fit the card.
-    pitch = min(VIZ_CHAR_PITCH, (_W - _M - x0) / (w + VIZ_STEM_BP + 5))
+    pitch = min(VIZ_CHAR_PITCH, (_W - _M - x0) / (w + VIZ_STEM_BP + 10))
     mono = min(VIZ_MONO_SIZE, pitch * 1.45)
     top_y = y
     _bar(node, x0, top_y, window, pitch, "5to3", fill="url(#g-surface)", mono_size=mono)
