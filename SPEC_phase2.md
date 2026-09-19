@@ -252,6 +252,7 @@ STEMLOOP_BODY_LENGTH = 44  # nt
 
 # 3' overhang — KHÔNG ĐỔI DEFAULT
 # Nguồn: [Chen05] — 6 nt là tối ưu cho steric hindrance vs pre-miRNA
+# (Quyết định 2026-09-18: 6 nt mặc định; 5 và 7 nt được hỗ trợ kèm cảnh báo off-label; ngoài 5–7 bị từ chối.)
 # [R2]: "6 nt được xác định là tối ưu để bổ sung hoàn hảo với đầu 3' mature miRNA"
 OVERHANG_LENGTH_DEFAULT = 6  # nt
 OVERHANG_LENGTH_MIN = 4       # nt — giới hạn tối thiểu cho phép
@@ -328,7 +329,8 @@ TM_PAIR_DIFF_MAX = 2.0   # °C
 
 # Tm CALCULATION METHOD — QUAN TRỌNG
 # Primer3Plus: PRIMER_TM_FORMULA=1 và PRIMER_SALT_CORRECTIONS=1 [P3P]
-# → Dùng SantaLucia 1998 nearest-neighbor với Owczarzy 2004 salt correction
+# → Dùng SantaLucia 1998 nearest-neighbor với salt correction 'santalucia' của primer3 + Mg²⁺→Na⁺eq theo von Ahsen 2001
+# (sửa 2026-09-18, audit SCI-06: Owczarzy 2004 chỉ hiệu chỉnh Na⁺; mô hình Mg²⁺ của Owczarzy là 2008 và KHÔNG được dùng — quyết định giữ primer3 'santalucia')
 # → primer3-py calc_tm() implement đúng method này
 # KHÔNG dùng Wallace formula (Tm = 2AT + 4GC) — quá đơn giản cho oligo ngắn
 
@@ -1503,7 +1505,8 @@ def _get_p3_params(params: dict) -> dict:
 def calculate_tm_nn(sequence: str, params: dict) -> float:
     """
     Calculate Tm using nearest-neighbor thermodynamics (SantaLucia 1998).
-    Includes Owczarzy 2004 salt correction for Mg2+.
+    Salt correction: primer3 'santalucia' method; Mg2+ enters via primer3 dv_conc
+    (not Owczarzy — see SCI-06 note in AUDIT_REPORT.md).
     Method: primer3-py calc_tm() — same as IDT OligoAnalyzer [IDT] [SL98].
     Primer3Plus: PRIMER_TM_FORMULA=1, PRIMER_SALT_CORRECTIONS=1 [P3P]
     """
@@ -3661,7 +3664,7 @@ def _find_tails_for_target_tm(specific_region, tm_binding, target_tm, params, ta
 3. Top-10 bất kể Tm: nếu < 5 tails từ wide (e.g. AT-rich miRNA với tails ngắn 3 nt)
 
 **Tm calculation:** `calculate_tm_nn(full_primer, params)` = `primer3.calc_tm()` với
-SantaLucia 1998 NN + Owczarzy 2004 Mg²⁺ salt correction. Các thông số từ user params
+SantaLucia 1998 NN + salt correction 'santalucia' của primer3 (sửa 2026-09-18, audit SCI-06: Owczarzy 2004 chỉ hiệu chỉnh Na⁺; mô hình Mg²⁺ của Owczarzy là 2008 và KHÔNG được dùng — quyết định giữ primer3 'santalucia'). Các thông số từ user params
 (`mvConc`, `dvConc`, `dntpConc`, `dnaConc`). [SL98][Kor07]
 
 **Nguồn:** [P3P] Primer3Plus SEQUENCE_OVERHANG_LEFT principle:
@@ -4021,7 +4024,7 @@ stability = calculate_end_stability(last5, p3)   # dùng p3 đã extract từ pa
 ```
 
 **Nguồn:** [P3P] `PRIMER_MAX_END_STABILITY = 9.0 kcal/mol` tính với điều kiện salt
-của user. Salt corrections quan trọng: Owczarzy 2004 Na_eq = Na + 120√freeMg. [Kor07]
+của user. Salt corrections quan trọng: Na_eq = Na + 120√freeMg (von Ahsen 2001, PMID 11673362 — không phải Owczarzy 2004). [Kor07]
 
 ---
 
@@ -4070,7 +4073,7 @@ scores["tm_binding_accuracy"] = round(max(0, 100 - (tm_bind_diff / TM_BINDING_TO
 
 Primers với 12–17 nt specific region bây giờ nhận score 65–100 thay vì 49–85.
 
-**Calibration nguồn:** SantaLucia 1998 NN + Owczarzy 2004 Mg correction.
+**Calibration nguồn:** SantaLucia 1998 NN + salt correction 'santalucia' của primer3 (sửa 2026-09-18, audit SCI-06: Owczarzy 2004 chỉ hiệu chỉnh Na⁺; mô hình Mg²⁺ của Owczarzy là 2008 và KHÔNG được dùng — quyết định giữ primer3 'santalucia').
 Target 45°C = median của empirical Tm distribution cho 12–17 nt miRNA
 5'-regions tại điều kiện qPCR chuẩn (HG Lab calibration).
 

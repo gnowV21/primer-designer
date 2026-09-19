@@ -362,7 +362,7 @@ errors, isSubmitting, activeSection, visitedSections, resetKey, sectionOpenReque
 
 // computedFields (useMemo):
 freeMagnesium = max(0, mg - dntpTotal)
-naEquivalent  = saltConc + 120*sqrt(max(0, mg-dntpTotal))  [Owczarzy 2004]
+naEquivalent  = saltConc + 120*sqrt(max(0, mg-dntpTotal))  [von Ahsen 2001, PMID 11673362 — trước ghi nhầm Owczarzy 2004]
 
 // POST /api/design: { ...formData, _computed: computedFields }
 // On success → navigate('/results', { state: { results, params } })

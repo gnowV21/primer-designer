@@ -20,7 +20,12 @@ npm run build          # production build → dist/
 npm run preview        # preview production build
 ```
 
-No test runner is configured yet. No linter is configured yet.
+### Tests
+```bash
+cd backend && python -m pytest tests visualization -q --ignore=tests/smoke   # unit + route tests
+npx playwright test          # e2e (repo root; needs both dev servers running)
+```
+No linter is configured yet.
 
 ## Architecture
 
@@ -34,7 +39,7 @@ In production, `/api/*` must be reverse-proxied to the Flask server separately (
 ### Backend (`backend/`)
 - `app.py` — Flask entry point; registers blueprints; CORS allowed for `localhost:5173` and `localhost:3000`; exposes `GET /api/health`
 - `routes/mirbase.py` — `GET /api/mirbase/<mirna_id>`: tries `?accession=<id>` first, then `?name=<id>`, returns `{id, accession, sequence, family, species, length}` or 404
-- Fixed stack: **Flask 3 + flask-cors + requests** — do not add other dependencies
+- Stack: **Flask 3 + flask-cors + requests + primer3-py + ViennaRNA + biopython + numpy + flask-limiter + reportlab** (see `requirements.txt`); BLAST+ is a system binary. Do not add dependencies beyond these without a reason recorded in the PR.
 
 ### Frontend (`frontend/src/`)
 - Fixed stack: **React 18 + Vite 5 + Tailwind 3 + React Router DOM v6 + Axios** — no Redux, no Formik, no UI component libraries
@@ -52,4 +57,4 @@ Colors are defined under `theme.extend.colors` (not `theme.colors`) to preserve 
 Two `<input type="range">` elements are stacked with `position: absolute`. The filled track between thumbs is a CSS `linear-gradient` computed from `leftPct` and `rightPct` as inline styles. The constraint `minVal ≤ maxVal - step` must be enforced in `onMinChange`/`onMaxChange` handlers.
 
 ### Domain context
-Stem-loop RT-qPCR (Chen et al. 2005): designs three primers for mature miRNA quantification — a stem-loop RT primer, a forward qPCR primer, and a fixed universal reverse primer (`5'-CCAGTGCAGGGTCCGAGGTA-3'`). The binding region is fixed at **6 nt** and must not be changed.
+Stem-loop RT-qPCR (Chen et al. 2005): designs three primers for mature miRNA quantification — a stem-loop RT primer, a forward qPCR primer, and a fixed universal reverse primer (`5'-CCAGTGCAGGGTCCGAGGTA-3'`). The RT 3′ overhang (binding region) is **6 nt by default** (Chen 2005). **5 and 7 nt are supported** (project decision 2026-09-18) and always carry an off-label warning; anything outside 5–7 nt is rejected with HTTP 400. The overhang length is read from the RT primer (`len(S) − 44`) wherever a primer is analysed or visualised — never assumed to be 6.

@@ -112,7 +112,8 @@ Sau khi `/api/design` trả Top 3 bộ primer, người dùng chọn 1 candidate
 ## A.3 Công thức
 
 ```python
-RT_OVERHANG = 6          # [Chen05] — CỐ ĐỊNH, cấm tham số hoá
+RT_OVERHANG = 6          # [Chen05] — ĐÃ THAY ĐỔI 2026-09-18 (audit SCI-08): độ dài overhang
+                         #   đọc từ mồi S: o = len(S) − 44, cho phép 5–7 nt (OVERHANG_LENGTH_MIN..MAX).
 
 overhang = S[-RT_OVERHANG:]
 BODY     = S[:-RT_OVERHANG]
@@ -149,7 +150,7 @@ Mỗi assertion fail → `HTTP 422` với `error_code` tương ứng, **không**
 
 | # | Kiểm tra | `error_code` | Ý nghĩa |
 |---|---|---|---|
-| A1 | `len(S) == len(BODY) + 6` và `len(BODY) == 44` | `RT_PRIMER_LENGTH` | Mồi S sai kiến trúc |
+| A1 | `5 ≤ len(S) − 44 ≤ 7` (sửa 2026-09-18, trước: `== 6`) | `RT_PRIMER_LENGTH` | Mồi S sai kiến trúc |
 | A2 | `S[-6:] == rc(m[-6:])` | `OVERHANG_MISMATCH` | Overhang không khớp đầu 3' miRNA |
 | A3 | `F[-k:] == m[:k]` | `FORWARD_BINDING_MISMATCH` | Vùng bắt cặp F không khớp đầu 5' miRNA |
 | A4 | `12 <= k <= 17` | `FORWARD_BINDING_RANGE` | Vi phạm quy tắc SPEC_week1 §1 |
@@ -217,7 +218,7 @@ Tạo backend/visualization/coordinates.py.
    universal_reverse) -> AmpliconModel (dataclass).
    Dùng sequence_utils.rna_to_dna và sequence_utils.reverse_complement — KHÔNG viết lại.
    Implement đúng công thức SPEC_visualization §A.3.
-   RT_OVERHANG = 6 đặt trong constants.py với comment [Chen05]; KHÔNG nhận qua tham số.
+   (Sửa 2026-09-18) Độ dài overhang KHÔNG còn là hằng số: đọc từ mồi S, giới hạn 5–7 nt.
 
 2) AmpliconModel chứa: mirna_dna, stemloop_body, overhang, cdna, sense_strand, amplicon,
    universal_offset (j), regions (list 4 tuple start/end/name), stages (list 5 StageModel).
