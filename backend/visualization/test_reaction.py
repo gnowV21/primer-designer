@@ -154,12 +154,12 @@ def _row(rows, seq):
 
 
 def test_stage1_overhang_base_pairs_with_mirna_3prime():
-    """The RT overhang sits directly ABOVE the miRNA 3' end, complementary column by column."""
+    """Two rows only: the miRNA (top) ends exactly over the RT overhang (bottom)."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 1")
     yo, ov = _row(rows, model.overhang[::-1])          # overhang displayed 3'->5'
     ym, mi = _row(rows, model.mirna_dna)
-    assert yo < ym                                      # miRNA drawn below the primer
+    assert ym < yo                                      # miRNA top row, primer bottom row
     for x, base in ov.items():
         assert base == _COMP[mi[x]], f"x={x}: {mi[x]} paired with {base}"
     assert "".join(mi[x] for x in sorted(ov)) == model.mirna_dna[-len(ov):]
@@ -173,7 +173,7 @@ def test_stage2_cdna_pairs_with_whole_mirna():
     ye, ex = _row(rows, ext[::-1])
     yo, ov = _row(rows, model.overhang[::-1])
     ym, mi = _row(rows, model.mirna_dna)
-    assert ye == yo < ym
+    assert ym < ye == yo
     paired = {**ex, **ov}
     assert sorted(paired) == sorted(mi)
     for x, base in paired.items():
@@ -181,13 +181,13 @@ def test_stage2_cdna_pairs_with_whole_mirna():
 
 
 def test_stage3_forward_primer_pairs_with_cdna_copy():
-    """Stage 3: F's specific region sits under the cDNA 3' end and is complementary."""
+    """Stage 3: F takes the miRNA 5' end's place (top row), pairing with the cDNA."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 3")
     ext = model.cdna[len(model.stemloop_rt):]
     ye, ex = _row(rows, ext[::-1])
     yf, fs = _row(rows, model.forward[len(model.tail):])
-    assert ye < yf
+    assert yf < ye
     for x, base in fs.items():
         assert ex[x] == _COMP[base], f"x={x}: primer {base} against cDNA {ex[x]}"
 
@@ -232,3 +232,15 @@ def test_hairpin_fits_the_card(L, o, tail):
     right, _ = R._stemloop(_Node(), x_ov, 100, STEMLOOP_BODY + "A" * o, o, p, R._mono(p),
                            ext="C" * (L - o))
     assert right <= R._W - R._M
+
+
+@pytest.mark.parametrize("stage", ["Stage 1", "Stage 2"])
+def test_mirna_shares_the_top_row_with_arm_a(stage):
+    """miRNA and stem arm A are on the same row; the miRNA ends where arm A begins."""
+    model = _golden_model()
+    rows = _char_rows(render_reaction(model), stage)
+    ym, mi = _row(rows, model.mirna_dna)
+    ya, arm_a = _row(rows, model.stemloop_rt[:14])
+    assert ym == ya
+    pitch = sorted(arm_a)[1] - sorted(arm_a)[0]
+    assert abs(min(arm_a) - max(mi) - pitch) < 0.01       # adjacent columns, no gap

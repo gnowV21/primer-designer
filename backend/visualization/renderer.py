@@ -159,47 +159,66 @@ def _rungs(node, x_start, count, pitch, y_top, y_bot):
 _HP_FILL, _HP_EDGE = color("viz-hairpin"), color("viz-hairpin-edge")   # stem-loop primer
 _CD_FILL, _CD_EDGE = color("viz-cdna"), color("viz-cdna-edge")         # new RT-made cDNA
 _LOOP_N = 16          # loop nt of STEMLOOP_BODY (44 - 2 * VIZ_STEM_BP)
-_NECK = 64            # px over which each arm flares smoothly into the loop
-
-
-def _loop_r(mono):
-    """Radius of the loop semicircle: loop letters ~1.15 glyphs apart along it."""
-    return (_LOOP_N + 1) * mono * 1.15 / math.pi
-
-
-def _hp_margin(mono):
-    """Vertical space the loop bulb needs above the top row / below the bottom row."""
-    return _loop_r(mono) - (VIZ_BAR_HEIGHT + _PAIR_GAP) / 2
+_NECK = 16            # short fillet from the straight arms into the loop circle
+_ENTRY_EXTRA = math.radians(14)   # entry point sits this far above/below the arm line
 
 
 def _mono(p):
     return min(VIZ_MONO_SIZE, p * 1.45)
 
 
+def _loop_geom(mono):
+    """(radius, entry angle phi) of the loop circle. The circle is sized so the 16
+    loop letters sit ~1.2 glyphs apart on the arc between the two entries; the
+    entries sit a little outside the arm lines so each fillet rises monotonically
+    (no inward pinch)."""
+    h = (VIZ_BAR_HEIGHT + _PAIR_GAP) / 2
+    need = (_LOOP_N + 1) * mono * 1.2
+    r = h + 4
+    while True:
+        phi = min(math.asin(h / r) + _ENTRY_EXTRA, math.radians(80))
+        if (2 * math.pi - 2 * phi) * r >= need:
+            return r, phi
+        r += 0.5
+
+
+def _loop_extent(mono):
+    """px from the last stem column's right edge to the loop's outer right edge."""
+    r, phi = _loop_geom(mono)
+    return _TXT_PAD + _NECK + r * math.cos(phi) + r + VIZ_BAR_HEIGHT / 2 + 2
+
+
+def _hp_margin(mono):
+    """Height the loop needs above the top row / below the bottom row."""
+    r, _ = _loop_geom(mono)
+    return max(0.0, r - (VIZ_BAR_HEIGHT + _PAIR_GAP) / 2)
+
+
 def _fit_pitch(x_left, cols):
-    """Largest column pitch (≤ VIZ_CHAR_PITCH) that keeps `cols` columns starting at
-    x_left plus the hairpin loop inside the content width."""
+    """Largest pitch (≤ VIZ_CHAR_PITCH) keeping `cols` columns from x_left plus the
+    loop inside the content width."""
     p = float(VIZ_CHAR_PITCH)
-    while p > 8 and (x_left + cols * p + _TXT_PAD + _NECK + _loop_r(_mono(p))
-                     + VIZ_BAR_HEIGHT / 2 + 2) > _W - _M:
+    while p > 8 and x_left + cols * p + _loop_extent(_mono(p)) > _W - _M:
         p -= 0.25
     return p
 
 
 def _disk(cx, cy, r):
-    return f"M {cx - r:.2f} {cy:.2f} a {r:.2f} {r:.2f} 0 1 0 {2 * r:.2f} 0 a {r:.2f} {r:.2f} 0 1 0 {-2 * r:.2f} 0 Z"
+    return (f"M {cx - r:.2f} {cy:.2f} a {r:.2f} {r:.2f} 0 1 0 {2 * r:.2f} 0 "
+            f"a {r:.2f} {r:.2f} 0 1 0 {-2 * r:.2f} 0 Z")
 
 
-def _stemloop(node, x_ov, y_top, S, o, pitch, mono, ext=""):
-    """The stem-loop RT primer (or its cDNA) as one smooth hairpin.
+def _stemloop(node, x_ov, y_top, S, o, pitch, mono, ext="", a_round=True, a_label="left"):
+    """The stem-loop RT primer (or its cDNA) as one smooth hairpin on TWO rows.
 
-    Top row (y_top): stem arm A, the primer 5' end, read 5'->3'.
-    Bottom row: [ext] + 3' overhang + stem arm B, read 3'->5' left to right, so the
-    overhang column x_ov lines up with the miRNA drawn BELOW it (stage 1) and `ext`
-    (the RT-made cDNA, stage 2-3) with the rest of the miRNA to its left.
-    Arms flare out through cubic necks into a semicircular loop — continuous
-    tangents, no pinch. Butt-ended strokes + explicit end disks give rounded ends
-    and a clean colour seam where the cDNA meets the primer.
+    Top row: stem arm A (the primer 5' end), read 5'->3'. In stages 1-2 the miRNA
+    shares this row, ending right where arm A starts (its 3' end stacks on the stem).
+    Bottom row: [ext] + 3' overhang + stem arm B, read 3'->5' left to right — the
+    overhang lies directly under the miRNA 3' end, ext under the rest of the miRNA.
+    The arms run straight to just past their last letter, then a short monotonic
+    fillet enters a near-full loop circle whose letters follow the ring.
+    a_round: round (True) or flat (False, abutting the miRNA) left end of arm A.
+    a_label: "left" (5' label beside arm A) or "above" (over its first column).
     Returns (right_x, bottom_row_y).
     """
     stem, half = VIZ_STEM_BP, VIZ_BAR_HEIGHT / 2
@@ -208,16 +227,20 @@ def _stemloop(node, x_ov, y_top, S, o, pitch, mono, ext=""):
     y_bot = y_top + VIZ_BAR_HEIGHT + _PAIR_GAP
     y1c, y2c = y_top + half, y_bot + half
     cy = (y1c + y2c) / 2
-    r = _loop_r(mono)
-    xa = x_ov + o * pitch                              # arm A column 0
-    xe = xa + stem * pitch + _TXT_PAD                  # straight arms end here
-    xc = xe + _NECK                                    # loop centre x
-    yt, yb, k = cy - r, cy + r, _NECK * 0.55
+    r, phi = _loop_geom(mono)
+    xa = x_ov + o * pitch                               # arm A column 0
+    xe = xa + stem * pitch + _TXT_PAD                   # straight arms end here
+    ex = xe + _NECK                                     # loop entry x
+    xc = ex + r * math.cos(phi)
+    e1y, e2y = cy - r * math.sin(phi), cy + r * math.sin(phi)
+    t1 = (math.sin(phi), -math.cos(phi))                # clockwise tangent at the top entry
+    k = _NECK * 0.6
+    a_start = xa - _TXT_PAD + half if a_round else xa + 1.5
     main = (
-        f"M {xa - _TXT_PAD + half:.2f} {y1c:.2f} L {xe:.2f} {y1c:.2f} "
-        f"C {xe + k:.2f} {y1c:.2f} {xc - k:.2f} {yt:.2f} {xc:.2f} {yt:.2f} "
-        f"A {r:.2f} {r:.2f} 0 0 1 {xc:.2f} {yb:.2f} "
-        f"C {xc - k:.2f} {yb:.2f} {xe + k:.2f} {y2c:.2f} {xe:.2f} {y2c:.2f} "
+        f"M {a_start:.2f} {y1c:.2f} L {xe:.2f} {y1c:.2f} "
+        f"C {xe + k:.2f} {y1c:.2f} {ex - k * t1[0]:.2f} {e1y - k * t1[1]:.2f} {ex:.2f} {e1y:.2f} "
+        f"A {r:.2f} {r:.2f} 0 1 1 {ex:.2f} {e2y:.2f} "
+        f"C {ex - k * t1[0]:.2f} {e2y + k * t1[1]:.2f} {xe + k:.2f} {y2c:.2f} {xe:.2f} {y2c:.2f} "
         f"L {(x_ov if ext else x_ov - _TXT_PAD + half):.2f} {y2c:.2f}"
     )
     x_ext = x_ov - len(ext) * pitch
@@ -225,18 +248,19 @@ def _stemloop(node, x_ov, y_top, S, o, pitch, mono, ext=""):
     if ext:
         pieces.append((f"M {x_ext - _TXT_PAD + half:.2f} {y2c:.2f} L {x_ov:.2f} {y2c:.2f}",
                        _CD_EDGE, _CD_FILL))
-    ends = [(xa - _TXT_PAD + half, y1c, _HP_EDGE, _HP_FILL),
-            ((x_ext if ext else x_ov) - _TXT_PAD + half, y2c,
+    ends = [((x_ext if ext else x_ov) - _TXT_PAD + half, y2c,
              _CD_EDGE if ext else _HP_EDGE, _CD_FILL if ext else _HP_FILL)]
+    if a_round:
+        ends.append((a_start, y1c, _HP_EDGE, _HP_FILL))
     # outline pass, then fill pass, so neighbouring pieces never cover each other's rim
     for d, edge, _ in pieces:
         node.path(d, fill="none", stroke=edge, stroke_width=VIZ_BAR_HEIGHT + 2)
-    for ex_, ey, edge, _ in ends:
-        node.path(_disk(ex_, ey, half + 1), fill=edge)
+    for cx_, cy_, edge, _ in ends:
+        node.path(_disk(cx_, cy_, half + 1), fill=edge)
     for d, _, fill in pieces:
         node.path(d, fill="none", stroke=fill, stroke_width=VIZ_BAR_HEIGHT)
-    for ex_, ey, _, fill in ends:
-        node.path(_disk(ex_, ey, half), fill=fill)
+    for cx_, cy_, _, fill in ends:
+        node.path(_disk(cx_, cy_, half), fill=fill)
 
     _bar_text(node, xa, y_top, arm_a, pitch, "5to3", mono)
     if ext:
@@ -245,13 +269,18 @@ def _stemloop(node, x_ov, y_top, S, o, pitch, mono, ext=""):
     _bar_text(node, xa, y_bot, arm_b, pitch, "3to5", mono)
     _rungs(node, xa, stem, pitch, y_top + VIZ_BAR_HEIGHT, y_bot)
     lab = half + VIZ_LABEL_SIZE * 0.35
-    node.text(xa - _TXT_PAD - 10, y_top + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
-              anchor="end", weight="600")
+    if a_label == "left":
+        node.text(xa - _TXT_PAD - 10, y_top + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+                  anchor="end", weight="600")
+    else:
+        node.text(xa + pitch / 2, y_top - 9, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+                  anchor="middle", weight="600")
     node.text((x_ext if ext else x_ov) - _TXT_PAD - 10, y_bot + lab, "3'", size=VIZ_LABEL_SIZE,
               fill=_MUTED, anchor="end", weight="600")
-    # loop letters in sequence order: from arm A's 3' end (top) round to arm B (bottom)
+    # loop letters in sequence order: from arm A's 3' end (top entry) clockwise to arm B
+    t0, span = math.pi + phi, 2 * math.pi - 2 * phi
     for i, ch in enumerate(loop):
-        t = -math.pi / 2 + (i + 1) * math.pi / (len(loop) + 1)
+        t = t0 + (i + 1) * span / (len(loop) + 1)
         node.text(round(xc + r * math.cos(t), 2), round(cy + r * math.sin(t) + mono * 0.35, 2),
                   ch, size=mono, fill=_FG, anchor="middle", weight="600")
     return xc + r + half, y_bot
@@ -319,34 +348,44 @@ def _stage0(node, y, model, oscale):
 
 
 def _duplex_rows(model, extra_left_cols=0):
-    """Shared geometry for stages 1-3: pitch, miRNA column 0, overhang x."""
+    """Shared geometry for stages 1-3: pitch, mono, miRNA column 0 x, overhang x."""
     L, o = len(model.mirna_dna), len(model.overhang)
     p = _fit_pitch(_OX, extra_left_cols + L + VIZ_STEM_BP)
-    x0 = _OX + extra_left_cols * p                    # miRNA / cDNA-3'-end column 0
+    x0 = _OX + extra_left_cols * p
     return p, _mono(p), x0, x0 + (L - o) * p
+
+
+def _mirna_top_row(node, x0, y_top, m, p, mono, *, caption):
+    """miRNA in the TOP row, its 3' end stacked against the primer's arm A."""
+    _bar(node, x0, y_top, m, p, "5to3", fill="url(#g-surface)", mono_size=mono,
+         show_ends=False, pad_r=-2)
+    lab = VIZ_BAR_HEIGHT / 2 + VIZ_LABEL_SIZE * 0.35
+    node.text(x0 - _TXT_PAD - 10, y_top + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+              anchor="end", weight="600")
+    node.text(x0 + (len(m) - 0.5) * p, y_top - 9, "3'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+              anchor="middle", weight="600")
+    node.text(x0, y_top - 9, caption, size=VIZ_LABEL_SIZE, fill=_MUTED)
 
 
 def _stage1(node, y, model, oscale):
     y = _title(node, y, "Stage 1 · RT annealing")
     m, o = model.mirna_dna, len(model.overhang)
     p, mono, x0, x_ov = _duplex_rows(model)
-    y_top = y + _hp_margin(mono)
-    _, y_bot = _stemloop(node, x_ov, y_top, model.stemloop_rt, o, p, mono)
-    y_m = y_bot + VIZ_BAR_HEIGHT + _PAIR_GAP
-    _bar(node, x0, y_m, m, p, "5to3", fill="url(#g-surface)", mono_size=mono)
+    y_top = y + max(_hp_margin(mono), 18)
+    _mirna_top_row(node, x0, y_top, m, p, mono, caption="miRNA (RNA)")
     frame = 4
-    node.rect(x_ov - 3, y_m - frame, o * p + 6, VIZ_BAR_HEIGHT + 2 * frame, rx=_BAR_RX + 2,
+    node.rect(x_ov - 3, y_top - frame, o * p + 1, VIZ_BAR_HEIGHT + 2 * frame, rx=_BAR_RX + 2,
               fill="none", stroke=color("viz-mirna"), stroke_width=2.5)
-    _rungs(node, x_ov, o, p, y_bot + VIZ_BAR_HEIGHT, y_m - frame - 1)
-    node.text(x0, y_m + VIZ_BAR_HEIGHT + 16, "miRNA (RNA)", size=VIZ_LABEL_SIZE, fill=_MUTED)
-    # RT will extend the primer 3' end leftward, in the empty lane of the bottom row
-    # (starts left of the overhang's 3' label so the two never touch)
+    _, y_bot = _stemloop(node, x_ov, y_top, model.stemloop_rt, o, p, mono,
+                         a_round=False, a_label="above")
+    _rungs(node, x_ov, o, p, y_top + VIZ_BAR_HEIGHT + frame + 1, y_bot)
+    # RT will extend the primer 3' end leftward, in the empty lane under the miRNA
     _arrow(node, x_ov - _TXT_PAD - 36, y_bot + VIZ_BAR_HEIGHT / 2, x0 + 6,
            label="RT extension (5'→3')")
-    y = max(y_m + VIZ_BAR_HEIGHT + 22, y_bot + VIZ_BAR_HEIGHT + _hp_margin(mono)) + 8
+    y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 0) + 14
     y = _wrap_note(node, _M, y, model.stages[1].annotation_en, _CONTENT_W)
     return _roles(node, y, [
-        ("viz-mirna", "miRNA", "the RT template."),
+        ("viz-mirna", "miRNA", "the RT template; its 3' end stacks against the primer stem."),
         ("viz-hairpin-edge", "S", f"its {o}-nt 3' overhang pairs with the miRNA 3' end and primes "
                                   "reverse transcription; the stem stays folded."),
     ])
@@ -358,17 +397,15 @@ def _stage2(node, y, model, oscale):
     S = model.stemloop_rt
     ext = model.cdna[len(S):]
     p, mono, x0, x_ov = _duplex_rows(model)
-    y_top = y + _hp_margin(mono)
-    _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext)
-    node.text(x0 + len(ext) * p / 2, y_top + VIZ_BAR_HEIGHT / 2 + 4,
+    y_top = y + max(_hp_margin(mono), 18)
+    _mirna_top_row(node, x0, y_top, m, p, mono, caption="miRNA (RNA) — read 3'→5' by the RT")
+    _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext,
+                         a_round=False, a_label="above")
+    _rungs(node, x0, len(m), p, y_top + VIZ_BAR_HEIGHT, y_bot)
+    node.text(x0 + len(ext) * p / 2, y_bot + VIZ_BAR_HEIGHT + 16,
               f"new cDNA ({len(ext)} nt) — RT copy of the miRNA",
               size=VIZ_LABEL_SIZE, fill=color("viz-cdna-edge"), anchor="middle", weight="700")
-    y_m = y_bot + VIZ_BAR_HEIGHT + _PAIR_GAP
-    _bar(node, x0, y_m, m, p, "5to3", fill="url(#g-surface)", mono_size=mono)
-    _rungs(node, x0, len(m), p, y_bot + VIZ_BAR_HEIGHT, y_m)
-    node.text(x0, y_m + VIZ_BAR_HEIGHT + 16, "miRNA (RNA) — read 3'→5' by the RT",
-              size=VIZ_LABEL_SIZE, fill=_MUTED)
-    y = max(y_m + VIZ_BAR_HEIGHT + 22, y_bot + VIZ_BAR_HEIGHT + _hp_margin(mono)) + 8
+    y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 22) + 12
     y = _wrap_note(node, _M, y, model.stages[2].annotation_en, _CONTENT_W)
     return _roles(node, y, [
         ("viz-mirna", "miRNA", "was read end to end; still paired to the cDNA until the first "
@@ -385,33 +422,28 @@ def _stage3(node, y, model, oscale):
     S, o = model.stemloop_rt, len(model.overhang)
     ext = model.cdna[len(S):]
     p, mono, x0, x_ov = _duplex_rows(model, extra_left_cols=len(tail))
-    y_top = y + _hp_margin(mono)
-    _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext)
-    node.text(x0 + len(ext) * p / 2, y_top + VIZ_BAR_HEIGHT / 2 + 4, "cDNA template",
-              size=VIZ_LABEL_SIZE, fill=color("viz-cdna-edge"), anchor="middle", weight="700")
-    # F binds below the cDNA 3' end: specific base j sits under cDNA column j
-    y_f = y_bot + VIZ_BAR_HEIGHT + _PAIR_GAP
+    y_top = y + max(_hp_margin(mono), 18)
+    # F takes the place of the miRNA 5' end in the top row; tail hangs off the cDNA end
     if tail:
-        _bar(node, x0 - len(tail) * p, y_f, tail, p, "5to3", fill=_grad("viz-tail"),
+        _bar(node, x0 - len(tail) * p, y_top, tail, p, "5to3", fill=_grad("viz-tail"),
              mono_size=mono, dash=True, text_fill=_BG, show_ends=False, pad_r=0)
-    _bar(node, x0, y_f, F[len(tail):], p, "5to3", fill=_grad("viz-mirna"), mono_size=mono,
+    _bar(node, x0, y_top, F[len(tail):], p, "5to3", fill=_grad("viz-mirna"), mono_size=mono,
          text_fill=_BG, show_ends=False, pad_l=0 if tail else _TXT_PAD)
-    _end_labels(node, x0 - len(tail) * p - _TXT_PAD, y_f, len(F) * p + 2 * _TXT_PAD, "5to3")
-    _rungs(node, x0, k, p, y_bot + VIZ_BAR_HEIGHT, y_f)
-    cap_y = y_f + VIZ_BAR_HEIGHT + 15
-    if tail:
-        node.text(x0 - len(tail) * p / 2, cap_y, "GC tail — no template", size=VIZ_LABEL_SIZE,
-                  fill=_MUTED, anchor="middle")
-    node.text(x0 + k * p / 2 + 12, cap_y, "binds the cDNA copy of the miRNA 5' end",
-              size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="start" if tail else "middle")
-    # arrow starts after F's 3' label; its caption is left-aligned so it never runs
-    # back over the primer
-    ax = x0 + k * p + _TXT_PAD + 34
-    _arrow(node, ax, y_f + VIZ_BAR_HEIGHT / 2, max(ax + 120, x_ov + (o + 8) * p))
-    node.text(ax, y_f + VIZ_BAR_HEIGHT / 2 - 9,
-              "extension copies the cDNA through the unfolded stem-loop",
+    _end_labels(node, x0 - len(tail) * p - _TXT_PAD, y_top, len(F) * p + 2 * _TXT_PAD, "5to3")
+    _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext, a_label="left")
+    _rungs(node, x0, k, p, y_top + VIZ_BAR_HEIGHT, y_bot)
+    xf = x0 + k * p + _TXT_PAD + 34                      # after F's 3' label
+    xa = x_ov + o * p
+    _arrow(node, xf, y_top + VIZ_BAR_HEIGHT / 2, xa - _TXT_PAD - 42)   # clear of arm A's 5' label
+    node.text(xf, y_top - 9, "F extends → copies the cDNA, then the unfolded stem-loop",
               size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="start")
-    y = max(cap_y + 14, y_bot + VIZ_BAR_HEIGHT + _hp_margin(mono)) + 8
+    if tail:
+        node.text(x0 - len(tail) * p / 2, y_top - 9, "GC tail", size=VIZ_LABEL_SIZE,
+                  fill=_MUTED, anchor="middle")
+    cap_y = y_bot + VIZ_BAR_HEIGHT + 16
+    node.text(x0 + len(ext) * p / 2, cap_y, "cDNA template (miRNA removed at 95 °C)",
+              size=VIZ_LABEL_SIZE, fill=color("viz-cdna-edge"), anchor="middle", weight="700")
+    y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 22) + 12
     node.text(_M, y + 4, "Resulting cycle-1 strand", size=VIZ_LABEL_SIZE + 1, fill=_FG, weight="600")
     y += 16
     _bar(node, _OX, y, model.sense_strand, oscale, "5to3", fill="url(#g-surface)")
@@ -420,8 +452,8 @@ def _stage3(node, y, model, oscale):
     return _roles(node, y, [
         ("viz-mirna", "miRNA", "no longer needed — separated from the cDNA at 95 °C."),
         ("viz-cdna-edge", "cDNA", "template for the first PCR strand."),
-        ("viz-tail", "F", f"its {k}-nt specific region pairs with the cDNA copy of the miRNA 5' end "
-                          "(the step that makes the assay miRNA-specific); the tail hangs free."),
+        ("viz-tail", "F", f"its {k}-nt specific region pairs with the cDNA where the miRNA 5' end "
+                          "was (the step that makes the assay miRNA-specific); the tail hangs free."),
         ("viz-hairpin-edge", "S", "copied into the new strand, which now contains the universal site."),
     ])
 
