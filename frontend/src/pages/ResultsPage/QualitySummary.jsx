@@ -197,7 +197,7 @@ export default function QualitySummary({ results, onBlastResult }) {
 
           {/* [RESEARCH_QUESTIONS_UX C1] predicted design quality — not efficiency */}
           {metadata?.output_note && (
-            <p className="text-[11px] text-slate-400 italic border-t border-slate-100 pt-2">
+            <p className="text-xs text-slate-500 italic border-t border-slate-100 pt-2">
               {metadata.output_note}
             </p>
           )}

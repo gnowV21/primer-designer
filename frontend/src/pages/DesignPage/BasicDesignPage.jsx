@@ -96,8 +96,8 @@ export default function BasicDesignPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-700">Design your primers</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-semibold text-slate-700">Design your primers</h1>
+          <p className="text-sm text-slate-500 mt-1">
             Enter a miRNA and answer two questions — everything else uses validated defaults.
           </p>
         </div>
@@ -121,6 +121,7 @@ export default function BasicDesignPage() {
           onError={handleError}
           seqAnalysis={seqAnalysis}
           openRequested={0}
+          bare
         />
       </div>
 
@@ -131,7 +132,7 @@ export default function BasicDesignPage() {
           <h2 className="text-sm font-semibold text-slate-700">What sample are you using?</h2>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {SAMPLE_CARDS.map(({ value, label, hint }) => {
               const isActive = sampleType === value;
@@ -144,16 +145,16 @@ export default function BasicDesignPage() {
                   className={`text-left rounded-xl border-2 px-3 py-2.5 transition-all duration-150 active:scale-[0.98] ${
                     isActive
                       ? 'border-teal-500 bg-teal-50 shadow-sm'
-                      : 'border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
+                      : 'border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-sm font-semibold ${isActive ? 'text-teal-800' : 'text-gray-700'}`}>
+                    <span className={`text-sm font-semibold ${isActive ? 'text-teal-800' : 'text-slate-700'}`}>
                       {label}
                     </span>
                     {isActive && <span className="ml-auto text-teal-600 text-sm font-bold">✓</span>}
                   </div>
-                  <p className={`text-xs leading-snug mt-0.5 ${isActive ? 'text-teal-700' : 'text-gray-400'}`}>
+                  <p className={`text-xs leading-snug mt-0.5 ${isActive ? 'text-teal-700' : 'text-slate-500'}`}>
                     {hint}
                   </p>
                 </button>
@@ -182,7 +183,7 @@ export default function BasicDesignPage() {
           <h2 className="text-sm font-semibold text-slate-700">How will you detect the signal?</h2>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
+        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -191,16 +192,16 @@ export default function BasicDesignPage() {
               className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
                 isTaqMan
                   ? 'border-teal-500 bg-teal-50 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
+                  : 'border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-gray-700'}`}>
+                <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-slate-700'}`}>
                   TaqMan Probe
                 </span>
                 {isTaqMan && <span className="ml-auto text-teal-600 text-sm font-bold">✓</span>}
               </div>
-              <p className={`text-xs leading-snug ${isTaqMan ? 'text-teal-700' : 'text-gray-400'}`}>
+              <p className={`text-xs leading-snug ${isTaqMan ? 'text-teal-700' : 'text-slate-500'}`}>
                 Hydrolysis probe · high specificity · probe designed automatically
               </p>
             </button>
@@ -212,16 +213,16 @@ export default function BasicDesignPage() {
               className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
                 !isTaqMan
                   ? 'border-amber-400 bg-amber-50 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-amber-200 hover:bg-amber-50/30'
+                  : 'border-slate-200 bg-white hover:border-amber-200 hover:bg-amber-50/30'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className={`text-sm font-semibold ${!isTaqMan ? 'text-amber-800' : 'text-gray-700'}`}>
+                <span className={`text-sm font-semibold ${!isTaqMan ? 'text-amber-800' : 'text-slate-700'}`}>
                   SYBR Green
                 </span>
                 {!isTaqMan && <span className="ml-auto text-amber-600 text-sm font-bold">✓</span>}
               </div>
-              <p className={`text-xs leading-snug ${!isTaqMan ? 'text-amber-700' : 'text-gray-400'}`}>
+              <p className={`text-xs leading-snug ${!isTaqMan ? 'text-amber-700' : 'text-slate-500'}`}>
                 Intercalating dye · no probe · melting curve required
               </p>
             </button>
@@ -243,7 +244,7 @@ export default function BasicDesignPage() {
           disabled={!canSubmit}
           className={`w-full py-3 px-6 rounded-xl text-sm font-semibold transition-all shadow-md
             ${!canSubmit
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+              ? 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-none'
               : 'bg-gradient-to-r from-teal-600 to-teal-800 text-white hover:opacity-90 hover:shadow-lg active:scale-[0.99]'
             }`}
         >
@@ -253,7 +254,7 @@ export default function BasicDesignPage() {
             </span>
           ) : hasErrors ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="text-gray-500">✕</span> Fix errors to continue
+              <span className="text-slate-500">✕</span> Fix errors to continue
             </span>
           ) : !seqAnalysis ? (
             'Enter a miRNA to continue'
@@ -261,11 +262,11 @@ export default function BasicDesignPage() {
             'Design Primers →'
           )}
         </button>
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-slate-500">
           You&apos;ll get a stem-loop RT primer, a forward primer, and the universal reverse primer
           {isTaqMan ? ' — plus a TaqMan probe.' : '.'}
         </p>
-        <p className="text-center text-xs text-gray-400">
+        <p className="text-center text-xs text-slate-500">
           Need to tune Tm, salt or GC limits?{' '}
           <span className="text-teal-600 font-medium">Switch to Advanced</span> — your entries carry over.
         </p>

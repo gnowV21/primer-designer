@@ -44,7 +44,7 @@ export default function Tooltip({ text }) {
         onFocus={handleShow}
         onBlur={handleHide}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setVisible(v => !v)}
-        className="w-4 h-4 rounded-full bg-gray-200 text-gray-500 text-[10px] font-bold flex items-center justify-center hover:bg-teal-100 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-colors cursor-default select-none"
+        className="w-4 h-4 rounded-full bg-slate-200 text-slate-500 text-xs font-bold flex items-center justify-center hover:bg-teal-100 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-colors cursor-default select-none"
         aria-label="More information"
       >
         ?
@@ -63,7 +63,7 @@ export default function Tooltip({ text }) {
             zIndex: 9999,
             maxWidth: '17rem',
           }}
-          className="px-3 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs leading-relaxed shadow-xl pointer-events-none"
+          className="px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs leading-relaxed shadow-xl pointer-events-none"
         >
           {/* Arrow */}
           <span

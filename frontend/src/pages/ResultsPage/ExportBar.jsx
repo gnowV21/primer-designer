@@ -62,7 +62,7 @@ export default function ExportBar({ results, blastResult }) {
         <ExportButton label="FASTA (order)"  busy={busyFmt === 'fasta'} onClick={() => download('fasta')} icon="⬇" secondary />
       </div>
       {error && <p className="text-sm text-red-700">{error}</p>}
-      <p className="text-xs text-slate-400 leading-relaxed">
+      <p className="text-xs text-slate-500 leading-relaxed">
         PDF: full report (comparison, scientific notes, off-target, MIQE checklist).
         CSV: Excel-compatible data + specificity + checklist. FASTA: synthesis-order-ready.
         {!blastResult && (

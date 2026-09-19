@@ -36,9 +36,8 @@ export default function ResultsPage() {
   if (!state?.results) {
     return (
       <div className="max-w-lg mx-auto mt-20 text-center space-y-4">
-        <p className="text-4xl">🔬</p>
-        <h1 className="text-xl font-semibold text-gray-700">No results yet</h1>
-        <p className="text-sm text-gray-500">Run a primer design first to see results here.</p>
+        <h1 className="text-xl font-semibold text-slate-700">No results yet</h1>
+        <p className="text-sm text-slate-500">Run a primer design first to see results here.</p>
         <button
           onClick={() => navigate('/')}
           className="mt-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition"
@@ -60,8 +59,8 @@ export default function ResultsPage() {
       {/* ── Page header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Design Results</h1>
-          <p className="text-xs text-gray-500 mt-0.5 tabular-nums">
+          <h1 className="text-xl font-semibold text-slate-800">Design Results</h1>
+          <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
             {metadata?.mirna_id && <span className="font-medium">{metadata.mirna_id} · </span>}
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
@@ -122,7 +121,7 @@ export default function ResultsPage() {
         >
           <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           {showDetails ? 'Hide scientific details' : 'Show scientific details'}
-          <span className="text-xs font-normal text-slate-400">
+          <span className="text-xs font-normal text-slate-500">
             visualization · thermodynamics · normalization
           </span>
         </button>

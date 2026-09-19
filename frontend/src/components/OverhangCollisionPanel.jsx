@@ -116,25 +116,25 @@ function MatrixView({ data }) {
         <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white px-3 py-2 space-y-1 text-xs shadow-sm">
           <div className="flex items-center justify-between">
             <span className="font-mono font-semibold text-slate-800">{activeC.mirna}</span>
-            <span className="font-bold px-2 py-0.5 rounded-full border text-[11px]"
+            <span className="font-bold px-2 py-0.5 rounded-full border text-xs"
                   style={{ color: COMBINED_COLOR[activeC.combined_risk].color, borderColor: COMBINED_COLOR[activeC.combined_risk].border, background: COMBINED_COLOR[activeC.combined_risk].bg }}>
               {activeC.combined_risk}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-slate-600">
             <span>RT 6-mer</span>
-            <span className="font-mono">{_diffMarkup(activeC.rt_window_dna, target.rt_window_dna)} <span className="text-slate-400">({activeC.rt_risk}, kwok {activeC.rt_kwok})</span></span>
+            <span className="font-mono">{_diffMarkup(activeC.rt_window_dna, target.rt_window_dna)} <span className="text-slate-500">({activeC.rt_risk}, kwok {activeC.rt_kwok})</span></span>
             <span>FWD prefix</span>
-            <span className="font-mono">{_diffMarkup(activeC.fwd_window_dna, target.fwd_window_dna)} <span className="text-slate-400">({activeC.fwd_risk}, kwok {activeC.fwd_kwok})</span></span>
+            <span className="font-mono">{_diffMarkup(activeC.fwd_window_dna, target.fwd_window_dna)} <span className="text-slate-500">({activeC.fwd_risk}, kwok {activeC.fwd_kwok})</span></span>
             <span>Same seed?</span>
             <span>{activeC.same_seed_family ? 'yes' : 'no'}</span>
           </div>
-          {activeC.note && <p className="text-[11px] text-slate-500 pt-1">{activeC.note}</p>}
+          {activeC.note && <p className="text-xs text-slate-500 pt-1">{activeC.note}</p>}
         </div>
       )}
 
       {/* legend */}
-      <div className="flex flex-wrap gap-2 justify-center text-[10px]">
+      <div className="flex flex-wrap gap-2 justify-center text-xs">
         {Object.values(COMBINED_COLOR).map((cfg) => (
           <span key={cfg.label} className="flex items-center gap-1 px-1.5 py-0.5 rounded border"
                 style={{ color: cfg.color, borderColor: cfg.border, background: cfg.bg }}>● {cfg.label}</span>
@@ -169,7 +169,7 @@ function TableView({ data }) {
                 <td className="px-2 py-1.5 tabular-nums text-slate-500">{(c.fwd_mismatch_positions_1based || []).join(', ') || '—'}</td>
                 <td className="px-2 py-1.5 text-slate-600">{c.fwd_risk}</td>
                 <td className="px-2 py-1.5">
-                  <span className="font-bold px-2 py-0.5 rounded-full border text-[11px]"
+                  <span className="font-bold px-2 py-0.5 rounded-full border text-xs"
                         style={{ color: cfg.color, borderColor: cfg.border, background: cfg.bg }}>{c.combined_risk}</span>
                 </td>
                 <td className="px-2 py-1.5 text-slate-500">{c.same_seed_family ? 'yes' : 'no'}</td>
@@ -200,19 +200,19 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Primer Binding Specificity</p>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600">RT 3′ · {overhang_len} nt</span>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600">
+          <span className="text-xs font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600">RT 3′ · {overhang_len} nt</span>
+          <span className="text-xs font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600">
             FWD 5′ · {forward_specific_len} nt{forward_axis_estimated ? ' (est.)' : ''}
           </span>
           {n_screened != null && (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border bg-teal-50 border-teal-200 text-teal-700"
+            <span className="text-xs font-medium px-1.5 py-0.5 rounded border bg-teal-50 border-teal-200 text-teal-700"
                   title={`Screened ${n_screened} ${species} mature miRNAs. Built ${data_provenance.build_date || 'n/a'}.`}>
               {n_screened} {species} screened
             </span>
           )}
         </div>
         {hasCollisions && (
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-[11px]">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
             {['matrix', 'table'].map((v) => (
               <button key={v} type="button" onClick={() => setView(v)}
                       className={`px-2.5 py-1 font-medium capitalize transition-colors ${v === 'table' ? 'border-l border-slate-200 ' : ''}${view === v ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
@@ -237,7 +237,7 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
 
       {/* summary line */}
       {hasCollisions && (
-        <p className="text-[11px] text-slate-500">
+        <p className="text-xs text-slate-500">
           Worst combined risk: <span className="font-semibold text-slate-700">{worst_combined_risk}</span>
           {' · '}{summary.CRITICAL || 0} CRITICAL, {summary.LOW || 0} LOW, {summary.rt_identical || 0} RT-identical
           {summary.truncated ? ` (showing ${summary.n_reported} of ${summary.n_total_non_safe})` : ''}
@@ -257,7 +257,7 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
 
       {/* interpretation */}
       {overhangCollision.interpretation && (
-        <p className="text-[10px] text-slate-400 italic">{overhangCollision.interpretation}</p>
+        <p className="text-xs text-slate-500 italic">{overhangCollision.interpretation}</p>
       )}
     </div>
   );

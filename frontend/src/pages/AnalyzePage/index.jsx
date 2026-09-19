@@ -121,7 +121,7 @@ export default function AnalyzePage() {
           <div className="flex items-center gap-3 text-xs">
             <button onClick={loadExample} className="text-teal-600 hover:underline font-medium">Load example</button>
             <span className="text-slate-300">·</span>
-            <button onClick={clearAll} className="text-slate-400 hover:text-slate-600">Clear</button>
+            <button onClick={clearAll} className="text-slate-500 hover:text-slate-600">Clear</button>
           </div>
         </div>
 
@@ -129,7 +129,7 @@ export default function AnalyzePage() {
         <div className="space-y-2">
           <div>
             <span className="text-xs font-medium text-slate-600">Mature miRNA</span>
-            <span className="text-xs text-slate-400 ml-1">· type a name/ID for suggestions, or paste the RNA sequence (A/U/G/C)</span>
+            <span className="text-xs text-slate-500 ml-1">· type a name/ID for suggestions, or paste the RNA sequence (A/U/G/C)</span>
           </div>
           <MiRNASearchInput
             initialQuery={mirnaId || mature}
@@ -140,7 +140,7 @@ export default function AnalyzePage() {
 
           {mature && (
             <div className="border border-teal-200 rounded-xl bg-teal-50/40 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
-              <span className="text-xs text-slate-400 uppercase tracking-wide">miRNA</span>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">miRNA</span>
               <span className="font-mono font-semibold text-slate-800">{mirnaId || '—'}</span>
               <SeqWithSeed seq={mature} />
               <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded px-2 py-0.5 tabular-nums">{mature.length} nt</span>
@@ -183,7 +183,7 @@ export default function AnalyzePage() {
             <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-3">
               {ION_FIELDS.map(({ key, label, unit, step }) => (
                 <label key={key} className="block space-y-1">
-                  <span className="text-xs text-slate-500">{label} <span className="text-slate-400">({unit})</span></span>
+                  <span className="text-xs text-slate-500">{label} <span className="text-slate-500">({unit})</span></span>
                   <input
                     type="number" step={step} value={params[key]}
                     onChange={(e) => setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))}
@@ -254,7 +254,7 @@ export default function AnalyzePage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-slate-400">ΔG in kcal/mol. More negative = more stable dimer. A stable 3′-end dimer is the concern — the polymerase can extend it into primer-dimer artifacts.</p>
+            <p className="text-xs text-slate-500">ΔG in kcal/mol. More negative = more stable dimer. A stable 3′-end dimer is the concern — the polymerase can extend it into primer-dimer artifacts.</p>
           </section>
 
           {/* Context vs miRNA */}
@@ -349,7 +349,7 @@ export default function AnalyzePage() {
           </section>
 
           {/* Method notes */}
-          <section className="text-xs text-slate-400 border-t border-slate-100 pt-3 space-y-1">
+          <section className="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1">
             {result.meta?.method_notes?.map((n, i) => <p key={i}>{n}</p>)}
           </section>
         </div>
@@ -377,7 +377,7 @@ function PrimerInput({ label, accent, value, onChange, placeholder, hint }) {
     <div className={`rounded-lg border border-slate-200 border-l-4 ${accent} px-4 py-3 space-y-1.5 bg-slate-50/40`}>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm font-semibold text-slate-700">{label}</span>
-        {value && <span className="text-xs text-slate-400 tabular-nums">{value.replace(/\s/g, '').length} nt</span>}
+        {value && <span className="text-xs text-slate-500 tabular-nums">{value.replace(/\s/g, '').length} nt</span>}
       </div>
       <input
         value={value}
@@ -385,7 +385,7 @@ function PrimerInput({ label, accent, value, onChange, placeholder, hint }) {
         placeholder={placeholder}
         className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-400 focus:ring-1 focus:ring-teal-300 outline-none tracking-wide bg-white"
       />
-      <p className="text-xs text-slate-400 leading-relaxed">{hint}</p>
+      <p className="text-xs text-slate-500 leading-relaxed">{hint}</p>
     </div>
   );
 }
@@ -425,7 +425,7 @@ function PrimerCard({ title, data }) {
           {sd.critical_3prime && <li className="text-red-700">{sd.note}</li>}
         </ul>
       )}
-      {data.tm_note && <p className="text-xs text-slate-400 leading-relaxed">{data.tm_note}</p>}
+      {data.tm_note && <p className="text-xs text-slate-500 leading-relaxed">{data.tm_note}</p>}
     </div>
   );
 }
@@ -433,7 +433,7 @@ function PrimerCard({ title, data }) {
 function Metric({ label, value, valueClass = 'text-slate-700' }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-xs text-slate-400">{label}</p>
+      <p className="text-xs text-slate-500">{label}</p>
       <p className={`text-sm font-semibold tabular-nums ${valueClass}`}>{value}</p>
     </div>
   );
@@ -455,7 +455,7 @@ function ContextRow({ title, ok, note, extra }) {
 function Kv({ k, v, mono }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs bg-white border border-slate-200 rounded px-2 py-0.5">
-      <span className="text-slate-400">{k}</span>
+      <span className="text-slate-500">{k}</span>
       <span className={`text-slate-700 font-semibold ${mono ? 'font-mono' : ''}`}>{v}</span>
     </span>
   );

@@ -17,15 +17,15 @@ function ReferenceChip({ item: r }) {
     <div className={`rounded-lg border px-3 py-2 space-y-0.5 ${style}`}>
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-xs font-semibold">{r.name}</span>
-        <span className="text-[10px] font-medium capitalize opacity-75">{r.role}</span>
+        <span className="text-xs font-medium capitalize opacity-75">{r.role}</span>
       </div>
-      <p className="text-[11px] opacity-80 leading-snug">{r.note}</p>
+      <p className="text-xs opacity-80 leading-snug">{r.note}</p>
       {r.source_doi && (
         <a
           href={`https://doi.org/${r.source_doi}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] underline opacity-60 hover:opacity-100"
+          className="text-xs underline opacity-60 hover:opacity-100"
         >
           doi:{r.source_doi}
         </a>
@@ -63,14 +63,14 @@ export default function NormalizationAdvisor({ advice }) {
             Normalization Advisor
           </p>
           {sample_type && (
-            <p className="text-[11px] text-purple-600 mt-0.5">
+            <p className="text-xs text-purple-600 mt-0.5">
               Sample type: <span className="font-medium capitalize">{sample_type}</span>
               {rule_label && ` — ${rule_label}`}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] px-2 py-0.5 rounded border border-purple-200 bg-white text-purple-600 font-medium">
+          <span className="text-xs px-2 py-0.5 rounded border border-purple-200 bg-white text-purple-600 font-medium">
             Advisory only
           </span>
           <span className="text-purple-400 text-sm">{open ? '▲' : '▼'}</span>
@@ -89,7 +89,7 @@ export default function NormalizationAdvisor({ advice }) {
       {/* Reference candidates */}
       {reference_candidates.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold text-purple-700 uppercase tracking-wide">
+          <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
             Reference Candidates
           </p>
           <div className="grid grid-cols-1 gap-2">
@@ -116,7 +116,7 @@ export default function NormalizationAdvisor({ advice }) {
                     href={`https://doi.org/${c.source_doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[10px] text-amber-600 underline hover:text-amber-800"
+                    className="text-xs text-amber-600 underline hover:text-amber-800"
                   >
                     doi:{c.source_doi}
                   </a>
@@ -133,7 +133,7 @@ export default function NormalizationAdvisor({ advice }) {
           <p className="text-xs text-slate-600">{validation_note}</p>
         )}
         {external_tools.length > 0 && (
-          <div className="flex flex-wrap gap-3 text-[11px]">
+          <div className="flex flex-wrap gap-3 text-xs">
             {external_tools.map((tool) => (
               <a
                 key={tool.name}
@@ -151,7 +151,7 @@ export default function NormalizationAdvisor({ advice }) {
 
       {/* Source DOIs */}
       {sources.length > 0 && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-purple-600">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-purple-600">
           {sources.map((doi) => (
             <a
               key={doi}
@@ -168,7 +168,7 @@ export default function NormalizationAdvisor({ advice }) {
 
       {/* MIQE 2.0 normalization requirement */}
       <div className="rounded-lg bg-white border border-purple-200 px-3 py-2">
-        <p className="text-[11px] font-semibold text-purple-700">MIQE 2.0 — normalization</p>
+        <p className="text-xs font-semibold text-purple-700">MIQE 2.0 — normalization</p>
         <p className="text-xs text-slate-600 leading-relaxed">
           Use <span className="font-semibold">≥ 2 reference genes</span> and normalize by their{' '}
           <span className="font-semibold">geometric mean</span>; validate their expression stability
@@ -177,7 +177,7 @@ export default function NormalizationAdvisor({ advice }) {
       </div>
 
       {/* Disclaimer */}
-      <p className="text-[10px] italic text-purple-500 border-t border-purple-200 pt-2">
+      <p className="text-xs italic text-purple-500 border-t border-purple-200 pt-2">
         {disclaimer}
       </p>
       </div>

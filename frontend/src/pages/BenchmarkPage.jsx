@@ -43,9 +43,9 @@ function MetricBar({ label, values, unit = '', lowerBetter = false }) {
         const color = TOOL_COLORS[tool] || '#94A3B8';
         return (
           <div key={tool} className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-500 w-28 shrink-0">{TOOL_LABELS[tool] || tool}</span>
+            <span className="text-xs text-slate-500 w-28 shrink-0">{TOOL_LABELS[tool] || tool}</span>
             {isNA ? (
-              <span className="text-[11px] text-slate-400 italic">
+              <span className="text-xs text-slate-500 italic">
                 N/A (compared via published examples)
               </span>
             ) : (
@@ -56,7 +56,7 @@ function MetricBar({ label, values, unit = '', lowerBetter = false }) {
                     style={{ width: `${pct}%`, background: color, opacity: lowerBetter ? 0.7 : 1 }}
                   />
                 </div>
-                <span className="text-[11px] font-mono text-slate-700 w-16 text-right shrink-0">
+                <span className="text-xs font-mono text-slate-700 w-16 text-right shrink-0">
                   {typeof num === 'number' ? num.toFixed(1) : raw}{unit}
                 </span>
               </>
@@ -86,8 +86,8 @@ export default function BenchmarkPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
       <div>
-        <h1 className="text-xl font-semibold text-gray-800">Tool Benchmark</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Design-characteristic comparison vs miRprimer / miPrimer</p>
+        <h1 className="text-xl font-semibold text-slate-800">Tool Benchmark</h1>
+        <p className="text-xs text-slate-500 mt-0.5">Design-characteristic comparison vs miRprimer / miPrimer</p>
       </div>
 
       {/* MANDATORY limitation banner — must always be visible */}
@@ -106,12 +106,12 @@ export default function BenchmarkPage() {
           miRprimer and miPrimer use linear RT primers — direct efficiency comparison is not valid.
         </p>
         {data?._metadata?.comparison_note && (
-          <p className="text-[11px] text-amber-600 border-t border-amber-200 pt-1 mt-1">
+          <p className="text-xs text-amber-600 border-t border-amber-200 pt-1 mt-1">
             {data._metadata.comparison_note}
           </p>
         )}
         {data?._metadata?.validation_note && (
-          <p className="text-[11px] text-amber-700 pt-1">
+          <p className="text-xs text-amber-700 pt-1">
             {data._metadata.validation_note}
           </p>
         )}
@@ -146,7 +146,7 @@ export default function BenchmarkPage() {
       {!loading && !error && data?._metadata && (
         <>
           {/* Metadata badges */}
-          <div className="flex flex-wrap gap-2 text-[11px]">
+          <div className="flex flex-wrap gap-2 text-xs">
             {data._metadata.run_date && (
               <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-medium">
                 Run: {data._metadata.run_date}
@@ -168,7 +168,7 @@ export default function BenchmarkPage() {
               </span>
             )}
             {data._metadata.status && (
-              <span className="px-2 py-1 rounded bg-orange-50 border border-orange-200 text-orange-700 font-medium max-w-full break-all">
+              <span className="px-2 py-1 rounded bg-amber-50 border border-amber-200 text-amber-700 font-medium max-w-full break-all">
                 {data._metadata.status}
               </span>
             )}
@@ -201,7 +201,7 @@ export default function BenchmarkPage() {
                 <h2 className="text-sm font-semibold text-slate-700">
                   Scientific Validation — vs published methodology
                 </h2>
-                <span className="px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-700 text-[11px] font-semibold">
+                <span className="px-2 py-1 rounded bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold">
                   {data.validation.checks_passed}/{data.validation.checks_total} checks passed
                   {typeof data.validation.success_rate === 'number' &&
                     ` (${(data.validation.success_rate * 100).toFixed(0)}%)`}
@@ -215,11 +215,11 @@ export default function BenchmarkPage() {
               {/* Deterministic primer reconstruction */}
               {data.validation.deterministic_primer_targets?.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
                     RT-primer overhang — expected vs designed (Chen 2005 deterministic)
                   </p>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-[11px] border-collapse">
+                    <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="text-slate-500 text-left">
                           <th className="py-1 pr-3 font-medium">miRNA</th>
@@ -252,7 +252,7 @@ export default function BenchmarkPage() {
               {/* Published exact-match — the strongest external check */}
               {data.validation.published_exact_match?.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
                     Exact match vs a published primer table
                   </p>
                   {data.validation.published_exact_match.map((p) => (
@@ -260,23 +260,23 @@ export default function BenchmarkPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-semibold text-slate-700">{p.id}</span>
                         {p.rt_exact_match === 'PASS' && (
-                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-semibold">
+                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-xs font-semibold">
                             RT primer byte-identical ✓
                           </span>
                         )}
                         {p.rt_overhang_match === 'PASS' && (
-                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-semibold">
+                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-xs font-semibold">
                             {p.rt_exact_match === 'PASS' ? 'overhang ✓' : 'RT overhang ✓ (cross-system)'}
                           </span>
                         )}
                         {p.forward_shares_specific === 'PASS' && (
-                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-semibold">
+                          <span className="px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-xs font-semibold">
                             forward specific-region identical ({p.forward_specific_overlap_nt} nt) ✓
                           </span>
                         )}
                       </div>
                       {p.forward_tool_specific && (
-                        <div className="text-[11px] text-slate-500 leading-relaxed space-y-0.5">
+                        <div className="text-xs text-slate-500 leading-relaxed space-y-0.5">
                           <div>
                             Forward miRNA-specific region (the biologically meaningful part) is
                             byte-identical over its full {p.forward_specific_overlap_nt}-nt overlap:
@@ -285,7 +285,7 @@ export default function BenchmarkPage() {
                             tool <span className="text-teal-700">{p.forward_tool_specific}</span> ·
                             published <span className="text-teal-700">{p.forward_pub_specific}</span>
                           </div>
-                          <div className="text-slate-400">
+                          <div className="text-slate-500">
                             The two full primers differ only by the 5′ Tm-raising tail and specific-region
                             length (design choice for the target Tm, not scored): tool{' '}
                             <span className="font-mono">{p.forward_tool}</span> vs published{' '}
@@ -294,7 +294,7 @@ export default function BenchmarkPage() {
                         </div>
                       )}
                       {p.source && (
-                        <p className="text-[10px] text-slate-400 italic">{p.source}</p>
+                        <p className="text-xs text-slate-500 italic">{p.source}</p>
                       )}
                     </div>
                   ))}
@@ -304,7 +304,7 @@ export default function BenchmarkPage() {
               {/* Specificity concordance */}
               {data.validation.specificity_concordance && (
                 <div className="space-y-1">
-                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
                     Family specificity concordance
                   </p>
                   <p className="text-xs text-slate-600">
@@ -321,14 +321,14 @@ export default function BenchmarkPage() {
               {/* Edge cases */}
               {data.validation.edge_cases?.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
                     Edge-case warnings fired
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {data.validation.edge_cases.map((e) => (
                       <span
                         key={e.label}
-                        className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[11px] font-mono"
+                        className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-xs font-mono"
                       >
                         {e.label} → {e.expected} {e.pass ? '✓' : '✗'}
                       </span>
@@ -338,7 +338,7 @@ export default function BenchmarkPage() {
               )}
 
               {data.validation.sources?.length > 0 && (
-                <details className="text-[11px] text-slate-500">
+                <details className="text-xs text-slate-500">
                   <summary className="cursor-pointer font-medium text-slate-600">Sources</summary>
                   <ul className="mt-1 space-y-0.5 pl-3">
                     {data.validation.sources.map((s, i) => (
@@ -349,7 +349,7 @@ export default function BenchmarkPage() {
               )}
 
               {data.validation.reproduce && (
-                <pre className="text-[11px] bg-slate-50 border border-slate-200 rounded px-3 py-2 font-mono text-slate-600 overflow-x-auto">
+                <pre className="text-xs bg-slate-50 border border-slate-200 rounded px-3 py-2 font-mono text-slate-600 overflow-x-auto">
                   {data.validation.reproduce}
                 </pre>
               )}
@@ -363,7 +363,7 @@ export default function BenchmarkPage() {
               <ul className="space-y-1">
                 {data._metadata.limitations.map((lim, i) => (
                   <li key={i} className="text-xs text-slate-600 flex gap-2">
-                    <span className="text-slate-400 shrink-0">•</span>
+                    <span className="text-slate-500 shrink-0">•</span>
                     {lim}
                   </li>
                 ))}

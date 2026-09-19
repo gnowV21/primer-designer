@@ -31,7 +31,7 @@ export default function NumInput({
     <div className="space-y-1">
       {label !== undefined && (
         <div className="flex items-center gap-1.5">
-          <label htmlFor={id} className="text-sm font-medium text-gray-700 leading-snug">
+          <label htmlFor={id} className="text-sm font-medium text-slate-700 leading-snug">
             {label}
           </label>
           {tooltip && <Tooltip text={tooltip} />}
@@ -47,15 +47,15 @@ export default function NumInput({
           value={raw}
           onChange={handleChange}
           onFocus={(e) => e.target.select()}
-          className={`w-full text-sm border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 transition-colors
+          className={`w-full text-sm border rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-1 transition-colors
             ${unit ? 'pr-10' : 'pr-3'}
             ${error
               ? 'border-red-400 focus:border-red-400 focus:ring-red-200 bg-red-50'
-              : 'border-gray-200 focus:border-teal-300 focus:ring-teal-100'
+              : 'border-slate-200 focus:border-teal-300 focus:ring-teal-100'
             }`}
         />
         {unit && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 pointer-events-none">
             {unit}
           </span>
         )}

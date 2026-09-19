@@ -8,14 +8,14 @@ import axios from 'axios';
 const RISK_COLOR = {
   HIGH:   'bg-red-500 text-white',
   MEDIUM: 'bg-amber-400 text-white',
-  LOW:    'bg-yellow-200 text-slate-700',
+  LOW:    'bg-amber-200 text-slate-700',
   SAFE:   'bg-teal-100 text-teal-800',
 };
 
 const RISK_BORDER = {
   HIGH:   'border-red-200 bg-red-50 text-red-800',
   MEDIUM: 'border-amber-400 bg-amber-50 text-amber-800',
-  LOW:    'border-yellow-300 bg-yellow-50 text-yellow-800',
+  LOW:    'border-amber-300 bg-amber-50 text-amber-800',
   SAFE:   'border-teal-300 bg-teal-50 text-teal-700',
 };
 
@@ -23,7 +23,7 @@ function RiskCell({ risk }) {
   return (
     <div
       className={`w-8 h-8 flex items-center justify-center text-xs font-bold rounded ${
-        RISK_COLOR[risk] ?? 'bg-slate-100 text-slate-400'
+        RISK_COLOR[risk] ?? 'bg-slate-100 text-slate-500'
       }`}
       title={risk ?? '—'}
     >
@@ -111,11 +111,11 @@ export default function MultiplexPanel() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm font-semibold text-slate-700">
           Multiplex Panel Check
-          <span className="ml-2 text-xs font-normal text-slate-400">
+          <span className="ml-2 text-xs font-normal text-slate-500">
             RT/preamp — not qPCR duplexing
           </span>
         </p>
-        <span className="text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
+        <span className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-full px-2 py-0.5">
           Max 20 assays/tube [Bell17]
         </span>
       </div>
@@ -145,7 +145,7 @@ export default function MultiplexPanel() {
             <button
               onClick={() => removeAssay(i)}
               disabled={assays.length <= 1}
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-400 hover:text-red-500 hover:border-red-200 disabled:opacity-30"
+              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-500 hover:text-red-500 hover:border-red-200 disabled:opacity-30"
             >
               ✕
             </button>
@@ -196,7 +196,7 @@ export default function MultiplexPanel() {
                   <tr>
                     <th />
                     {assayLabels.map((lbl) => (
-                      <th key={lbl} className="text-slate-400 font-normal px-1 pb-1 text-center max-w-[60px] truncate">
+                      <th key={lbl} className="text-slate-500 font-normal px-1 pb-1 text-center max-w-[60px] truncate">
                         {lbl.length > 8 ? lbl.slice(0, 7) + '…' : lbl}
                       </th>
                     ))}
@@ -205,7 +205,7 @@ export default function MultiplexPanel() {
                 <tbody>
                   {assayLabels.map((rowLbl) => (
                     <tr key={rowLbl}>
-                      <td className="text-slate-400 font-normal pr-2 text-right max-w-[60px] truncate">
+                      <td className="text-slate-500 font-normal pr-2 text-right max-w-[60px] truncate">
                         {rowLbl.length > 8 ? rowLbl.slice(0, 7) + '…' : rowLbl}
                       </td>
                       {assayLabels.map((colLbl) => {
@@ -227,7 +227,7 @@ export default function MultiplexPanel() {
                   ))}
                 </tbody>
               </table>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-slate-500">
                 H = HIGH · M = MEDIUM · L = LOW · ✓ = SAFE
               </p>
             </div>

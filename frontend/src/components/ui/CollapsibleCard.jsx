@@ -53,7 +53,7 @@ export default function CollapsibleCard({
         {!open && summary && (
           <span className={`text-xs truncate min-w-0 ${t.text}`}>{summary}</span>
         )}
-        <span className="ml-auto text-[11px] text-slate-400 shrink-0">
+        <span className="ml-auto text-xs text-slate-500 shrink-0">
           {open ? 'hide' : 'show'}
         </span>
       </button>

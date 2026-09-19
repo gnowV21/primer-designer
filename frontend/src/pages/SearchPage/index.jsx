@@ -121,11 +121,11 @@ export default function SearchPage() {
                       transition-all duration-150 active:scale-[0.96]
                       ${isActive
                         ? 'bg-teal-50 text-teal-700 ring-1 ring-teal-200 shadow-sm'
-                        : 'text-gray-600 hover:text-teal-700 hover:bg-teal-50'
+                        : 'text-slate-600 hover:text-teal-700 hover:bg-teal-50'
                       }`}
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 transition-all duration-300 ${
-                      isReady ? 'bg-teal-500 scale-100' : 'bg-gray-300 scale-75'
+                      isReady ? 'bg-teal-500 scale-100' : 'bg-slate-300 scale-75'
                     }`} />
                     <span className="truncate">{label}</span>
                   </button>
@@ -143,8 +143,8 @@ export default function SearchPage() {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-semibold text-gray-700">Design your primers</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <h1 className="text-xl font-semibold text-slate-700">Design your primers</h1>
+              <p className="text-sm text-slate-500 mt-1">
                 Enter miRNA information and adjust technical parameters.
               </p>
             </div>
@@ -153,13 +153,13 @@ export default function SearchPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-teal-500 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${(readyCount / NAV_SECTIONS.length) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-gray-500 shrink-0 tabular-nums font-medium">
+            <span className="text-xs text-slate-500 shrink-0 tabular-nums font-medium">
               {readyCount}/{NAV_SECTIONS.length} ready
             </span>
           </div>
@@ -243,7 +243,7 @@ export default function SearchPage() {
             disabled={!canSubmit}
             className={`w-full py-3 px-6 rounded-xl text-sm font-semibold transition-all shadow-md
               ${!canSubmit
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                ? 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-none'
                 : 'bg-gradient-to-r from-teal-600 to-teal-800 text-white hover:opacity-90 hover:shadow-lg active:scale-[0.99]'
               }`}
           >
@@ -253,14 +253,14 @@ export default function SearchPage() {
               </span>
             ) : hasErrors ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="text-gray-500">✕</span> Fix errors to continue
+                <span className="text-slate-500">✕</span> Fix errors to continue
               </span>
             ) : (
               'Design Primers →'
             )}
           </button>
           {isSeqReady && !hasErrors && (
-            <p className="text-center text-xs text-gray-400">
+            <p className="text-center text-xs text-slate-500">
               Stem-loop primer · Forward primer · Universal reverse primer
             </p>
           )}

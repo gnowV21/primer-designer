@@ -31,13 +31,13 @@ function polarToXY(angle, r) {
 function ProvenanceBadge({ provenance, canonical }) {
   if (canonical) {
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-teal-50 border-teal-200 text-teal-700">
+      <span className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border bg-teal-50 border-teal-200 text-teal-700">
         miRBase family (canonical)
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-amber-50 border-amber-200 text-amber-700">
+    <span className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border bg-amber-50 border-amber-200 text-amber-700">
       Seed-based grouping (approximate)
       <Tooltip text="Canonical miFam.dat source unavailable. Family grouping based on 7-nt seed sequence (positions 2-8). Re-run scripts/build_family_db.py with FTP access for canonical data." />
     </span>
@@ -155,7 +155,7 @@ function MapView({ data }) {
           <div className="flex items-center justify-between">
             <span className="font-mono font-semibold text-slate-800">{activeData.sibling}</span>
             <span
-              className="font-bold px-2 py-0.5 rounded-full border text-[11px]"
+              className="font-bold px-2 py-0.5 rounded-full border text-xs"
               style={{ color: activeData.cfg.color, borderColor: activeData.cfg.border, background: activeData.cfg.bg }}
             >
               {activeData.cfg.shape} {activeData.cfg.label}
@@ -177,8 +177,8 @@ function MapView({ data }) {
           </div>
           {/* Highlight mismatched positions in overhang */}
           {activeData.sibling_overhang && activeData.sibling_overhang.length === (data.overhang_used || 6) && (
-            <div className="mt-1 font-mono text-[11px]">
-              <span className="text-slate-400 mr-1">vs target:</span>
+            <div className="mt-1 font-mono text-xs">
+              <span className="text-slate-500 mr-1">vs target:</span>
               {(data.target_overhang || '').split('').map((nt, idx) => {
                 const sib = activeData.sibling_overhang[idx] || '';
                 const mismatch = nt !== sib;
@@ -194,7 +194,7 @@ function MapView({ data }) {
       )}
 
       {/* Risk legend */}
-      <div className="flex flex-wrap gap-2 justify-center text-[10px]">
+      <div className="flex flex-wrap gap-2 justify-center text-xs">
         {Object.entries(RISK_CONFIG).map(([risk, cfg]) => (
           <span key={risk} className="flex items-center gap-1 px-1.5 py-0.5 rounded border"
             style={{ color: cfg.color, borderColor: cfg.border, background: cfg.bg }}>
@@ -298,11 +298,11 @@ export default function FamilySpecificityMap({ familyCrossReactivity }) {
             )}
           </p>
           {species && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600"
+            <span className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-600"
               title={`Cross-reactivity scoped to ${SPECIES_LABEL[species] || species} (${species}). Same-family orthologs in other species are not off-targets for a single-species sample.`}>
               {SPECIES_LABEL[species] || species}
               {cross_species_excluded > 0 && (
-                <span className="text-slate-400">· {cross_species_excluded} cross-species excluded</span>
+                <span className="text-slate-500">· {cross_species_excluded} cross-species excluded</span>
               )}
             </span>
           )}
@@ -313,7 +313,7 @@ export default function FamilySpecificityMap({ familyCrossReactivity }) {
         </div>
         {/* Map / Table toggle */}
         {!noFamilyData && (
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-[11px]">
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
             <button
               type="button"
               onClick={() => setView('map')}
@@ -341,7 +341,7 @@ export default function FamilySpecificityMap({ familyCrossReactivity }) {
       </div>
 
       {/* Fixed axis-clarification line (cannot be hidden) */}
-      <p className="text-[11px] text-slate-500">
+      <p className="text-xs text-slate-500">
         Seed grouping (positions 2–8) is the mRNA-targeting axis. It does not determine primer
         specificity — see <span className="font-medium">Primer Binding Specificity</span> above.
       </p>
@@ -370,7 +370,7 @@ export default function FamilySpecificityMap({ familyCrossReactivity }) {
 
       {/* Data warning */}
       {data_warning && (
-        <p className="text-[10px] text-slate-400 italic">{data_warning}</p>
+        <p className="text-xs text-slate-500 italic">{data_warning}</p>
       )}
     </div>
   );

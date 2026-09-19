@@ -20,10 +20,10 @@ function WarnBox({ text }) {
 function SubDivider({ label }) {
   return (
     <div className="flex items-center gap-3 pt-1">
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 shrink-0">
+      <span className="text-xs font-semibold uppercase tracking-widest text-slate-500 shrink-0">
         {label}
       </span>
-      <div className="flex-1 h-px bg-gray-100" />
+      <div className="flex-1 h-px bg-slate-100" />
     </div>
   );
 }
@@ -167,7 +167,7 @@ export default function PrimerConstraintsGroup({
           className={`text-xs font-medium px-2 py-0.5 rounded transition-all duration-150 shrink-0 ${
             confirmingReset
               ? 'text-red-600 bg-red-50 border border-red-200 hover:bg-red-100'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              : 'text-slate-500 hover:text-slate-600 hover:bg-slate-100'
           }`}
         >
           {confirmingReset ? 'Confirm reset?' : 'Reset Tm'}
@@ -207,7 +207,7 @@ export default function PrimerConstraintsGroup({
         {/* GC Clamp */}
         <div className="space-y-2">
           <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">3′ GC Clamp</label>
+            <label className="text-sm font-medium text-slate-700">3′ GC Clamp</label>
             <Tooltip text="End the primer with a G or C at the 3′ terminus. Increases binding stability and prevents 3′ end 'breathing'. Recommended ON in most cases." />
           </div>
           <Toggle
@@ -220,7 +220,7 @@ export default function PrimerConstraintsGroup({
         {/* 3′ Binding region — selectable 5 / 6 / 7 nt */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">3′ Binding region</label>
+            <label className="text-sm font-medium text-slate-700">3′ Binding region</label>
             <Tooltip text="Number of nucleotides at the 3′ overhang of the stem-loop RT primer that base-pair with the 3′ end of the mature miRNA. 6 nt is the validated standard (Chen et al. 2005). Use 7 nt for large miRNA families with highly similar 3′ sequences." />
           </div>
           <div className="flex gap-1.5">
@@ -232,7 +232,7 @@ export default function PrimerConstraintsGroup({
                 className={`flex-1 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-150 active:scale-95 ${
                   data.bindingRegion3prime === nt
                     ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:text-teal-700'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:text-teal-700'
                 }`}
               >
                 {nt} nt
@@ -368,7 +368,7 @@ export default function PrimerConstraintsGroup({
         }`}>
           <span className="font-medium shrink-0">Effective free [Mg²⁺]</span>
           <span className="font-mono font-bold tabular-nums">{freeMg.toFixed(2)} mM</span>
-          <span className="text-gray-400 font-normal tabular-nums">({mg} total − {dNTP} mM dNTP)</span>
+          <span className="text-slate-500 font-normal tabular-nums">({mg} total − {dNTP} mM dNTP)</span>
           <span className="ml-auto shrink-0 font-medium">
             {freeMg >= 1.0 ? '✓ Acceptable (≥ 1.0 mM)' : freeMg >= 0.5 ? '⚠ Below optimal' : '✕ Critically low'}
           </span>

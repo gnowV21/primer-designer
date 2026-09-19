@@ -118,7 +118,7 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
         {/* PCR efficiency range */}
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">PCR efficiency (%)</label>
+            <label className="text-sm font-medium text-slate-700">PCR efficiency (%)</label>
             <Tooltip text="Ideal efficiency = 100% (slope −3.32). The algorithm will prioritize primers with predicted efficiency within this range." />
           </div>
           <div className="flex items-center gap-1.5">
@@ -133,7 +133,7 @@ export default function QpcrConditionsGroup({ data, errors, onChange, onError, t
                 error={errors.pcrEfficiencyMin}
               />
             </div>
-            <span className="text-xs text-gray-400 shrink-0 self-start mt-2">→</span>
+            <span className="text-xs text-slate-500 shrink-0 self-start mt-2">→</span>
             <div className="flex-1">
               <NumInput
                 id="qpcr-eff-max"
