@@ -108,9 +108,13 @@ _NS = "{http://www.w3.org/2000/svg}"
 _COMP = {"A": "T", "T": "A", "G": "C", "C": "G"}
 
 
-def _char_rows(svg):
-    """[(y, {x: char}), ...] for every per-character sequence row in the SVG."""
+def _char_rows(svg, stage=None):
+    """[(y, {x: char}), ...] for every per-character sequence row in the SVG, or only
+    inside the stage group whose aria-label starts with `stage` (e.g. "Stage 1")."""
     root = ET.fromstring(svg)
+    if stage:
+        root = next(g for g in root.iter(f"{_NS}g")
+                    if (g.get("aria-label") or "").startswith(stage))
     rows = []
     for t in root.iter(f"{_NS}text"):
         cols = {
@@ -145,7 +149,7 @@ def _paired_rows(rows, n):
 def test_stage1_overhang_base_pairs_with_mirna_3prime():
     """The 6-nt RT overhang must sit complementary under the miRNA 3' end."""
     model = _golden_model()
-    rows = _char_rows(render_reaction(model))
+    rows = _char_rows(render_reaction(model), "Stage 1")
     mirna_cols, overhang_cols = _paired_rows(rows, 6)
 
     for x, base in overhang_cols.items():
@@ -166,7 +170,7 @@ def test_stage1_overhang_base_pairs_with_mirna_3prime():
 def test_stage3_template_base_pairs_with_forward_primer():
     """The cDNA template row must be complementary to the forward primer row."""
     model = _golden_model()
-    rows = _char_rows(render_reaction(model))
+    rows = _char_rows(render_reaction(model), "Stage 3")
     k = model.forward_binding_length
     template_cols, specific_cols = _paired_rows(rows, k)
 
@@ -175,3 +179,33 @@ def test_stage3_template_base_pairs_with_forward_primer():
             f"x={x}: primer {base} against template {template_cols[x]}, "
             f"expected {_COMP[base]}"
         )
+
+
+@pytest.mark.parametrize("stage", ["Stage 0", "Stage 1"])
+def test_stemloop_drawn_as_paired_hairpin(stage):
+    """Stages 0-1 draw the RT primer as a hairpin: arm A (nt 1-14) sits under arm B
+    (nt 31-44) base-paired column by column, and all 16 loop nt are drawn."""
+    model = _golden_model()
+    svg = render_reaction(model)
+    rows = _char_rows(svg, stage)
+    text = lambda c: "".join(c[x] for x in sorted(c))            # noqa: E731
+    S = model.stemloop_rt
+    (ya, arm_a_cols), = [(y, c) for y, c in rows if text(c) == S[:14]]
+    (yb, arm_b_cols), = [(y, c) for y, c in rows if text(c) == S[30:44][::-1]]
+    assert yb < ya and set(arm_a_cols) == set(arm_b_cols)     # arm B directly above arm A
+    for x, base in arm_a_cols.items():
+        assert base == _COMP[arm_b_cols[x]]
+    loop = model.stemloop_rt[14:30]
+    root = next(g for g in ET.fromstring(svg).iter(f"{_NS}g")
+                if (g.get("aria-label") or "").startswith(stage))
+    singles = [t.text for t in root.iter(f"{_NS}text") if t.text and len(t.text) == 1
+               and t.text in "ACGT"]
+    assert "".join(singles) == loop
+
+
+def test_rungs_do_not_touch_bars():
+    """Every base-pair rung ends clear of the bars it connects (no overlap)."""
+    svg = render_reaction(_golden_model())
+    for ln in ET.fromstring(svg).iter(f"{_NS}line"):
+        if ln.get("stroke-width") == "2.4":
+            assert float(ln.get("y2")) - float(ln.get("y1")) > 0

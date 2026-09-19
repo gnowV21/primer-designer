@@ -5,6 +5,11 @@
 # are imported from algorithm.constants — NOT duplicated here.
 # ================================================================
 
+# Stem of STEMLOOP_BODY: nt 1–14 pair with nt 31–44 around a 16-nt loop (ViennaRNA
+# DNA MFE fold ((((((((((((((................)))))))))))))) and exact reverse-
+# complementarity of the arms). Used only to DRAW the hairpin.
+VIZ_STEM_BP = 14
+
 # --- PART A: coordinate model --------------------------------------------------
 # RT overhang length is NOT a constant here: it is read from the RT primer
 # (len(S) − 44) and must lie in algorithm.constants OVERHANG_LENGTH_MIN..MAX

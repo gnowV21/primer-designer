@@ -13,6 +13,8 @@
 # dedicated side gutters so 5'/3' never clip or overlap the sequence.
 # ================================================================
 
+import math
+
 from .svg_builder import Svg, _Node, escape_xml
 from .constants import (
     VIZ_CANVAS_WIDTH, VIZ_MARGIN, VIZ_CHAR_PITCH, VIZ_BAR_HEIGHT,
@@ -21,6 +23,7 @@ from .constants import (
     VIZ_MELT_T_START, VIZ_MELT_T_END,
     VIZ_GEL_BAND_HEIGHT, VIZ_GEL_AGAROSE_PCT,
     REGION_COLOR_TOKEN, REGION_TAIL, REGION_MIRNA, REGION_STEMLOOP, REGION_UNIVERSAL,
+    VIZ_STEM_BP,
 )
 
 _W = 1000                      # widened canvas (SPEC §B.1 allows dynamic width)
@@ -30,7 +33,9 @@ _CONTENT_W = _W - 2 * _M
 _OX = _M + _GUT               # overview drawing origin (leaves left gutter)
 _OW = _W - 2 * _M - 2 * _GUT  # overview drawing width (leaves right gutter)
 _CARD_PAD = 16
-_PAIR_GAP = 22                # gap between paired strands (base-pair rungs)
+_PAIR_GAP = 30                # gap between paired strands (base-pair rungs)
+_RUNG_GAP = 4                 # rungs stop this far short of each bar / frame
+_TXT_PAD = 8                  # inner padding so end nucleotides never touch the bar edge
 _BAR_RX = 8
 
 _FG     = color("viz-fg")
@@ -121,26 +126,87 @@ def _end_labels(node, x, y, width, direction):
 
 
 def _bar(node, x, y, seq, pitch, direction, *, fill, mono_size=None, dash=False,
-         text_fill=None, show_ends=True, shadow=True):
+         text_fill=None, show_ends=True, shadow=True, pad_l=_TXT_PAD, pad_r=_TXT_PAD):
+    """Sequence bar. Columns start at x (pairing geometry unchanged); the rectangle
+    extends pad_l/pad_r beyond them so end letters never touch the edge. Contiguous
+    segments pass pad 0 on the shared side."""
     width = len(seq) * pitch
     mono_size = mono_size or min(VIZ_MONO_SIZE, pitch * 1.45)
-    node.rect(x, y, width, VIZ_BAR_HEIGHT, rx=_BAR_RX, fill=fill, stroke=_BORDER,
-              stroke_width=1, dash="5 3" if dash else None,
+    node.rect(x - pad_l, y, width + pad_l + pad_r, VIZ_BAR_HEIGHT, rx=_BAR_RX, fill=fill,
+              stroke=_BORDER, stroke_width=1, dash="5 3" if dash else None,
               filter=_SHADOW if shadow else None)
-    chars = seq if direction == "5to3" else seq[::-1]
-    node.text_columns(x + pitch / 2, y + VIZ_BAR_HEIGHT / 2 + mono_size * 0.35,
-                      chars, pitch, size=mono_size, fill=text_fill or _FG, weight="600")
+    _bar_text(node, x, y, seq, pitch, direction, mono_size, text_fill)
     if show_ends:
-        _end_labels(node, x, y, width, direction)
+        _end_labels(node, x - pad_l, y, width + pad_l + pad_r, direction)
     return width
 
 
+def _bar_text(node, x, y, seq, pitch, direction, mono_size, text_fill=None):
+    chars = seq if direction == "5to3" else seq[::-1]
+    node.text_columns(x + pitch / 2, y + VIZ_BAR_HEIGHT / 2 + mono_size * 0.35,
+                      chars, pitch, size=mono_size, fill=text_fill or _FG, weight="600")
+
+
 def _rungs(node, x_start, count, pitch, y_top, y_bot):
-    """Base-pair rungs: short rounded verticals between two aligned strands."""
+    """Base-pair rungs: short rounded verticals in the gap between two aligned
+    strands, stopping _RUNG_GAP short of each (never drawn over a bar or frame)."""
     for t in range(count):
         cx = x_start + t * pitch + pitch / 2
-        node.line(cx, y_top + 2, cx, y_bot - 2, stroke=_AXIS, stroke_width=2.4,
-                  linecap="round")
+        node.line(cx, y_top + _RUNG_GAP, cx, y_bot - _RUNG_GAP, stroke=_AXIS,
+                  stroke_width=2.4, linecap="round")
+
+
+def _stemloop(node, x, y, S, o, pitch, mono_size):
+    """Stem-loop RT primer drawn as a hairpin.
+
+    Row 1 (y): 3' overhang + stem arm B, read 3'->5' left to right, so the overhang
+    sits at the left exactly where it pairs with the miRNA in stage 1. Row 2: stem
+    arm A (the primer 5' end) paired under arm B. The loop runs round a ring on the
+    right. Returns (right_x, bottom_y).
+    """
+    stem = VIZ_STEM_BP
+    body = len(S) - o
+    arm_b, loop, arm_a = S[body - stem:body], S[stem:body - stem], S[:stem]
+    y2 = y + VIZ_BAR_HEIGHT + _PAIR_GAP
+    fill = _grad("viz-stemloop")
+    n1 = o + stem
+    # row 1: one bar, two text runs (overhang | arm B) so each stays addressable
+    node.rect(x - _TXT_PAD, y, n1 * pitch + 2 * _TXT_PAD, VIZ_BAR_HEIGHT, rx=_BAR_RX, fill=fill,
+              stroke=_BORDER, stroke_width=1, filter=_SHADOW)
+    _bar_text(node, x, y, S[body:], pitch, "3to5", mono_size, _BG)
+    _bar_text(node, x + o * pitch, y, arm_b, pitch, "3to5", mono_size, _BG)
+    # row 2: arm A; its 5' nt pairs with the last body nt (first column of arm B)
+    xa = x + o * pitch
+    node.rect(xa - _TXT_PAD, y2, stem * pitch + 2 * _TXT_PAD, VIZ_BAR_HEIGHT, rx=_BAR_RX,
+              fill=fill, stroke=_BORDER, stroke_width=1, filter=_SHADOW)
+    _bar_text(node, xa, y2, arm_a, pitch, "5to3", mono_size, _BG)
+    _rungs(node, xa, stem, pitch, y + VIZ_BAR_HEIGHT, y2)
+    lab = VIZ_BAR_HEIGHT / 2 + VIZ_LABEL_SIZE * 0.35
+    node.text(x - _TXT_PAD - 10, y + lab, "3'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+              anchor="end", weight="600")
+    node.text(xa - _TXT_PAD - 10, y2 + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+              anchor="end", weight="600")
+
+    # loop: a ring through both arm ends, letters ~0.8 pitch apart along it
+    band = mono_size + 12
+    x_end = x + n1 * pitch + _TXT_PAD + 2        # ring meets the arms past their padding
+    h = (y2 - y) / 2
+    cy = y + VIZ_BAR_HEIGHT / 2 + h
+    need = (len(loop) + 1) * max(pitch, mono_size * 1.15)
+    r = h + 1
+    while (2 * math.pi - 2 * math.asin(h / r)) * r < need:
+        r += 1
+    phi = math.asin(h / r)
+    cx = x_end + r * math.cos(phi)
+    # large arc from the arm-A end (below) round the right side to the arm-B end
+    node.path(f"M {x_end:.2f} {cy + h:.2f} A {r:.2f} {r:.2f} 0 1 0 {x_end:.2f} {cy - h:.2f}",
+              fill="none", stroke=color("viz-stemloop"), stroke_width=band, opacity=0.85)
+    a0, span = math.pi + phi, 2 * math.pi - 2 * phi
+    for i, ch in enumerate(loop):
+        a = a0 + (i + 1) * span / (len(loop) + 1)
+        node.text(round(cx + r * math.cos(a), 2), round(cy - r * math.sin(a) + mono_size * 0.35, 2),
+                  ch, size=mono_size, fill=_BG, anchor="middle", weight="600")
+    return cx + r + band / 2, y2 + VIZ_BAR_HEIGHT
 
 
 def _arrow(node, x1, y, x2, *, label=None):
@@ -161,12 +227,18 @@ def _stage0(node, y, model, oscale):
         (model.forward, "Forward (F)"),
         (model.universal_reverse, "Universal reverse (U)"),
     ]
-    label_w = 155
-    bar_x = _M + label_w
-    avail = _W - _M - _GUT - bar_x
+    # label column sized to the longest label, plus room for the 5' end label
+    label_w = max(len(n) for _, n in rows) * (VIZ_LABEL_SIZE + 1) * 0.62 + 28
+    bar_x = _M + label_w + _TXT_PAD
+    avail = _W - _M - _GUT - _TXT_PAD - bar_x
     s = avail / max(len(r[0]) for r in rows)
+    mono = min(VIZ_MONO_SIZE, s * 1.45)
     for seq, name in rows:
         node.text(_M, y + VIZ_BAR_HEIGHT / 2 + 4, name, size=VIZ_LABEL_SIZE + 1, fill=_FG, weight="600")
+        if seq is model.stemloop_rt:
+            _, y = _stemloop(node, bar_x, y, seq, len(model.overhang), s, mono)
+            y += 22
+            continue
         _bar(node, bar_x, y, seq, s, "5to3", fill="url(#g-surface)")
         y += VIZ_BAR_HEIGHT + 22
     return _wrap_note(node, _M, y, model.stages[0].annotation_en, _CONTENT_W)
@@ -179,35 +251,28 @@ def _stage1(node, y, model, oscale):
     w = min(L, VIZ_MAX_ZOOM_COLUMNS)
     window = m[L - w:]
     truncated = w < L
-    x0 = _OX
-    top_y = y
-    _bar(node, x0, top_y, window, VIZ_CHAR_PITCH, "5to3", fill="url(#g-surface)",
-         mono_size=VIZ_MONO_SIZE)
-    if truncated:
-        node.text(x0 - 12, top_y + VIZ_BAR_HEIGHT / 2 + 4, "…", size=VIZ_MONO_SIZE,
-                  fill=_MUTED, anchor="end")
     o = len(model.overhang)   # 5–7 nt, read from the RT primer
-    hl_x = x0 + (w - o) * VIZ_CHAR_PITCH
-    node.rect(hl_x, top_y - 4, o * VIZ_CHAR_PITCH, VIZ_BAR_HEIGHT + 8, rx=_BAR_RX + 2,
-              fill="none", stroke=color("viz-mirna"), stroke_width=2.5)
+    x0 = _OX
+    # Shrink the pitch only when the miRNA + hairpin would not fit the card.
+    pitch = min(VIZ_CHAR_PITCH, (_W - _M - x0) / (w + VIZ_STEM_BP + 5))
+    mono = min(VIZ_MONO_SIZE, pitch * 1.45)
+    top_y = y
+    _bar(node, x0, top_y, window, pitch, "5to3", fill="url(#g-surface)", mono_size=mono)
+    if truncated:
+        node.text(x0 - _TXT_PAD - 12, top_y + VIZ_BAR_HEIGHT / 2 + 4, "…", size=VIZ_MONO_SIZE,
+                  fill=_MUTED, anchor="end")
+    hl_x = x0 + (w - o) * pitch
+    frame_pad = 4
+    node.rect(hl_x - 3, top_y - frame_pad, o * pitch + 6, VIZ_BAR_HEIGHT + 2 * frame_pad,
+              rx=_BAR_RX + 2, fill="none", stroke=color("viz-mirna"), stroke_width=2.5)
     bot_y = top_y + VIZ_BAR_HEIGHT + _PAIR_GAP
-    # Pass the overhang in its OWN 5'->3' order — _bar reverses a "3to5" strand for
-    # display, so handing it column-order text would reverse it twice and break the
-    # base pairing. model.overhang is revcomp(miRNA 3' o nt), i.e. what is actually
-    # synthesized on the primer.
-    _bar(node, hl_x, bot_y, model.overhang, VIZ_CHAR_PITCH, "3to5",
-         fill=_grad("viz-stemloop"), mono_size=VIZ_MONO_SIZE, text_fill=_BG, show_ends=False)
-    _rungs(node, hl_x, o, VIZ_CHAR_PITCH, top_y + VIZ_BAR_HEIGHT, bot_y)
-    body_x = hl_x + o * VIZ_CHAR_PITCH + 14
-    body_w = min(180, _W - _M - body_x)
-    node.rect(body_x, bot_y, body_w, VIZ_BAR_HEIGHT, rx=VIZ_BAR_HEIGHT / 2,
-              fill=_grad("viz-stemloop"), stroke=_BORDER, stroke_width=1,
-              dash="6 4", opacity=0.65, filter=_SHADOW)
-    node.text(body_x + body_w / 2, bot_y + VIZ_BAR_HEIGHT / 2 + 4,
-              "stem-loop body (44 nt)", size=VIZ_LABEL_SIZE, fill=_BG, anchor="middle", weight="600")
-    _arrow(node, hl_x + o * VIZ_CHAR_PITCH, bot_y + VIZ_BAR_HEIGHT + 20, x0 - 6,
-           label="RT extension (5'→3')")
-    y = bot_y + VIZ_BAR_HEIGHT + 34
+    # Hairpin RT primer; its overhang (row 1, drawn 3'->5') sits under the miRNA 3'
+    # end. model.overhang = revcomp(miRNA 3' o nt) — see viz_strand_orientation_rule.
+    _, bottom = _stemloop(node, hl_x, bot_y, model.stemloop_rt, o, pitch, mono)
+    _rungs(node, hl_x, o, pitch, top_y + VIZ_BAR_HEIGHT + frame_pad + 1, bot_y)
+    # RT extends the primer 3' end (left end of the overhang) leftward along the miRNA.
+    _arrow(node, hl_x - _TXT_PAD, bottom + 18, x0 - 6, label="RT extension (5'→3')")
+    y = bottom + 30
     return _wrap_note(node, _M, y, model.stages[1].annotation_en, _CONTENT_W)
 
 
@@ -216,10 +281,10 @@ def _stage2(node, y, model, oscale):
     S = model.stemloop_rt
     ext = model.cdna[len(S):]
     _bar(node, _OX, y, S, oscale, "5to3", fill=_grad("viz-stemloop"), text_fill=_BG,
-         show_ends=False)
+         show_ends=False, pad_r=0)
     _bar(node, _OX + len(S) * oscale, y, ext, oscale, "5to3", fill="url(#g-surface)",
-         show_ends=False)
-    _end_labels(node, _OX, y, len(model.cdna) * oscale, "5to3")
+         show_ends=False, pad_l=0)
+    _end_labels(node, _OX - _TXT_PAD, y, len(model.cdna) * oscale + 2 * _TXT_PAD, "5to3")
     node.text(_OX + len(S) * oscale, y + VIZ_BAR_HEIGHT + 16, "↑ new RT extension",
               size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="middle")
     y += VIZ_BAR_HEIGHT + 26
@@ -238,14 +303,16 @@ def _stage3(node, y, model, oscale):
     top_y = y
     _bar(node, x0, top_y, template, VIZ_CHAR_PITCH, "3to5", fill="url(#g-surface)",
          mono_size=VIZ_MONO_SIZE)
-    node.text(x0 + len(F) * VIZ_CHAR_PITCH + 16, top_y + VIZ_BAR_HEIGHT / 2 + 4,
+    # placed after the bar's right end label ("5'"), not on top of it
+    node.text(x0 + len(F) * VIZ_CHAR_PITCH + _TXT_PAD + 34, top_y + VIZ_BAR_HEIGHT / 2 + 4,
               "cDNA template", size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="start")
     bot_y = top_y + VIZ_BAR_HEIGHT + _PAIR_GAP
     if tail:
         _bar(node, x0, bot_y, tail, VIZ_CHAR_PITCH, "5to3", fill=_grad("viz-tail"),
-             mono_size=VIZ_MONO_SIZE, dash=True, text_fill=_BG, show_ends=False)
+             mono_size=VIZ_MONO_SIZE, dash=True, text_fill=_BG, show_ends=False, pad_r=0)
     _bar(node, x0 + len(tail) * VIZ_CHAR_PITCH, bot_y, F[len(tail):], VIZ_CHAR_PITCH,
-         "5to3", fill=_grad("viz-mirna"), mono_size=VIZ_MONO_SIZE, text_fill=_BG, show_ends=False)
+         "5to3", fill=_grad("viz-mirna"), mono_size=VIZ_MONO_SIZE, text_fill=_BG, show_ends=False,
+         pad_l=0 if tail else _TXT_PAD)
     _rungs(node, x0 + len(tail) * VIZ_CHAR_PITCH, k, VIZ_CHAR_PITCH,
            top_y + VIZ_BAR_HEIGHT, bot_y)
     # captions BELOW the primer bar (no overlap)
