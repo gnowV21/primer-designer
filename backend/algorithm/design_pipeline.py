@@ -21,13 +21,14 @@ from algorithm.specificity_check.overhang_collision import check_overhang_collis
 from algorithm.specificity_check.isomir_flag import check_isomir_flag
 from algorithm.scoring import score_candidate
 from algorithm.sequence_utils import validate_rna_sequence, rna_to_dna, reverse_complement
-from algorithm.thermodynamics import predicted_amplicon_tm, calc_dimer_tm
+from algorithm.thermodynamics import predicted_amplicon_tm, calc_dimer_tm, _get_p3_params
 from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
 from algorithm.template_structure import check_template_structure
 from algorithm.probe_design import design_probe
 from algorithm.normalization_advisor import advise_normalization
+from algorithm.controls_advisor import advise_controls
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -405,6 +406,10 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         "edge_cases": edge_cases,
         "protocol_advice": protocol_advice,
         "normalization_advice": normalization_advice,
+        "controls_advice": advise_controls(
+            mirna_name, seq, params.get("signalMethod", "taqman"),
+            (top_n[0].get("predicted_amplicon_tm_mg_span") if top_n else None),
+        ),
         "lna_hints": lna_hints,
         "specificity_warnings": {
             "cross_reactivity": cross_reactivity,          # UNCHANGED schema (biological context)
@@ -445,6 +450,9 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 "dntp_mm": params.get("dntpTotal"),
                 "primer_nm": params.get("primerConcentration"),
                 "buffer_ph": params.get("bufferPH"),
+                # What the engines actually used (defaults filled in) — so the MIQE
+                # report never says "None" for a condition that had a value.
+                "effective_p3": _get_p3_params(params),
                 # Planned-assay context: does not change the design, recorded
                 # for the MIQE report (audit ENG-02 — these fields were collected
                 # but never used).

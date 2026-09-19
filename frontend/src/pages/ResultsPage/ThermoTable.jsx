@@ -92,8 +92,8 @@ const ROWS = [
   },
   {
     label: 'Self-dimer ΔG',
-    extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg'),
-    format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg')),
+    extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg_overall'),
+    format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg_overall')),
     best: 'min_abs',
   },
   {
@@ -284,7 +284,7 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <PropRow label="GC%" value={set.gc_percent !== undefined ? fmt(set.gc_percent) + '%' : undefined} />
           <PropRow label="Amplicon" value={set.amplicon_size !== undefined ? fmt(set.amplicon_size, 0) + ' bp' : undefined} />
           <PropRow label="Hairpin ΔG" value={fmtDg(get(set, 'structure_checks', 'hairpin', 'dg'))} />
-          <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg'))} />
+          <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg_overall'))} />
           <PropRow label="3′ stability ΔG" value={fmtDg(get(set, 'structure_checks', 'end_stability', 'stability_kcal_mol'))} />
           <PropRow label="Binding region" value={set.specific_length !== undefined ? `${set.specific_length} nt` : undefined} />
           <PropRow label="Binding pos (1-based)" value={

@@ -141,3 +141,40 @@ def test_oversized_body_rejected(client):
     r = client.post("/api/analyze", data=b"x" * (3 * 1024 * 1024),
                     content_type="application/json")
     assert r.status_code == 413
+
+
+# ── SCI-11: Controls & contamination (parts 1 + 2) ────────────────────────────
+
+def test_controls_table_is_assay_specific():
+    from algorithm.controls_advisor import advise_controls
+    span = {"mg_mM": [1.5, 3.0], "tm_c": [80.8, 83.8]}
+    sybr = advise_controls("hsa-miR-X", MIR16, "sybr", span)
+    taq = advise_controls("hsa-miR-X", MIR16, "taqman", span)
+    names = [c["name"] for c in sybr["controls"]]
+    assert names[:4] == ["NTC (water)", "RT-NTC", "No-RT", "Positive control"]
+    assert MIR16 in sybr["controls"][3]["setup"]                  # synthetic oligo = mature
+    assert "≥ 10" in sybr["controls"][0]["pass"]                   # lab ΔCq convention
+    assert sybr["melt_note"] and "positive control" in sybr["melt_note"]
+    assert taq["melt_note"] is None and "probe" in taq["controls"][0]["setup"]
+
+
+def test_contamination_risk_sources(monkeypatch):
+    import algorithm.controls_advisor as ca
+    db = {"_metadata": {}, "hsa-miR-HI": {"median_total_rpm": 5000.0, "abundance_percentile": 99.0},
+          "hsa-miR-LO": {"median_total_rpm": 3.0, "abundance_percentile": 40.0}}
+    monkeypatch.setattr(ca, "_load_db3", lambda: db)
+    assert ca.advise_controls("hsa-miR-HI", MIR16, "sybr")["contamination"]["risk"] == "elevated"
+    assert ca.advise_controls("hsa-miR-LO", MIR16, "sybr")["contamination"]["risk"] == "standard"
+    monkeypatch.setattr(ca, "_lab_synthetic_controls", lambda: ["cel-mir-39-3p"])
+    res = ca.advise_controls("cel-miR-39-3p", MIR16, "sybr")
+    assert res["contamination"]["risk"] == "elevated"
+    assert any("triplicate" in p for p in res["contamination"]["precautions"])
+
+
+def test_pdf_contains_controls_section(client):
+    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16},
+                                         "detectionMethod": {"signalMethod": "sybr"}})
+    results = r.get_json()
+    assert results["controls_advice"]["ntc_delta_cq_min"] == 10
+    pdf = client.post("/api/export", json={"format": "pdf", "results": results, "history_count": 1})
+    assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"

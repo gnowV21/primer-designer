@@ -318,6 +318,10 @@ PROBE_DNA_CONC = 200.0
 ISOMIR_3P_FRACTION_HIGH     = 0.50
 ISOMIR_3P_FRACTION_MODERATE = 0.20
 
+# Controls & contamination (audit SCI-11) — lab policy, not literature values.
+NTC_DELTA_CQ_MIN          = 10   # cycles: NTC must be ≥10 Cq later than the latest sample (HG Lab, 2026-09-19)
+ABUNDANCE_PERCENTILE_HIGH = 95   # miRNA in the top 5 % by median isomiRdb RPM → elevated contamination risk
+
 # Amplicon Tm is reported with its Mg2+ sensitivity (audit SCI-07): the same
 # product melts ~3 °C apart across this Mg2+ span, and the user's master-mix Mg2+
 # is often unknown. Display span only — not a claim about any specific mix.

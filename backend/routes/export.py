@@ -20,6 +20,8 @@ from datetime import date
 
 from flask import Blueprint, jsonify, request, make_response
 
+from algorithm.constants import NTC_DELTA_CQ_MIN
+
 try:
     from reportlab.platypus import (
         SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer,
@@ -69,6 +71,12 @@ def export_primers():
     results = body.get("results")
     blast_result = body.get("blast_result")  # optional — off-target analysis, if run
     include_checklist = body.get("include_checklist", True)
+    # Prior designs of the same miRNA in this browser (IndexedDB history) — a
+    # carry-over hint for the Controls section. Optional, client-supplied.
+    try:
+        history_count = max(0, int(body.get("history_count") or 0))
+    except (TypeError, ValueError):
+        history_count = 0
 
     # Validate format — whitelist only
     if fmt not in ("pdf", "csv", "fasta"):
@@ -95,7 +103,8 @@ def export_primers():
             return jsonify({
                 "error": "PDF export requires 'reportlab'. Run: pip install reportlab>=4.0"
             }), 503
-        return _build_pdf(results, filename, blast_result=blast_result, include_checklist=include_checklist)
+        return _build_pdf(results, filename, blast_result=blast_result, include_checklist=include_checklist,
+                          history_count=history_count)
 
 
 # ── CSV builder ───────────────────────────────────────────────────
@@ -120,6 +129,18 @@ def _miqe_modifications(top3):
         if lna:
             return f"LNA at forward positions {lna}"
     return "None (standard DNA oligonucleotides)"
+
+
+def _ions_row(ds: dict) -> str:
+    """User-entered ions, or the effective values the engine used when none were given."""
+    if ds.get("na_mm") is not None:
+        return (f"Na+ {ds.get('na_mm')} / K+ {ds.get('k_mm') or 0} / Mg2+ {ds.get('mg_mm')} / "
+                f"dNTP {ds.get('dntp_mm')}")
+    ef = ds.get("effective_p3") or {}
+    if not ef:
+        return "—"
+    return (f"monovalent {ef['mv_conc']:g} / Mg2+ {ef['dv_conc']:g} / dNTP {ef['dntp_conc']:g} "
+            "(tool defaults)")
 
 
 def _miqe_design_rows(meta, top3):
@@ -154,10 +175,10 @@ def _miqe_design_rows(meta, top3):
         ("Primer length", _fmt_range(ds.get("primer_length_nt"), "nt")),
         ("Primer GC", _fmt_range(ds.get("gc_percent"), "%")),
         ("Amplicon length target", _fmt_range(ds.get("amplicon_bp"), "bp")),
-        ("Reaction ions Na+/K+/Mg2+/dNTP (mM)",
-         f"{ds.get('na_mm','?')} / {ds.get('k_mm','?')} / {ds.get('mg_mm','?')} / {ds.get('dntp_mm','?')}"),
-        ("Primer concentration", f"{ds.get('primer_nm','?')} nM"),
-        ("Buffer pH", str(ds.get("buffer_ph", "—"))),
+        ("Reaction ions (mM)", _ions_row(ds)),
+        ("Primer concentration",
+         f"{ds['primer_nm'] if ds.get('primer_nm') is not None else (ds.get('effective_p3') or {}).get('dna_conc', '?')} nM"),
+        ("Buffer pH", str(ds["buffer_ph"]) if ds.get("buffer_ph") is not None else "—"),
         ("Oligo modifications", _miqe_modifications(top3)),
         ("Planned Ta / cycles",
          f"{ds.get('annealing_temp_c') or '?'} °C / {ds.get('total_cycles') or '?'} cycles"),
@@ -293,8 +314,8 @@ def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
     checklist = [
         (
             "No-template control (NTC)",
-            "No amplification, or Cq ≥5 cycles above lowest standard",
-            "MIQE 2.0",
+            f"No amplification, or Cq ≥{NTC_DELTA_CQ_MIN} cycles later than the latest-Cq sample",
+            "HG Lab convention; reporting per MIQE 2.0",
             "",
             "",
         ),
@@ -408,7 +429,8 @@ def _seq_with_seed_markup(seq: str) -> str:
     )
 
 
-def _build_pdf(results: dict, filename: str, blast_result=None, include_checklist: bool = True):
+def _build_pdf(results: dict, filename: str, blast_result=None, include_checklist: bool = True,
+               history_count: int = 0):
     from reportlab.lib import colors as rl_colors
     teal     = rl_colors.HexColor(_TEAL)
     teal_bg  = rl_colors.HexColor(_TEAL_BG)
@@ -534,21 +556,21 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
 
     # ── Comparison table (Tab A summary) ─────────────────────────
     story.append(Paragraph("Primer Set Comparison", h2))
-    cmp_header = ["Criterion", "Rank 1", "Rank 2", "Rank 3"]
+    cmp_header = ["Criterion"] + [f"Rank {i + 1}" for i in range(len(top3))]
     criteria = [
         ("Total score",    lambda s: f"{_fmt(s.get('total_score'))} ({s.get('grade', '')})"),
         ("Forward Tm",     lambda s: f"{_fmt(s.get('tm_full'))}°C"),
         ("GC%",            lambda s: f"{_fmt(s.get('gc_percent'))}%"),
         ("Amplicon",       lambda s: f"{s.get('amplicon_size', '?')} bp"),
         ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
-        ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg")),
+        ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg_overall")),
         ("Cycle-1 occupancy % (Ta)", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding_pct'))}"),
     ]
     cmp_data = [cmp_header] + [
-        [label] + [fn(s) for s in top3 + [{}]*(3 - len(top3))]
+        [label] + [fn(s) for s in top3]
         for label, fn in criteria
     ]
-    cmp_tbl = Table(cmp_data, colWidths=[4.5*cm, 4*cm, 4*cm, 4*cm])
+    cmp_tbl = Table(cmp_data, colWidths=[4.5*cm] + [4*cm] * len(top3))
     cmp_tbl.setStyle(TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), teal),
         ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
@@ -653,6 +675,11 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
                 story.append(Paragraph(f"<i>doi:{esc(str(doi))}</i>", body))
         story.append(Spacer(1, 0.4*cm))
 
+    # ── Controls & Contamination (audit SCI-11) ──────────────────
+    if results.get("controls_advice"):
+        story.extend(_build_controls_pdf_section(
+            results["controls_advice"], history_count, h2, h3, body, teal, rl_colors))
+
     # ── Validation Checklist (Phase 7 PART E) ────────────────────
     if include_checklist:
         story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result))
@@ -676,6 +703,65 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
+
+
+# ── Controls & contamination PDF helper (audit SCI-11) ───────────
+
+def _build_controls_pdf_section(ca, history_count, h2, h3, body, teal, rl_colors) -> list:
+    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.units import cm
+    from reportlab.lib.styles import ParagraphStyle
+
+    esc = _html.escape
+    cell = ParagraphStyle("ctlcell", fontName="Helvetica", fontSize=8, leading=9.5)
+    P = lambda t: Paragraph(esc(str(t)), cell)  # noqa: E731
+
+    rows = [["Control", "Set-up", "Checks", "Pass criterion"]] + [
+        [P(c["name"]), P(c["setup"]), P(c["checks"]), P(c["pass"])] for c in ca.get("controls", [])
+    ]
+    tbl = Table(rows, colWidths=[3*cm, 5.6*cm, 4.2*cm, 4.2*cm], repeatRows=1)
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), teal),
+        ("TEXTCOLOR",  (0, 0), (-1, 0), rl_colors.white),
+        ("FONTNAME",   (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",   (0, 0), (-1, -1), 8),
+        ("GRID",       (0, 0), (-1, -1), 0.5, rl_colors.grey),
+        ("VALIGN",     (0, 0), (-1, -1), "TOP"),
+    ]))
+
+    cont = ca.get("contamination", {})
+    reasons = cont.get("reasons", [])
+    risk = "ELEVATED" if reasons else "standard"
+
+    out = [
+        Spacer(1, 0.5*cm),
+        Paragraph("Controls &amp; Contamination", h2),
+        Paragraph("Run these controls on every plate. NTC and no-RT results must be reported "
+                  "(MIQE 2.0, Bustin et al. 2025).", body),
+        Spacer(1, 0.2*cm),
+        tbl,
+    ]
+    if ca.get("melt_note"):
+        out += [Spacer(1, 0.2*cm), Paragraph(esc(ca["melt_note"]), body)]
+    out += [
+        Spacer(1, 0.3*cm),
+        Paragraph(f"Contamination risk: <b>{risk}</b>", h3),
+    ]
+    for r in reasons:
+        out.append(Paragraph("• " + esc(r), body))
+    if not reasons:
+        out.append(Paragraph(f"No specific risk factor found (abundance data: "
+                             f"{esc(cont.get('abundance_data', 'n/a'))}).", body))
+    if history_count:
+        # Designing is not amplifying, so this is a prompt, not a risk factor.
+        out.append(Paragraph(
+            f"<i>Note: this miRNA was designed {history_count} time(s) before in this browser. "
+            "If its amplicon has already been made in the lab, amplicon carry-over is the most "
+            "common cause of a positive NTC.</i>", body))
+    out.append(Paragraph("<b>Precautions</b>", body))
+    for pr in cont.get("precautions", []):
+        out.append(Paragraph("• " + esc(pr), body))
+    return out
 
 
 # ── Checklist PDF helper ──────────────────────────────────────────
@@ -704,8 +790,8 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, bl
     checklist_data = [
         ["Criterion", "Acceptance Target", "Reference", "Pass ☐", "Value / Notes"],
         ["No-template control (NTC)",
-         "No amplification, or Cq ≥5 cycles above lowest standard",
-         "MIQE 2.0", "", ""],
+         f"No amplification, or Cq ≥{NTC_DELTA_CQ_MIN} cycles later than the latest-Cq sample",
+         "HG Lab convention; reporting per MIQE 2.0", "", ""],
         ["No-RT control",
          "No signal (excludes genomic DNA / self-priming)",
          "MIQE 2.0", "", ""],

@@ -32,6 +32,7 @@ import pandas as pd
 
 MIN_RPM = 10.0        # a miRNA counts as expressed in a sample at ≥ 10 RPM
 BINS = 200            # histogram resolution for median / IQR (0.5 % steps)
+LOG_BINS = 400        # abundance histogram over log10(RPM + 1) in [0, 8), 0.02-decade steps
 CHUNK = 256           # sample rows per chunk
 MAX_ROWS = None       # set via argv[2] for a quick partial smoke run
 OUT = Path(__file__).resolve().parent.parent / "data" / "known_3prime_isomir_mirnas.json"
@@ -53,19 +54,27 @@ def load_labels(path: Path) -> dict:
     return labels
 
 
-def quantile(hist: np.ndarray, q: float) -> float:
+def quantile_bins(hist: np.ndarray, q: float, bins: int) -> float:
+    """q-quantile of a histogram over [0, 1) with `bins` equal bins (bin midpoint)."""
     c = np.cumsum(hist)
     if c[-1] == 0:
         return float("nan")
-    return (int(np.searchsorted(c, q * c[-1])) + 0.5) / BINS
+    return (int(np.searchsorted(c, q * c[-1])) + 0.5) / bins
 
 
-def _accumulate(m, order, inv, starts, mask3, hist, pooled_iso) -> int:
+def quantile(hist: np.ndarray, q: float) -> float:
+    return quantile_bins(hist, q, BINS)
+
+
+def _accumulate(m, order, inv, starts, mask3, hist, pooled_iso, hist_tot) -> int:
     """Add one block of samples (rows) to the per-miRNA histograms and pooled sums."""
     m = np.nan_to_num(m[:, order], copy=False)
     pooled_iso += m.sum(axis=0, dtype=np.float64)[inv]
     tot = np.add.reduceat(m, starts, axis=1)
     t3 = np.add.reduceat(m * mask3, starts, axis=1)
+    # Abundance over ALL samples (0 RPM included) → median RPM per miRNA.
+    lb = np.minimum((np.log10(tot + 1.0) / 8.0 * LOG_BINS).astype(np.int64), LOG_BINS - 1)
+    np.add.at(hist_tot, (np.broadcast_to(np.arange(tot.shape[1]), tot.shape).ravel(), lb.ravel()), 1)
     expressed = tot >= MIN_RPM
     frac = np.divide(t3, tot, out=np.zeros_like(t3), where=expressed)
     b = np.minimum((frac * BINS).astype(np.int64), BINS - 1)
@@ -93,6 +102,7 @@ def main(src: Path) -> None:
     n_mir = len(mirnas)
     hist = np.zeros((n_mir, BINS), dtype=np.int64)
     pooled_iso = np.zeros(len(header), dtype=np.float64)
+    hist_tot = np.zeros((n_mir, LOG_BINS), dtype=np.int64)
     n_samples = 0
 
     # Line-by-line with np.fromstring: pandas' parser is ~50x slower on a
@@ -106,14 +116,20 @@ def main(src: Path) -> None:
             vals = line[line.index("\t") + 1:].replace("NA", "0")
             batch.append(np.fromstring(vals, sep="\t", dtype=np.float32))
             if len(batch) == CHUNK or (MAX_ROWS and n_samples + len(batch) >= MAX_ROWS):
-                n_samples += _accumulate(np.vstack(batch), order, inv, starts, mask3, hist, pooled_iso)
+                n_samples += _accumulate(np.vstack(batch), order, inv, starts, mask3, hist, pooled_iso, hist_tot)
                 batch = []
-                print(f"{n_samples} samples", end="", file=sys.stderr)
+                if n_samples % (CHUNK * 20) == 0:
+                    print(f"{n_samples} samples", file=sys.stderr)
                 if MAX_ROWS and n_samples >= MAX_ROWS:
                     break
         if batch:
-            n_samples += _accumulate(np.vstack(batch), order, inv, starts, mask3, hist, pooled_iso)
+            n_samples += _accumulate(np.vstack(batch), order, inv, starts, mask3, hist, pooled_iso, hist_tot)
     print(file=sys.stderr)
+
+    # Median RPM per miRNA (log-histogram midpoint) and its percentile among miRNAs.
+    med_rpm = np.array([10 ** ((quantile_bins(hist_tot[i], 0.5, LOG_BINS)) * 8.0) - 1.0
+                        for i in range(n_mir)])
+    rank_pct = 100.0 * (np.argsort(np.argsort(med_rpm, kind="stable"), kind="stable") + 1) / n_mir
 
     entries = {}
     for mir, i in idx.items():
@@ -130,6 +146,8 @@ def main(src: Path) -> None:
             "iqr_3prime_fraction": [round(quantile(hist[i], 0.25), 3), round(quantile(hist[i], 0.75), 3)],
             "pooled_3prime_fraction": round(float(pooled_iso[cols3].sum() / pooled_tot), 3),
             "n_samples_expressed": n_expr,
+            "median_total_rpm": round(float(max(med_rpm[i], 0.0)), 1),
+            "abundance_percentile": round(float(rank_pct[i]), 1),
             "top_3prime_variants": [
                 {"sequence_dna": s, "label": lab, "pooled_share": round(float(sh), 3)} for sh, s, lab in top
             ],
@@ -156,6 +174,9 @@ def main(src: Path) -> None:
             "method": {
                 "three_prime_labels": list(THREE_PRIME_TAGS),
                 "expressed_threshold_rpm": MIN_RPM,
+                "abundance": "median_total_rpm = median over ALL samples of the summed RPM of "
+                             "every isoform of the miRNA (0.02-decade log bins); "
+                             "abundance_percentile = its rank among the miRNAs in this file.",
                 "samples_processed": n_samples,
                 "isomirs_in_matrix": len(header),
                 "isomirs_without_label": unlabeled,

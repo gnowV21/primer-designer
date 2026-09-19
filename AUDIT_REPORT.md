@@ -191,7 +191,8 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 - SCI-06: **giữ** `santalucia`, chỉ sửa trích dẫn spec.
 - SCI-09: gỡ toggle, sửa tooltip.
 - SCI-10: dữ liệu từ **isomiRdb** (PMID 36243964).
-- Hoãn: SCI-11 (module Controls), UX-02 (song ngữ), UX-05 (mẫu đặt hàng — cần file mẫu thật của nhà cung cấp).
+- SCI-11: làm phần 1 + 2, xuất vào PDF; ΔCq(NTC − mẫu) ≥ 10; danh sách synthetic control để trống.
+- Hoãn: UX-02 (song ngữ), UX-05 (mẫu đặt hàng — cần file mẫu thật của nhà cung cấp).
 
 | ID | Trạng thái | Đã làm |
 |---|---|---|
@@ -205,7 +206,7 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 | SCI-08 | ✅ Đã sửa | Dải 5–7 nt thực thi ở API (400), thuật toán, recommender (trần 7), visualization (đọc từ mồi; `_RENDER_VERSION` = 3). |
 | SCI-09 | ✅ Đã sửa | Gỡ toggle pre-miRNA và toggle family (check luôn chạy); UI nêu rõ giới hạn. |
 | SCI-10 | ⏳ xem dưới | Script `backend/scripts/build_isomir_3prime_index.py` tính tỷ lệ đọc 3′-isoform mỗi miRNA từ ma trận RPM isomiRdb; cảnh báo khi ≥50 % (quy ước dự án). *Đính chính audit:* file dữ liệu cũ **rỗng** ("INITIALIZED EMPTY"), không phải 7 mục như tôi ghi ở SCI-10. |
-| SCI-11 | ⏸ Hoãn | Theo quyết định. |
+| SCI-11 | ✅ Phần 1+2 (theo quyết định) | Mục "Controls & Contamination" trong PDF export: bảng control riêng cho từng assay (NTC, RT-NTC, no-RT, control dương bằng synthetic RNA đúng trình tự mature, pre-miRNA tùy chọn), tiêu chí NTC **ΔCq ≥ 10** (quy ước HG Lab, cũng áp vào checklist thay cho "≥5 chu kỳ" chưa kiểm chứng); SYBR: so đỉnh melt NTC với control dương cùng plate. Rủi ro nhiễm: miRNA thuộc top 5 % về độ dồi dào (isomiRdb) hoặc nằm trong danh sách synthetic control của lab (`data/lab_controls.json`, đang để trống) → "elevated" + khuyến nghị NTC lặp ba. Lịch sử thiết kế trong trình duyệt chỉ là ghi chú nhắc carry-over, không nâng mức rủi ro. Phần 3 (trang diễn giải sau khi chạy) chưa làm. |
 | SCI-12 | ✅ Đã sửa | LNA hiển thị Tm primer3 + ΔTm; mục tiêu Tm được quy về hệ quy chiếu của engine LNA (trước đó LNA bị gợi ý dư ~3 °C). |
 | SCI-13 | ✅ Đã sửa | Nhãn dimer theo đúng cặp; note nhất quán với `pass_overall`; giải thích dimer stem–stem của mồi stem-loop. |
 | SCI-14 | Ghi nhận | Chờ dữ liệu wet-lab để calibrate (trọng số khóa). |
@@ -221,7 +222,7 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 | UX-06 | ✅ Đã sửa | Tên file tải về có `_SIMULATED`. Bỏ qua watermark chéo (nhãn đã nhúng trong hình). |
 | UX-07 | ✅ Đã kiểm | 375 px: không trang nào tràn ngang (đã sửa navbar tràn). Bàn phím: mọi control hiển thị đều có focus ring. Label của 3 `<select>` đã gắn `htmlFor`. |
 
-**Kiểm chứng:** backend 530 test pass; e2e Playwright 62/62 (trước: 36/62 — 26 spec lỗi thời từ đợt tách Basic/Advanced, đã cập nhật); validation 184/184; `npm run build` OK.
+**Kiểm chứng:** backend 533 test pass; e2e Playwright 62/62 (trước: 36/62 — 26 spec lỗi thời từ đợt tách Basic/Advanced, đã cập nhật); validation 184/184; `npm run build` OK.
 
 ---
 

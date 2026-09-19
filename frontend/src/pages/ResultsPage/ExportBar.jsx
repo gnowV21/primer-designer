@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { listDesigns } from '../../utils/historyDb.js';
 
 function filenameFromDisposition(cd, fallback) {
   if (!cd) return fallback;
@@ -26,9 +27,15 @@ export default function ExportBar({ results, blastResult }) {
     setBusyFmt(format);
     setError(null);
     try {
+      // Earlier designs of this miRNA in this browser (minus the current one) —
+      // shown in the PDF as an amplicon carry-over reminder.
+      const mirnaId = results?.metadata?.mirna_id;
+      const history_count = mirnaId
+        ? Math.max(0, (await listDesigns()).filter((d) => d.mirnaId === mirnaId).length - 1)
+        : 0;
       const resp = await axios.post(
         '/api/export',
-        { format, results, blast_result: blastResult ?? null },
+        { format, results, blast_result: blastResult ?? null, history_count },
         { responseType: 'blob', timeout: 30000 },
       );
       const cd = resp.headers['content-disposition'] ?? '';
