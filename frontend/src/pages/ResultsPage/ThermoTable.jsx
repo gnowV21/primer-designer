@@ -118,11 +118,13 @@ const ROWS = [
     best: 'min_abs',
   },
   {
-    label: 'Bound fraction (binding)',
-    extract: (s) => get(s, 'scores', 'bound_fraction_binding'),
+    // Informational (not scored, audit SCI-02): % of the specific region bound
+    // to first-strand cDNA in PCR cycle 1 at Ta.
+    label: 'Cycle-1 occupancy (at Ta)',
+    extract: (s) => get(s, 'scores', 'bound_fraction_binding_pct'),
     format: (s) => {
-      const v = get(s, 'scores', 'bound_fraction_binding');
-      return v !== undefined ? fmt(v) : '—';
+      const v = get(s, 'scores', 'bound_fraction_binding_pct');
+      return v !== undefined ? `${fmt(v)}%` : '—';
     },
     best: 'max',
   },
@@ -290,9 +292,9 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
               ? `${set.binding_start_1based}–${set.binding_end_1based}`
               : undefined
           } />
-          {/* [RESEARCH_QUESTIONS_UX A1] Show raw bound fraction % alongside quality score */}
+          {/* Cycle-1 occupancy: informational, evaluated at the user's Ta (audit SCI-02) */}
           <PropRow
-            label="Bound frac. (binding, 42°C)"
+            label="Cycle-1 occupancy (Ta, not scored)"
             value={set.scores?.bound_fraction_binding_pct !== undefined
               ? `${fmt(set.scores.bound_fraction_binding_pct)}%`
               : undefined}
@@ -346,10 +348,16 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
             <PropRow label="MFE" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) + ' kcal/mol' : undefined} />
             <PropRow label="MFE method" value={stemloopRt.mfe_method} />
           </div>
-          {stemloopRt.three_prime_isomir?.three_prime_isomir_risk && (
-            <p className="text-[11px] text-amber-700 px-1 leading-relaxed">
-              ⚠ 3′ isomiR ({stemloopRt.three_prime_isomir.rt_capture_impact} RT-capture impact):{' '}
-              {stemloopRt.three_prime_isomir.warning}
+          {/* 3′ isomiR share from isomiRdb (audit SCI-10) — warning when the canonical
+              3′ form is a minority, plain note otherwise. */}
+          {stemloopRt.three_prime_isomir?.three_prime_isomir_risk ? (
+            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+              3′ isomiRs: {stemloopRt.three_prime_isomir.warning}{' '}
+              <span className="text-slate-500">Source: {stemloopRt.three_prime_isomir.source}.</span>
+            </p>
+          ) : stemloopRt.three_prime_isomir?.summary && (
+            <p className="text-xs text-slate-500 px-1 leading-relaxed">
+              3′ isomiRs: {stemloopRt.three_prime_isomir.summary} Source: {stemloopRt.three_prime_isomir.source}.
             </p>
           )}
         </div>
@@ -401,7 +409,7 @@ function RtTmRow({ stemloopRt }) {
         </span>
         <span className="text-slate-700 tabular-nums font-medium">
           {stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : '—'}
-          <span className="text-slate-400 ml-1 text-[10px] font-normal">indicative</span>
+          <span className="text-slate-500 ml-1 text-xs font-normal">indicative</span>
         </span>
       </div>
       {hasHybrid && (
@@ -412,7 +420,7 @@ function RtTmRow({ stemloopRt }) {
           </span>
           <span className="text-slate-700 tabular-nums font-medium">
             {stemloopRt.tm_hybrid_c}°C
-            <span className="text-blue-600 ml-1 text-[10px] font-normal">modeled</span>
+            <span className="text-slate-600 ml-1 text-xs font-normal">modeled</span>
           </span>
         </div>
       )}
@@ -426,7 +434,7 @@ function RtTmRow({ stemloopRt }) {
           <span className="tabular-nums text-right">
             <span className="text-slate-700 font-medium">{stemloopRt.dg37_kcal_mol} kcal/mol</span>
             {Array.isArray(stemloopRt.tm_hybrid_band_c) && (
-              <span className="text-slate-400 ml-1 text-[10px] font-normal">
+              <span className="text-slate-500 ml-1 text-xs font-normal">
                 Tm ≈ {stemloopRt.tm_hybrid_band_c[0]}–{stemloopRt.tm_hybrid_band_c[1]}°C (not reportable)
               </span>
             )}
@@ -436,7 +444,7 @@ function RtTmRow({ stemloopRt }) {
       {!hasHybrid && stemloopRt?.dg37_kcal_mol == null && (
         <div className="flex justify-between text-xs py-0.5">
           <span className="text-slate-500">Overhang Tm (DNA:RNA)</span>
-          <span className="text-slate-400 tabular-nums text-[10px]">approx. — see note</span>
+          <span className="text-slate-500 tabular-nums text-xs">approx. — see note</span>
         </div>
       )}
     </>

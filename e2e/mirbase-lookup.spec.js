@@ -3,7 +3,7 @@ import { PLACEHOLDER } from './helpers.js';
 
 test.describe('miRBase lookup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/design/advanced');
   });
 
   test('hsa-miR-21-5p search fills sequence', async ({ page }) => {
@@ -28,6 +28,6 @@ test.describe('miRBase lookup', () => {
     const idInput = page.getByPlaceholder(PLACEHOLDER);
     await idInput.fill('invalid-id-xyz');
     await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.locator('text=✗').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/not found\. Please check the ID/)).toBeVisible({ timeout: 5000 });
   });
 });

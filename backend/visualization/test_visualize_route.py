@@ -63,8 +63,14 @@ def test_determinism(client):
 # ── six error paths → correct error_code (SPEC §E.8) ────────────────────────────
 
 def test_error_rt_primer_length(client):
-    r = client.post("/api/visualize", json=_golden(stemloop_rt="GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCA"))
+    r = client.post("/api/visualize", json=_golden(stemloop_rt="GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCC"))
     assert r.status_code == 422 and r.get_json()["error_code"] == "RT_PRIMER_LENGTH"
+
+
+def test_five_nt_overhang_renders(client):
+    """A 5-nt overhang (49-nt RT primer) is supported since 2026-09-18 (SCI-08)."""
+    r = client.post("/api/visualize", json=_golden(stemloop_rt="GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCA"))
+    assert r.status_code == 200, r.get_json()
 
 
 def test_error_overhang_mismatch(client):

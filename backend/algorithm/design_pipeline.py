@@ -34,6 +34,8 @@ from algorithm.constants import (
     OVERHANG_LENGTH_DEFAULT, HARD_FILTER_ENABLED,
     STEMLOOP_BODY, UNIVERSAL_REVERSE, AMPLICON_DIMER_TM_GAP_WARN,
     FORWARD_SPECIFIC_LENGTHS,
+    ALGORITHM_VERSION, SCORING_WEIGHTS_V4, UNSCORED_CRITERIA_V4,
+    AMPLICON_TM_MG_SPAN_MM,
 )
 
 
@@ -255,6 +257,13 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             _amplicon = _sense[: _j + len(_univ_seq)]
             _atm = predicted_amplicon_tm(_amplicon, params)
             p["predicted_amplicon_tm"] = _atm
+            p["predicted_amplicon_tm_mg_span"] = {
+                "mg_mM": list(AMPLICON_TM_MG_SPAN_MM),
+                "tm_c": [predicted_amplicon_tm(_amplicon, {**params, "magnesiumConcentration": mg})
+                         for mg in AMPLICON_TM_MG_SPAN_MM],
+                "method": "81.5 + 0.41·GC − 600/N + 16.6·log10[Na+eq] (von Ahsen Mg→Na); "
+                          "empirical, not calibrated on this lab's instrument",
+            }
             _dimer_tms = [
                 t for t in (
                     calc_dimer_tm(p["sequence"], None, params),        # forward self-dimer
@@ -273,6 +282,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 p["dimer_tm_warning"] = None
         else:
             p["predicted_amplicon_tm"] = None
+            p["predicted_amplicon_tm_mg_span"] = None
             p["dimer_tm_warning"] = None
 
     # Primer-axis collision warning — this is the specificity/scoring axis (Week2 C5).
@@ -435,14 +445,28 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 "dntp_mm": params.get("dntpTotal"),
                 "primer_nm": params.get("primerConcentration"),
                 "buffer_ph": params.get("bufferPH"),
+                # Planned-assay context: does not change the design, recorded
+                # for the MIQE report (audit ENG-02 — these fields were collected
+                # but never used).
+                "annealing_temp_c": params.get("annealingTemp"),
+                "total_cycles": params.get("totalCycles"),
+                "efficiency_acceptance_pct": [params.get("pcrEfficiencyMin"), params.get("pcrEfficiencyMax")],
+                "quantification": params.get("quantMode"),
+                "reference": (params.get("customReferenceGene") or None)
+                             if params.get("referenceGene") == "custom" else params.get("referenceGene"),
+                "qpcr_instrument": params.get("qpcrSystem"),
+                "sample_type": params.get("sampleType"),
             },
             "candidates_generated": len(candidates) + len(rejection_log),
             "candidates_passed_prefilter": len(candidates),
             "candidates_rejected": len(rejection_log),
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
-            "algorithm_version": "3.0.0",
-            "scoring_version": "V4 (15 criteria)",
+            "algorithm_version": ALGORITHM_VERSION,
+            "scoring_version": "V4 (14 scored + 1 informational)",
+            # Reproducibility (MIQE 2.0 §1, audit ENG-01): engines and the exact
+            # weight table behind this result.
+            "provenance": _provenance(),
             "output_label": "predicted design quality",
             "output_note": (
                 "Score reflects in-silico design quality (Tm, GC%, structure, specificity). "
@@ -455,3 +479,37 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             ],
         },
     }
+
+
+def _provenance() -> dict:
+    """Engine versions + scoring-weights fingerprint, computed once per process."""
+    global _PROVENANCE
+    if _PROVENANCE is None:
+        import hashlib
+        import json
+        import platform
+        from importlib import metadata as _md
+
+        def _ver(dist):
+            try:
+                return _md.version(dist)
+            except _md.PackageNotFoundError:
+                return None
+
+        weights_blob = json.dumps(
+            {"weights": SCORING_WEIGHTS_V4, "unscored": sorted(UNSCORED_CRITERIA_V4)},
+            sort_keys=True,
+        ).encode()
+        _PROVENANCE = {
+            "python": platform.python_version(),
+            "primer3_py": _ver("primer3-py"),
+            "viennarna": _ver("ViennaRNA"),
+            "scoring_weights_sha256": hashlib.sha256(weights_blob).hexdigest()[:12],
+            # The local miRBase cache does not record its release — reported as
+            # unknown rather than guessed.
+            "mirbase_release": "unknown",
+        }
+    return _PROVENANCE
+
+
+_PROVENANCE = None

@@ -10,7 +10,7 @@
 #      (reuses existing calculate_tm_nn).
 #   5. Classify risk: IDENTICAL / HIGH / LOW.
 #      Kwok weighted distance: 3'-proximal mismatches block extension → downgrade to LOW [Kwok90].
-#   6. If any HIGH risk → auto-extend overhang to 7→8 nt and repeat.
+#   6. If any HIGH risk → auto-extend overhang up to OVERHANG_LENGTH_MAX (7 nt) and repeat.
 #
 # Data: backend/data/mirbase_family_overhangs.json (offline — no API calls)
 # WARNING: Family sequences in JSON are PLACEHOLDER — verify vs miRBase v22+.
@@ -24,7 +24,9 @@ import os
 import re
 from ..thermodynamics import calculate_tm_nn
 from ..sequence_utils import rna_to_dna
-from ..constants import KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX
+from ..constants import (
+    KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX, OVERHANG_LENGTH_MAX,
+)
 from .kwok import kwok_weighted_distance, PRIMER_3P_AT_WINDOW_START
 
 # UI species value → miRBase 3-letter prefix
@@ -34,7 +36,7 @@ _DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "mirbase_
 _DB_CACHE: dict | None = None
 
 # Maximum overhang length to attempt when resolving HIGH risk
-_OVERHANG_MAX_NT = 8
+_OVERHANG_MAX_NT = OVERHANG_LENGTH_MAX
 
 
 def _resolve_species_prefix(mirna_name: str, species: str | None = None) -> str:

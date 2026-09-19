@@ -22,6 +22,8 @@
 import json
 import os
 
+from ..constants import ISOMIR_3P_FRACTION_HIGH, ISOMIR_3P_FRACTION_MODERATE
+
 _DB_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "data", "known_5prime_isomir_mirnas.json"
 )
@@ -103,43 +105,59 @@ def check_isomir_flag(
 
 def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
     """
-    Flag whether a miRNA has documented 3' isomiRs that land on the RT-primer binding
-    window (Week2 C11). The stem-loop RT primer binds the 3'-terminal `overhang_len` nt,
-    so 3' heterogeneity (templated shift, non-templated uridylation/adenylation) reduces
-    RT capture of the affected isoforms. Informational only — not scored.
+    How much of this miRNA exists as 3'-end isoforms (isomiRdb, audit SCI-10).
+    The stem-loop RT primer pairs with the canonical 3'-terminal `overhang_len` nt,
+    so 3'-extended/trimmed/tailed isoforms are captured poorly [Nejad18]: the assay
+    measures the canonical 3' form, not the whole miRNA. Informational — not scored.
     """
     db = _load_db3()
-    entry = _find_entry(db, mirna_name)
-    coverage = db.get("_metadata", {}).get("coverage_warning", "")
+    meta = db.get("_metadata", {})
+    entry = _find_entry(db, mirna_name) if mirna_name else None
+    source = meta.get("source", {})
+    base = {
+        "mirna_name": mirna_name,
+        "overhang_len": overhang_len,
+        "data_warning": meta.get("coverage_warning", ""),
+        "source": f"{source.get('name', '?')} (PMID {source.get('pmid', '?')})" if source else None,
+    }
 
     if entry is None:
         return {
+            **base,
             "three_prime_isomir_risk": False,
-            "mirna_name": mirna_name,
-            "overhang_len": overhang_len,
+            "level": "no_data",
             "note": (
-                "No 3' isomiR entry for this miRNA in the current reference set. "
-                "Absence of evidence is not evidence of absence — 3' isomiRs are common."
+                "No 3' isomiR data for this miRNA (isomiRdb covers human miRNAs only). "
+                "Absence of data is not evidence that 3' isomiRs are absent."
             ),
-            "coverage_note": "no entry in the 3' isomiR reference set",
-            "data_warning": coverage,
+            "coverage_note": "not in the 3' isomiR reference set",
         }
 
+    f = entry["median_3prime_fraction"]
+    lo, hi = entry.get("iqr_3prime_fraction", [None, None])
+    level = ("high" if f >= ISOMIR_3P_FRACTION_HIGH
+             else "moderate" if f >= ISOMIR_3P_FRACTION_MODERATE else "low")
+    summary = (
+        f"In isomiRdb, a median {f:.0%} of {mirna_name} reads are 3'-end isoforms "
+        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples)."
+    )
+    top = entry.get("top_3prime_variants", [])
     return {
-        "three_prime_isomir_risk": True,
-        "mirna_name": mirna_name,
-        "overhang_len": overhang_len,
-        "dominant_3prime_variants": entry.get("dominant_3prime_variants", []),
-        "rt_capture_impact": entry.get("rt_capture_impact", "unknown"),
-        "evidence_level": entry.get("evidence_level", "unknown"),
+        **base,
+        "three_prime_isomir_risk": level == "high",
+        "level": level,
+        "median_3prime_fraction": f,
+        "iqr_3prime_fraction": [lo, hi],
+        "n_samples_expressed": entry.get("n_samples_expressed"),
+        "dominant_3prime_variants": top,
+        "rt_capture_impact": level,
+        "summary": summary,
         "warning": (
-            "This miRNA has documented 3' isomiRs. The stem-loop RT primer binds the "
-            f"3'-terminal {overhang_len} nt, so 3'-variant isoforms are captured with reduced "
-            "efficiency; measured abundance reflects the canonical 3' form more than total "
-            "miRNA. Consider a 3'-tolerant chemistry or report the target as 'canonical 3' isoform'."
-        ),
-        "source": entry.get("source", "see known_3prime_isomir_mirnas.json"),
-        "data_warning": coverage,
+            summary + f" The stem-loop RT primer pairs with the canonical 3'-terminal "
+            f"{overhang_len} nt, so these isoforms are captured poorly: the assay measures the "
+            "canonical 3' form — here a minority of this miRNA. Report the target as the "
+            "canonical 3' isoform, or consider a 3'-tolerant chemistry (e.g. poly(A)-tailing RT)."
+        ) if level == "high" else None,
     }
 
 

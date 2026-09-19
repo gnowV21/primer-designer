@@ -84,7 +84,7 @@ export default function VisualizationPanel({ results, params }) {
 
   function downloadSVG() {
     if (!svg) return;
-    triggerDownload(`${mirnaId}_${tab}.svg`, new Blob([svg], { type: 'image/svg+xml' }));
+    triggerDownload(`${mirnaId}_${tab}_SIMULATED.svg`, new Blob([svg], { type: 'image/svg+xml' }));
   }
 
   function downloadPNG() {
@@ -103,7 +103,7 @@ export default function VisualizationPanel({ results, params }) {
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
-      canvas.toBlob((b) => b && triggerDownload(`${mirnaId}_${tab}_300dpi.png`, b), 'image/png');
+      canvas.toBlob((b) => b && triggerDownload(`${mirnaId}_${tab}_SIMULATED_300dpi.png`, b), 'image/png');
     };
     img.onerror = () => URL.revokeObjectURL(url);
     img.src = url;
@@ -168,7 +168,7 @@ export default function VisualizationPanel({ results, params }) {
       {/* viewport */}
       <div className="p-4 bg-slate-50/60 overflow-x-auto" style={VIZ_VARS}>
         {status === 'loading' && (
-          <p className="text-sm text-slate-400 py-8 text-center">Rendering…</p>
+          <p className="text-sm text-slate-500 py-8 text-center">Rendering…</p>
         )}
         {status === 'error' && (
           <p className="text-sm text-red-600 py-8 text-center">Visualization failed: {error}</p>
@@ -181,10 +181,19 @@ export default function VisualizationPanel({ results, params }) {
       </div>
 
       {meta && (
-        <p className="px-4 py-2 text-xs text-slate-400 border-t border-slate-100">
+        <p className="px-4 py-2 text-xs text-slate-500 border-t border-slate-100">
           Amplicon {meta.amplicon_length} bp · GC {meta.gc_percent}%
           {meta.dh_source === 'approximate' && ' · ΔH approximated (peak width indicative)'}
           {' · Simulated from predicted values — not experimental data'}
+        </p>
+      )}
+      {/* Amplicon Tm depends strongly on Mg2+ (audit SCI-07) — show the span, not one number. */}
+      {tab === 'melting' && cand?.predicted_amplicon_tm_mg_span && (
+        <p className="px-4 pb-2 text-xs text-slate-500">
+          Predicted melt peak {cand.predicted_amplicon_tm} °C at your Mg²⁺ setting ·{' '}
+          {cand.predicted_amplicon_tm_mg_span.tm_c[0]}–{cand.predicted_amplicon_tm_mg_span.tm_c[1]} °C
+          across {cand.predicted_amplicon_tm_mg_span.mg_mM[0]}–{cand.predicted_amplicon_tm_mg_span.mg_mM[1]} mM Mg²⁺.
+          Empirical formula — compare with your instrument&apos;s melt peak rather than expecting an exact match.
         </p>
       )}
     </div>

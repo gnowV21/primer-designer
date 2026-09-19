@@ -8,6 +8,7 @@ import Tooltip from '../../../components/ui/Tooltip.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
 import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
+import { rankReason } from '../../../utils/rankReason.js';
 
 // Warnings shown in-context elsewhere (design-page slider / results-page note) —
 // not repeated in the generic list. Still recorded in the exported report.
@@ -33,8 +34,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       {/* ── Header ── */}
       {!hideHeader && <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Design Results</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-lg font-semibold text-slate-800">Design Results</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
           </p>
@@ -65,56 +66,82 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         </div>
       )}
 
-      {/* ── Stem-loop RT primer info ── */}
-      {stemloop_rt && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stem-loop RT Primer (shared)</p>
-          <div className="font-mono text-xs text-slate-700 break-all leading-relaxed">
-            {stemloop_rt.sequence}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
-            <span className="flex items-center gap-1">
-              Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
-              <RtTmBadge stemloopRt={stemloop_rt} />
-            </span>
-            {stemloop_rt.tm_hybrid_c != null && (
-              <span>
-                Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
-              </span>
-            )}
-            <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
-            <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
-            <span className="text-slate-400">({stemloop_rt.mfe_method})</span>
-            <span>{stemloop_rt.length} nt</span>
-          </div>
-          {stemloop_rt.tm_note && (
-            <p className="text-[11px] text-slate-400 italic">{stemloop_rt.tm_note}</p>
-          )}
-          {stemloop_rt.rt_primer_conc_note && (
-            <p className="text-xs text-slate-500 border-t border-slate-200 pt-2 mt-1">
-              {stemloop_rt.rt_primer_conc_note}
-            </p>
-          )}
-        </div>
-      )}
+      {/* ── Shared components ──────────────────────────────────────────────
+           The RT primer and the universal reverse are identical across all
+           three candidates, so they are grouped once here rather than competing
+           with the ranked results for attention. The universal reverse is the
+           same string in every assay ever run, so it gets a single line; the RT
+           primer is miRNA-specific and keeps its metrics. */}
+      {(stemloop_rt || universal_reverse) && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            Shared by all candidates
+          </p>
 
-      {/* ── Universal reverse primer info ── */}
-      {universal_reverse && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Universal Reverse Primer (fixed)</p>
-          <div className="font-mono text-xs text-slate-700">
-            5'–{universal_reverse.sequence}–3'
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            <span>Tm <strong>{universal_reverse.tm?.toFixed(1)}°C</strong></span>
-            <span>GC <strong>{universal_reverse.gc_percent}%</strong></span>
-            <span>{universal_reverse.length} nt</span>
-          </div>
+          {stemloop_rt && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-slate-600">
+                Stem-loop RT primer <span className="text-slate-500 font-normal">· miRNA-specific</span>
+              </p>
+              <div className="font-mono text-xs text-slate-700 break-all leading-relaxed">
+                {stemloop_rt.sequence}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
+                <span className="flex items-center gap-1">
+                  Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
+                  <RtTmBadge stemloopRt={stemloop_rt} />
+                </span>
+                {stemloop_rt.tm_hybrid_c != null && (
+                  <span>
+                    Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
+                  </span>
+                )}
+                <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
+                <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
+                <span className="text-slate-500">({stemloop_rt.mfe_method})</span>
+                <span>{stemloop_rt.length} nt</span>
+              </div>
+              {/* The caveat is signposted by the badge above and stays one click
+                  away — it is long methodology, not a finding, so it should not
+                  outweigh the sequence it annotates. */}
+              {stemloop_rt.tm_note && (
+                <details className="group">
+                  <summary className="text-xs text-slate-500 cursor-pointer hover:text-teal-700 list-none marker:hidden">
+                    <span className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
+                    Why this Tm is approximate
+                  </summary>
+                  <p className="text-xs text-slate-500 italic mt-1 leading-relaxed">
+                    {stemloop_rt.tm_note}
+                  </p>
+                </details>
+              )}
+              {stemloop_rt.rt_primer_conc_note && (
+                <p className="text-xs text-slate-500">{stemloop_rt.rt_primer_conc_note}</p>
+              )}
+            </div>
+          )}
+
+          {universal_reverse && (
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-200 pt-2.5">
+              <p className="text-xs font-medium text-slate-600 shrink-0">
+                Universal reverse <span className="text-slate-500 font-normal">· fixed</span>
+              </p>
+              <code className="font-mono text-xs text-slate-700">
+                5'–{universal_reverse.sequence}–3'
+              </code>
+              <span className="text-xs text-slate-500 tabular-nums">
+                Tm {universal_reverse.tm?.toFixed(1)}°C · GC {universal_reverse.gc_percent}% · {universal_reverse.length} nt
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── Top-3 primer sets ── */}
+      {top3?.length > 1 && (
+        <p className="text-sm text-slate-600 leading-relaxed">{rankReason(top3[0], top3[1])}</p>
+      )}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
           <PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} mirnaId={mirnaId} />
@@ -166,7 +193,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
       {/* ── Source footnote ── */}
       {metadata?.sources && (
-        <p className="text-center text-xs text-gray-400 pt-2">
+        <p className="text-center text-xs text-slate-500 pt-2">
           {metadata.sources.join(' · ')}
         </p>
       )}
@@ -195,11 +222,11 @@ function RtTmBadge({ stemloopRt }) {
   // The "approximate" state is a modeling caveat shown on every result, not a
   // problem — neutral slate (not amber) so it does not read as an alarm.
   const color = hasHybrid
-    ? 'bg-blue-50 text-blue-700 border-blue-200'
+    ? 'bg-slate-50 text-slate-700 border-slate-200'
     : 'bg-slate-50 text-slate-500 border-slate-200';
 
   return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${color}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border ${color}`}>
       {label}
       <Tooltip text={tooltipText} />
     </span>
@@ -294,7 +321,7 @@ function CrossReactivityPanel({ data }) {
       )}
 
       {/* Data warning */}
-      <p className="text-xs text-slate-400 italic">{data.data_warning}</p>
+      <p className="text-xs text-slate-500 italic">{data.data_warning}</p>
     </div>
   );
 }

@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toRna, DNA_CONVERTED_NOTE } from '../utils/sequence.js';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useMiRBase } from '../hooks/useMiRBase.js';
@@ -45,6 +46,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
   const [query, setQuery] = useState(initialQuery);
   const [isSeqLookup, setIsSeqLookup] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [localNote, setLocalNote] = useState('');
   const prevQuery = useRef('');
 
   const [suggestions, setSuggestions]       = useState([]);
@@ -116,8 +118,9 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
   }, [updateDropdownRect]);
 
   function validateSequence(seq) {
-    const clean = seq.trim().toUpperCase();
-    if (/T/i.test(clean)) { setLocalError("Character 'T' detected — this must be RNA. Use 'U' instead of 'T'."); return null; }
+    const { seq: clean, converted, error } = toRna(seq);
+    setLocalNote(converted ? DNA_CONVERTED_NOTE : '');
+    if (error) { setLocalError(error); return null; }
     if (/[^AUGC]/i.test(clean)) { setLocalError('Only A, U, G, C are accepted.'); return null; }
     if (clean.length < 15) { setLocalError('Sequence too short. Mature miRNAs are typically 17–24 nt.'); return null; }
     if (clean.length > 30) { setLocalError('Sequence too long for a mature miRNA (typically 17–24 nt).'); return null; }
@@ -206,7 +209,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
             }}
             placeholder={placeholder || 'hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA'}
             disabled={status === 'loading'}
-            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-400"
+            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
           />
 
           {showSuggestions && dropdownRect && createPortal(
@@ -218,7 +221,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                   {isFetchingSugg ? 'Searching…' : `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
                 </span>
-                <span className="text-[10px] text-slate-400">↑↓ navigate · Enter select · Esc close</span>
+                <span className="text-xs text-slate-500">↑↓ navigate · Enter select · Esc close</span>
               </div>
 
               {isFetchingSugg && (
@@ -255,8 +258,8 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
                         <span className="font-mono text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
                           <Highlight text={item.name} query={query} />
                         </span>
-                        {item.accession && <span className="text-[11px] font-mono text-slate-400 shrink-0">{item.accession}</span>}
-                        <span className={`text-[11px] px-1.5 py-0.5 rounded font-medium shrink-0 ${isHuman ? 'bg-teal-50 text-teal-600 border border-teal-100' : 'bg-slate-100 text-slate-500'}`}>
+                        {item.accession && <span className="text-xs font-mono text-slate-500 shrink-0">{item.accession}</span>}
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${isHuman ? 'bg-teal-50 text-teal-600 border border-teal-100' : 'bg-slate-100 text-slate-500'}`}>
                           {speciesShort}
                         </span>
                       </li>
@@ -268,7 +271,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
               {!isFetchingSugg && suggestions.length === 0 && (
                 <div className="px-4 py-5 text-center">
                   <p className="text-sm text-slate-500">No miRNA found matching <span className="font-mono font-medium">"{query}"</span></p>
-                  <p className="text-xs text-slate-400 mt-1">Try a different name, or paste the sequence directly</p>
+                  <p className="text-xs text-slate-500 mt-1">Try a different name, or paste the sequence directly</p>
                 </div>
               )}
             </div>,
@@ -290,6 +293,9 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
         </button>
       </div>
 
+      {localNote && !showError && (
+        <p className="text-xs text-slate-500">{localNote}</p>
+      )}
       {showError && (
         <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">{showError}</p>
       )}

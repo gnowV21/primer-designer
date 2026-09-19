@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('RangeSlider', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/design/advanced');
     // Open Primer Design Constraints to access Tm slider
     await page.getByText('Primer Design Constraints').click();
   });

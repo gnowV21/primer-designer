@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DEFAULTS } from '../constants/defaults.js';
 import useDraftState from './useDraftState.js';
+import { saveDesign } from '../utils/historyDb.js';
 import { computeSeqAnalysis } from '../utils/seqAnalysis.js';
 
 export default function useDesignForm(mode) {
@@ -94,6 +95,7 @@ export default function useDesignForm(mode) {
         _computed: computedFields,
       };
       const response = await axios.post('/api/design', postBody, { timeout: 15000 });
+      saveDesign(postBody, response.data);   // best-effort, not awaited
       navigate('/results', { state: { results: response.data, params: postBody } });
     } catch (err) {
       if (err.response?.status === 422) {

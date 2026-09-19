@@ -106,7 +106,7 @@ test.describe('FamilySpecificityMap', () => {
   test('/api/blast-status endpoint is reachable from the app context', async ({ page }) => {
     // blast-status is fetched lazily (on user click in QualitySummary), not on page load.
     // This test verifies the mock intercept works correctly in the app context.
-    await page.goto('/search');
+    await page.goto('/design/advanced');
     const resp = await page.evaluate(async () => {
       const r = await fetch('/api/blast-status');
       return r.json();

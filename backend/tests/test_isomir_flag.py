@@ -1,3 +1,4 @@
+import pytest
 # ================================================================
 # tests/test_isomir_flag.py
 # Unit tests for specificity_check/isomir_flag.py
@@ -113,37 +114,36 @@ if __name__ == "__main__":
 from algorithm.specificity_check import isomir_flag as _iso3
 
 
-def test_3prime_no_entry_returns_false():
-    # The shipped 3' reference set is initialized empty (curation pending).
-    _iso3._DB3_CACHE = None
-    res = _iso3.check_3prime_isomir_flag("hsa-miR-21-5p", overhang_len=6)
+_FAKE_META = {"coverage_warning": "Human only.", "source": {"name": "isomiRdb", "pmid": "36243964"}}
+
+
+def _entry(f):
+    return {"median_3prime_fraction": f, "iqr_3prime_fraction": [f - 0.05, f + 0.05],
+            "pooled_3prime_fraction": f, "n_samples_expressed": 1000,
+            "top_3prime_variants": [{"sequence_dna": "ACGT", "label": "lv3p|lv3pT|lv3p#-1",
+                                     "pooled_share": 0.3}]}
+
+
+def test_3prime_no_entry_returns_false(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-NOPE-5p", overhang_len=6)
     assert res["three_prime_isomir_risk"] is False
-    assert res["coverage_note"] == "no entry in the 3' isomiR reference set"
-    assert "not evidence of absence" in res["note"]
+    assert res["level"] == "no_data"
+    assert "not evidence" in res["note"]
 
 
-def test_3prime_with_entry_raises_warning(monkeypatch):
-    fake = {
-        "_metadata": {"coverage_warning": "Partial coverage."},
-        "hsa-miR-TEST-3p": {
-            "dominant_3prime_variants": ["+U", "+A"],
-            "rt_capture_impact": "moderate",
-            "evidence_level": "review_supported",
-            "source": "TestRef PMID:00000000",
-        },
-    }
-    monkeypatch.setattr(_iso3, "_DB3_CACHE", fake)
-    res = _iso3.check_3prime_isomir_flag("hsa-miR-TEST-3p", overhang_len=6)
-    assert res["three_prime_isomir_risk"] is True
-    assert res["rt_capture_impact"] == "moderate"
-    assert res["dominant_3prime_variants"] == ["+U", "+A"]
-    assert "reduced" in res["warning"]
+def test_3prime_majority_isoforms_raise_warning(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META, "hsa-miR-T-3p": _entry(0.89)})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-T-3p", overhang_len=6)
+    assert res["three_prime_isomir_risk"] is True and res["level"] == "high"
+    assert "89%" in res["warning"] and "minority" in res["warning"]
+    assert res["source"] == "isomiRdb (PMID 36243964)"
 
 
-def test_3prime_entry_missing_optional_fields(monkeypatch):
-    fake = {"_metadata": {}, "hsa-miR-X-3p": {}}   # entry present but no optional fields
-    monkeypatch.setattr(_iso3, "_DB3_CACHE", fake)
-    res = _iso3.check_3prime_isomir_flag("hsa-miR-X-3p")
-    assert res["three_prime_isomir_risk"] is True
-    assert res["rt_capture_impact"] == "unknown"
-    assert res["dominant_3prime_variants"] == []
+@pytest.mark.parametrize("f, level", [(0.49, "moderate"), (0.20, "moderate"), (0.19, "low")])
+def test_3prime_tiers_below_majority_are_informational(monkeypatch, f, level):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META, "hsa-miR-T-3p": _entry(f)})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-T-3p")
+    assert res["three_prime_isomir_risk"] is False
+    assert res["level"] == level and res["warning"] is None and res["summary"]
+

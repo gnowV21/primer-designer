@@ -20,10 +20,13 @@ from routes.lna_suggest import lna_suggest_bp
 from routes.analyze import analyze_bp
 from routes.docs import docs_bp
 from routes.visualize import visualize_bp
-from algorithm.constants import USE_LNA_SUGGESTIONS
+from algorithm.constants import USE_LNA_SUGGESTIONS, ALGORITHM_VERSION
 from db import local_db
 
 app = Flask(__name__)
+# Reject oversized bodies with 413 before any JSON parsing (audit ENG-04).
+# The largest legitimate payload is /api/export (a full design result, ~100s of KB).
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
 # Ensure schema + indexes exist on every startup (CREATE IF NOT EXISTS — safe on existing DBs)
 local_db.init_schema()
@@ -65,7 +68,7 @@ def health():
     return {
         "status":  "ok",
         "message": "Backend is running",
-        "version": "3.1.0",
+        "version": ALGORITHM_VERSION,
         "features": {
             # LNA Tm suggestions are gated until the NN tables are verified. [A2]
             "lna_suggestions": USE_LNA_SUGGESTIONS,

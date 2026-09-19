@@ -3,13 +3,14 @@
 // ThermoTable tabs, EdgeCaseBanner, Back navigation.
 
 import { test, expect } from '@playwright/test';
+import { PLACEHOLDER } from './helpers.js';
 
 const SEQUENCE = 'UAGCUUAUCAGACUGAUGUUGA'; // hsa-miR-21-5p 22 nt
 
 // Helper: run a full design flow and land on /results
 async function runDesign(page) {
-  await page.goto('/search');
-  const input = page.locator('input[placeholder*="hsa-miR"]');
+  await page.goto('/design/advanced');
+  const input = page.getByPlaceholder(PLACEHOLDER);
   await input.fill(SEQUENCE);
   // Trigger the sequence lookup/validation
   await page.evaluate(() => {
@@ -53,15 +54,15 @@ test('results page shows single Design Results header', async ({ page }) => {
   await expect(headers).toHaveCount(1);
 });
 
-test('Back button navigates to /search', async ({ page }) => {
+test('Back button returns to the Advanced designer', async ({ page }) => {
   await runDesign(page);
   await page.getByRole('button', { name: /Back/i }).click();
-  await expect(page).toHaveURL('/search');
+  await expect(page).toHaveURL('/design/advanced');
 });
 
 test('algorithm version badge visible on results page', async ({ page }) => {
   await runDesign(page);
-  await expect(page.locator('text=v3.0.0')).toBeVisible();
+  await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible();
 });
 
 // ── Quality Summary ───────────────────────────────────────────────
@@ -73,7 +74,8 @@ test('Quality Summary panel is visible', async ({ page }) => {
 
 test('Off-target BLAST not run shows Run check button', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/Off-target.*not run yet/i)).toBeVisible();
+  await page.getByText('Quality Summary').first().click();   // collapsed by default
+  await expect(page.getByText('Off-target (BLAST) — run to include in the exported report.')).toBeVisible();
   await expect(page.getByText('Run check')).toBeVisible();
 });
 
@@ -92,7 +94,7 @@ test('stem-loop RT primer section visible', async ({ page }) => {
 
 test('universal reverse primer section visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/UNIVERSAL REVERSE PRIMER/i)).toBeVisible();
+  await expect(page.getByText(/Universal reverse/i).first()).toBeVisible();
 });
 
 // ── ThermoTable ───────────────────────────────────────────────────

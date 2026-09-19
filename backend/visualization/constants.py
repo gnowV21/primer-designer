@@ -6,10 +6,9 @@
 # ================================================================
 
 # --- PART A: coordinate model --------------------------------------------------
-# RT overhang length. FIXED architecturally by the current STEMLOOP_BODY design
-# (S = 44 nt body + 6 nt overhang = 50 nt). The visualization module must NOT
-# parameterize this — it is a property of the assay chemistry, not a user knob.
-RT_OVERHANG = 6   # nt [Chen05] Nucleic Acids Res 2005;33(20):e179 — stem-loop overhang
+# RT overhang length is NOT a constant here: it is read from the RT primer
+# (len(S) − 44) and must lie in algorithm.constants OVERHANG_LENGTH_MIN..MAX
+# (5–7 nt, project decision 2026-09-18; 6 nt is the Chen05 standard).
 
 # Region names + colour tokens — the single colour contract shared by all 3 panels
 # (SPEC §A.5). `name` is what appears in meta.regions; `token` is the CSS custom

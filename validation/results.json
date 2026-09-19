@@ -6,7 +6,7 @@
     "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
     "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
   ],
-  "run_date": "2026-09-17",
+  "run_date": "2026-09-19",
   "checks_passed": 184,
   "checks_total": 184,
   "success_rate": 1.0,

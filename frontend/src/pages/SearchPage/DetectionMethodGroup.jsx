@@ -41,7 +41,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
 
       {/* ── Signal detection — card picker ── */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Signal detection</label>
+        <label className="text-sm font-medium text-slate-700">Signal detection</label>
         <div className="grid grid-cols-2 gap-3">
           {/* TaqMan card */}
           <button
@@ -50,16 +50,16 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
             className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
               isTaqMan
                 ? 'border-teal-500 bg-teal-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
+                : 'border-slate-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-gray-700'}`}>
+              <span className={`text-sm font-semibold ${isTaqMan ? 'text-teal-800' : 'text-slate-700'}`}>
                 TaqMan Probe
               </span>
               {isTaqMan && <span className="ml-auto text-teal-600 text-sm font-bold">✓</span>}
             </div>
-            <p className={`text-xs leading-snug ${isTaqMan ? 'text-teal-700' : 'text-gray-400'}`}>
+            <p className={`text-xs leading-snug ${isTaqMan ? 'text-teal-700' : 'text-slate-500'}`}>
               Hydrolysis probe · high specificity · probe designed automatically
             </p>
           </button>
@@ -71,16 +71,16 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
             className={`text-left rounded-xl border-2 px-4 py-3 transition-all duration-150 active:scale-[0.98] ${
               isSYBR
                 ? 'border-amber-400 bg-amber-50 shadow-sm'
-                : 'border-gray-200 bg-white hover:border-amber-200 hover:bg-amber-50/30'
+                : 'border-slate-200 bg-white hover:border-amber-200 hover:bg-amber-50/30'
             }`}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className={`text-sm font-semibold ${isSYBR ? 'text-amber-800' : 'text-gray-700'}`}>
+              <span className={`text-sm font-semibold ${isSYBR ? 'text-amber-800' : 'text-slate-700'}`}>
                 SYBR Green
               </span>
               {isSYBR && <span className="ml-auto text-amber-600 text-sm font-bold">✓</span>}
             </div>
-            <p className={`text-xs leading-snug ${isSYBR ? 'text-amber-700' : 'text-gray-400'}`}>
+            <p className={`text-xs leading-snug ${isSYBR ? 'text-amber-700' : 'text-slate-500'}`}>
               Intercalating dye · no probe · melting curve required
             </p>
           </button>
@@ -97,7 +97,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
       {/* ── Quantification mode ── */}
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Quantification mode</label>
+          <label className="text-sm font-medium text-slate-700">Quantification mode</label>
           <Tooltip text="Absolute: reports copy number per volume. Relative: reports fold-change vs. a reference sample using the 2^(−ΔΔCt) formula." />
         </div>
         <div className="flex gap-4">
@@ -114,7 +114,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
                 onChange={() => onChange('quantMode', value)}
                 className="accent-teal-600"
               />
-              <span className="text-sm text-gray-700">{label}</span>
+              <span className="text-sm text-slate-700">{label}</span>
             </label>
           ))}
         </div>
@@ -122,13 +122,14 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
         <Reveal show={data.quantMode === 'relative'}>
           <div className="space-y-1.5 pt-0.5">
             <div className="flex items-center gap-1.5">
-              <label className="text-sm font-medium text-gray-700">Reference gene</label>
+              <label htmlFor="det-reference-gene" className="text-sm font-medium text-slate-700">Reference gene</label>
               <Tooltip text="Housekeeping reference used to normalize RNA input across samples. miR-16 is stable in most tissues. Use cel-miR-39 (spike-in) for serum or plasma." />
             </div>
             <select
+              id="det-reference-gene"
               value={data.referenceGene}
               onChange={(e) => onChange('referenceGene', e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
             >
               {REFERENCE_GENE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -142,7 +143,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
                 value={data.customReferenceGene}
                 onChange={(e) => onChange('customReferenceGene', e.target.value)}
                 placeholder="e.g. hsa-miR-103a-3p"
-                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100"
+                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100"
               />
             </Reveal>
           </div>
@@ -154,26 +155,24 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
         <button
           type="button"
           onClick={() => setShowSpecificity((v) => !v)}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-teal-700 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-teal-700 transition-colors"
         >
           <span className={`text-teal-600 font-bold text-sm leading-none transition-transform duration-200 ${showSpecificity ? 'rotate-90' : ''}`}>
             ▸
           </span>
-          Advanced specificity options
+          Advanced options
         </button>
         <Reveal show={showSpecificity}>
           <div className="space-y-2 pl-3 border-l-2 border-teal-100 mt-1">
+            {/* Family cross-reactivity is always checked (it drives the score), so
+                it has no toggle. Pre-miRNA discrimination is not computed — say so
+                instead of offering a switch that does nothing (audit SCI-09). */}
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Family cross-reactivity is always checked. Mature vs pre-miRNA discrimination is
+              not computed: Chen et al. 2005 showed it for the miRNAs they tested, but it is not
+              guaranteed for every miRNA — run a pre-miRNA or no-RT control if precursor levels may be high.
+            </p>
             {[
-              {
-                key: 'enableFamilyDiscrimination',
-                label: 'Penalize off-target in same miRNA family',
-                tooltip: 'The algorithm penalizes candidates whose 6 nt overhang could cross-react with a family member. Especially important for the let-7 family.',
-              },
-              {
-                key: 'enablePrecursorCheck',
-                label: 'Check cross-reactivity with pre-miRNA',
-                tooltip: 'Enable only when high pre-miRNA levels are expected. Steric hindrance normally prevents stem-loop primers from binding pre-miRNA.',
-              },
               {
                 key: 'enableRefoldingProtocol',
                 label: 'Generate re-folding protocol in output',
@@ -187,7 +186,7 @@ export default function DetectionMethodGroup({ data, onChange, seqAnalysis, onFi
                   onChange={(e) => onChange(key, e.target.checked)}
                   className="mt-0.5 accent-teal-600"
                 />
-                <span className="text-sm text-gray-700 flex-1">{label}</span>
+                <span className="text-sm text-slate-700 flex-1">{label}</span>
                 <Tooltip text={tooltip} />
               </label>
             ))}

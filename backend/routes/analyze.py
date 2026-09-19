@@ -30,6 +30,7 @@ from algorithm.structure_check import (
 from algorithm.hybrid_tm import predict_hybrid_tm
 from algorithm.constants import (
     UNIVERSAL_REVERSE, STEMLOOP_BODY, OVERHANG_LENGTH_DEFAULT,
+    OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX,
     P3_RT_MV_CONC, USE_HYBRID_TM, MAX_HOMOPOLYMER_RUN,
 )
 
@@ -92,13 +93,19 @@ def _analyze_single(seq: str, role: str, p3: dict, temp_c: float, params: dict) 
             "The RT primer is a hairpin; its 3' overhang anneals to the miRNA as a "
             "DNA:RNA hybrid — see the context section for the Sugimoto 1995 hybrid Tm."
         )
+        if seq.startswith(STEMLOOP_BODY) and not self_dimer["pass_overall"]:
+            self_dimer["note"] += (
+                " For a stem-loop RT primer this is expected: two copies can exchange "
+                "their stems (same 44-nt body in every assay). Used at ~1 nM and refolded "
+                "before RT, it is not a design defect."
+            )
     return result
 
 
 # ── Cross-dimer matrix ────────────────────────────────────────────
 
 def _cross_dimer(seq1: str, seq2: str, label: str, p3: dict, temp_c: float) -> dict:
-    hd = _check_hetero_dimer(seq1, seq2, p3, temp_c)
+    hd = _check_hetero_dimer(seq1, seq2, p3, temp_c, label=f"Hetero-dimer ({label})")
     hd["pair"] = label
     return hd
 
@@ -111,30 +118,59 @@ def _context_checks(rt: str, fwd: str, rev: str, mature_rna: str) -> dict:
     ctx: dict = {"provided": True}
 
     # 1. Universal reverse identity ---------------------------------
+    #    Any reverse primer lying inside the stem-loop body works as a
+    #    universal reverse (e.g. shorter 18-nt loop variants in the literature).
     matches_rev = rev == UNIVERSAL_REVERSE
+    in_body = (not matches_rev) and rev in STEMLOOP_BODY
     ctx["reverse_universal"] = {
         "matches": matches_rev,
+        "within_stemloop_body": matches_rev or in_body,
         "canonical": UNIVERSAL_REVERSE,
         "note": (
             "Reverse primer matches the canonical universal reverse "
             f"(5'-{UNIVERSAL_REVERSE}-3')."
             if matches_rev else
+            f"Reverse primer is a {len(rev)}-nt variant located inside the stem-loop body "
+            f"(position {STEMLOOP_BODY.index(rev) + 1}); it binds the same universal site. "
+            f"The canonical primer is 5'-{UNIVERSAL_REVERSE}-3'."
+            if in_body else
             "Reverse primer differs from the canonical universal reverse "
-            f"(5'-{UNIVERSAL_REVERSE}-3'). Stem-loop RT-qPCR shares one fixed "
-            "reverse primer across all assays — verify this is intentional."
+            f"(5'-{UNIVERSAL_REVERSE}-3') and is not found in the stem-loop body. "
+            "Stem-loop RT-qPCR shares one fixed reverse primer across all assays — verify "
+            "this primer matches the RT primer you use."
         ),
     }
 
     # 2. RT 3' overhang binding -------------------------------------
-    #    Expected: last 6 nt of RT == reverse_complement(DNA of miRNA 3' 6 nt)
-    n = OVERHANG_LENGTH_DEFAULT
+    #    If the RT primer starts with the standard 44-nt body, whatever follows
+    #    it IS the overhang, so its length is read from the primer, not assumed.
+    #    Otherwise (custom stem-loop) fall back to the default 6 nt.
+    has_body = rt.startswith(STEMLOOP_BODY)
+    inferred = has_body and len(rt) > len(STEMLOOP_BODY)
+    n = len(rt) - len(STEMLOOP_BODY) if inferred else OVERHANG_LENGTH_DEFAULT
+    n = min(n, len(mature_dna))
     expected_rc = reverse_complement(mature_dna[-n:])
     observed = rt[-n:] if len(rt) >= n else rt
     match_count = sum(1 for a, b in zip(observed, expected_rc) if a == b)
     overhang_ok = observed == expected_rc
+    in_range = OVERHANG_LENGTH_MIN <= n <= OVERHANG_LENGTH_MAX
 
-    hybrid = predict_hybrid_tm(observed, dna_conc_nM=4000.0, mv_conc_mM=float(P3_RT_MV_CONC)) \
-        if USE_HYBRID_TM else None
+    hybrid = predict_hybrid_tm(observed, dna_conc_nM=4000.0, mv_conc_mM=float(P3_RT_MV_CONC))         if USE_HYBRID_TM else None
+
+    if overhang_ok:
+        note = (f"RT 3' overhang ({observed}, {n} nt) is the reverse-complement of the miRNA 3' "
+                f"end — anneals correctly ({match_count}/{n} nt).")
+        if n != OVERHANG_LENGTH_DEFAULT:
+            note += (f" Note: the standard overhang is {OVERHANG_LENGTH_DEFAULT} nt [Chen05]; "
+                     f"a {n}-nt overhang is {'supported' if in_range else f'outside the supported {OVERHANG_LENGTH_MIN}–{OVERHANG_LENGTH_MAX} nt range'} "
+                     "and changes RT priming strength and 3′-isomiR selectivity.")
+    else:
+        note = (f"RT 3' overhang ({observed}) does not fully match the expected "
+                f"reverse-complement of the miRNA 3' end ({expected_rc}); "
+                f"{match_count}/{n} nt pair. A mismatched overhang reduces RT priming.")
+    if not has_body:
+        note += (" The RT primer does not start with the standard 44-nt stem-loop body, so the "
+                 f"overhang length could not be read from it and {OVERHANG_LENGTH_DEFAULT} nt was assumed.")
 
     ctx["rt_overhang"] = {
         "expected": expected_rc,
@@ -142,17 +178,13 @@ def _context_checks(rt: str, fwd: str, rev: str, mature_rna: str) -> dict:
         "matches": overhang_ok,
         "match_count": match_count,
         "overhang_length": n,
-        "starts_with_stemloop_body": rt.startswith(STEMLOOP_BODY),
+        "overhang_length_inferred": inferred,
+        "overhang_length_standard": OVERHANG_LENGTH_DEFAULT,
+        "overhang_in_supported_range": in_range,
+        "starts_with_stemloop_body": has_body,
         "hybrid_tm_c": (hybrid or {}).get("tm_c"),
         "hybrid_method": (hybrid or {}).get("method"),
-        "note": (
-            f"RT 3' overhang ({observed}) is the reverse-complement of the miRNA 3' "
-            f"end — anneals correctly ({match_count}/{n} nt)."
-            if overhang_ok else
-            f"RT 3' overhang ({observed}) does not fully match the expected "
-            f"reverse-complement of the miRNA 3' end ({expected_rc}); "
-            f"{match_count}/{n} nt pair. A mismatched overhang reduces RT priming."
-        ),
+        "note": note,
     }
 
     # 3. Forward specific anchoring ---------------------------------
@@ -164,8 +196,8 @@ def _context_checks(rt: str, fwd: str, rev: str, mature_rna: str) -> dict:
             matched_len = L
             break
     # The specific region should anchor on the miRNA 5' end (~12–17 nt) and stop
-    # short of the last 6 nt reserved for the RT overhang.
-    max_specific = max(len(mature_dna) - OVERHANG_LENGTH_DEFAULT, 0)
+    # short of the 3' nt reserved for the RT overhang (length n from step 2).
+    max_specific = max(len(mature_dna) - n, 0)
     tail_len = max(len(fwd) - matched_len, 0)
     anchors_ok = matched_len >= 10
     overlaps_overhang = matched_len > max_specific
@@ -179,7 +211,7 @@ def _context_checks(rt: str, fwd: str, rev: str, mature_rna: str) -> dict:
     elif overlaps_overhang:
         note = (
             f"Forward primer 3' end matches {matched_len} nt of the miRNA, extending into the "
-            f"3' {OVERHANG_LENGTH_DEFAULT} nt reserved for the RT overhang. Forward and RT "
+            f"3' {n} nt reserved for the RT overhang. Forward and RT "
             "primers may compete for the same 3' region — verify the specific region stops short."
         )
     else:

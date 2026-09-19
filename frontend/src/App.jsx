@@ -9,6 +9,7 @@ import BasicDesignPage from './pages/DesignPage/BasicDesignPage.jsx';
 import SearchPage from './pages/SearchPage/index.jsx';
 import ResultsPage from './pages/ResultsPage/index.jsx';
 import AnalyzePage from './pages/AnalyzePage/index.jsx';
+import HistoryPage from './pages/HistoryPage/index.jsx';
 import BenchmarkPage from './pages/BenchmarkPage.jsx';
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/analyze" element={<AnalyzePage />} />
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/benchmark" element={<BenchmarkPage />} />
+              <Route path="/history" element={<HistoryPage />} />
             </Routes>
           </main>
         </div>

@@ -747,7 +747,7 @@
   ],
   "validation": {
     "purpose": "Independent scientific validation of the design engine against published-methodology ground truth AND real published primer tables: one byte-identical exact match (same universal system) plus cross-system RT-overhang & forward concordance from independent labs/chemistries.",
-    "run_date": "2026-09-17",
+    "run_date": "2026-09-19",
     "method": "Deterministic ground truth from the Chen 2005 stem-loop method (RT primer = fixed universal body + revcomp of 3'-terminal 6 nt; universal reverse = fixed constant; forward specific region = 5' prefix of the miRNA), recomputed independently from the sequence the tool used. Plus thermodynamic-plausibility windows and let-7 specificity concordance with Wang 2017.",
     "sources": [
       "[Chen05] Chen C et al. Nucleic Acids Res. 2005;33(20):e179 — original stem-loop RT-qPCR; RT primer hybridizes 6-8 nt at 3' end of mature miRNA.",

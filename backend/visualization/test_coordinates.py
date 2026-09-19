@@ -19,11 +19,11 @@ from visualization.coordinates import (                            # noqa: E402
 
 # ── helpers ────────────────────────────────────────────────────────────────────
 
-def make_valid(m: str, k: int = 14, tail: str = "GGCG") -> dict:
+def make_valid(m: str, k: int = 14, tail: str = "GGCG", o: int = 6) -> dict:
     """Construct a structurally valid /api/visualize input for a DNA miRNA `m`."""
     return dict(
         mirna_sequence=m,
-        stemloop_rt=STEMLOOP_BODY + rc(m[-6:]),
+        stemloop_rt=STEMLOOP_BODY + rc(m[-o:]),
         forward=tail + m[:k],
         forward_binding_length=k,
         universal_reverse=UNIVERSAL_REVERSE,
@@ -121,9 +121,27 @@ def test_regions_partition_amplicon(k):
 
 def test_trap_A1_rt_primer_length():
     v = make_valid("TAGCAGCACGTAAATATTGGCG")
-    v["stemloop_rt"] = v["stemloop_rt"][:-1]   # 49 nt — overhang truncated
+    v["stemloop_rt"] = v["stemloop_rt"][:-2]   # 48 nt — 4-nt overhang, below 5–7
     with pytest.raises(VisualizationError) as e:
         build_amplicon_model(**v)
+    assert e.value.error_code == "RT_PRIMER_LENGTH"
+
+
+@pytest.mark.parametrize("o", [5, 6, 7])
+def test_overhang_length_read_from_primer(o):
+    """5–7 nt overhangs are supported; the length comes from the primer itself."""
+    m = "TAGCAGCACGTAAATATTGGCG"
+    model = build_amplicon_model(**make_valid(m, o=o))
+    assert model.overhang == rc(m[-o:])
+    assert model.stemloop_body == STEMLOOP_BODY
+    assert model.cdna == STEMLOOP_BODY + rc(m)          # full miRNA complement either way
+    assert len(model.stages[1].pairings) == o
+
+
+def test_trap_A1_overhang_too_long():
+    m = "TAGCAGCACGTAAATATTGGCG"
+    with pytest.raises(VisualizationError) as e:
+        build_amplicon_model(**make_valid(m, o=8))
     assert e.value.error_code == "RT_PRIMER_LENGTH"
 
 
@@ -173,7 +191,7 @@ def test_trap_A5_universal_site_ambiguous():
 
 def test_error_to_dict_carries_expected_actual():
     v = make_valid("TAGCAGCACGTAAATATTGGCG")
-    v["stemloop_rt"] = v["stemloop_rt"][:-1]
+    v["stemloop_rt"] = v["stemloop_rt"][:-2]
     with pytest.raises(VisualizationError) as e:
         build_amplicon_model(**v)
     d = e.value.to_dict()

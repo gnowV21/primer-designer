@@ -17,9 +17,9 @@ from algorithm.sequence_utils import rna_to_dna, reverse_complement, calculate_g
 from algorithm.constants import (
     STEMLOOP_BODY_LENGTH, UNIVERSAL_REVERSE,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR,
+    OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX,
 )
 from .constants import (
-    RT_OVERHANG,
     REGION_TAIL, REGION_MIRNA, REGION_STEMLOOP, REGION_UNIVERSAL,
     REGION_COLOR_TOKEN,
 )
@@ -128,20 +128,23 @@ def build_amplicon_model(
     U = universal_reverse.upper()
     k = int(forward_binding_length)
 
-    overhang = S[-RT_OVERHANG:]
-    body = S[:-RT_OVERHANG]
-
-    # A1 — RT primer architecture (44 nt body + 6 nt overhang = 50 nt)
-    if not (len(S) == len(body) + RT_OVERHANG and len(body) == STEMLOOP_BODY_LENGTH):
+    # A1 — RT primer architecture: 44 nt body + 5–7 nt overhang (49–51 nt).
+    # The overhang length is read from the primer, not assumed.
+    o = len(S) - STEMLOOP_BODY_LENGTH
+    if not (OVERHANG_LENGTH_MIN <= o <= OVERHANG_LENGTH_MAX):
         raise VisualizationError(
             "RT_PRIMER_LENGTH",
-            f"Stem-loop RT primer must be {STEMLOOP_BODY_LENGTH + RT_OVERHANG} nt "
-            f"({STEMLOOP_BODY_LENGTH} body + {RT_OVERHANG} overhang).",
-            expected=STEMLOOP_BODY_LENGTH + RT_OVERHANG, actual=len(S),
+            f"Stem-loop RT primer must be {STEMLOOP_BODY_LENGTH + OVERHANG_LENGTH_MIN}–"
+            f"{STEMLOOP_BODY_LENGTH + OVERHANG_LENGTH_MAX} nt ({STEMLOOP_BODY_LENGTH} body + "
+            f"{OVERHANG_LENGTH_MIN}–{OVERHANG_LENGTH_MAX} nt overhang).",
+            expected=f"{STEMLOOP_BODY_LENGTH + OVERHANG_LENGTH_MIN}..{STEMLOOP_BODY_LENGTH + OVERHANG_LENGTH_MAX}",
+            actual=len(S),
         )
+    overhang = S[-o:]
+    body = S[:-o]
 
     # A2 — overhang matches reverse complement of miRNA 3' end
-    expected_overhang = reverse_complement(m[-RT_OVERHANG:])
+    expected_overhang = reverse_complement(m[-o:])
     if overhang != expected_overhang:
         raise VisualizationError(
             "OVERHANG_MISMATCH",
@@ -169,7 +172,7 @@ def build_amplicon_model(
     tail = F[: len(F) - k]
 
     # §A.3 formulas
-    ext = reverse_complement(m[: L - RT_OVERHANG])   # RT-synthesized complement
+    ext = reverse_complement(m[: L - o])   # RT-synthesized complement
     cdna = S + ext                                    # len = 44 + L
     sense = tail + m + reverse_complement(body)       # cycle-1 strand
 
@@ -254,9 +257,9 @@ def _build_stages(m, L, S, body, overhang, F, tail, k, ext, cdna, sense, U, j) -
     )
 
     # Stage 1 — RT annealing. miRNA on top (5'→3'); stem-loop RT below (3'→5') so the
-    # 6-nt overhang aligns antiparallel under the miRNA 3' end. overhang[i] = S[44+i]
+    # overhang aligns antiparallel under the miRNA 3' end. overhang[i] = S[44+i]
     # pairs with m[L-1-i]; RT extends the S 3' end leftward (toward the miRNA 5' end).
-    stage1_pairings = [(L - 1 - i, len(body) + i) for i in range(RT_OVERHANG)]
+    stage1_pairings = [(L - 1 - i, len(body) + i) for i in range(len(overhang))]
     stage1 = Stage(
         id=1,
         label_en="RT annealing",
@@ -266,7 +269,8 @@ def _build_stages(m, L, S, body, overhang, F, tail, k, ext, cdna, sense, U, j) -
         ],
         pairings=stage1_pairings,
         annotation_en=(
-            "The stem-loop RT primer folds back; only its 6-nt 3' overhang is exposed and "
+            "The stem-loop RT primer folds back; only its "
+            f"{len(overhang)}-nt 3' overhang is exposed and "
             "anneals antiparallel to the miRNA 3' end. Reverse transcriptase extends the "
             "primer 3' end leftward, copying the miRNA toward its 5' end."
         ),

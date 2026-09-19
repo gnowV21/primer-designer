@@ -186,25 +186,26 @@ def _stage1(node, y, model, oscale):
     if truncated:
         node.text(x0 - 12, top_y + VIZ_BAR_HEIGHT / 2 + 4, "…", size=VIZ_MONO_SIZE,
                   fill=_MUTED, anchor="end")
-    hl_x = x0 + (w - 6) * VIZ_CHAR_PITCH
-    node.rect(hl_x, top_y - 4, 6 * VIZ_CHAR_PITCH, VIZ_BAR_HEIGHT + 8, rx=_BAR_RX + 2,
+    o = len(model.overhang)   # 5–7 nt, read from the RT primer
+    hl_x = x0 + (w - o) * VIZ_CHAR_PITCH
+    node.rect(hl_x, top_y - 4, o * VIZ_CHAR_PITCH, VIZ_BAR_HEIGHT + 8, rx=_BAR_RX + 2,
               fill="none", stroke=color("viz-mirna"), stroke_width=2.5)
     bot_y = top_y + VIZ_BAR_HEIGHT + _PAIR_GAP
     # Pass the overhang in its OWN 5'->3' order — _bar reverses a "3to5" strand for
     # display, so handing it column-order text would reverse it twice and break the
-    # base pairing. model.overhang is revcomp(miRNA 3' 6 nt), i.e. what is actually
+    # base pairing. model.overhang is revcomp(miRNA 3' o nt), i.e. what is actually
     # synthesized on the primer.
     _bar(node, hl_x, bot_y, model.overhang, VIZ_CHAR_PITCH, "3to5",
          fill=_grad("viz-stemloop"), mono_size=VIZ_MONO_SIZE, text_fill=_BG, show_ends=False)
-    _rungs(node, hl_x, 6, VIZ_CHAR_PITCH, top_y + VIZ_BAR_HEIGHT, bot_y)
-    body_x = hl_x + 6 * VIZ_CHAR_PITCH + 14
+    _rungs(node, hl_x, o, VIZ_CHAR_PITCH, top_y + VIZ_BAR_HEIGHT, bot_y)
+    body_x = hl_x + o * VIZ_CHAR_PITCH + 14
     body_w = min(180, _W - _M - body_x)
     node.rect(body_x, bot_y, body_w, VIZ_BAR_HEIGHT, rx=VIZ_BAR_HEIGHT / 2,
               fill=_grad("viz-stemloop"), stroke=_BORDER, stroke_width=1,
               dash="6 4", opacity=0.65, filter=_SHADOW)
     node.text(body_x + body_w / 2, bot_y + VIZ_BAR_HEIGHT / 2 + 4,
               "stem-loop body (44 nt)", size=VIZ_LABEL_SIZE, fill=_BG, anchor="middle", weight="600")
-    _arrow(node, hl_x + 6 * VIZ_CHAR_PITCH, bot_y + VIZ_BAR_HEIGHT + 20, x0 - 6,
+    _arrow(node, hl_x + o * VIZ_CHAR_PITCH, bot_y + VIZ_BAR_HEIGHT + 20, x0 - 6,
            label="RT extension (5'→3')")
     y = bot_y + VIZ_BAR_HEIGHT + 34
     return _wrap_note(node, _M, y, model.stages[1].annotation_en, _CONTENT_W)

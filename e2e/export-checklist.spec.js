@@ -57,7 +57,7 @@ test.describe('Export MIQE checklist', () => {
     expect(responseBody).toContain('VALIDATION CHECKLIST');
   });
 
-  test('CSV has 8 checklist items', async ({ page }) => {
+  test('CSV has 13 checklist items (MIQE 2.0)', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -76,7 +76,7 @@ test.describe('Export MIQE checklist', () => {
     const dataRows = block
       .split('\n')
       .filter((l) => l && !l.startsWith('#') && !l.startsWith('Item,'));
-    expect(dataRows.length).toBe(8);
+    expect(dataRows.length).toBe(13);
   });
 
   test('CSV checklist omitted when include_checklist=false', async ({ page }) => {

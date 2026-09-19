@@ -5,6 +5,7 @@
 from flask import Blueprint, jsonify, request
 from algorithm.design_pipeline import run as _run_pipeline
 from algorithm.sequence_utils import validate_rna_sequence
+from algorithm.constants import OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX
 
 design_bp = Blueprint("design", __name__)
 
@@ -27,6 +28,20 @@ def design_primers():
         **data.get("detectionMethod", {}),
         **data.get("experimentalContext", {}),
     }
+    # RT overhang length: supported 5–7 nt. Reject instead of silently clamping,
+    # so the returned primers always match what the user asked for.
+    if "bindingRegion3prime" in params:
+        try:
+            ov = int(params["bindingRegion3prime"])
+        except (TypeError, ValueError):
+            ov = None
+        if ov is None or not (OVERHANG_LENGTH_MIN <= ov <= OVERHANG_LENGTH_MAX):
+            return jsonify({"error": (
+                f"bindingRegion3prime must be an integer {OVERHANG_LENGTH_MIN}–{OVERHANG_LENGTH_MAX} nt "
+                f"(got {params['bindingRegion3prime']!r})."
+            )}), 400
+        params["bindingRegion3prime"] = ov
+
     # Species drives family cross-reactivity scoping when the miRNA is pasted
     # without a name prefix (otherwise the name prefix is authoritative). [A3]
     params["species"] = data.get("sequence", {}).get("species")

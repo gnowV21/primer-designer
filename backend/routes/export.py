@@ -136,8 +136,16 @@ def _miqe_design_rows(meta, top3):
         (f"accession {meta['mirna_accession']}" if meta.get("mirna_accession") else None),
         (f"{meta.get('mirna_length')} nt" if meta.get("mirna_length") else None),
     ]))
+    pv = meta.get("provenance") or {}
+    engines = " · ".join(filter(None, [
+        f"primer3-py {pv['primer3_py']}" if pv.get("primer3_py") else None,
+        f"ViennaRNA {pv['viennarna']}" if pv.get("viennarna") else None,
+        f"weights #{pv['scoring_weights_sha256']}" if pv.get("scoring_weights_sha256") else None,
+        f"miRBase release {pv.get('mirbase_release', 'unknown')}" if pv else None,
+    ])) or "—"
     return [
         ("Design tool + version + settings", tool),
+        ("Computation engines (reproducibility)", engines),
         ("Target (symbol · species · accession · length)", ident),
         ("Detection method", str(ds.get("detection_method", "—")).upper()),
         ("RT 3' overhang (binding region)",
@@ -151,6 +159,13 @@ def _miqe_design_rows(meta, top3):
         ("Primer concentration", f"{ds.get('primer_nm','?')} nM"),
         ("Buffer pH", str(ds.get("buffer_ph", "—"))),
         ("Oligo modifications", _miqe_modifications(top3)),
+        ("Planned Ta / cycles",
+         f"{ds.get('annealing_temp_c') or '?'} °C / {ds.get('total_cycles') or '?'} cycles"),
+        ("Efficiency acceptance", _fmt_range(ds.get("efficiency_acceptance_pct"), "%")),
+        ("Quantification · reference",
+         " · ".join(str(x) for x in (ds.get("quantification"), ds.get("reference")) if x) or "—"),
+        ("Sample type · instrument",
+         " · ".join(str(x) for x in (ds.get("sample_type"), ds.get("qpcr_instrument")) if x) or "—"),
     ]
 
 
@@ -242,7 +257,10 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     tpi = results.get("stemloop_rt", {}).get("three_prime_isomir", {}) or {}
     if tpi:
         writer.writerow(["three_prime_isomir_risk", str(tpi.get("three_prime_isomir_risk", False))])
-        writer.writerow(["rt_capture_impact", str(tpi.get("rt_capture_impact", "n/a"))])
+        writer.writerow(["three_prime_isomir_level", str(tpi.get("level", "n/a"))])
+        if tpi.get("median_3prime_fraction") is not None:
+            writer.writerow(["three_prime_isomir_median_fraction", tpi["median_3prime_fraction"]])
+            writer.writerow(["three_prime_isomir_source", tpi.get("source", "")])
 
     if include_checklist:
         _append_checklist_csv(writer, buf, results, blast_result)
@@ -524,7 +542,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Amplicon",       lambda s: f"{s.get('amplicon_size', '?')} bp"),
         ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
         ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg")),
-        ("Bound frac. binding", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding'))}"),
+        ("Cycle-1 occupancy % (Ta)", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding_pct'))}"),
     ]
     cmp_data = [cmp_header] + [
         [label] + [fn(s) for s in top3 + [{}]*(3 - len(top3))]
