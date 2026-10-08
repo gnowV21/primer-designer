@@ -102,9 +102,12 @@ def main():
 
     lines.append("## 4. Caveats")
     lines.append("")
-    lines.append("- The hsa-miR-16-5p published primer is a **domestic conference proceedings "
-                  "paper** (Hoi nghi Cong nghe Sinh hoc Toan quoc 2020), not a PubMed-indexed "
-                  "journal article — see its full citation in reference_mirnas.json.")
+    lines.append("- hsa-miR-16-5p is matched against Chen, Bosmajian & Woo 2024 (*Biol Methods "
+                  "Protoc*, PMID 38783988); the lab's 2020 Vietnamese conference paper is cited "
+                  "as a second, non-PubMed-indexed source.")
+    lines.append("- hsa-miR-155-5p: the published RT overhangs (Czimmerer 2013, Yang 2014) target "
+                  "the older 23-nt annotation; miRBase v22 gives 24 nt, so only the forward core "
+                  "is scored — see the note in reference_mirnas.json.")
     lines.append("- 4 entries (miR-125b-5p, miR-9-3p, miR-221-3p, miR-222-3p) cite **unpublished "
                   "lab-internal bachelor theses** — recorded as such, not presented as "
                   "peer-reviewed sources.")

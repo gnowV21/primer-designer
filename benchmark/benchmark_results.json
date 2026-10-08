@@ -14,7 +14,7 @@
       "Panel of 50 curated open-access hsa- miRNAs — may not represent full biological diversity",
       "Design time includes network overhead (localhost); actual server latency will differ"
     ],
-    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 184/184 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
+    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 209/209 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
   },
   "metrics": {
     "forward_tm_mean": {
@@ -755,8 +755,8 @@
       "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ],
-    "checks_passed": 184,
-    "checks_total": 184,
+    "checks_passed": 209,
+    "checks_total": 209,
     "success_rate": 1.0,
     "deterministic_primer_targets": [
       {
@@ -859,6 +859,24 @@
         "amplicon_bp": 67
       },
       {
+        "id": "hsa-miR-181b-5p",
+        "rt_overhang_expected": "ACCCAC",
+        "rt_overhang_actual": "ACCCAC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "hsa-miR-181c-5p",
+        "rt_overhang_expected": "ACTCAC",
+        "rt_overhang_actual": "ACTCAC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
+      },
+      {
         "id": "hsa-miR-125b-5p",
         "rt_overhang_expected": "TCACAA",
         "rt_overhang_actual": "TCACAA",
@@ -912,11 +930,24 @@
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
         "forward_tool": "CGCTCGTTAGCAGCACGTA",
-        "forward_published": "CACGTATAGCAGCACGTAAATA",
+        "forward_published": "GCGCCCGTAGCAGCACGTAAATA",
         "forward_tool_specific": "TAGCAGCACGTA",
         "forward_pub_specific": "TAGCAGCACGTAAATA",
         "forward_specific_overlap_nt": 12,
-        "source": "Nguyen Hoang Thao Vy, Nguyen Thi Ngoc Thanh, Huynh Huu Luan, Nguyen Thi Hue (2020). 'Designing a stem-loop RT-qPCR method for measuring miRNA-16 expression in human plasma samples.' Proceedings of the National Conference on Biotechnology 2020 (Hoi nghi Cong nghe Sinh hoc Toan quoc 2020), Vietnam, pp. 181-186. Human Genetics Group, Faculty of Biology and Biotechnology, University of Science, Vietnam National University Ho Chi Minh City (the same lab as this tool). Funded by VNU-HCM grant 562-2020-18-02/HD-KHCN. Table 1 'Sequence and characteristics of the stem-loop RT-qPCR primers set'. Domestic conference proceedings, not indexed in PubMed (confirmed by search, zero hits) — not a peer-reviewed journal article. Uses the same Chen-2005 universal stem-loop body and universal reverse as this tool; the tool's RT primer and reverse are byte-identical to this published set. NOTE: Table 1 lists the published universal reverse as 'CCAGTGCAGGGCCGAGGTA' (19 nt; the table's own length column also inconsistently says 16 bp) — one nt different from this tool's fixed 20-nt universal reverse 'CCAGTGCAGGGTCCGAGGTA'. Flagged as an apparent transcription anomaly in the source table, not independently resolved; not scored as a mismatch here."
+        "source": "Chen L, Bosmajian C, Woo S (2024). 'A highly sensitive stem-loop RT-qPCR method to study siRNA intracellular pharmacokinetics and pharmacodynamics.' Biology Methods & Protocols 9(1):bpae029. DOI 10.1093/biomethods/bpae029 (PMID 38783988, PMC11112049, open access; confirmed on PubMed), Supplemental Table 2 — independent lab (University at Buffalo, SUNY), uses miR-16 as the endogenous normalizer for intracellular siRNA quantification. Uses the identical Chen-2005 44-nt universal stem-loop body AND the identical 20-nt universal reverse primer as this tool; the tool's RT primer and universal reverse are byte-identical to this published set (independently re-verified against the live tool's /api/design output). SECOND, independent source for the same miRNA: Nguyen Hoang Thao Vy et al. (2020), Hoi nghi Cong nghe Sinh hoc Toan quoc 2020 (Vietnam national biotech conference proceedings, not PubMed-indexed), pp. 181-186, Table 1 — reports the same stem-loop RT primer and the same forward-primer specific region; that source's own reverse-primer entry is 19 nt ('CCAGTGCAGGGCCGAGGTA', and its own length column inconsistently says '16 bp'), an apparent transcription anomaly in that table, not used for matching here."
+      },
+      {
+        "id": "hsa-miR-155-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": null,
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CGAACCAAGACTTTAATGCTAATCGTG",
+        "forward_published": "GTGGGTTAATGCTAATCGTGAT",
+        "forward_tool_specific": "TTAATGCTAATCGTG",
+        "forward_pub_specific": "TTAATGCTAATCGTGAT",
+        "forward_specific_overlap_nt": 15,
+        "source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-155): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACCCCT, forward GTGGGTTAATGCTAATCGTGAT. Also Yang L-h, et al. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293: forward GCGGTTAATGCTAATCGTGATA (same miRNA-specific core; different USLP body). Forward-core comparison only. NOTE — overhang NOT scored: both papers anchor the RT primer on the older 23-nt mature miR-155 (3' end ...AGGGGU; Czimmerer overhang ACCCCT; Yang 8-nt ACCCCTAT), whereas miRBase v22 / this tool's database annotate hsa-miR-155-5p as 24 nt (3' end ...GGGGUU), giving overhang AACCCC. This is a reference-annotation difference, not a design error — but it means a primer ordered from the 2013/2014 papers binds a 1-nt-shifted 3' end."
       },
       {
         "id": "hsa-miR-150-5p",
@@ -929,7 +960,7 @@
         "forward_tool_specific": "TCTCCCAACCCT",
         "forward_pub_specific": "TCTCCCAACCCTTGTACC",
         "forward_specific_overlap_nt": 12,
-        "source": "Yang L-h, et al. Universal Stem-Loop Primer Method. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293 — miR-150 forward qPCR primer (5' GC tail added to raise Tm). NOTE: Yang 2014 uses a different stem-loop body and reverse (random 3' end), so only the forward miRNA-specific core is comparable; no RT exact-match applies."
+        "source": "Yang L-h, et al. Universal Stem-Loop Primer Method. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293 — miR-150 forward qPCR primer (5' GC tail added to raise Tm). NOTE: Yang 2014 uses a different stem-loop body and reverse (random 3' end), so only the forward miRNA-specific core is comparable; no RT exact-match applies. Yang's miR-150 stem-loop 3' end is CACTGGTA (8 nt binding); this tool's 6-nt overhang CACTGG is its prefix — within Chen's 6-8 nt range, not scored."
       },
       {
         "id": "hsa-miR-1-3p",
@@ -956,6 +987,32 @@
         "forward_pub_specific": "AACATTCAACGCTGTCG",
         "forward_specific_overlap_nt": 14,
         "source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181a). Different universal body/reverse — overhang + forward-core comparison only."
+      },
+      {
+        "id": "hsa-miR-181b-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GCCGCTAACATTCATTGCTGTC",
+        "forward_published": "GTTTGAACATTCATTGCTGTCG",
+        "forward_tool_specific": "AACATTCATTGCTGTC",
+        "forward_pub_specific": "AACATTCATTGCTGTCG",
+        "forward_specific_overlap_nt": 16,
+        "source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181b): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACCCAC. Different universal body/reverse — overhang + forward-core comparison only."
+      },
+      {
+        "id": "hsa-miR-181c-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "TACGACCGAACATTCAACCTGTC",
+        "forward_published": "GGGAACATTCAACCTGTCG",
+        "forward_tool_specific": "AACATTCAACCTGTC",
+        "forward_pub_specific": "AACATTCAACCTGTCG",
+        "forward_specific_overlap_nt": 15,
+        "source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181c): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACTCAC. Different universal body/reverse — overhang + forward-core comparison only."
       },
       {
         "id": "hsa-miR-125b-5p",
