@@ -254,6 +254,57 @@
       "expected_family": null,
       "published_forward": "TGCCGGTGAGGTAGGAGG",
       "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGAGGUAGGAGGUUGUAUAGU (21 nt) (overhang ACTATA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "ath-miR156a-5p",
+      "matureSequence": "UGACAGAAGAGAGUGAGCAC",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGTGCTC",
+      "published_rt_overhang": "GTGCTC",
+      "published_forward": "GCGGCGGTGACAGAAGAGAGT",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR159a",
+      "matureSequence": "UUUGGAUUGAAGGGAGCUCUA",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTAGAGC",
+      "published_rt_overhang": "TAGAGC",
+      "published_forward": "CGGCGGTTTGGATTGAAGGGA",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR166a-3p",
+      "matureSequence": "UCGGACCAGGCUUCAUUCCCC",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGGGGAA",
+      "published_rt_overhang": "GGGGAA",
+      "published_forward": "TCGCTTCGGACCAGGCTTCA",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR167a-5p",
+      "matureSequence": "UGAAGCUGCCAGCAUGAUCUA",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTAGATC",
+      "published_rt_overhang": "TAGATC",
+      "published_forward": "TCGCGTGAAGCTGCCAGCAT",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR171a-3p",
+      "matureSequence": "UGAUUGAGCCGCGCCAAUAUC",
+      "role": "plant miRNA vs Varkonyi-Gasic 2007 — KNOWN LIMITATION: GC-rich 5' prefix, tool refuses by design",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGATATT",
+      "published_rt_overhang": "GATATT",
+      "published_forward": "TTCCTTGATTGAGCCGCGCC",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated.",
+      "expect_design_failure": "Every forward 3' end inside the miRNA's 5' prefix at 12-15 nt ends in 5/5 G/C (TGATTGAGCC|GCGCC), rejected by the hard 3'-end GC rule (Primer3 Max End GC, forward_primer.py); at 16 nt the GC tail pushes GC%/Tm out of range. The published forward TTCCTT+TGATTGAGCCGCGCC itself ends in GCGCC, i.e. violates that rule. Kept as a documented limitation (owner decision 2026-10-08), not relaxed in the algorithm."
     }
   ],
   "edge_cases": [

@@ -14,7 +14,7 @@
       "Panel of 50 curated open-access hsa- miRNAs — may not represent full biological diversity",
       "Design time includes network overhead (localhost); actual server latency will differ"
     ],
-    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 321/321 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
+    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 405/405 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
   },
   "metrics": {
     "forward_tm_mean": {
@@ -755,8 +755,8 @@
       "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ],
-    "checks_passed": 321,
-    "checks_total": 321,
+    "checks_passed": 405,
+    "checks_total": 405,
     "success_rate": 1.0,
     "deterministic_primer_targets": [
       {
@@ -1001,6 +1001,42 @@
         "forward_tm_c": 60.0,
         "forward_gc_pct": 54.5,
         "amplicon_bp": 69
+      },
+      {
+        "id": "ath-miR156a-5p",
+        "rt_overhang_expected": "GTGCTC",
+        "rt_overhang_actual": "GTGCTC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 65
+      },
+      {
+        "id": "ath-miR159a",
+        "rt_overhang_expected": "TAGAGC",
+        "rt_overhang_actual": "TAGAGC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 45.5,
+        "amplicon_bp": 65
+      },
+      {
+        "id": "ath-miR166a-3p",
+        "rt_overhang_expected": "GGGGAA",
+        "rt_overhang_actual": "GGGGAA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.1,
+        "forward_gc_pct": 60.0,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ath-miR167a-5p",
+        "rt_overhang_expected": "TAGATC",
+        "rt_overhang_actual": "TAGATC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 65
       }
     ],
     "published_exact_match": [
@@ -1315,6 +1351,58 @@
         "forward_pub_specific": "TGAGGTAGGAGG",
         "forward_specific_overlap_nt": 12,
         "source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGAGGUAGGAGGUUGUAUAGU (21 nt) (overhang ACTATA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+      },
+      {
+        "id": "ath-miR156a-5p",
+        "rt_exact_match": "PASS",
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CGCCAAGGTGACAGAAGAGAG",
+        "forward_published": "GCGGCGGTGACAGAAGAGAGT",
+        "forward_tool_specific": "TGACAGAAGAGAG",
+        "forward_pub_specific": "TGACAGAAGAGAGT",
+        "forward_specific_overlap_nt": 13,
+        "source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+      },
+      {
+        "id": "ath-miR159a",
+        "rt_exact_match": "PASS",
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "AACGCAGTTTGGATTGAAGGGA",
+        "forward_published": "CGGCGGTTTGGATTGAAGGGA",
+        "forward_tool_specific": "TTTGGATTGAAGGGA",
+        "forward_pub_specific": "TTTGGATTGAAGGGA",
+        "forward_specific_overlap_nt": 15,
+        "source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+      },
+      {
+        "id": "ath-miR166a-3p",
+        "rt_exact_match": "PASS",
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CTGACTACTCGGACCAGGCT",
+        "forward_published": "TCGCTTCGGACCAGGCTTCA",
+        "forward_tool_specific": "TCGGACCAGGCT",
+        "forward_pub_specific": "TCGGACCAGGCTTCA",
+        "forward_specific_overlap_nt": 12,
+        "source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+      },
+      {
+        "id": "ath-miR167a-5p",
+        "rt_exact_match": "PASS",
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "TATGCCGTGAAGCTGCCAG",
+        "forward_published": "TCGCGTGAAGCTGCCAGCAT",
+        "forward_tool_specific": "TGAAGCTGCCAG",
+        "forward_pub_specific": "TGAAGCTGCCAGCAT",
+        "forward_specific_overlap_nt": 12,
+        "source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
       }
     ],
     "specificity_concordance": {

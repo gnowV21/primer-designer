@@ -136,14 +136,24 @@ def validate_one(base, entry, consts, windows):
                      "edge_found": ",".join(codes) or "-",
                      "edge_check": ok(hit)},
                     [("edge_case", hit)])
-        return {"target": label, "status": f"HTTP {resp.status_code}: {body.get('error', '')[:60]}"}, []
+        # Documented known limitation: the tool is EXPECTED to refuse this miRNA.
+        if entry.get("expect_design_failure"):
+            return ({"target": label, "status": f"HTTP {resp.status_code} (expected)",
+                     "failed_checks": ""}, [("expected_design_failure", True)])
+        # A real miRNA the tool cannot design for is a FAIL, not a silent skip.
+        return ({"target": label, "status": f"HTTP {resp.status_code}: {body.get('error', '')[:60]}"},
+                [("design_succeeded", False)])
 
     data = resp.json()
     used_seq = get(data, "metadata", "mirna_sequence", default=mature).upper()
     dna = to_dna(used_seq)
 
-    checks = []
+    checks = [] if entry.get("expect_edge_code") else [("design_succeeded", True)]
     row = {"target": label, "source": src, "length": len(used_seq), "status": "200"}
+
+    # A documented limitation that now designs fine: flag it so the dataset gets updated.
+    if entry.get("expect_design_failure"):
+        return row, [("expected_design_failure", False)]
 
     # --- Edge-case entries: just verify the expected code fired ---
     if entry.get("expect_edge_code"):

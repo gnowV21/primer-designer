@@ -63,6 +63,22 @@ def main():
         )
     lines.append("")
 
+    failed = [t for t in targets if "design_succeeded" in (t.get("failed_checks") or [])]
+    known = [t for t in targets if ref.get(t["target"], {}).get("expect_design_failure")]
+    if failed or known:
+        lines.append("### 1b. miRNAs the tool does NOT design with default parameters")
+        lines.append("")
+        lines.append("| miRNA | Status | Published primer | Reason |")
+        lines.append("|---|---|---|---|")
+        for t in known + failed:
+            e = ref.get(t["target"], {})
+            status = ("KNOWN LIMITATION (tool refusal verified, PASS)" if t in known
+                      else "FAIL — unexpected, counted in the total")
+            pub = e.get("published_forward") or "—"
+            lines.append(f"| {t['target']} | {status} | `{pub}` | "
+                          f"{e.get('expect_design_failure') or 'no forward-primer candidate'} |")
+        lines.append("")
+
     # ── Section 2: published (journal/thesis) primer comparison ──
     lines.append("## 2. Tool primer vs. published primer (journal / conference / thesis)")
     lines.append("")
@@ -113,6 +129,10 @@ def main():
                   "mature sequences, whose 3' ends miRBase has since changed; let-7a used a 5-nt "
                   "overhang; let-7b's listed overhang is not complementary to let-7b (source typo). "
                   "Those RT primers are not scored; their forward cores are.")
+    lines.append("- Plant miRNAs (ath-*, Varkonyi-Gasic 2007) validate primer design only: the "
+                  "family/overhang-collision index covers human/mouse/rat and BLAST covers human "
+                  "cDNA, so the tool reports 'no family data — cannot assess' for them, which is "
+                  "not evidence of specificity.")
     lines.append("- 4 entries (miR-125b-5p, miR-9-3p, miR-221-3p, miR-222-3p) cite **unpublished "
                   "lab-internal bachelor theses** — recorded as such, not presented as "
                   "peer-reviewed sources.")
