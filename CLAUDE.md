@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Read [HANDOFF_THESIS_STATUS.md](HANDOFF_THESIS_STATUS.md) first** — current project status, locked decisions, and next steps for the thesis. Keep it updated when a milestone changes.
+
 ## Development Commands
 
 ### Backend (Terminal 1)
