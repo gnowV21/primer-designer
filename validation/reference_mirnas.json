@@ -26,28 +26,53 @@
     "overhang_len": 6
   },
   "plausibility_windows": {
-    "forward_tm_c": [55.0, 65.0],
-    "forward_gc_pct": [40.0, 60.0],
-    "amplicon_bp": [40, 110],
-    "qpcr_efficiency_ref_pct": [90, 110]
+    "forward_tm_c": [
+      55.0,
+      65.0
+    ],
+    "forward_gc_pct": [
+      40.0,
+      60.0
+    ],
+    "amplicon_bp": [
+      40,
+      110
+    ],
+    "qpcr_efficiency_ref_pct": [
+      90,
+      110
+    ]
   },
   "mirnas": [
     {
       "id": "hsa-miR-21-5p",
       "role": "canonical positive control; widely published stem-loop assay target",
-      "expected_family": null
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCAACA",
+      "published_rt_overhang": "TCAACA",
+      "published_forward": "GCCCGCTAGCTTATCAGACTGATG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
     },
     {
       "id": "hsa-let-7a-5p",
       "role": "family discrimination anchor",
       "expected_family": "let-7",
-      "expected_cross_reactive_siblings": ["hsa-let-7c-5p", "hsa-let-7f-5p"],
-      "note": "[Wang17]: let-7a/c/f differ by as little as 1 nt; specificity module SHOULD flag siblings."
+      "expected_cross_reactive_siblings": [
+        "hsa-let-7c-5p",
+        "hsa-let-7f-5p"
+      ],
+      "note": "[Wang17]: let-7a/c/f differ by as little as 1 nt; specificity module SHOULD flag siblings.",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — Chen's let-7a RT uses a 5-nt overhang (AACTA, RT GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA); this tool's 6-nt AACTAT extends it by one nt. Not exact-matched; forward core scored."
     },
     {
       "id": "hsa-let-7c-5p",
       "role": "family discrimination (1-nt from let-7a)",
-      "expected_family": "let-7"
+      "expected_family": "let-7",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt_overhang": "AACCAT",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
     },
     {
       "id": "hsa-let-7f-5p",
@@ -62,7 +87,7 @@
       "published_rt_overhang": "CGCCAA",
       "published_forward": "GCGCCCGTAGCAGCACGTAAATA",
       "published_universal_reverse": "CCAGTGCAGGGTCCGAGGTA",
-      "published_source": "Chen L, Bosmajian C, Woo S (2024). 'A highly sensitive stem-loop RT-qPCR method to study siRNA intracellular pharmacokinetics and pharmacodynamics.' Biology Methods & Protocols 9(1):bpae029. DOI 10.1093/biomethods/bpae029 (PMID 38783988, PMC11112049, open access; confirmed on PubMed), Supplemental Table 2 — independent lab (University at Buffalo, SUNY), uses miR-16 as the endogenous normalizer for intracellular siRNA quantification. Uses the identical Chen-2005 44-nt universal stem-loop body AND the identical 20-nt universal reverse primer as this tool; the tool's RT primer and universal reverse are byte-identical to this published set (independently re-verified against the live tool's /api/design output). SECOND, independent source for the same miRNA: Nguyen Hoang Thao Vy et al. (2020), Hoi nghi Cong nghe Sinh hoc Toan quoc 2020 (Vietnam national biotech conference proceedings, not PubMed-indexed), pp. 181-186, Table 1 — reports the same stem-loop RT primer and the same forward-primer specific region; that source's own reverse-primer entry is 19 nt ('CCAGTGCAGGGCCGAGGTA', and its own length column inconsistently says '16 bp'), an apparent transcription anomaly in that table, not used for matching here."
+      "published_source": "Chen L, Bosmajian C, Woo S (2024). 'A highly sensitive stem-loop RT-qPCR method to study siRNA intracellular pharmacokinetics and pharmacodynamics.' Biology Methods & Protocols 9(1):bpae029. DOI 10.1093/biomethods/bpae029 (PMID 38783988, PMC11112049, open access; confirmed on PubMed), Supplemental Table 2 — independent lab (University at Buffalo, SUNY), uses miR-16 as the endogenous normalizer for intracellular siRNA quantification. Uses the identical Chen-2005 44-nt universal stem-loop body AND the identical 20-nt universal reverse primer as this tool; the tool's RT primer and universal reverse are byte-identical to this published set (independently re-verified against the live tool's /api/design output). SECOND, independent source for the same miRNA: Nguyen Hoang Thao Vy et al. (2020), Hoi nghi Cong nghe Sinh hoc Toan quoc 2020 (Vietnam national biotech conference proceedings, not PubMed-indexed), pp. 181-186, Table 1 — reports the same stem-loop RT primer and the same forward-primer specific region; that source's own reverse-primer entry is 19 nt ('CCAGTGCAGGGCCGAGGTA', and its own length column inconsistently says '16 bp'), an apparent transcription anomaly in that table, not used for matching here. THIRD source: Chen C et al. Nucleic Acids Res 2005;33(20):e179, DOI 10.1093/nar/gni178 (PMID 16314309), supplementary 'TaqMan miRNA assays' — RT primer GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCAA, byte-identical; forward CGCGCTAGCAGCACGTAAAT."
     },
     {
       "id": "hsa-miR-155-5p",
@@ -160,6 +185,75 @@
       "published_rt_overhang": "GAAACC",
       "published_forward": "GGCGAGCTACATTGTCTG",
       "published_source": "Tran Thuy Linh. 'Xay dung quy trinh dinh luong miR-221-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-221-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18-nt loop window, not exact-matched vs this tool's 20-nt reverse). RT overhang GAAACC = revcomp of 3'-terminal GGUUUC (independently verified)."
+    },
+    {
+      "id": "hsa-miR-10a-5p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCACAAA",
+      "published_rt_overhang": "CACAAA",
+      "published_forward": "TGCGGTACCCTGTAGATCCG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-miR-22-3p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACAGTT",
+      "published_rt_overhang": "ACAGTT",
+      "published_forward": "GCCTGAAGCTGCCAGTTGA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-miR-26b-5p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACCTAT",
+      "published_rt_overhang": "ACCTAT",
+      "published_forward": "CGCCGCTTCAAGTAATTCAGGAT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "role": "forward-core concordance vs Chen 2005; documents a source-table anomaly",
+      "expected_family": null,
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTGT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — the supplementary table lists the let-7b RT overhang as AATCAC, which is NOT the reverse complement of let-7b's 3' end (expected AACCAC, as this tool designs) — an apparent typo in the source table; RT not scored, forward core scored."
+    },
+    {
+      "id": "hsa-miR-7-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "CGGCGGTGGAAGACTAGTGATT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGGAAGACUAGUGAUUUUGUU (21 nt) (overhang AACAAA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-miR-10b-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "TCGGGTACCCTGTAGAACCG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UACCCUGUAGAACCGAAUUUGU (22 nt) (overhang ACAAAT); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-miR-20a-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "GCGGCGGTAAAGTGCTTATAGTG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UAAAGUGCUUAUAGUGCAGGUA (22 nt) (overhang TACCTG); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-let-7d-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "GCCGCAGAGGTAGTAGGTTGC",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence AGAGGUAGUAGGUUGCAUAGU (21 nt) (overhang ACTATG); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-let-7e-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "TGCCGGTGAGGTAGGAGG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGAGGUAGGAGGUUGUAUAGU (21 nt) (overhang ACTATA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
     }
   ],
   "edge_cases": [

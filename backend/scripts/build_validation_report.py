@@ -108,6 +108,11 @@ def main():
     lines.append("- hsa-miR-155-5p: the published RT overhangs (Czimmerer 2013, Yang 2014) target "
                   "the older 23-nt annotation; miRBase v22 gives 24 nt, so only the forward core "
                   "is scored — see the note in reference_mirnas.json.")
+    lines.append("- Chen 2005 (the original stem-loop paper): 6 RT primers are byte-identical to the "
+                  "tool. For miR-7, miR-10b, miR-20a, let-7d and let-7e the paper used the 2005 "
+                  "mature sequences, whose 3' ends miRBase has since changed; let-7a used a 5-nt "
+                  "overhang; let-7b's listed overhang is not complementary to let-7b (source typo). "
+                  "Those RT primers are not scored; their forward cores are.")
     lines.append("- 4 entries (miR-125b-5p, miR-9-3p, miR-221-3p, miR-222-3p) cite **unpublished "
                   "lab-internal bachelor theses** — recorded as such, not presented as "
                   "peer-reviewed sources.")
