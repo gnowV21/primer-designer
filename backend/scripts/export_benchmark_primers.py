@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""
+export_benchmark_primers.py — one combined data file for every miRNA the project
+has benchmarked, merging:
+  - benchmark/panel.json          (50-miRNA in-silico panel, tool only)
+  - validation/reference_mirnas.json (16-miRNA deterministic ground-truth panel;
+    9 of them carry a REAL published primer — journal paper or lab thesis)
+
+For every unique miRNA it calls this tool's own /api/design (same engine the
+app uses) and records the tool's primer set next to the published one where
+one exists. Never fabricates a published sequence — those fields stay blank
+unless reference_mirnas.json already cites one.
+
+Usage (backend must be running on :5000):
+  python backend/scripts/export_benchmark_primers.py
+Writes: benchmark/primer_benchmark_export.csv + .json
+"""
+import csv
+import json
+import os
+import sys
+
+import requests
+
+ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+BASE = "http://localhost:5000"
+
+
+def load(path):
+    with open(os.path.join(ROOT, path), encoding="utf-8") as f:
+        return json.load(f)
+
+
+def fetch_sequence(mirna_id):
+    r = requests.get(f"{BASE}/api/mirbase/{mirna_id}", timeout=20)
+    r.raise_for_status()
+    return r.json()["sequence"].upper()
+
+
+def design(mature_seq, mirna_id):
+    payload = {
+        "sequence": {"matureSequence": mature_seq, "mirnaId": mirna_id},
+        "thermodynamic": {}, "primerConstraints": {}, "qpcr": {},
+        "detectionMethod": {}, "experimentalContext": {},
+    }
+    r = requests.post(f"{BASE}/api/design", json=payload, timeout=60)
+    r.raise_for_status()
+    return r.json()
+
+
+def norm(s):
+    return (s or "").upper().replace("U", "T").replace(" ", "")
+
+
+def specific_region(primer, mirna_dna):
+    """Longest 3' suffix of `primer` that is a 5' prefix of `mirna_dna` — the
+    miRNA-specific core, independent of whatever 5' Tm-raising tail each
+    protocol adds. Same definition validate_primers.py uses."""
+    primer = primer.upper()
+    for length in range(len(primer), 0, -1):
+        if mirna_dna.startswith(primer[-length:]):
+            return primer[-length:]
+    return ""
+
+
+def main():
+    panel = load("benchmark/panel.json")["mirnas"]
+    ref = load("validation/reference_mirnas.json")["mirnas"]
+
+    # Union by id; reference entries (which may carry published_* citations) win.
+    merged = {e["id"]: {"id": e["id"], "sequence": e.get("sequence")} for e in panel}
+    for e in ref:
+        merged.setdefault(e["id"], {"id": e["id"]})
+        merged[e["id"]].update({k: v for k, v in e.items() if k != "id"})
+
+    rows, n_ok, n_published = [], 0, 0
+    for mid, entry in sorted(merged.items()):
+        seq = entry.get("sequence") or entry.get("matureSequence")
+        try:
+            if not seq:
+                seq = fetch_sequence(mid)
+            data = design(seq, mid)
+        except Exception as exc:  # noqa: BLE001
+            rows.append({"id": mid, "status": f"ERROR: {exc}"})
+            continue
+
+        used = data["metadata"]["mirna_sequence"].upper()
+        used_dna = used.replace("U", "T")          # primers are DNA; match on DNA bases
+        rt = data["stemloop_rt"]["sequence"]
+        olen = len(rt) - 44
+        top = (data.get("top3") or [{}])[0]
+        fwd = (top.get("sequence") or "").upper()
+        spec = (top.get("specific_region") or "").upper()
+
+        pub_rt = entry.get("published_rt")
+        pub_over = entry.get("published_rt_overhang")
+        pub_fwd = entry.get("published_forward")
+
+        row = {
+            "id": mid,
+            "status": "OK",
+            "mirna_sequence": used,
+            "length_nt": len(used),
+            "gc_pct_mirna": entry.get("gc_pct"),
+            "role_note": entry.get("role", ""),
+            # tool output
+            "tool_rt_primer": rt,
+            "tool_rt_overhang": rt[-olen:],
+            "tool_universal_reverse": data["universal_reverse"]["sequence"],
+            "tool_forward_primer": fwd,
+            "tool_forward_specific_region": spec,
+            "tool_forward_tm_c": top.get("tm_full"),
+            "tool_forward_gc_pct": top.get("gc_percent"),
+            "tool_amplicon_bp": top.get("amplicon_size"),
+            "tool_score": top.get("total_score"),
+            "tool_grade": top.get("grade"),
+            # published (journal / thesis) — blank unless cited in reference_mirnas.json
+            "published_rt_primer": pub_rt or "",
+            "published_rt_overhang": pub_over or "",
+            "published_forward_primer": pub_fwd or "",
+            "published_source": entry.get("published_source", ""),
+            "rt_exact_match": "",
+            "rt_overhang_match": "",
+            "published_forward_specific_region": "",
+            "forward_specific_overlap_nt": "",
+            "forward_specific_agrees": "",
+        }
+        if pub_rt:
+            row["rt_exact_match"] = "YES" if norm(rt) == norm(pub_rt) else "NO"
+        if pub_over:
+            row["rt_overhang_match"] = "YES" if norm(rt).endswith(norm(pub_over)) else "NO"
+        if pub_fwd:
+            pub_spec = specific_region(norm(pub_fwd), used_dna)
+            ov = min(len(spec), len(pub_spec))
+            agree = ov >= 10 and spec[:ov] == pub_spec[:ov]
+            row["published_forward_specific_region"] = pub_spec
+            row["forward_specific_overlap_nt"] = ov
+            row["forward_specific_agrees"] = "YES" if agree else "NO"
+        if pub_rt or pub_over or pub_fwd:
+            n_published += 1
+
+        rows.append(row)
+        n_ok += 1
+
+    out_json = os.path.join(ROOT, "benchmark", "primer_benchmark_export.json")
+    out_csv = os.path.join(ROOT, "benchmark", "primer_benchmark_export.csv")
+
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump({
+            "generated_by": "backend/scripts/export_benchmark_primers.py",
+            "note": "Tool primer set vs published (journal/thesis) primer set, where cited. "
+                    "Published sequences are never invented — see each row's published_source.",
+            "n_mirnas": len(rows),
+            "n_design_ok": n_ok,
+            "n_with_published_primer": n_published,
+            "rows": rows,
+        }, f, indent=2, ensure_ascii=False)
+
+    cols = list(rows[0].keys()) if rows else []
+    # make sure every row has every column (ERROR rows are sparse)
+    all_cols = []
+    for r in rows:
+        for k in r:
+            if k not in all_cols:
+                all_cols.append(k)
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=all_cols, extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+    print(f"{len(rows)} miRNAs total, {n_ok} designed OK, {n_published} with a published primer to compare.")
+    print(f"Wrote {out_json}")
+    print(f"Wrote {out_csv}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
