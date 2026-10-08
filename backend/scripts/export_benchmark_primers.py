@@ -128,7 +128,10 @@ def main():
         if pub_rt:
             row["rt_exact_match"] = "YES" if norm(rt) == norm(pub_rt) else "NO"
         if pub_over:
-            row["rt_overhang_match"] = "YES" if norm(rt).endswith(norm(pub_over)) else "NO"
+            po = norm(pub_over)
+            # longer published overhang (7-8 nt): tool's overhang must be its 5' prefix
+            hit = po.startswith(rt[-olen:]) if len(po) > olen else norm(rt).endswith(po)
+            row["rt_overhang_match"] = "YES" if hit else "NO"
         if pub_fwd:
             pub_spec = specific_region(norm(pub_fwd), used_dna)
             ov = min(len(spec), len(pub_spec))

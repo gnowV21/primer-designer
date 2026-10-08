@@ -133,6 +133,13 @@ def main():
                   "family/overhang-collision index covers human/mouse/rat and BLAST covers human "
                   "cDNA, so the tool reports 'no family data — cannot assess' for them, which is "
                   "not evidence of specificity.")
+    lines.append("- EBV (Cosmopoulos 2009): 30 of the paper's 40 assays are included — those whose "
+                  "primers are complementary to a Table I sequence. Not scored: BHRF1-2, BHRF1-3, "
+                  "BART1-3p, BART12 (RT overhang binds 1 nt past the listed 3' end, i.e. a +1 "
+                  "isoform), BART1-5p, BART8*, BART9 (binds 1 nt short, a -1 isoform), BART10 (forward "
+                  "skips the first nt), the 'BART3' row (forward matches neither Table I nor miRBase "
+                  "v22), BART14 (paper: no primer). Rows 'BART3*' and 'BART14*' carry the primers of "
+                  "BART3 and BART14 (label mix-up) and are scored under the sequence they match.")
     lines.append("- 4 entries (miR-125b-5p, miR-9-3p, miR-221-3p, miR-222-3p) cite **unpublished "
                   "lab-internal bachelor theses** — recorded as such, not presented as "
                   "peer-reviewed sources.")

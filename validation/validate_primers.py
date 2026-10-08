@@ -208,7 +208,12 @@ def validate_one(base, entry, consts, windows):
 
     pub_over = _norm(entry.get("published_rt_overhang"))
     if pub_over:
-        c = _norm(rt).endswith(pub_over)
+        if len(pub_over) > olen:
+            # Longer published overhang (7-8 nt, Chen's 6-8 nt range): both bind the miRNA
+            # 3' end, so the tool's overhang must be the 5' prefix of the published one.
+            c = pub_over.startswith(_norm(rt)[-olen:])
+        else:
+            c = _norm(rt).endswith(pub_over)
         checks.append(("published_rt_overhang_match", c))
         row["published_rt_overhang_match"] = ok(c)
 

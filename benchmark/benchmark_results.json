@@ -14,7 +14,7 @@
       "Panel of 50 curated open-access hsa- miRNAs — may not represent full biological diversity",
       "Design time includes network overhead (localhost); actual server latency will differ"
     ],
-    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 405/405 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
+    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 783/783 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
   },
   "metrics": {
     "forward_tm_mean": {
@@ -755,8 +755,8 @@
       "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ],
-    "checks_passed": 405,
-    "checks_total": 405,
+    "checks_passed": 783,
+    "checks_total": 783,
     "success_rate": 1.0,
     "deterministic_primer_targets": [
       {
@@ -1037,6 +1037,267 @@
         "forward_tm_c": 60.0,
         "forward_gc_pct": 57.9,
         "amplicon_bp": 65
+      },
+      {
+        "id": "ebv-miR-BHRF1-1",
+        "rt_overhang_expected": "AACTCC",
+        "rt_overhang_actual": "AACTCC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BHRF1-2-5p",
+        "rt_overhang_expected": "GCTATC",
+        "rt_overhang_actual": "GCTATC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 45.5,
+        "amplicon_bp": 65
+      },
+      {
+        "id": "ebv-miR-BART2-5p",
+        "rt_overhang_expected": "GCAAGG",
+        "rt_overhang_actual": "GCAAGG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART2-3p",
+        "rt_overhang_expected": "TTTATT",
+        "rt_overhang_actual": "TTTATT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART3-3p",
+        "rt_overhang_expected": "ACACCT",
+        "rt_overhang_actual": "ACACCT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART4-5p",
+        "rt_overhang_expected": "AGCACA",
+        "rt_overhang_actual": "AGCACA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 64
+      },
+      {
+        "id": "ebv-miR-BART5-5p",
+        "rt_overhang_expected": "CGATGG",
+        "rt_overhang_actual": "CGATGG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 48.0,
+        "amplicon_bp": 69
+      },
+      {
+        "id": "ebv-miR-BART6-5p",
+        "rt_overhang_expected": "CCTATG",
+        "rt_overhang_actual": "CCTATG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART7-3p",
+        "rt_overhang_expected": "CCCTGG",
+        "rt_overhang_actual": "CCCTGG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART7-5p",
+        "rt_overhang_expected": "TGTTTC",
+        "rt_overhang_actual": "TGTTTC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART8-5p",
+        "rt_overhang_expected": "CTGTAC",
+        "rt_overhang_actual": "CTGTAC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART9-5p",
+        "rt_overhang_expected": "GTTTCC",
+        "rt_overhang_actual": "GTTTCC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART10-5p",
+        "rt_overhang_expected": "TGTACA",
+        "rt_overhang_actual": "TGTACA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART11-5p",
+        "rt_overhang_expected": "CAACTA",
+        "rt_overhang_actual": "CAACTA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART11-3p",
+        "rt_overhang_expected": "GGCAGT",
+        "rt_overhang_actual": "GGCAGT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 59.9,
+        "forward_gc_pct": 60.0,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART13-3p",
+        "rt_overhang_expected": "TCAGCC",
+        "rt_overhang_actual": "TCAGCC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 68
+      },
+      {
+        "id": "ebv-miR-BART13-5p",
+        "rt_overhang_expected": "CTGTAC",
+        "rt_overhang_actual": "CTGTAC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 60.0,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART14-3p",
+        "rt_overhang_expected": "ATCCCT",
+        "rt_overhang_actual": "ATCCCT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART15",
+        "rt_overhang_expected": "TCAAGG",
+        "rt_overhang_actual": "TCAAGG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 47.6,
+        "amplicon_bp": 65
+      },
+      {
+        "id": "ebv-miR-BART16",
+        "rt_overhang_expected": "AGAGCA",
+        "rt_overhang_actual": "AGAGCA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 69
+      },
+      {
+        "id": "ebv-miR-BART17-5p",
+        "rt_overhang_expected": "CTTGTA",
+        "rt_overhang_actual": "CTTGTA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART17-3p",
+        "rt_overhang_expected": "ACTAAG",
+        "rt_overhang_actual": "ACTAAG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART18-5p",
+        "rt_overhang_expected": "TGTATA",
+        "rt_overhang_actual": "TGTATA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 63
+      },
+      {
+        "id": "ebv-miR-BART18-3p",
+        "rt_overhang_expected": "GACGAA",
+        "rt_overhang_actual": "GACGAA",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART19-5p",
+        "rt_overhang_expected": "CATGTC",
+        "rt_overhang_actual": "CATGTC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART19-3p",
+        "rt_overhang_expected": "AGCATT",
+        "rt_overhang_actual": "AGCATT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
+      },
+      {
+        "id": "ebv-miR-BART20-5p",
+        "rt_overhang_expected": "GGAATG",
+        "rt_overhang_actual": "GGAATG",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
+      },
+      {
+        "id": "ebv-miR-BART20-3p",
+        "rt_overhang_expected": "GGTAAC",
+        "rt_overhang_actual": "GGTAAC",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 65
+      },
+      {
+        "id": "ebv-miR-BART22",
+        "rt_overhang_expected": "ACTACT",
+        "rt_overhang_actual": "ACTACT",
+        "rt_overhang_match": true,
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 69
       }
     ],
     "published_exact_match": [
@@ -1403,6 +1664,383 @@
         "forward_pub_specific": "TGAAGCTGCCAGCAT",
         "forward_specific_overlap_nt": 12,
         "source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+      },
+      {
+        "id": "ebv-miR-BHRF1-1",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GTTACCGGTAACCTGATCAGCC",
+        "forward_published": "ACACTCCAGCTGGGTAACCTGATCAGCCCC",
+        "forward_tool_specific": "TAACCTGATCAGCC",
+        "forward_pub_specific": "TAACCTGATCAGCCCC",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BHRF1-2-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CACAGCAAATTCTGTTGCAGCA",
+        "forward_published": "ACACTCCAGCTGGGAAATTCTGTTGCAGCA",
+        "forward_tool_specific": "AAATTCTGTTGCAGCA",
+        "forward_pub_specific": "AAATTCTGTTGCAGCA",
+        "forward_specific_overlap_nt": 16,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART2-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GGTGCGGTATTTTCTGCATTCG",
+        "forward_published": "ACACTCCAGCTGGGTATTTTCTGCATTCGC",
+        "forward_tool_specific": "TATTTTCTGCATTCG",
+        "forward_pub_specific": "TATTTTCTGCATTCGC",
+        "forward_specific_overlap_nt": 15,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART2-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "ACTGACGAAGGAGCGATTTGG",
+        "forward_published": "ACACTCCAGCTGGGAAGGAGCGATTTGGAG",
+        "forward_tool_specific": "AAGGAGCGATTTGG",
+        "forward_pub_specific": "AAGGAGCGATTTGGAG",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART3-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GAAGACCACGCACCACTAGTC",
+        "forward_published": "ACACTCCAGCTGGGCGCACCACTAGTCACC",
+        "forward_tool_specific": "CGCACCACTAGTC",
+        "forward_pub_specific": "CGCACCACTAGTCACC",
+        "forward_specific_overlap_nt": 13,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells. NOTE: Table II row 'BART3*' primers actually match Table I 'BART3' (label mix-up in the paper); attributed here by sequence."
+      },
+      {
+        "id": "ebv-miR-BART4-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GCATGGACCTGATGCTGCT",
+        "forward_published": "ACACTCCAGCTGGGGACCTGATGCTGCTGG",
+        "forward_tool_specific": "GACCTGATGCTGCT",
+        "forward_pub_specific": "GACCTGATGCTGCTGG",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART5-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GGAGTGACCAAGGTGAATATAGCTG",
+        "forward_published": "ACACTCCAGCTGGGCAAGGTGAATATAGCT",
+        "forward_tool_specific": "CAAGGTGAATATAGCTG",
+        "forward_pub_specific": "CAAGGTGAATATAGCT",
+        "forward_specific_overlap_nt": 16,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART6-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CTTCCGACGTAAGGTTGGTCC",
+        "forward_published": "ACACTCCAGCTGGGTAAGGTTGGTCCAATC",
+        "forward_tool_specific": "TAAGGTTGGTCC",
+        "forward_pub_specific": "TAAGGTTGGTCCAATC",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART7-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CTGCCACCATCATAGTCCAGTG",
+        "forward_published": "ACACTCCAGCTGGGCATCATAGTCCAGTGT",
+        "forward_tool_specific": "CATCATAGTCCAGTG",
+        "forward_pub_specific": "CATCATAGTCCAGTGT",
+        "forward_specific_overlap_nt": 15,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART7-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GCGAGTAACCTGGACCTTGAC",
+        "forward_published": "ACACTCCAGCTGGGCCTGGACCTTGACTAT",
+        "forward_tool_specific": "CCTGGACCTTGAC",
+        "forward_pub_specific": "CCTGGACCTTGACTAT",
+        "forward_specific_overlap_nt": 13,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART8-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "AACTGGCTCTACGGTTTCCTAGA",
+        "forward_published": "ACACTCCAGCTGGGTACGGTTTCCTAGATT",
+        "forward_tool_specific": "TACGGTTTCCTAGA",
+        "forward_pub_specific": "TACGGTTTCCTAGATT",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART9-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "AAGGAGAGCTACTGGACCCTG",
+        "forward_published": "ACACTCCAGCTGGGTACTGGACCCTGAATT",
+        "forward_tool_specific": "TACTGGACCCTG",
+        "forward_pub_specific": "TACTGGACCCTGAATT",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART10-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CGTAAGAGGCCACCTCTTTGG",
+        "forward_published": "ACACTCCAGCTGGGGCCACCTCTTTGGTTC",
+        "forward_tool_specific": "GCCACCTCTTTGG",
+        "forward_pub_specific": "GCCACCTCTTTGGTTC",
+        "forward_specific_overlap_nt": 13,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART11-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "TCAGCACTCAGACAGTTTGGTG",
+        "forward_published": "ACACTCCAGCTGGGTCAGACAGTTTGGTGC",
+        "forward_tool_specific": "TCAGACAGTTTGGTG",
+        "forward_pub_specific": "TCAGACAGTTTGGTGC",
+        "forward_specific_overlap_nt": 15,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART11-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GTCTCGATACGCACACCAGG",
+        "forward_published": "ACACTCCAGCTGGGACGCACACCAGGCTGA",
+        "forward_tool_specific": "ACGCACACCAGG",
+        "forward_pub_specific": "ACGCACACCAGGCTGA",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART13-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "TTGGTCACTGTAACTTGCCAGG",
+        "forward_published": "ACACTCCAGCTGGGTGTAACTTGCCAGGGA",
+        "forward_tool_specific": "TGTAACTTGCCAGG",
+        "forward_pub_specific": "TGTAACTTGCCAGGGA",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART13-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GAGATCGTAACCGGCTCGTG",
+        "forward_published": "ACACTCCAGCTGGGAACCGGCTCGTGGCTC",
+        "forward_tool_specific": "AACCGGCTCGTG",
+        "forward_pub_specific": "AACCGGCTCGTGGCTC",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART14-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CGCTGCCATAAATGCTGCAG",
+        "forward_published": "ACACTCCAGCTGGGTAAATGCTGCAGTAGT",
+        "forward_tool_specific": "TAAATGCTGCAG",
+        "forward_pub_specific": "TAAATGCTGCAGTAGT",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells. NOTE: Table II row 'BART14*' primers actually match Table I 'BART14' (label mix-up in the paper); attributed here by sequence."
+      },
+      {
+        "id": "ebv-miR-BART15",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "ACCGACGTCAGTGGTTTTGTT",
+        "forward_published": "ACACTCCAGCTGGGGTCAGTGGTTTTGTTT",
+        "forward_tool_specific": "GTCAGTGGTTTTGTT",
+        "forward_pub_specific": "GTCAGTGGTTTTGTTT",
+        "forward_specific_overlap_nt": 15,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART16",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CGTTGGTGTTAGATAGAGTGGGTG",
+        "forward_published": "ACACTCCAGCTGGGTTAGATAGAGTGGGTG",
+        "forward_tool_specific": "TTAGATAGAGTGGGTG",
+        "forward_pub_specific": "TTAGATAGAGTGGGTG",
+        "forward_specific_overlap_nt": 16,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART17-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CAGTGTGTAAGAGGACGCAGG",
+        "forward_published": "ACACTCCAGCTGGGTAAGAGGACGCAGGCA",
+        "forward_tool_specific": "TAAGAGGACGCAGG",
+        "forward_pub_specific": "TAAGAGGACGCAGGCA",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART17-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GGTGATCTGTATGCCTGGTGTC",
+        "forward_published": "ACACTCCAGCTGGGTGTATGCCTGGTGTCC",
+        "forward_tool_specific": "TGTATGCCTGGTGTC",
+        "forward_pub_specific": "TGTATGCCTGGTGTCC",
+        "forward_specific_overlap_nt": 15,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART18-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "TCCGTCAAGTTCGCACTTCC",
+        "forward_published": "ACACTCCAGCTGGGTCAAGTTCGCACTTCC",
+        "forward_tool_specific": "TCAAGTTCGCACTTCC",
+        "forward_pub_specific": "TCAAGTTCGCACTTCC",
+        "forward_specific_overlap_nt": 16,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART18-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "ACAGGCGTATCGGAAGTTTGG",
+        "forward_published": "ACACTCCAGCTGGGTATCGGAAGTTTGGGC",
+        "forward_tool_specific": "TATCGGAAGTTTGG",
+        "forward_pub_specific": "TATCGGAAGTTTGGGC",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART19-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "CAATCCGACATTCCCCGCA",
+        "forward_published": "ACACTCCAGCTGGGACATTCCCCGCAAACA",
+        "forward_tool_specific": "ACATTCCCCGCA",
+        "forward_pub_specific": "ACATTCCCCGCAAACA",
+        "forward_specific_overlap_nt": 12,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART19-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "GTCCGATCCTTTTGTTTGCTTGG",
+        "forward_published": "ACACTCCAGCTGGGTTTTGTTTGCTTGGGA",
+        "forward_tool_specific": "TTTTGTTTGCTTGG",
+        "forward_pub_specific": "TTTTGTTTGCTTGGGA",
+        "forward_specific_overlap_nt": 14,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART20-5p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "ACGAACTGTAGCAGGCATGTC",
+        "forward_published": "ACACTCCAGCTGGGTAGCAGGCATGTCTTC",
+        "forward_tool_specific": "TAGCAGGCATGTC",
+        "forward_pub_specific": "TAGCAGGCATGTCTTC",
+        "forward_specific_overlap_nt": 13,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART20-3p",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "ATCCGCCATGAAGGCACAG",
+        "forward_published": "ACACTCCAGCTGGGCATGAAGGCACAGCCT",
+        "forward_tool_specific": "CATGAAGGCACAG",
+        "forward_pub_specific": "CATGAAGGCACAGCCT",
+        "forward_specific_overlap_nt": 13,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+      },
+      {
+        "id": "ebv-miR-BART22",
+        "rt_exact_match": null,
+        "rt_overhang_match": "PASS",
+        "forward_shares_specific": "PASS",
+        "forward_exact_note": "FAIL",
+        "forward_tool": "AGGTTCCAGTTACAAAGTCATGGTC",
+        "forward_published": "ACACTCCAGCTGGGTTACAAAGTCATGGTC",
+        "forward_tool_specific": "TTACAAAGTCATGGTC",
+        "forward_pub_specific": "TTACAAAGTCATGGTC",
+        "forward_specific_overlap_nt": 16,
+        "source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
       }
     ],
     "specificity_concordance": {
