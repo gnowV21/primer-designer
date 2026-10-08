@@ -747,7 +747,7 @@
   ],
   "validation": {
     "purpose": "Independent scientific validation of the design engine against published-methodology ground truth AND real published primer tables: one byte-identical exact match (same universal system) plus cross-system RT-overhang & forward concordance from independent labs/chemistries.",
-    "run_date": "2026-09-19",
+    "run_date": "2026-10-08",
     "method": "Deterministic ground truth from the Chen 2005 stem-loop method (RT primer = fixed universal body + revcomp of 3'-terminal 6 nt; universal reverse = fixed constant; forward specific region = 5' prefix of the miRNA), recomputed independently from the sequence the tool used. Plus thermodynamic-plausibility windows and let-7 specificity concordance with Wang 2017.",
     "sources": [
       "[Chen05] Chen C et al. Nucleic Acids Res. 2005;33(20):e179 — original stem-loop RT-qPCR; RT primer hybridizes 6-8 nt at 3' end of mature miRNA.",
@@ -916,7 +916,7 @@
         "forward_tool_specific": "TAGCAGCACGTA",
         "forward_pub_specific": "TAGCAGCACGTAAATA",
         "forward_specific_overlap_nt": 12,
-        "source": "'Designing a stem-loop RT-qPCR method for measuring miRNA-16 expression in human plasma samples' — Table 1 'Sequence and characteristics of the stem-loop RT-qPCR primers set'. Uses the same Chen-2005 universal stem-loop body and universal reverse as this tool; the tool's RT primer and reverse are byte-identical to this published set."
+        "source": "Nguyen Hoang Thao Vy, Nguyen Thi Ngoc Thanh, Huynh Huu Luan, Nguyen Thi Hue (2020). 'Designing a stem-loop RT-qPCR method for measuring miRNA-16 expression in human plasma samples.' Proceedings of the National Conference on Biotechnology 2020 (Hoi nghi Cong nghe Sinh hoc Toan quoc 2020), Vietnam, pp. 181-186. Human Genetics Group, Faculty of Biology and Biotechnology, University of Science, Vietnam National University Ho Chi Minh City (the same lab as this tool). Funded by VNU-HCM grant 562-2020-18-02/HD-KHCN. Table 1 'Sequence and characteristics of the stem-loop RT-qPCR primers set'. Domestic conference proceedings, not indexed in PubMed (confirmed by search, zero hits) — not a peer-reviewed journal article. Uses the same Chen-2005 universal stem-loop body and universal reverse as this tool; the tool's RT primer and reverse are byte-identical to this published set. NOTE: Table 1 lists the published universal reverse as 'CCAGTGCAGGGCCGAGGTA' (19 nt; the table's own length column also inconsistently says 16 bp) — one nt different from this tool's fixed 20-nt universal reverse 'CCAGTGCAGGGTCCGAGGTA'. Flagged as an apparent transcription anomaly in the source table, not independently resolved; not scored as a mismatch here."
       },
       {
         "id": "hsa-miR-150-5p",
