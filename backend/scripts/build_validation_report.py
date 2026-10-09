@@ -158,6 +158,17 @@ def main():
                   "miRNA core (< 10) are recorded, not scored. Mou 2013: the tool designs "
                   "osa-miR1846a-5p and osa-miR1858a, which the paper's stem-loop assay failed to "
                   "detect experimentally (low abundance, GC-rich) — design success is not detection.")
+    lines.append("- Busk 2014 (miRprimer, BMC Bioinformatics 15:29, Additional file 5; group "
+                  "`polyA_system`): 80 of the 82 wet-lab validated assays (2 snoRNA references "
+                  "excluded). Different chemistry (poly(A) tailing + poly(T) RT primer, two "
+                  "miRNA-specific PCR primers) — there is no stem-loop RT primer, so only the "
+                  "forward miRNA core is scored. Sequences are used inline as printed (several "
+                  "ssc/bta/gga entries predate current miRBase). Reverse primers and the paper's "
+                  "failed forward primers are recorded in reference_mirnas.json, not scored.")
+    lines.append("- 2026-10 bm_001-003: Lukashevich 2026 (Chen body, mouse; byte-exact RT expected); "
+                  "Nourmohammadi 2019 (modified Chen loop CCGACCGG — body not scored, overhang and "
+                  "forward scored); Keyhani 2025 (different body; its miR-155-5p forward is a copy of "
+                  "the miR-146a forward — not scored).")
     lines.append("- The forward specific-region check is weak evidence: when both primers anchor "
                   "the miRNA 5' end, their cores agree by construction. It confirms anchoring and "
                   "core length >= 10 nt, not primer equivalence.")

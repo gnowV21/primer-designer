@@ -33,6 +33,7 @@
 | 2026-09-18/19 | **Audit khoa học v3.1.0** (`AUDIT_REPORT.md`): sửa SCI-01…SCI-13, ENG-01…06, UX-01…07 (chi tiết mục 4) |
 | 2026-10-08 | **Mở rộng bộ kiểm chứng** với mồi đã công bố → 783/783; xuất file benchmark so sánh mồi tool vs mồi công bố |
 | 2026-10-09 | Thêm 46 assay từ 7 bài (bm_01–04 thân Chen, bm_11–13 hệ khác) → **1382/1382**; logic so sánh gom vào `compare_published()` (dùng chung validate + export) |
+| 2026-10-10 | Thêm 89 assay: Busk 2014 miRprimer (80/82 assay đã kiểm chứng wet-lab, nhóm `polyA_system`, chỉ chấm lõi forward) + bm_001–003 → **2439/2439**; 2 ca từ chối mới ghi là giới hạn đã biết |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -40,7 +41,8 @@
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
   - Kiểm tra cửa sổ nhiệt động (Fwd Tm ≈ 60 °C, GC %, amplicon 63–73 bp), độ đặc hiệu let-7 (so với Wang 2017), edge cases E1/E4/E5/E6.
 - **Mở rộng 2026-10-09 (46 assay, cột `benchmark_group`):** `chen_body` = Mashayekhi 2019 (let-7b, 200b, 145: RT trùng byte-to-byte), Zhang 2007 (let-7a, overhang in 5 nt: thân trùng), Zheng 2014 (143, 145, overhang 8 nt: thân trùng), Bagheri 2021 (15b, 195, 103a-2-5p: thân **biến thể** CGAGAG → chỉ chấm overhang 7 nt + lõi forward). `other_body` = Wang 2018 (9 let-7/miR-98; let-7c/7i dùng thân Chen → RT trùng byte-to-byte), Cao 2023 (21 miRNA chuột; 2 lỗi in RT miR-467a-5p/34c-5p, xác nhận bằng probe trong bài → không chấm; 5 lõi forward 9 nt < 10 → không chấm), Mou 2013 (7 miRNA lúa, overhang 8 nt).
-- **So sánh với mồi đã công bố** (mục 2 của report; full sequence: `benchmark/primer_benchmark_export.csv`, 136/138 dòng thiết kế được):
+- **Mở rộng 2026-10-10 (89 assay):** Busk 2014 (BMC Bioinformatics 15:29, Additional file 5) — hóa học poly(A)/poly(T), không có mồi RT stem-loop → chỉ chấm lõi forward: 79/79 khớp (ssc-miR-2137 bị từ chối). bm_001 Lukashevich 2026 (thân Chen, chuột): 4 RT trùng byte-to-byte, miR-124-3p bị từ chối. bm_003 Nourmohammadi 2019 (loop Chen biến thể CCGACCGG → chỉ chấm overhang + forward). bm_002 Keyhani 2025 (thân khác; forward miR-155 in trùng forward miR-146a → không chấm).
+- **So sánh với mồi đã công bố** (mục 2 của report; full sequence: `benchmark/primer_benchmark_export.csv`, xem `n_design_ok` trong file JSON):
   - **Chen et al. 2005** (NAR) — miR-21, let-7c, miR-10a, miR-22, miR-26b: RT primer **trùng byte-to-byte**.
   - **Varkonyi-Gasic 2007** (Plant Methods 3:12) — ath-miR156a/159a/166a/167a: RT **trùng byte-to-byte**.
   - **Chen, Bosmajian, Woo 2024** — miR-16-5p: RT **trùng byte-to-byte**.
@@ -48,7 +50,7 @@
   - **Cosmopoulos 2009** (J Virol 83:2357) — 30 miRNA EBV: hệ overhang 8 nt; overhang 6 nt của tool = tiền tố 5' của overhang 8 nt → pass.
   - **Yang 2014** (USLP), **Zhao** (miR-195): chỉ so lõi forward (hệ universal khác).
   - 4 khóa luận cử nhân nội bộ lab (miR-125b, 9-3p, 221-3p, 222-3p) — ghi rõ là **nguồn chưa bình duyệt**.
-- **Giới hạn đã ghi nhận (không sửa thuật toán, theo quyết định chủ dự án):** ath-miR171a-3p và ebv-miR-BART6-3p — tiền tố 5' giàu GC vi phạm luật GC đầu 3'; tool từ chối thiết kế (check sẽ fail nếu tool đột nhiên thiết kế được). Các assay nhắm isoform ±1 nt không được chấm.
+- **Giới hạn đã ghi nhận (không sửa thuật toán, theo quyết định chủ dự án):** ath-miR171a-3p, ebv-miR-BART6-3p, ssc-miR-2137 (GC 85,7 %) và mmu-miR-124-3p (20 nt, chỉ còn 14 nt cho forward; GC > 60 % / đầu 3′ CGCGG) — tool từ chối thiết kế, trong khi mồi công bố của các bài này vi phạm chính luật của tool mà vẫn chạy được wet-lab (miR-124-3p: E 107 %) → đưa vào Thảo luận: bộ lọc chặt hơn thực tế (check sẽ fail nếu tool đột nhiên thiết kế được). Các assay nhắm isoform ±1 nt không được chấm.
 - **LNA:** benchmark với 39 oligo McTigue 2004 — RMSD ΔTm 0.78 °C (bài báo 0.85).
 - **Test suite (chạy lại 2026-10-08, cả 2 server đang chạy):** backend unit + route **578 passed, 3 skipped, 0 failed** (`cd backend && python -m pytest tests visualization -q --ignore=tests/smoke`); smoke API **5/5**; e2e Playwright **62/62**; validation chạy lại với API thật **783/783** — `results.json` sinh ra trùng y bản đã commit (tool tất định). Smoke test `test_design_v4_scoring_present` đã được sửa cho khớp SCI-02 (`bound_fraction_binding` → `bound_fraction_binding_pct`).
 
