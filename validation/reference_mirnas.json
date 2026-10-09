@@ -576,6 +576,477 @@
       "published_rt_overhang": "ACTACTAG",
       "published_forward": "ACACTCCAGCTGGGTTACAAAGTCATGGTC",
       "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "label": "hsa-let-7b-5p (Mashayekhi 2019)",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAC",
+      "published_rt_overhang": "AACCAC",
+      "published_forward": "GCTCTTGAGGTAGTAGGTTGTGTG",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-200b-3p",
+      "label": "hsa-miR-200b-3p",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCATCA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCATCA",
+      "published_rt_overhang": "TCATCA",
+      "published_forward": "CGCTAATACTGCCTGGTAATGATGA",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-145-5p",
+      "label": "hsa-miR-145-5p",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGAT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGAT",
+      "published_rt_overhang": "AGGGAT",
+      "published_forward": "CATCCGTCCAGTTTTCCCAGG",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-15b-5p",
+      "label": "hsa-miR-15b-5p",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACTGTAAAC",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "TGTAAAC",
+      "published_forward": "GCAGCACATCATGGTTTACA",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3."
+    },
+    {
+      "id": "hsa-miR-195-5p",
+      "label": "hsa-miR-195-5p (Bagheri 2021)",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACGCCAATA",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "GCCAATA",
+      "published_forward": "GCAGCACAGAAATATTGGC",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3."
+    },
+    {
+      "id": "hsa-miR-103a-2-5p",
+      "label": "hsa-miR-103a-2-5p",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACCAAGGCA",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "CAAGGCA",
+      "published_forward": "GCTTCTTTACAGTGCTGCC",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3. Paper calls it 'miR-103' (reference miRNA); both primers match hsa-miR-103a-2-5p (MIMAT0009196), not miR-103a-3p."
+    },
+    {
+      "id": "hsa-let-7a-5p",
+      "label": "hsa-let-7a-5p (Zhang 2007)",
+      "role": "Chen-body benchmark vs Zhang 2007 (bm_03)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA",
+      "published_rt_overhang": "AACTA",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Zhang HH, Wang XJ, Li GX, Yang E, Yang NM. 'Detection of let-7a microRNA by real-time PCR in gastric carcinoma.' World J Gastroenterol 2007;13(20):2883-2888, Table 1. Chen 2005 44-nt body; the RT primer is printed with a 5-nt overhang (AACTA) while the MGB probe TGGATACGACAACTATAC implies 8 nt (AACTATAC) - likely truncated in print. Reverse GTGCAGGGTCCGAGGT (16-nt sub-window)."
+    },
+    {
+      "id": "hsa-miR-143-3p",
+      "label": "hsa-miR-143-3p",
+      "role": "Chen-body benchmark vs Zheng 2014 (bm_04)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAGCTACA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAGCTACA",
+      "published_rt_overhang": "GAGCTACA",
+      "published_forward": "ATGGTTCGTGGGTGAGATGAAGCACTG",
+      "published_source": "Zheng B, Xue X, Zhao Y, Chen J, Xu CY, Duan P. 'The differential expression of microRNA-143,145 in endometriosis.' Iran J Reprod Med 2014;12(8):555-560, Table I. Chen 2005 44-nt body + 8-nt overhang. NOTE: the printed reverse GTGTCGTGGAGTCGGCAATTC belongs to a different stem-loop body (CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG), inconsistent with the paper's own RT primers."
+    },
+    {
+      "id": "hsa-miR-145-5p",
+      "label": "hsa-miR-145-5p (Zheng 2014)",
+      "role": "Chen-body benchmark vs Zheng 2014 (bm_04)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGATTC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGATTC",
+      "published_rt_overhang": "AGGGATTC",
+      "published_forward": "ATGGTTCGTGGGGTCCAGTTTTCCCAG",
+      "published_source": "Zheng B, Xue X, Zhao Y, Chen J, Xu CY, Duan P. 'The differential expression of microRNA-143,145 in endometriosis.' Iran J Reprod Med 2014;12(8):555-560, Table I. Chen 2005 44-nt body + 8-nt overhang. NOTE: the printed reverse GTGTCGTGGAGTCGGCAATTC belongs to a different stem-loop body (CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG), inconsistent with the paper's own RT primers."
+    },
+    {
+      "id": "hsa-let-7a-5p",
+      "label": "hsa-let-7a-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "label": "hsa-let-7b-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGAGCTAGTTTCGTCGTAGGGCAGTTGAGAACCACAC",
+      "published_rt_overhang": "AACCACAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7c-5p",
+      "label": "hsa-let-7c-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt_overhang": "AACCAT",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7d-5p",
+      "label": "hsa-let-7d-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATGC",
+      "published_rt_overhang": "AACTATGC",
+      "published_forward": "CCAGCTGGGAGAGGTAGTAGGTTGC",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7e-5p",
+      "label": "hsa-let-7e-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGGAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7f-5p",
+      "label": "hsa-let-7f-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGATTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7g-5p",
+      "label": "hsa-let-7g-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTGTAC",
+      "published_rt_overhang": "AACTGTAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGTTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7i-5p",
+      "label": "hsa-let-7i-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACAGC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACAGC",
+      "published_rt_overhang": "AACAGC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGTTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-miR-98-5p",
+      "label": "hsa-miR-98-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACAATAC",
+      "published_rt_overhang": "AACAATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAAGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "mmu-miR-223-5p",
+      "label": "mmu-miR-223-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAACTC",
+      "published_rt_overhang": "CAACTC",
+      "published_forward": "CTGTGTCGGTCGTGTATTTGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-223-3p",
+      "label": "mmu-miR-223-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTGGGGT",
+      "published_rt_overhang": "TGGGGT",
+      "published_forward": "CGTCAGTGTGTGTCAGTTTGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-501-3p",
+      "label": "mmu-miR-501-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAAATC",
+      "published_rt_overhang": "CAAATC",
+      "published_forward": "CCTTCCACAATGCACCCG",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-669a-5p",
+      "label": "mmu-miR-669a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGACAT",
+      "published_rt_overhang": "AGACAT",
+      "published_forward": "CTCGTCGGTTAGTTGTGTGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-129b-5p",
+      "label": "mmu-miR-129b-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGAAGC",
+      "published_rt_overhang": "GGAAGC",
+      "published_forward": "CCTCTTCCCTTTGCTTTTTGG",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467a-5p",
+      "label": "mmu-miR-467a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAGCTC",
+      "published_rt_unscored": "Printed RT overhang CAGCTC is not complementary to the miRNA 3' end (expected CGCATA); the paper's own probe GTGTCCGCATATACATGC contains CGCATA, so the RT row is a misprint.",
+      "published_forward": "CCAAGGACGTAAGTGCCTGC",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-335-3p",
+      "label": "mmu-miR-335-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGTCAG",
+      "published_rt_overhang": "GGTCAG",
+      "published_forward": "CTTGGTTGTGGTTGGTTTTTCATT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-335-5p",
+      "label": "mmu-miR-335-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACATTT",
+      "published_rt_overhang": "ACATTT",
+      "published_forward": "CTCCTCCCTATCAAGAGCAA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-147-3p",
+      "label": "mmu-miR-147-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTAGCAG",
+      "published_rt_overhang": "TAGCAG",
+      "published_forward": "CGTCAGACTGTGTGCGGAA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-7a-5p",
+      "label": "mmu-miR-7a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACAACA",
+      "published_rt_overhang": "ACAACA",
+      "published_forward": "CTCGTGCATGATGGAAGACTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-342-3p",
+      "label": "mmu-miR-342-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACGGGT",
+      "published_rt_overhang": "ACGGGT",
+      "published_forward": "CAACCACACTCTCACACAGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467b-5p",
+      "label": "mmu-miR-467b-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCATATA",
+      "published_rt_overhang": "CATATA",
+      "published_forward": "CTTGCTGTCTCGTAAGTGCCT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-1983",
+      "label": "mmu-miR-1983",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGAAAA",
+      "published_rt_overhang": "AGAAAA",
+      "published_forward": "CTTTCTGTCTCTCACCTGGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-21a-5p",
+      "label": "mmu-miR-21a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTCAACA",
+      "published_rt_overhang": "TCAACA",
+      "published_forward": "CATCACCCTCGTAGCTTATCA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-34c-5p",
+      "label": "mmu-miR-34c-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGCAATG",
+      "published_rt_unscored": "Printed RT overhang GCAATG differs from the expected GCAATC at its last base; the paper's own probe CTTGTGTCGCAATCAGCTAAC contains GCAATC, so the RT row is a misprint.",
+      "published_forward": "CCATGGTAGTAGGCAGTGTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-181c-3p",
+      "label": "mmu-miR-181c-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGTCCA",
+      "published_rt_overhang": "GGTCCA",
+      "published_forward": "CAAGAGCACCATCGACCGTT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-19a-3p",
+      "label": "mmu-miR-19a-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTCAGTT",
+      "published_rt_overhang": "TCAGTT",
+      "published_forward": "CCGTGTCGTGTGCAAATCTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-144-3p",
+      "label": "mmu-miR-144-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGTACA",
+      "published_rt_overhang": "AGTACA",
+      "published_forward": "CGTTCCGATGAGTAATACAGTATA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-511-5p",
+      "label": "mmu-miR-511-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTGAGTG",
+      "published_rt_overhang": "TGAGTG",
+      "published_forward": "CCTTCGCTTCCATGCCTTTT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467c-5p",
+      "label": "mmu-miR-467c-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCACATA",
+      "published_rt_overhang": "CACATA",
+      "published_forward": "CTCTTCCTATTCCTAAGTGCGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-21a-3p",
+      "label": "mmu-miR-21a-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGACAGC",
+      "published_rt_overhang": "GACAGC",
+      "published_forward": "CAACAGAACACCAACAGCAGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "osa-miR164a",
+      "label": "osa-miR164a",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTGCACGTG",
+      "published_rt_overhang": "TGCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR164a/b/f' (identical mature sequences)."
+    },
+    {
+      "id": "osa-miR164c",
+      "label": "osa-miR164c",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTGCACGTA",
+      "published_rt_overhang": "TGCACGTA",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR164d",
+      "label": "osa-miR164d",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGAGCACGTG",
+      "published_rt_overhang": "AGCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR164e",
+      "label": "osa-miR164e",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGCTCACGTG",
+      "published_rt_overhang": "CTCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR530-5p",
+      "label": "osa-miR530-5p",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTAGGTGCA",
+      "published_rt_overhang": "TAGGTGCA",
+      "published_forward": "ACACTCCAGCTGGGTGCATTTGCACC",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR1846a-5p",
+      "label": "osa-miR1846a-5p",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGAGCGGCCC",
+      "published_rt_overhang": "AGCGGCCC",
+      "published_forward": "ACACTCCAGCTGGGAGTGAGGAGG",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR1846a/b/c-5p'."
+    },
+    {
+      "id": "osa-miR1858a",
+      "label": "osa-miR1858a",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGGCCCCACT",
+      "published_rt_overhang": "GCCCCACT",
+      "published_forward": "ACACTCCAGCTGGGGAGAGGAGGA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR1858a/b'."
     }
   ],
   "edge_cases": [

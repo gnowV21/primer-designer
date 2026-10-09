@@ -57,6 +57,96 @@ def specific_region(primer: str, mirna_dna: str) -> str:
     return ""
 
 
+def anchored_region(primer: str, mirna_dna: str):
+    """(core, start) — where a published forward primer sits on the miRNA.
+
+    Normally the 5'-prefix core above (start 0). Some protocols print a forward with
+    no 5' tail that starts at miRNA nt 2-3 (e.g. Bagheri 2021); then fall back to the
+    longest 3' suffix of the primer found anywhere in the miRNA.
+    """
+    core = specific_region(primer, mirna_dna)
+    if len(core) >= 10:
+        return core, 0
+    primer = primer.upper()
+    for length in range(len(primer), len(core), -1):
+        pos = mirna_dna.find(primer[-length:])
+        if pos >= 0:
+            return primer[-length:], pos
+    return core, 0
+
+
+def _norm(s):
+    return (s or "").upper().replace("U", "T").replace(" ", "")
+
+
+def compare_published(entry, rt, fwd, dna, olen):
+    """Tool primers vs a cited published primer table. Returns (checks, row fields).
+
+    Entry fields (all optional, never invented — only from a cited paper table):
+      published_rt          full RT primer. Compared only when its stem-loop body is the
+                            tool's (Chen 2005). Same length -> byte-exact; different
+                            overhang length (5/7/8 nt) -> body must be identical.
+      published_rt_overhang 3' overhang. Every overhang starts with the base pairing the
+                            miRNA 3'-terminal nt, so the shorter one must be the 5'
+                            prefix of the longer one.
+      published_forward     forward primer. Scored: its miRNA core overlaps the tool's
+                            core by >= 10 nt at the same miRNA coordinates. Cores < 10 nt
+                            are recorded but not scored. Exact match recorded, not scored.
+      published_rt_unscored reason the printed RT is shown but NOT scored (paper erratum,
+                            modified body). Its printed sequence goes in published_rt_printed.
+    """
+    checks, row = [], {}
+    rt, fwd = _norm(rt), _norm(fwd)
+    tool_over = rt[-olen:]
+    pub_rt = _norm(entry.get("published_rt"))
+    pub_over = _norm(entry.get("published_rt_overhang"))
+    pub_fwd = _norm(entry.get("published_forward"))
+
+    if pub_rt:
+        if len(pub_rt) == len(rt):
+            c = rt == pub_rt
+            checks.append(("published_rt_exact_match", c))
+            row["published_rt_match"] = ok(c)
+        else:
+            plen = len(pub_over) or olen
+            c = pub_rt[:-plen] == rt[:-olen]
+            checks.append(("published_rt_body_match", c))
+            row["published_rt_match"] = f"BODY {ok(c)} ({plen}-nt overhang)"
+
+    if pub_over:
+        if len(pub_over) >= olen:
+            c = pub_over.startswith(tool_over)
+        else:
+            c = tool_over.startswith(pub_over)
+        checks.append(("published_rt_overhang_match", c))
+        row["published_rt_overhang_match"] = ok(c)
+
+    if pub_fwd:
+        tool_spec = specific_region(fwd, dna)
+        pub_spec, pub_start = anchored_region(pub_fwd, dna)
+        ov = max(0, min(len(tool_spec), pub_start + len(pub_spec)) - pub_start)
+        row.update({
+            "published_forward_exact": ok(fwd == pub_fwd),
+            "published_forward_tool": fwd,
+            "published_forward_ref": entry.get("published_forward"),
+            "forward_tool_specific": tool_spec,
+            "forward_pub_specific": pub_spec,
+            "forward_pub_start_nt": pub_start + 1,
+            "forward_specific_overlap_nt": ov,
+        })
+        if len(pub_spec) >= 10:
+            c = ov >= 10
+            checks.append(("published_forward_specific_agrees", c))
+            row["published_forward_specific_shared"] = ok(c)
+        else:
+            row["published_forward_specific_shared"] = f"N/A (published core {len(pub_spec)} nt < 10)"
+
+    for k in ("published_source", "published_rt_unscored", "published_rt_printed", "benchmark_group"):
+        if entry.get(k):
+            row[k] = entry[k]
+    return checks, row
+
+
 def to_dna(rna: str) -> str:
     return rna.upper().replace("U", "T")
 
@@ -190,54 +280,10 @@ def validate_one(base, entry, consts, windows):
     checks += [("forward_specific_is_5prime_prefix", c_spec_prefix),
                ("forward_ends_with_specific", c_fwd_tail)]
 
-    # --- Optional EXACT-MATCH vs published primer sequences ---------------------
-    # Only runs when the dataset entry carries real published sequences. We never
-    # fabricate these — fields are absent until a paper table is supplied.
-    #   published_rt            : full stem-loop RT primer as published
-    #   published_rt_overhang   : just the 3' overhang (6 nt) as published
-    #   published_forward       : forward qPCR primer as published
-    #   published_source        : citation string (recorded, not checked)
-    def _norm(s):
-        return (s or "").upper().replace("U", "T").replace(" ", "")
-
-    pub_rt = _norm(entry.get("published_rt"))
-    if pub_rt:
-        c = _norm(rt) == pub_rt
-        checks.append(("published_rt_exact_match", c))
-        row["published_rt_match"] = ok(c)
-
-    pub_over = _norm(entry.get("published_rt_overhang"))
-    if pub_over:
-        if len(pub_over) > olen:
-            # Longer published overhang (7-8 nt, Chen's 6-8 nt range): both bind the miRNA
-            # 3' end, so the tool's overhang must be the 5' prefix of the published one.
-            c = pub_over.startswith(_norm(rt)[-olen:])
-        else:
-            c = _norm(rt).endswith(pub_over)
-        checks.append(("published_rt_overhang_match", c))
-        row["published_rt_overhang_match"] = ok(c)
-
-    pub_fwd = _norm(entry.get("published_forward"))
-    if pub_fwd:
-        # Rich forward comparison. Forward EXACT match is a design choice (the 5'
-        # Tm-raising tail and specific-region length differ between protocols/Tm
-        # targets), so it is recorded but NOT scored. The SCORED check is that the
-        # tool's miRNA-specific region is byte-identical to the published one over
-        # their full overlap — i.e. both anchor the same nucleotides of the miRNA.
-        tool_spec = specific_region(_norm(fwd), dna)
-        pub_spec = specific_region(pub_fwd, dna)
-        ov = min(len(tool_spec), len(pub_spec))
-        c_agree = ov >= 10 and tool_spec[:ov] == pub_spec[:ov]
-        checks.append(("published_forward_specific_agrees", c_agree))
-        row["published_forward_exact"] = ok(_norm(fwd) == pub_fwd)
-        row["published_forward_specific_shared"] = ok(c_agree)
-        row["published_forward_tool"] = fwd
-        row["published_forward_ref"] = entry.get("published_forward")
-        row["forward_tool_specific"] = tool_spec
-        row["forward_pub_specific"] = pub_spec
-        row["forward_specific_overlap_nt"] = ov
-    if entry.get("published_source"):
-        row["published_source"] = entry["published_source"]
+    # --- Optional match vs published primer sequences (never fabricated) ---
+    pub_checks, pub_row = compare_published(entry, rt, fwd, dna, olen)
+    checks += pub_checks
+    row.update(pub_row)
 
     # --- Plausibility: Tm / GC / amplicon ---
     tm = top.get("tm_full")
@@ -319,6 +365,10 @@ def main():
             "forward_tool_specific": row.get("forward_tool_specific"),
             "forward_pub_specific": row.get("forward_pub_specific"),
             "forward_specific_overlap_nt": row.get("forward_specific_overlap_nt"),
+            "forward_pub_start_nt": row.get("forward_pub_start_nt"),
+            "published_rt_printed": row.get("published_rt_printed"),
+            "published_rt_unscored": row.get("published_rt_unscored"),
+            "benchmark_group": row.get("benchmark_group"),
             "published_source": row.get("published_source"),
             "failed_checks": failed,
         })
@@ -332,7 +382,7 @@ def main():
             "amplicon_bp", "grade", "score", "siblings_flagged",
             "published_rt_match", "published_rt_overhang_match",
             "published_forward_exact", "published_forward_specific_shared",
-            "forward_specific_overlap_nt",
+            "forward_specific_overlap_nt", "benchmark_group", "published_rt_unscored",
             "published_source", "edge_expected", "edge_found", "edge_check"]
     with open(args.out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")

@@ -32,13 +32,15 @@
 | 2026-09-17/19 | **Visualization module** (SVG: phản ứng 4 giai đoạn, đường cong melting, gel ảo; `/api/visualize`); **Designer 2 tầng**: `/design` (Basic, 3 bước) và `/design/advanced` |
 | 2026-09-18/19 | **Audit khoa học v3.1.0** (`AUDIT_REPORT.md`): sửa SCI-01…SCI-13, ENG-01…06, UX-01…07 (chi tiết mục 4) |
 | 2026-10-08 | **Mở rộng bộ kiểm chứng** với mồi đã công bố → 783/783; xuất file benchmark so sánh mồi tool vs mồi công bố |
+| 2026-10-09 | Thêm 46 assay từ 7 bài (bm_01–04 thân Chen, bm_11–13 hệ khác) → **1382/1382**; logic so sánh gom vào `compare_published()` (dùng chung validate + export) |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
 - **Validation in-silico:** `validation/results.json` — **783/783 check pass (100 %)**, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md` (bản đã commit), phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
   - Kiểm tra cửa sổ nhiệt động (Fwd Tm ≈ 60 °C, GC %, amplicon 63–73 bp), độ đặc hiệu let-7 (so với Wang 2017), edge cases E1/E4/E5/E6.
-- **So sánh với mồi đã công bố** (mục 2 của report; full sequence: `benchmark/primer_benchmark_export.csv`, 96 miRNA):
+- **Mở rộng 2026-10-09 (46 assay, cột `benchmark_group`):** `chen_body` = Mashayekhi 2019 (let-7b, 200b, 145: RT trùng byte-to-byte), Zhang 2007 (let-7a, overhang in 5 nt: thân trùng), Zheng 2014 (143, 145, overhang 8 nt: thân trùng), Bagheri 2021 (15b, 195, 103a-2-5p: thân **biến thể** CGAGAG → chỉ chấm overhang 7 nt + lõi forward). `other_body` = Wang 2018 (9 let-7/miR-98; let-7c/7i dùng thân Chen → RT trùng byte-to-byte), Cao 2023 (21 miRNA chuột; 2 lỗi in RT miR-467a-5p/34c-5p, xác nhận bằng probe trong bài → không chấm; 5 lõi forward 9 nt < 10 → không chấm), Mou 2013 (7 miRNA lúa, overhang 8 nt).
+- **So sánh với mồi đã công bố** (mục 2 của report; full sequence: `benchmark/primer_benchmark_export.csv`, 136/138 dòng thiết kế được):
   - **Chen et al. 2005** (NAR) — miR-21, let-7c, miR-10a, miR-22, miR-26b: RT primer **trùng byte-to-byte**.
   - **Varkonyi-Gasic 2007** (Plant Methods 3:12) — ath-miR156a/159a/166a/167a: RT **trùng byte-to-byte**.
   - **Chen, Bosmajian, Woo 2024** — miR-16-5p: RT **trùng byte-to-byte**.

@@ -22,7 +22,7 @@ def load(path):
 
 def main():
     results = load("validation/results.json")
-    ref = {e["id"]: e for e in load("validation/reference_mirnas.json")["mirnas"]}
+    ref = {e.get("label", e["id"]): e for e in load("validation/reference_mirnas.json")["mirnas"]}
 
     targets = results["targets"]
     mirnas = [t for t in targets if t.get("rt_overhang_expected") is not None]
@@ -83,11 +83,13 @@ def main():
     lines.append("## 2. Tool primer vs. published primer (journal / conference / thesis)")
     lines.append("")
     lines.append("Only miRNAs `reference_mirnas.json` cites a real external source for. "
-                  "Full side-by-side primer sequences for all 55 benchmarked miRNAs: "
+                  "Group: `chen_body` = paper uses the Chen 2005 stem-loop body (RT primer, overhang and "
+                  "forward compared); `other_body` = different universal system (overhang and forward "
+                  "core only). Full side-by-side primer sequences for every benchmarked miRNA: "
                   "[benchmark/primer_benchmark_export.csv](../benchmark/primer_benchmark_export.csv).")
     lines.append("")
-    lines.append("| miRNA | RT exact match | Overhang match | Forward specific-region agrees | Source |")
-    lines.append("|---|---|---|---|---|")
+    lines.append("| miRNA | Group | RT exact match | Overhang match | Forward specific-region agrees | Source |")
+    lines.append("|---|---|---|---|---|---|")
     for t in mirnas:
         mid = t["target"]
         has_pub = any(t.get(k) for k in
@@ -97,7 +99,8 @@ def main():
         src = ref[mid].get("published_source", "")
         src_short = src.split(".")[0][:70] + ("…" if len(src) > 70 else "")
         lines.append(
-            f"| {mid} | {t.get('published_rt_match') or '—'} | "
+            f"| {mid} | {t.get('benchmark_group') or '—'} | "
+            f"{t.get('published_rt_match') or ('not scored' if t.get('published_rt_unscored') else '—')} | "
             f"{t.get('published_rt_overhang_match') or '—'} | "
             f"{t.get('published_forward_specific_shared') or '—'} | {src_short} |"
         )
@@ -143,6 +146,21 @@ def main():
     lines.append("- 4 entries (miR-125b-5p, miR-9-3p, miR-221-3p, miR-222-3p) cite **unpublished "
                   "lab-internal bachelor theses** — recorded as such, not presented as "
                   "peer-reviewed sources.")
+    lines.append("- 2026-10 additions (46 assays, `benchmark_group` set): RT 'BODY PASS (n-nt "
+                  "overhang)' = Chen body identical, overhang length differs (Zhang 2007 prints 5 nt, "
+                  "its own MGB probe implies 8; Zheng 2014 uses 8). Bagheri 2021 uses a MODIFIED Chen "
+                  "stem (CGAGAG/CACTCG) — body not scored, 7-nt overhang and forward scored; its "
+                  "forwards have no 5' tail and start at miRNA nt 2-3; its 'miR-103' is "
+                  "hsa-miR-103a-2-5p. Zheng 2014's printed reverse belongs to another stem-loop body. "
+                  "Wang 2018 let-7c/let-7i use the Chen body and match byte-for-byte. Cao 2023: the "
+                  "printed RT overhangs of mmu-miR-467a-5p and mmu-miR-34c-5p are misprints "
+                  "(contradicted by the paper's own probes) — not scored; 5 forwards with a 9-nt "
+                  "miRNA core (< 10) are recorded, not scored. Mou 2013: the tool designs "
+                  "osa-miR1846a-5p and osa-miR1858a, which the paper's stem-loop assay failed to "
+                  "detect experimentally (low abundance, GC-rich) — design success is not detection.")
+    lines.append("- The forward specific-region check is weak evidence: when both primers anchor "
+                  "the miRNA 5' end, their cores agree by construction. It confirms anchoring and "
+                  "core length >= 10 nt, not primer equivalence.")
     lines.append("- This report is distinct from, and does not use, the miR-16 \"exp 220826\" "
                   "wet-lab case study in AUDIT_REPORT.md §3, which is explicitly not ground truth.")
     lines.append("- The 50-miRNA panel in `benchmark/panel.json` has no external tool configured "

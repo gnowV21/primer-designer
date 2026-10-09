@@ -22,6 +22,9 @@ import sys
 
 import requests
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "validation"))
+from validate_primers import compare_published  # noqa: E402  single source of truth
+
 ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
 BASE = "http://localhost:5000"
 
@@ -48,40 +51,28 @@ def design(mature_seq, mirna_id):
     return r.json()
 
 
-def norm(s):
-    return (s or "").upper().replace("U", "T").replace(" ", "")
-
-
-def specific_region(primer, mirna_dna):
-    """Longest 3' suffix of `primer` that is a 5' prefix of `mirna_dna` — the
-    miRNA-specific core, independent of whatever 5' Tm-raising tail each
-    protocol adds. Same definition validate_primers.py uses."""
-    primer = primer.upper()
-    for length in range(len(primer), 0, -1):
-        if mirna_dna.startswith(primer[-length:]):
-            return primer[-length:]
-    return ""
-
-
 def main():
     panel = load("benchmark/panel.json")["mirnas"]
     ref = load("validation/reference_mirnas.json")["mirnas"]
 
-    # Union by id; reference entries (which may carry published_* citations) win.
+    # Union by label (one miRNA may be benchmarked against several papers);
+    # reference entries (which may carry published_* citations) win.
     merged = {e["id"]: {"id": e["id"], "sequence": e.get("sequence")} for e in panel}
     for e in ref:
-        merged.setdefault(e["id"], {"id": e["id"]})
-        merged[e["id"]].update({k: v for k, v in e.items() if k != "id"})
+        key = e.get("label", e["id"])
+        merged.setdefault(key, {"id": e["id"]})
+        merged[key].update(e)
 
     rows, n_ok, n_published = [], 0, 0
-    for mid, entry in sorted(merged.items()):
+    for label, entry in sorted(merged.items()):
+        mid = entry["id"]
         seq = entry.get("sequence") or entry.get("matureSequence")
         try:
             if not seq:
                 seq = fetch_sequence(mid)
             data = design(seq, mid)
         except Exception as exc:  # noqa: BLE001
-            rows.append({"id": mid, "status": f"ERROR: {exc}"})
+            rows.append({"id": mid, "label": label, "status": f"ERROR: {exc}"})
             continue
 
         used = data["metadata"]["mirna_sequence"].upper()
@@ -92,17 +83,16 @@ def main():
         fwd = (top.get("sequence") or "").upper()
         spec = (top.get("specific_region") or "").upper()
 
-        pub_rt = entry.get("published_rt")
-        pub_over = entry.get("published_rt_overhang")
-        pub_fwd = entry.get("published_forward")
-
+        _, cmp = compare_published(entry, rt, fwd, used_dna, olen)
         row = {
             "id": mid,
+            "label": label,
             "status": "OK",
             "mirna_sequence": used,
             "length_nt": len(used),
             "gc_pct_mirna": entry.get("gc_pct"),
             "role_note": entry.get("role", ""),
+            "benchmark_group": entry.get("benchmark_group", ""),
             # tool output
             "tool_rt_primer": rt,
             "tool_rt_overhang": rt[-olen:],
@@ -115,31 +105,19 @@ def main():
             "tool_score": top.get("total_score"),
             "tool_grade": top.get("grade"),
             # published (journal / thesis) — blank unless cited in reference_mirnas.json
-            "published_rt_primer": pub_rt or "",
-            "published_rt_overhang": pub_over or "",
-            "published_forward_primer": pub_fwd or "",
+            "published_rt_primer": entry.get("published_rt") or entry.get("published_rt_printed", ""),
+            "published_rt_overhang": entry.get("published_rt_overhang", ""),
+            "published_forward_primer": entry.get("published_forward", ""),
             "published_source": entry.get("published_source", ""),
-            "rt_exact_match": "",
-            "rt_overhang_match": "",
-            "published_forward_specific_region": "",
-            "forward_specific_overlap_nt": "",
-            "forward_specific_agrees": "",
+            "rt_exact_match": cmp.get("published_rt_match", ""),
+            "rt_not_scored_reason": entry.get("published_rt_unscored", ""),
+            "rt_overhang_match": cmp.get("published_rt_overhang_match", ""),
+            "published_forward_specific_region": cmp.get("forward_pub_specific", ""),
+            "published_forward_start_nt": cmp.get("forward_pub_start_nt", ""),
+            "forward_specific_overlap_nt": cmp.get("forward_specific_overlap_nt", ""),
+            "forward_specific_agrees": cmp.get("published_forward_specific_shared", ""),
         }
-        if pub_rt:
-            row["rt_exact_match"] = "YES" if norm(rt) == norm(pub_rt) else "NO"
-        if pub_over:
-            po = norm(pub_over)
-            # longer published overhang (7-8 nt): tool's overhang must be its 5' prefix
-            hit = po.startswith(rt[-olen:]) if len(po) > olen else norm(rt).endswith(po)
-            row["rt_overhang_match"] = "YES" if hit else "NO"
-        if pub_fwd:
-            pub_spec = specific_region(norm(pub_fwd), used_dna)
-            ov = min(len(spec), len(pub_spec))
-            agree = ov >= 10 and spec[:ov] == pub_spec[:ov]
-            row["published_forward_specific_region"] = pub_spec
-            row["forward_specific_overlap_nt"] = ov
-            row["forward_specific_agrees"] = "YES" if agree else "NO"
-        if pub_rt or pub_over or pub_fwd:
+        if any(entry.get(k) for k in ("published_rt", "published_rt_overhang", "published_forward")):
             n_published += 1
 
         rows.append(row)
