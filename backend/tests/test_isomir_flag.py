@@ -1,3 +1,4 @@
+import pytest
 # ================================================================
 # tests/test_isomir_flag.py
 # Unit tests for specificity_check/isomir_flag.py
@@ -107,3 +108,50 @@ if __name__ == "__main__":
     test_output_boolean_type()
     test_co_amplification_warning_present_for_known()
     print("\nAll isomir_flag tests passed.")
+
+
+# ── Week2 C11: 3' isomiR flag ─────────────────────────────────────
+from algorithm.specificity_check import isomir_flag as _iso3
+
+
+_FAKE_META = {"coverage_warning": "Human only.", "source": {"name": "isomiRdb", "pmid": "36243964"}}
+
+
+def _entry(f):
+    return {"median_3prime_fraction": f, "iqr_3prime_fraction": [f - 0.05, f + 0.05],
+            "pooled_3prime_fraction": f, "n_samples_expressed": 1000,
+            "top_3prime_variants": [{"sequence_dna": "ACGT", "label": "lv3p|lv3pT|lv3p#-1",
+                                     "pooled_share": 0.3}]}
+
+
+def test_3prime_no_entry_returns_false(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-NOPE-5p", overhang_len=6)
+    assert res["three_prime_isomir_risk"] is False
+    assert res["level"] == "no_data"
+    assert "not evidence" in res["note"]
+
+
+def test_3prime_majority_isoforms_raise_warning(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META, "hsa-miR-T-3p": _entry(0.89)})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-T-3p", overhang_len=6)
+    assert res["three_prime_isomir_risk"] is True and res["level"] == "high"
+    assert "89%" in res["warning"] and "minority" in res["warning"]
+    assert res["source"] == "isomiRdb (PMID 36243964)"
+
+
+@pytest.mark.parametrize("f, level", [(0.49, "moderate"), (0.20, "moderate"), (0.19, "low")])
+def test_3prime_tiers_below_majority_are_informational(monkeypatch, f, level):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META, "hsa-miR-T-3p": _entry(f)})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-T-3p")
+    assert res["three_prime_isomir_risk"] is False
+    assert res["level"] == level and res["warning"] is None and res["summary"]
+
+
+
+def test_3prime_abundance_only_entry_is_no_data(monkeypatch):
+    monkeypatch.setattr(_iso3, "_DB3_CACHE", {"_metadata": _FAKE_META,
+                                              "hsa-miR-A-5p": {"median_total_rpm": 5.0,
+                                                               "abundance_percentile": 50.0}})
+    res = _iso3.check_3prime_isomir_flag("hsa-miR-A-5p")
+    assert res["level"] == "no_data" and res["three_prime_isomir_risk"] is False

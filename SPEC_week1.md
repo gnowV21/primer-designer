@@ -1,34 +1,58 @@
 # SPEC CHI TIẾT — Stem-loop RT-qPCR Primer Designer
-# Tuần 1: Thiết lập dự án · Form input · miRBase API
-# Phiên bản 3.2 — Week 1 HOÀN THÀNH · Sync với SPEC_phase2 v2.8.2 · Bug fixes defaults.js
+# Phiên bản 4.0 — Phase 1–8 HOÀN THÀNH · Cập nhật 2026-07-09
 
 ---
 
 ## 0. Hướng dẫn đọc spec này (dành cho Claude Code)
 
-- Đây là tài liệu gốc. Mọi quyết định kỹ thuật phải tuân theo spec này.
+- Đây là tài liệu nguồn sự thật duy nhất. Mọi quyết định kỹ thuật phải tuân theo spec này.
 - Khi nhận task mới: đọc lại section liên quan trước khi viết bất kỳ dòng code nào.
 - Không tự ý thêm tính năng, thay đổi layout, hoặc dùng thư viện ngoài danh sách cho phép.
-- Giải thích bằng tiếng Việt đơn giản khi cài package hoặc khi có lỗi.
-- Trước mỗi `git commit`: chạy Superpower security check (xem Section 2b).
-- Sau mỗi thay đổi UI có ý nghĩa: chạy Playwright E2E test liên quan (xem Section 21).
+- Trước mỗi `git commit`: chạy security check (kiểm tra hardcoded secrets, injection risk).
+- **Ngôn ngữ UI:** All UI text MUST be in English — labels, tooltips, errors, warnings, placeholders, buttons. No Vietnamese in the UI layer.
+- **Scoring:** SCORING_WEIGHTS_V4 (15 criteria, sum = 1.00) — KHÔNG thay đổi. RT primer KHÔNG scored. Probe KHÔNG scored.
+- **LNA Tm:** Informational only — KHÔNG vào SCORING_WEIGHTS_V4, KHÔNG vào hard filters.
 
 ---
 
 ## 1. Tổng quan dự án
 
-**Tên:** HG Lab — Stem-loop RT-qPCR Designer
-**Mục đích khoa học:** Thiết kế tự động 3 loại primer cho phản ứng Stem-loop RT-qPCR dùng để định lượng mature miRNA. Phát triển từ phương pháp tiên phong của Chen et al. (2005), với các cải tiến về độ nhạy và tối ưu Tm.
+**Tên:** HG Lab — Stem-loop RT-qPCR Designer  
+**Mục đích khoa học:** Thiết kế tự động 3 loại primer cho phản ứng Stem-loop RT-qPCR dùng để định lượng mature miRNA. Phát triển từ phương pháp của Chen et al. (2005) với các cải tiến về độ nhạy Tm và scoring đa tiêu chí V4.  
 **Người dùng:** Nhà nghiên cứu sinh học phân tử, không cần biết IT.
-**Ngôn ngữ giao diện:** All UI text in English — labels, tooltips, error messages, warnings, info boxes, placeholders, and button text. No Vietnamese in the UI layer.
 
-### Ba primer cần thiết kế (bối cảnh khoa học)
+### Ba primer cần thiết kế
 
 | Primer | Vai trò | Đặc điểm kỹ thuật |
 |--------|---------|-------------------|
-| Stem-loop RT primer | Phiên mã ngược, kéo dài miRNA từ ~22nt lên >60nt | Thân hairpin ~44nt + đầu thò 3' 6nt bổ sung với đầu 3' miRNA |
-| Forward qPCR primer | Bắt cặp đầu 5' của cDNA, khuếch đại đặc hiệu | Phần đặc hiệu 10–12nt từ miRNA + đuôi 5' để nâng Tm lên 60°C |
-| Universal reverse primer | Phá vỡ cấu trúc hairpin, dùng chung mọi assay | Chuỗi cải tiến: 5′-CCAGTGCAGGGTCCGAGGTA-3′ (20nt) |
+| Stem-loop RT primer | Phiên mã ngược | Thân hairpin 44 nt (STEMLOOP_BODY) + RC 3' 6 nt miRNA |
+| Forward qPCR primer | Khuếch đại đặc hiệu | 12–17 nt specific region + 5' GC-rich tail → Tm ≈ 60°C |
+| Universal reverse primer | Cố định cho mọi assay | 5′-CCAGTGCAGGGTCCGAGGTA-3′ (20 nt, Kramer 2011) |
+
+### Trạng thái dự án
+
+| Phase | Nội dung | Trạng thái |
+|-------|----------|------------|
+| Phase 1 (Week 1) | Setup, form input, miRBase API | ✅ HOÀN THÀNH |
+| Phase 2 | Thuật toán thiết kế primer, V3 scoring | ✅ HOÀN THÀNH |
+| Phase 3 | V4 scoring (15 criteria), bound fraction, hard filters | ✅ HOÀN THÀNH |
+| Phase 4 | TaqMan probe design, multiplex check | ✅ HOÀN THÀNH |
+| Phase 5 | Protocol advisor, edge cases, normalization advisor | ✅ HOÀN THÀNH |
+| Phase 6 | BLAST off-target, family specificity map | ✅ HOÀN THÀNH |
+| Phase 7 | Family benchmark (50 miRNAs), isoMiR flag | ✅ HOÀN THÀNH |
+| Phase 8 | Batch design, LNA Tm calculator, session history | ⚠️ GỠ / RÚT GỌN — xem ghi chú dưới |
+| Nhóm A | A1 Batch · A2 LNA · A3 Species (`PLAN_GapA_ScientificCompleteness.md`) | 🔧 A1 BỎ · A2 XONG (benchmarked) · A3 XONG — xem ghi chú |
+
+> **⚠️ Phase 8 — GỠ / RÚT GỌN (cập nhật 2026-08-14)**
+> Phase 8 đã được rút gọn khỏi sản phẩm. Các phần dưới (14, 15, 17 batch, 22 tests batch, 23) mô tả tính năng **không còn tồn tại** — giữ lại làm lịch sử thiết kế, không phản ánh code hiện tại.
+> - **Batch design — GỠ HOÀN TOÀN:** BatchPage, BatchDesignPanel, useBatchDesign, backend `batch_design.py` + test đã xóa; route `/batch` và tab Navbar "Batch" đã bỏ; blueprint `batch_design_bp` không còn đăng ký trong `app.py`. Constants `BATCH_*` cũng đã dọn khỏi `constants.py`.
+> - **Session history — GỠ:** HistoryPanel (UI), hook `useHistory.js` và `lib/historyDB.js` (IndexedDB) đã xóa; auto-save trong SearchPage đã gỡ. Không còn lưu/duyệt lịch sử phiên.
+> - **LNA Tm calculator — BẬT + ĐÃ BENCHMARK (2026-08-14):** `USE_LNA_SUGGESTIONS=True`. Bảng NN trong `lna_tm.py` nay là **số thật đã kiểm chứng** — Owczarzy 2011 Table 2 (`_MCTIGUE04` = single-LNA full params suy từ McTigue 2004 32NN; `_OWCZARZY11` = consecutive-LNA). Đã sửa bug initiation (áp SantaLucia init cho **cả 2 đầu** duplex). `tests/test_lna_benchmark.py` đối chiếu McTigue 2004 Table 1 (39 oligo đo thực, 1 M Na⁺): **ΔTm RMSD 0.78 °C** (paper 0.85), **absolute Tm RMSD 1.54 °C** (paper method-4 1.47), per-oligo ΔTm ≤ 2.5 °C. `/api/health` expose `features.lna_suggestions`; frontend `useLnaEnabled` hiện/ẩn nút LNA theo flag. LnaPanel render trong `ResultsPage/ThermoTable` + Analyzer.
+
+> **🔧 Nhóm A — Scientific Completeness (cập nhật 2026-08-14, `PLAN_GapA_ScientificCompleteness.md`)**
+> - **A1 Batch — BỎ (quyết định của chủ dự án).** Batch mâu thuẫn với hướng `feat/design-focus`; giữ nguyên trạng thái đã gỡ. Khôi phục từ commit `269a4c9` nếu cần.
+> - **A2 LNA — XONG + BENCHMARKED (2026-08-14).** Chủ dự án cung cấp 2 paper gốc (McTigue 2004, Owczarzy 2011). Đã thay placeholder bằng số thật (Owczarzy Table 2), sửa bug initiation 2 đầu, và viết `tests/test_lna_benchmark.py` đối chiếu 39 oligo đo thực trong McTigue Table 1: ΔTm RMSD 0.78 °C, absolute Tm RMSD 1.54 °C (≤ 2 °C). Bật lại `USE_LNA_SUGGESTIONS=True`. Xem ghi chú Phase 8.
+> - **A3 Species — XONG.** Family DB `mirbase_family_overhangs.json` rebuild đa loài `hsa,mmu,rno` (300 KB, seed-based) bằng `scripts/build_mirbase_data.py --species hsa,mmu,rno`. `check_family_crossreactivity(..., species=None)` nay scope theo species (prefix từ `mirna_name`, reuse `_extract_species_prefix`; loại same-family ortholog khác loài → `cross_species_excluded`, nhất quán logic BLAST). UI `FamilySpecificityMap` hiển thị species + số cross-species excluded. Test `tests/test_family_species.py` (6 pass) gồm `test_let7a_family_loaded_from_miFam` (hsa + mmu). **Lưu ý:** `_find_family` là name-based → chuỗi dán không có tên miRNA không tra được family (form `species` chỉ là fallback); species scoping thực chất do prefix trong tên miRNA quyết định.
 
 ---
 
@@ -37,66 +61,36 @@
 ### Frontend
 ```
 React 18 + Vite 5 + Tailwind CSS 3
-React Router DOM v6 (routing 3 tab)
-Axios (gọi API backend)
+React Router DOM v6
+Axios (API calls)
 ```
 
 ### Backend
 ```
 Python 3.11 + Flask 3 + flask-cors + requests
+primer3-py 2.0.3    — SantaLucia 1998 NN Tm, hairpin/dimer ΔG
+ViennaRNA 2.6.4     — RNA.fold MFE (optional, falls back to primer3-py)
+biopython 1.83      — sequence utilities
+numpy 1.26.4        — scoring calculations
 ```
 
 ### Thư viện KHÔNG dùng
-- Redux, Zustand, Context API phức tạp (dùng useState là đủ)
-- React Hook Form, Formik (tự viết validation đơn giản)
-- Ant Design, Material UI, Chakra UI (chỉ dùng Tailwind)
+- Redux, Zustand (dùng useState/useRef)
+- React Hook Form, Formik
+- Ant Design, Material UI, Chakra UI (chỉ Tailwind)
+- NUPACK, RNAstructure, thư viện hybrid ngoài
+- Thêm dependency backend mới — phải có approval
 
 ---
 
-## 2b. Công cụ phát triển (Development Tooling)
-
-### Superpower MCP
-**Dùng khi nào:**
-- Trước `git commit`: chạy security check để phát hiện hardcoded secrets, injection risk, auth bypass
-- Khi debug lỗi phức tạp: dùng skill systematic-debugging
-- Khi lên kế hoạch feature mới: dùng skill planning
-
-```bash
-claude mcp list  # kiểm tra: superpowers phải hiện ✔ Connected
-```
-
-### Playwright MCP
-**Dùng khi nào:**
-- Sau khi tạo xong một component hoặc page: chạy E2E test tương ứng
-- Trước khi push lên GitHub: chạy toàn bộ test suite
-
-```bash
-claude mcp list  # kiểm tra: playwright phải hiện ✔ Connected
-```
-
-**Cấu trúc thư mục test:**
-```
-primer-designer/
-└── e2e/
-    ├── sequence-group.spec.js
-    ├── detection-method.spec.js
-    ├── experimental-context.spec.js
-    ├── range-slider.spec.js
-    ├── mirbase-lookup.spec.js
-    └── form-submit.spec.js
-```
-
----
-
-## 3. Cấu trúc thư mục (bắt buộc đúng tên)
+## 3. Cấu trúc thư mục hiện tại
 
 ```
 primer-designer/
 ├── SPEC_week1.md
-├── README.md
 ├── CLAUDE.md
 ├── frontend/
-│   ├── index.html                 ← title, meta description, favicon set
+│   ├── index.html
 │   ├── package.json
 │   ├── tailwind.config.js
 │   ├── vite.config.js
@@ -105,41 +99,117 @@ primer-designer/
 │       ├── App.jsx
 │       ├── index.css
 │       ├── constants/
-│       │   └── defaults.js
+│       │   └── defaults.js          ← DEFAULTS, LIMITS, SPECIES_OPTIONS, SAMPLE_TYPE_PRESETS, QPCR_SYSTEM_NOTES, RT_ENZYME_NOTES
+│       ├── contexts/
+│       │   └── ThemeContext.jsx     ← theme switcher (teal/warm/cool/slate)
+│       ├── lib/
+│       │   └── historyDB.js         ← IndexedDB wrapper: saveHistory/listHistory/loadHistory/deleteHistory/clearHistory/countHistory
 │       ├── hooks/
-│       │   └── useMiRBase.js
+│       │   ├── useMiRBase.js        ← miRNA lookup: idle|loading|found|not_found|error
+│       │   ├── useBatchDesign.js    ← batch hybrid sync/async: idle|streaming|polling|done|error
+│       │   ├── useHistory.js        ← wraps historyDB.js với React state
+│       │   └── useBlastCheck.js     ← BLAST off-target query
+│       ├── utils/
+│       │   └── seqAnalysis.js       ← computeSeqAnalysis: length, gc, end3
 │       ├── components/
-│       │   ├── Navbar.jsx
+│       │   ├── Navbar.jsx           ← Home + Designer tabs + theme swatches
 │       │   ├── Footer.jsx
-│       │   ├── ChatbotPanel.jsx
+│       │   ├── ProbeCard.jsx        ← TaqMan probe display
+│       │   ├── MultiplexPanel.jsx   ← multiplex cross-dimer check
+│       │   ├── FamilySpecificityMap.jsx ← family overhang heatmap
+│       │   ├── NormalizationAdvisor.jsx ← normalization advisory
+│       │   ├── BatchDesignPanel/
+│       │   │   └── index.jsx        ← batch input, progress, NDJSON streaming, polling
+│       │   ├── HistoryPanel/
+│       │   │   └── index.jsx        ← IDB session list, load/delete
+│       │   ├── LnaPanel/
+│       │   │   └── index.jsx        ← LNA position suggester display
+│       │   ├── icons/
+│       │   │   └── PrimerIcons.jsx
 │       │   └── ui/
 │       │       ├── Tooltip.jsx
-│       │       ├── NumInput.jsx     ← MỚI: controlled number input với local state
+│       │       ├── NumInput.jsx
 │       │       ├── RangeSlider.jsx
 │       │       └── Toggle.jsx
 │       └── pages/
 │           ├── HomePage.jsx
 │           ├── RoadmapPage.jsx
+│           ├── BenchmarkPage.jsx
+│           ├── BatchPage.jsx        ← BatchDesignPanel (left) + HistoryPanel (right)
+│           ├── ResultsPage/
+│           │   ├── index.jsx        ← full results page (navigated via router state)
+│           │   ├── EdgeCaseBanner.jsx
+│           │   ├── ExportBar.jsx
+│           │   ├── ProtocolAdvisor.jsx
+│           │   ├── QualitySummary.jsx
+│           │   └── ThermoTable.jsx
 │           └── SearchPage/
-│               ├── index.jsx
+│               ├── index.jsx        ← state owner, submit handler, mini-nav
 │               ├── SequenceGroup.jsx
-│               ├── ThermodynamicGroup.jsx
-│               ├── PrimerConstraintsGroup.jsx
+│               ├── PrimerConstraintsGroup.jsx  ← merged: Thermo + Primer + Detection
 │               ├── QpcrConditionsGroup.jsx
-│               ├── DetectionMethodGroup.jsx
-│               └── ExperimentalContextGroup.jsx
+│               ├── ExperimentalContextGroup.jsx
+│               └── ResultsSection/
+│                   ├── index.jsx
+│                   ├── PrimerSetCard.jsx
+│                   ├── ScoreGauge.jsx
+│                   ├── ScoreBreakdown.jsx
+│                   ├── StructureChecks.jsx
+│                   ├── OverhangComparison.jsx
+│                   ├── RejectionLog.jsx
+│                   ├── ExportButtons.jsx
+│                   └── OffTargetPanel.jsx
 └── backend/
-    ├── app.py
+    ├── app.py                       ← registers all blueprints
     ├── requirements.txt
+    ├── algorithm/
+    │   ├── constants.py             ← tất cả magic numbers, weights, thresholds
+    │   ├── design_pipeline.py       ← run(seq, params, mirna_name) → full result dict
+    │   ├── stemloop_rt.py
+    │   ├── forward_primer.py
+    │   ├── universal_reverse.py
+    │   ├── thermodynamics.py
+    │   ├── scoring.py               ← V4 scoring (15 criteria)
+    │   ├── sequence_utils.py
+    │   ├── edge_cases.py
+    │   ├── hard_filters.py
+    │   ├── template_structure.py
+    │   ├── probe_design.py
+    │   ├── protocol_advisor.py
+    │   ├── normalization_advisor.py
+    │   ├── bound_fraction.py
+    │   ├── hybrid_tm.py             ← Sugimoto 1995 DNA:RNA Tm
+    │   ├── lna_tm.py                ← LNA doublet NN (McTigue 2004 / Owczarzy 2011)
+    │   ├── structure_check/
+    │   │   ├── __init__.py
+    │   │   └── heterodimer.py
+    │   └── specificity_check/
+    │       ├── __init__.py
+    │       ├── family_crossreactivity.py
+    │       └── isomir_flag.py
     ├── routes/
-    │   └── mirbase.py           ← local DB first → miRBase API → RNAcentral fallback
+    │   ├── mirbase.py               ← GET /api/mirbase/<id>
+    │   ├── design.py                ← POST /api/design (delegates to design_pipeline.run)
+    │   ├── batch_design.py          ← POST /api/batch-design, GET /api/batch-status/<id>
+    │   ├── lna_suggest.py           ← POST /api/lna-suggest
+    │   ├── blast_check.py           ← POST /api/blast-check
+    │   ├── multiplex_check.py       ← POST /api/multiplex-check
+    │   ├── export.py                ← POST /api/export
+    │   └── benchmark.py             ← GET /api/benchmark
     ├── db/
-    │   ├── local_db.py          ← SQLite CRUD: init_schema, lookup, upsert (idempotent)
-    │   ├── circuit_breaker.py   ← opens after 3 failures, resets after 60s
-    │   └── mirbase.db           ← 95 curated entries (KHÔNG commit, xem .gitignore)
+    │   ├── local_db.py
+    │   ├── circuit_breaker.py       ← FAILURE_THRESHOLD=3, RESET_TIMEOUT=300s
+    │   └── mirbase.db               ← KHÔNG commit (xem .gitignore)
+    ├── data/
+    │   ├── mirbase_family_overhangs.json
+    │   └── known_5prime_isomir_mirnas.json
+    ├── tests/
+    │   ├── __init__.py
+    │   ├── test_lna_tm.py           ← 29 unit tests
+    │   └── test_batch_design.py     ← 7 unit tests
     └── scripts/
-        ├── seed_db.py           ← 85 offline entries (human oncomiRs, let-7, clusters…)
-        └── fetch_and_seed.py    ← fetch từ miRBase API / RNAcentral / --all flag
+        ├── seed_db.py
+        └── fetch_and_seed.py
 ```
 
 ---
@@ -147,7 +217,7 @@ primer-designer/
 ## 4. Màu sắc & Design Tokens
 
 ```js
-// Teal — màu chủ đạo (brand color — dùng NHẤT QUÁN, không dùng blue cho UI chính)
+// Teal — màu chủ đạo
 teal = {
   50:  '#E1F5EE',   // bg chip, focus ring, hover
   200: '#5DCAA5',   // border nhẹ
@@ -155,773 +225,654 @@ teal = {
   700: '#0f766e',   // thumb hover, drag callout bg
   800: '#085041',   // button gradient end
 }
-
-// Amber — warning (scientific caution)
-amber = {
-  50:  '#FFFBEB',
-  200: '#FCD34D',
-  700: '#B45309',
-}
-
-// Red — error / invalid
-red = {
-  50:  '#FEF2F2',
-  200: '#FECACA',
-  400: '#F87171',
-  600: '#DC2626',
-}
-
-// Gray — neutral
-gray = {
-  100: '#F3F4F6',
-  200: '#E5E7EB',   // track empty, divider
-  400: '#9CA3AF',
-  500: '#6B7280',
-  700: '#374151',
-  900: '#111827',
-}
+amber = { 50: '#FFFBEB', 200: '#FCD34D', 700: '#B45309' }  // warning
+red   = { 50: '#FEF2F2', 200: '#FECACA', 400: '#F87171', 600: '#DC2626' }  // error
+gray  = { 100: '#F3F4F6', 200: '#E5E7EB', 400: '#9CA3AF', 500: '#6B7280', 700: '#374151', 900: '#111827' }
 ```
 
 ### Typography chuẩn
 
 | Phần tử | Class |
 |---------|-------|
-| Section title (CollapsibleSection) | `text-sm font-semibold text-gray-500` |
+| Section title | `text-sm font-semibold text-gray-500` |
 | Field label | `text-sm font-medium text-gray-700` |
 | Input text | `text-sm text-gray-900` |
 | Error message | `text-xs text-red-600` |
 | Warning banner | `text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed` |
 | Placeholder | `text-sm text-gray-400` |
-| Unit suffix inside input | `text-xs text-gray-400` |
+| Unit suffix | `text-xs text-gray-400` |
 | Value badge (RangeSlider) | `text-xs text-teal-700 font-semibold px-2 py-0.5 rounded-md bg-teal-50 border border-teal-100 tabular-nums` |
 
-> ⚠ **QUAN TRỌNG:** Không dùng `uppercase tracking-wider` cho section title — deprecated từ v3.0.
-> ⚠ **QUAN TRỌNG:** Tất cả warning banners phải dùng cùng một class string (xem bảng trên). Không dùng `text-amber-600` trần.
+> ⚠ KHÔNG dùng `uppercase tracking-wider` cho section title.
+> ⚠ Tất cả warning banners phải dùng cùng amber class string trên.
 
 ---
 
-## 5. Layout tổng thể
+## 5. Layout tổng thể & Routing
+
+### Routing (React Router DOM v6)
+
+| Path | Component | Title |
+|------|-----------|-------|
+| `/` | Redirect → `/search` | — |
+| `/home` | HomePage | `HG Lab \| Home` |
+| `/roadmap` | RoadmapPage | `HG Lab \| Roadmap` |
+| `/search` | SearchPage | `HG Lab \| Primer Designer` |
+| `/results` | ResultsPage | (set bởi ResultsPage) |
+| `/batch` | BatchPage | `HG Lab \| Batch Design` |
+| `/benchmark` | BenchmarkPage | — |
+
+### Layout tổng thể
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ NAVBAR (height: 56px, border-bottom: 1px solid #E5E7EB)          │
-│  [Logo 32px] HG Lab          [Home] [Roadmap] [Designer←active]  │
-│             Stem-loop RT-qPCR Designer                            │
-├──────────────────────────────────────────────┬───────────────────┤
-│ MAIN CONTENT (flex-1, overflow-y: auto)      │ CHATBOT PANEL     │
-│ padding: 24px                                │ width: 320px      │
-│                                              │ (collapsed: 64px) │
-├──────────────────────────────────────────────┴───────────────────┤
-│ FOOTER (height: 36px)                                             │
-│  HG Lab · Human Genetics Laboratory, HCMUS · v0.1.0-dev          │
-│                            Contact: hglab.hcmus.edu.vn            │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ NAVBAR (h-14, border-bottom)                                          │
+│  [Logo] HG Lab               [Home][Roadmap][Designer][Batch]  ●●●● │
+│         Stem-loop RT-qPCR Designer                        theme swatches│
+├─────────────────────────────────────────────┬────────────────────────┤
+│ MAIN CONTENT (flex-1, overflow-y-auto, p-6) │ CHATBOT PANEL          │
+│                                             │ (collapsed/expanded)   │
+├─────────────────────────────────────────────┴────────────────────────┤
+│ FOOTER (h-9, border-top)                                              │
+│  HG Lab · Human Genetics Laboratory, HCMUS · v0.1.0-dev   Contact…  │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Navbar chi tiết
+
 ```jsx
-// Brand: logo 32px + "HG Lab" bold + subtitle "Stem-loop RT-qPCR Designer" teal nhỏ
-// Nav tabs:
+// Brand: logo 32px + "HG Lab" bold 14px + "Stem-loop RT-qPCR Designer" teal 11px
+// Nav tabs (4):
 Tab thường:  px-4 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:text-teal-700 hover:bg-teal-50
 Tab active:  px-4 py-1.5 rounded-lg text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-200 shadow-sm
-// Tab labels: Home | Roadmap | Designer  (KHÔNG dùng "Search")
+// Labels: Home | Roadmap | Designer | Batch
+
+// Theme swatches (sau divider):
+// 4 colored circles w-4 h-4 rounded-full
+// Active: ring-2 ring-offset-1 ring-gray-400 scale-125
+// Inactive: opacity-60 hover:opacity-100 hover:scale-110
 ```
 
-### Chatbot Panel (collapsed/expanded)
-```
-Collapsed (w-16): chỉ hiện nút pill teal với robot icon + "AI"
-Expanded (w-80):
-  - Header: "AI Assistant" + badge "SOON"
-  - Hero: robot icon lớn + mô tả + badge "In development"
-  - Planned capabilities list (4 items với icon)
-  - Disabled input area + note "Available after primer design engine is complete"
-```
+### ThemeContext (contexts/ThemeContext.jsx)
 
-### Footer
 ```jsx
-// Left: "HG Lab · Human Genetics Laboratory, HCMUS · v0.1.0-dev"
-// Right: "Contact: hglab.hcmus.edu.vn" (link màu teal-600)
-```
-
-### Page titles (dynamic per route)
-```js
-HomePage:    document.title = 'HG Lab | Home'
-RoadmapPage: document.title = 'HG Lab | Roadmap'
-SearchPage:  document.title = 'HG Lab | Primer Designer'
-// index.html base title: 'HG Lab | Stem-loop RT-qPCR Primer Designer'
-// favicon: /logo.png
+// THEMES: { teal, warm, cool, slate } — mỗi theme có { label, swatch }
+// Lưu vào localStorage('hglab-theme')
+// Swatches màu inject vào :root CSS vars (theme-aware components dùng)
 ```
 
 ---
 
-## 6. Constants — Giá trị mặc định (file: src/constants/defaults.js)
+## 6. Constants (frontend/src/constants/defaults.js)
 
 ```js
 export const DEFAULTS = {
-  // Nhóm 1 — Sequence
   sequence: {
-    mirbaseId: '',
-    matureSequence: '',
-    species: 'human',
-    accession: '',
-    family: '',
+    searchQuery: '', mirnaName: '', mirbaseId: '',
+    matureSequence: '', species: 'human', accession: '', family: '',
   },
-
-  // Nhóm 2 — Thermodynamic (6 ionic/buffer parameters added v3.0)
   thermodynamic: {
-    tmMin: 58,
-    tmMax: 62,
+    tmMin: 58, tmMax: 62,
     saltConcentration: 50,        // mM [Na+]
-    primerConcentration: 200,     // nM — IDT PrimerQuest default (BUG FIX v3.2: was 250)
+    primerConcentration: 200,     // nM (IDT PrimerQuest default)
     magnesiumConcentration: 1.5,  // mM Mg2+ total
-    dntpTotal: 0.8,               // mM total 4 dNTPs (BUG FIX v3.2: was 0.2 per-species)
-    kPlusConc: 50,                // mM [K+] / KCl
-    bufferPH: 8.4,                // Tris-HCl pH at 20°C
+    dntpTotal: 0.8,               // mM total 4 dNTPs
+    kPlusConc: 50,                // mM [K+]
+    bufferPH: 8.4,
   },
-
-  // Nhóm 3 — Primer Constraints
   primerConstraints: {
-    gcMin: 40,
-    gcMax: 60,
-    lengthMin: 20,
-    lengthMax: 27,                // BUG FIX v3.2: was 24 — align với P3P General Settings Max=27
+    gcMin: 40, gcMax: 60,
+    lengthMin: 20, lengthMax: 27,
     gcClamp3prime: true,
-    bindingRegion3prime: 6,       // KHÔNG đổi default này
+    bindingRegion3prime: 6,       // KHÔNG thay đổi default này
   },
-
-  // Nhóm 4 — qPCR Conditions
   qpcr: {
-    annealingTemp: 60,
-    ampliconMin: 60,
-    ampliconMax: 150,
-    totalCycles: 40,
-    pcrEfficiencyMin: 90,
-    pcrEfficiencyMax: 110,
+    annealingTemp: 60, ampliconMin: 60, ampliconMax: 150,
+    totalCycles: 40, pcrEfficiencyMin: 90, pcrEfficiencyMax: 110,
   },
-
-  // Nhóm 5a — Detection Method
   detectionMethod: {
-    signalMethod: 'taqman',
-    quantMode: 'relative',
-    referenceGene: 'miR-16',
-    customReferenceGene: '',
-    enableFamilyDiscrimination: true,
-    enablePrecursorCheck: false,
+    signalMethod: 'taqman', quantMode: 'relative',
+    referenceGene: 'miR-16', customReferenceGene: '',
+    enableFamilyDiscrimination: true, enablePrecursorCheck: false,
     enableRefoldingProtocol: true,
   },
-
-  // Nhóm 5b — Experimental Context
   experimentalContext: {
-    sampleType: 'tissue',
-    qpcrSystem: 'other',
-    rtEnzyme: 'mmlv',
-    exportFormat: ['copy'],
-    userLevel: 'advanced',   // 'beginner' | 'advanced' — added v3.2
+    sampleType: 'tissue', qpcrSystem: 'other',
+    rtEnzyme: 'mmlv', exportFormat: ['copy'], userLevel: 'advanced',
   },
 };
 
-export const LIMITS = {
-  thermodynamic: {
-    tmMin: 50, tmMax: 70,
-    saltMin: 1, saltMax: 500,
-    primerConcMin: 50, primerConcMax: 1000,
-    mgMin: 0.5, mgMax: 5.0,
-    dntpMin: 0.2, dntpMax: 2.0,   // v3.2: total dNTPs (4 × 0.05–0.5 mM per species)
-    kPlusMin: 0, kPlusMax: 200,
-    bufferPHMin: 7.0, bufferPHMax: 9.5,
-  },
-  primerConstraints: {
-    gcMin: 20, gcMax: 80,
-    lengthMin: 15, lengthMax: 27,  // v3.2: align với FORWARD_MAX_LENGTH=27 (SPEC_phase2)
-  },
-  qpcr: {
-    taMin: 50, taMax: 68,
-    ampliconMin: 40, ampliconMax: 300,
-    cyclesMin: 30, cyclesMax: 50,
-    efficiencyMin: 80, efficiencyMax: 120,
-  },
-};
+export const LIMITS = { /* tmMin/Max, saltMin/Max, mgMin/Max, ... */ };
+export const SPECIES_OPTIONS = [ human, mouse, rat, other ];
+export const SAMPLE_TYPE_PRESETS = { serum, plasma, ffpe, tissue, cell, urine };
+export const QPCR_SYSTEM_NOTES   = { abi, biorad, roche, qiagen, other };
+export const RT_ENZYME_NOTES     = { mmlv, superscript, revertaid, other };
 ```
 
 ---
 
-## 7. Trang Search — Form 6 nhóm (SearchPage)
+## 7. SearchPage (/search) — Single Design
 
-### 7.1. State management
+### 7.1. State & submit flow
 
 ```jsx
-const [formData, setFormData] = useState({
-  sequence:             { ...DEFAULTS.sequence },
-  thermodynamic:        { ...DEFAULTS.thermodynamic },
-  primerConstraints:    { ...DEFAULTS.primerConstraints },
-  qpcr:                 { ...DEFAULTS.qpcr },
-  detectionMethod:      { ...DEFAULTS.detectionMethod },
-  experimentalContext:  { ...DEFAULTS.experimentalContext },
-});
-const [errors, setErrors] = useState({});
-const [isSubmitting, setIsSubmitting] = useState(false);
-const [activeSection, setActiveSection] = useState('seq');
-const [visitedSections, setVisitedSections] = useState(new Set());
-const [resetKey, setResetKey] = useState(0);
-const [sectionOpenRequests, setSectionOpenRequests] = useState({});
+// State (index.jsx):
+formData: { sequence, thermodynamic, primerConstraints, qpcr, detectionMethod, experimentalContext }
+errors, isSubmitting, activeSection, visitedSections, resetKey, sectionOpenRequests, designError
 
-// Computed fields — tính real-time từ formData, gửi kèm POST body (added v3.2)
-const computedFields = useMemo(() => {
-  const mg   = formData.thermodynamic.magnesiumConcentration;
-  const dntp = formData.thermodynamic.dntpTotal;
-  const freeMg = Math.max(0, mg - dntp);
-  // [Na+_eq] = [Na+] + 120 × sqrt([Mg2+] - [dNTP]) khi Mg2+ > dNTP (Owczarzy 2004)
-  const naEq = dntp < mg
-    ? formData.thermodynamic.saltConcentration + 120 * Math.sqrt(mg - dntp)
-    : formData.thermodynamic.saltConcentration;
-  return {
-    freeMagnesium: parseFloat(freeMg.toFixed(3)),   // mM — free Mg2+ sau chelation
-    naEquivalent:  parseFloat(naEq.toFixed(2)),      // mM — Na+ equivalent cho Tm calc
-  };
-}, [formData.thermodynamic]);
+// computedFields (useMemo):
+freeMagnesium = max(0, mg - dntpTotal)
+naEquivalent  = saltConc + 120*sqrt(max(0, mg-dntpTotal))  [von Ahsen 2001, PMID 11673362 — trước ghi nhầm Owczarzy 2004]
 
-// POST body: { ...formData, _computed: computedFields }
-// Backend dùng _computed trực tiếp — không tính lại
+// POST /api/design: { ...formData, _computed: computedFields }
+// On success → navigate('/results', { state: { results, params } })
+//           + saveHistory() non-blocking (single type)
+// On 422     → inline error display (ResultsSection với error prop)
+// On timeout → ECONNABORTED error message
 ```
 
 ### 7.2. Mini navigation sidebar (xl+ screens)
-- Sticky sidebar trái: 6 items (Sequence / Detection / Thermo. / Primer / qPCR / Context)
-- Dot indicator: teal khi section đã visit, gray khi chưa
-- Click nav item → expand section + scroll + mark visited
-- Progress bar: `{readyCount}/{total} ready`
 
-### 7.3. Layout của SearchPage
+```
+4 nav items: Sequence · Primer · qPCR · Context
+Dot: teal khi configured, gray khi chưa
+Progress bar: {readyCount}/4 ready
+Click → expand section + smooth scroll + mark visited
+```
+
+### 7.3. Layout 4 sections
+
 ```
 SearchPage
-├── [SequenceGroup]           — Nhóm 1 (always open)
-├── [DetectionMethodGroup]    — Nhóm 5a (quyết định algorithm)
-├── [ThermodynamicGroup]      — Nhóm 2
-├── [PrimerConstraintsGroup]  — Nhóm 3
-├── [QpcrConditionsGroup]     — Nhóm 4
-├── [ExperimentalContextGroup]— Nhóm 5b
-└── [Submit button — STICKY BOTTOM]
+├── [SequenceGroup]            — id="seq"
+├── [PrimerConstraintsGroup]   — id="constraints"  ← merged: Thermo + Primer + Detection
+├── [QpcrConditionsGroup]      — id="qpcr"
+├── [ExperimentalContextGroup] — id="context"
+└── [Submit button]
 ```
 
 ---
 
 ## 8. Nhóm 1: SequenceGroup.jsx
 
-### Giao diện
-
 ```
-┌─ Sequence Information ──────────────── [tooltip ?] ─────────────┐
-│  miRBase ID                                                       │
-│  [hsa-miR-21-5p                    ] [Search ⟳]                 │
-│  ✓ Found: Homo sapiens · Family: miR-21                          │
-│                                                                   │
-│  Mature miRNA sequence (5′→3′)                                   │
-│  [UAGCUUAUCAGACUGAUGUUGA           ]                             │
-│                                                                   │
-│  Species                                                          │
-│  [Human ▾]                                                       │
-│                                                                   │
-│  ℹ 22 nt · GC: 40.9% · 3′ end: UGA                             │
-└───────────────────────────────────────────────────────────────────┘
+┌─ Sequence Information ─────────────────── [?] ──────────────────────┐
+│  miRBase ID                                                           │
+│  [hsa-miR-21-5p              ] [Search ⟳]  ← Tab/Enter triggers     │
+│  ✓ Found: Homo sapiens · Family: miR-21                              │
+│                                                                       │
+│  Mature miRNA sequence (5′→3′)                                       │
+│  [UAGCUUAUCAGACUGAUGUUGA                   ]                         │
+│                                                                       │
+│  Species                                                              │
+│  [Human ▾]  (Human / Mouse / Rat / Other)                           │
+│                                                                       │
+│  ℹ 22 nt · GC: 40.9% · 3′ end: UGA     ← teal info bar             │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-### Field details
+- Sequence validation: auto-uppercase, T→U error, invalid chars, <15 nt, >30 nt
+- useMiRBase hook: `idle | loading | found | not_found | error`
+- seqAnalysis (useMemo từ computeSeqAnalysis): `{ length, gc, end3 }` — drives progress dot + submit guard
 
-**miRBase ID field:**
-- Placeholder: `e.g. hsa-miR-21-5p or MIMAT0000076`
-- On Tab / Enter / Search button → call useMiRBase hook
-- States: idle | loading | found | not_found | error
+---
 
-**Mature miRNA sequence:**
-- textarea 2 rows, auto-uppercase
-- Validation onBlur: empty, T→U error, invalid chars, <15nt, >30nt
+## 9. Nhóm 2: PrimerConstraintsGroup.jsx (MERGED)
 
-**Info bar (shown when valid):**
-```jsx
-// "22 nt · GC: 40.9% · 3′ end: UGA"
-// teal style: bg-teal-50 border border-teal-100 text-teal-700
+> Section này merge ThermodynamicGroup + PrimerConstraintsGroup cũ + DetectionMethodGroup.
+
+```
+┌─ Primer Design Constraints ────────────── [?] ──────────────────────┐
+│  [Thermodynamic sub-section]                                          │
+│  Tm range:  50°C ──[===58°──62°===]── 70°C                          │
+│  Na+ [50] mM  K+ [50] mM  Mg2+ [1.5] mM                            │
+│  dNTP [0.8] mM  Primer [200] nM  pH [8.4]                           │
+│  Free Mg2+: 0.70 mM ⚠ [colored indicator]                           │
+│  [Na+ equivalent: 149.23 mM display]                                 │
+│                                                                       │
+│  [Primer Constraints sub-section]                                     │
+│  GC %: 20% ──[===40%─60%===]── 80%                                  │
+│  Length: 15nt ──[===20nt─27nt===]── 27nt                            │
+│  3' GC Clamp [●──] ON   Binding region [6] nt                       │
+│                                                                       │
+│  [Detection Method sub-section]                                       │
+│  (●) TaqMan probe  ( ) SYBR Green                                    │
+│  (●) Relative  ( ) Absolute    Reference: [miR-16 ▾] [custom…]     │
+│  [✓] Family discrimination  [ ] Pre-miRNA check  [✓] Refolding      │
+│                                                                       │
+│  [Warning banners — ionic conditions, binding region, GC content]    │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+**Effective free [Mg²⁺] indicator:**
+```
+freeMg ≥ 1.5 mM → teal   "✓ Optimal (1.5–3 mM)"
+freeMg ≥ 1.0 mM → amber  "⚠ Below optimal"
+freeMg < 1.0 mM → red    "✕ Insufficient"
+```
+
+**Reset button (ThermodynamicGroup):** 2-step confirmation, 2.5s auto-cancel.
+
+---
+
+## 10. Nhóm 3: QpcrConditionsGroup.jsx
+
+```
+┌─ qPCR Conditions ──────────────────────── [?] ──────────────────────┐
+│  Annealing temp [60] °C  Total cycles [40]  PCR efficiency [90–110]%│
+│  Amplicon size:  40bp ──[===60────150===]── 300bp                   │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 9. Custom Hook: useMiRBase.js
+## 11. Nhóm 4: ExperimentalContextGroup.jsx
+
+```
+┌─ Experimental Context ─────────────────── [?] ──────────────────────┐
+│  Sample type [Tissue ▾]   qPCR system [Other ▾]   RT enzyme [M-MLV ▾]│
+│  Export format: [✓] Copy  [ ] PDF  [ ] CSV                          │
+│  [Serum/Plasma/FFPE preset banners khi sample type thay đổi]         │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 12. Submit Button & Error Display
+
+```jsx
+// Submit button states:
+// Ready:    teal gradient, "Design Primers →"
+// Errors:   gray bg, "✕ Fix errors to continue", cursor-not-allowed
+// Loading:  gray bg, "⟳ Processing…"
+
+// Below button (khi isSeqReady && !hasErrors):
+// "Stem-loop primer · Forward primer · Universal reverse primer"
+
+// Error display (designError state):
+// 422 no_candidates → ResultsSection với error prop (rejection summary, edge cases)
+// timeout           → ECONNABORTED message
+// network           → "Could not reach the backend"
+```
+
+---
+
+## 13. ResultsPage (/results)
+
+Navigated via `navigate('/results', { state: { results, params } })`.
+
+```
+ResultsPage
+├── ExportBar          ← copy / PDF / CSV buttons
+├── EdgeCaseBanner     ← E1 (short), E2 (GC-rich), E3 (repeat), E4 (low GC) warnings
+├── QualitySummary     ← score gauge, grade badge, algorithm version
+├── [Top 3 PrimerSetCards]
+│   ├── PrimerSetCard  ← rank, sequence, Tm, GC, amplicon, score breakdown
+│   │   ├── ScoreGauge
+│   │   ├── ScoreBreakdown  ← 15 criteria weight × score
+│   │   ├── StructureChecks ← hairpin/dimer ΔG, end stability
+│   │   └── OverhangComparison
+│   └── ...
+├── ProbeCard          ← TaqMan probe (nếu signalMethod=taqman)
+├── ThermoTable        ← Tm, GC, salt params summary
+├── ProtocolAdvisor    ← step-by-step protocol recommendation
+├── FamilySpecificityMap ← family overhang similarity heatmap
+├── NormalizationAdvisor ← advisory khi sampleType khác rỗng
+├── OffTargetPanel / RejectionLog
+└── LnaPanel           ← LNA position suggester (informational only)
+```
+
+**LnaPanel (informational only):**
+- Calls `POST /api/lna-suggest`
+- Displays: suggested positions, tm_dna, tm_lna, delta_tm, search strategy (exhaustive/greedy)
+- Disclaimer: "LNA Tm is informational only — not used in scoring or primer filtering."
+- Feature flag: `USE_LNA_SUGGESTIONS` trong constants.py (503 nếu False)
+- RT primer role → 400 (DNA:RNA context out of scope)
+
+---
+
+## 14. BatchPage (/batch)
+
+```
+BatchPage
+├── LEFT: BatchDesignPanel (flex-1)
+│   ├── Textarea: paste miRNA IDs (one per line)
+│   ├── Submit → POST /api/batch-design
+│   ├── ≤10 miRNAs → NDJSON streaming (sync path)
+│   │   Progress: "3/10 · 2 ok · 1 error" live-update
+│   ├── >10 miRNAs → async job (202 + job_id + polling every 2s)
+│   │   Progress bar + ETA
+│   ├── Results table: miRNA | Status | Tm | Score
+│   └── Loaded-from-history display (nếu loadedEntry state)
+└── RIGHT: HistoryPanel (w-64, border-left)
+    ├── List saved runs (newest first)
+    ├── Click → load vào left panel
+    └── Delete button per entry
+```
+
+**useBatchDesign hook:**
+- `BATCH_ASYNC_THRESHOLD = 10` — phải match backend constant
+- `POLL_INTERVAL_MS = 2000`
+- Cleanup: useEffect unmount clears setInterval
+- Status: `idle | streaming | polling | done | error`
+
+---
+
+## 15. Session History (historyDB.js)
 
 ```js
-// States: 'idle' | 'loading' | 'found' | 'not_found' | 'error'
-// Returns: { status, result, errorMessage, fetchMiRNA, reset }
-// Endpoint: GET /api/mirbase/:id
-// Tries ?accession= first, then ?name=
+// IndexedDB: DB_NAME="hglab_primer_history", STORE="design_history", MAX_ENTRIES=100
+// Key: `hist_${Date.now()}_${crypto.randomUUID().slice(0,8)}` — collision-safe
+
+// Schema mỗi record:
+{
+  id:         "hist_<ms>_<uuid8>",
+  type:       "single" | "batch",
+  created_at: ISO8601,
+  mirnas:     string[],
+  params:     {},           // thermodynamic params used
+  results:    [],           // full design output
+  summary:    { count, succeeded, failed, best_score }
+}
+
+// FIFO eviction: put + getAllKeys + delete trong 1 readwrite transaction (atomic)
+// _dbPromise = null on reject (no permanent poison)
+
+// Public API:
+saveHistory(entry)   → Promise<id>
+listHistory()        → Promise<Array<summary>>   (newest first)
+loadHistory(id)      → Promise<record | null>
+deleteHistory(id)    → Promise<void>
+clearHistory()       → Promise<void>
+countHistory()       → Promise<number>
 ```
+
+**Auto-save:**
+- Single design (SearchPage): non-blocking `saveHistory().catch(() => {})` sau navigate
+- Batch design (BatchPage): `save()` trong `handleBatchDone`
 
 ---
 
-## 10. Nhóm 2: ThermodynamicGroup.jsx
+## 16. Shared UI Components
 
-### Giao diện
-
-```
-┌─ Thermodynamic Parameters ──────────────── [Reset] [?] ─────────┐
-│                                                                   │
-│  Melting temperature (Tm) range             [tooltip]            │
-│  50°C ──[====58°──────────62°====]── 70°C                       │
-│         [58°C]              [62°C]    ← badge chips              │
-│                                                                   │
-│  ── Buffer & Ionic Conditions ─────────────────────────────────  │
-│                                                                   │
-│  [Na+] / NaCl [?]  [K+] / KCl  [?]  [Mg2+] total  [?]          │
-│  [50        ] mM   [50       ] mM    [1.5       ] mM            │
-│                                                                   │
-│  [dNTP] total [?]  [Primer]    [?]   Buffer pH     [?]           │
-│  [0.2      ] mM   [250      ] nM    [8.4          ]              │
-│                                                                   │
-│  ┌ Effective free [Mg²⁺]: 1.30 mM (1.5 total − 0.2 dNTP) ⚠ ┐  │
-│  └──────────────────────────────────────────────────────────┘   │
-│                                                                   │
-│  [Warning banners]                                                │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-### Ionic parameters (v3.0)
-
-| Field | Default | Range | Unit | Validation error |
-|-------|---------|-------|------|-----------------|
-| [Na⁺] / NaCl | 50 | 1–500 | mM | Must be between 1 and 500 mM |
-| [K⁺] / KCl | 50 | 0–200 | mM | Must be between 0 and 200 mM |
-| [Mg²⁺] total | 1.5 | 0.5–5.0 | mM | Must be between 0.5 and 5.0 mM |
-| [dNTP] total | **0.8** | 0.2–2.0 | mM | Must be between 0.2 and 2.0 mM |
-| [Primer] | **200** | 50–1000 | nM | Must be between 50 and 1000 nM |
-| Buffer pH | 8.4 | 7.0–9.5 | — | pH must be between 7.0 and 9.5 |
-
-### Effective free [Mg²⁺] indicator
-```
-freeMg = max(0, mg_total − dNTP_total)
-Colors:
-  freeMg >= 1.5 mM → teal  "✓ Optimal (1.5–3 mM)"
-  freeMg >= 1.0 mM → amber "⚠ Below optimal"
-  freeMg <  1.0 mM → red   "✕ Insufficient"
-```
-
-### Warnings (English only, priority order)
-1. `freeMgWarning` — free Mg²⁺ < 1.0 mM
-2. `saltWarning` — Na⁺ < 20 mM or > 150 mM (với ΔTm estimate)
-3. `kPlusWarning` — K⁺ > 75 mM (caution) or > 100 mM (inhibition)
-4. `mgWarning` — Mg²⁺ < 1.0 mM (low) or > 3.5 mM (high)
-5. `dntpWarning` — dNTP < 0.1 mM (very low) or > 0.4 mM (chelation)
-6. `primerConcWarning` — < 100 nM or > 600 nM
-7. `phWarning` — pH < 7.5 or > 9.0
-8. `showCombinedIonicWarn` — Na⁺ > 100 AND Mg²⁺ > 3.0
-9. `showFwdTmWarn` — Tm target deficit > 33°C vs. sequence
-
-### Reset button — 2-step confirmation (v3.0)
-```
-Click 1: button → "Confirm reset?" (red bg, 2.5s timeout to auto-cancel)
-Click 2: execute reset — restore all fields to DEFAULTS.thermodynamic
-Timeout: auto-cancel after 2.5s, button returns to "Reset"
-```
-
----
-
-## 11. Nhóm 3: PrimerConstraintsGroup.jsx
-
-### Giao diện
-
-```
-┌─ Primer Design Constraints ─────────────────────── [?] ─────────┐
-│  GC content (%)                           [tooltip]              │
-│  20% ──[======40%────────60%======]── 80%                       │
-│                                                                   │
-│  Primer length (nt)                       [tooltip]              │
-│  15nt ──[=====20nt───────27nt=====]── 27nt                      │
-│                                                                   │
-│  3′ GC Clamp [?]        3′ Binding region [?]                   │
-│  [●──────] ON           [6         ] nt                          │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-### Warnings (English only — all translated v3.0)
-- Binding region ≠ 6 nt: "⚠ 6 nt is the validated standard..."
-- GC clamp + A/U at 3' end: "⚠ Position 10–12 of the miRNA ends with A/U..."
-- Homopolymer run ≥ 4 nt: "⚠ Sequence contains a homopolymer run..."
-- GC < 30%: "⚠ AU-rich forward binding region ({x}% GC)..."
-- GC > 70%: "⚠ GC-rich forward binding region ({x}% GC)..."
-
----
-
-## 12. Nhóm 4: QpcrConditionsGroup.jsx
-
-### Giao diện
-
-```
-┌─ qPCR Conditions ───────────────────────────────── [?] ─────────┐
-│  Annealing temp (Ta)[?]  Total cycles [?]  PCR efficiency [?]   │
-│  [60     ] °C            [40   ] cycles    [90]% → [110]%       │
-│                                                                   │
-│  Amplicon size                                                    │
-│  40bp ──[===60────────150===]── 300bp                            │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-### Warnings (English only)
-- Ta > tmMin + 5: "⚠ Ta should be 2–5°C below Tm to avoid mispriming."
-- Cycles < 35: "⚠ Fewer than 35 cycles may be insufficient..."
-- Cycles > 45: "⚠ Too many cycles increases the risk of non-specific amplification."
-- Efficiency range > 25%: "⚠ A wide efficiency range will accept more low-quality primer candidates."
-
----
-
-## 13. Nhóm 5a: DetectionMethodGroup.jsx
-
-Always visible. Rendered immediately after Group 1.
-
-```
-┌─ Detection Method ──────────────────────────────── [?] ─────────┐
-│  Signal detection                                                 │
-│  (●) TaqMan probe      ( ) SYBR Green                           │
-│                                                                   │
-│  Quantification mode                                              │
-│  ( ) Absolute          (●) Relative                             │
-│                                                                   │
-│  Reference gene [?]                                              │
-│  [miR-16 ▾]   or enter custom: [              ]                 │
-│                                                                   │
-│  ── Advanced specificity options ──────────────────────────────  │
-│  [✓] Penalize off-target in same miRNA family                   │
-│  [ ] Check cross-reactivity with pre-miRNA                      │
-│  [✓] Generate re-folding protocol in output                     │
-└───────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 14. Nhóm 5b: ExperimentalContextGroup.jsx
-
-```
-┌─ Experimental Context ──────────────────────────── [?] ─────────┐
-│  Sample type [?]              qPCR system [?]                    │
-│  [Tissue ▾]                   [Other ▾]                         │
-│                                                                   │
-│  RT enzyme [?]                Export format                      │
-│  [M-MLV ▾]                    [✓] Copy  [ ] PDF  [ ] CSV        │
-└───────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 15. Shared component: NumInput.jsx (MỚI v3.0)
-
-**Vấn đề giải quyết:** `<input type="number">` controlled với `value={someNumber}` — khi user xóa hết, `Number('') = 0`, state bị set về 0, field hiện "0" thay vì trống.
-
+### NumInput.jsx
 ```jsx
-// Props: id, label, tooltip, value, onChange, min, max, step, unit, error
-// label là optional — nếu undefined thì không render label row
+// Local raw string state → syncs từ value prop via useEffect
+// onFocus: select all; khi '' hoặc NaN → set error, không update parent
 // onChange emits synthetic { target: { value: string } }
-
-// Behavior:
-// - Local raw string state, synced from value prop via useEffect
-// - onFocus: e.target.select() — select all text on click
-// - Khi raw === '' hoặc NaN: parent handler phải set error và return sớm
-//   (không update parent state → parent giữ last valid number)
-// - Khi reset từ ngoài: value prop thay đổi → useEffect sync raw
 ```
 
-**Handler pattern chuẩn trong mọi component:**
-```js
-function handleXChange(e) {
-  const str = e.target.value;
-  const val = parseFloat(str);
-  if (str === '' || isNaN(val)) {
-    onError('fieldName', 'Error message...');
-    return; // KHÔNG update parent state
+### RangeSlider.jsx
+```jsx
+// Props: min, max, valueMin, valueMax, step, unit, label, tooltip, onChange
+// Track fill: teal-600, thumbs: teal-600/hover-700
+// Drag callout bubble trên thumb đang kéo
+// Constraint: valueMin ≤ valueMax - step
+```
+
+### CollapsibleSection.jsx
+```jsx
+// Title: text-sm font-semibold text-gray-500 (KHÔNG uppercase)
+// Arrow: ▸ teal-600, rotate 90° khi open
+// Status dots: red-500 (error) | amber-400 (warning) khi collapsed
+// Animation: grid-template-rows 0fr ↔ 1fr
+// onFirstOpen: fired once → mark visited
+// openRequested: counter trigger từ mini-nav
+```
+
+### Tooltip.jsx
+```jsx
+// Show delay: 250ms; keyboard focus: immediate
+// Position: right (flip left nếu < 290px to viewport edge)
+// Renders via createPortal vào document.body (position: fixed)
+```
+
+---
+
+## 17. Backend API — Route Map
+
+| Method | Path | Module | Mô tả |
+|--------|------|--------|-------|
+| GET | `/api/health` | app.py | Health check |
+| GET | `/api/mirbase/<id>` | mirbase.py | Lookup miRNA (SQLite → miRBase REST → RNAcentral) |
+| POST | `/api/design` | design.py | Single primer design (→ design_pipeline.run) |
+| POST | `/api/batch-design` | batch_design.py | Batch: sync NDJSON (≤10) hoặc async job (>10) |
+| GET | `/api/batch-status/<job_id>` | batch_design.py | Poll async job progress |
+| POST | `/api/lna-suggest` | lna_suggest.py | LNA position suggestion (informational) |
+| POST | `/api/blast-check` | blast_check.py | BLAST off-target check |
+| POST | `/api/multiplex-check` | multiplex_check.py | Multiplex cross-dimer check |
+| POST | `/api/export` | export.py | PDF/CSV export |
+| GET | `/api/benchmark` | benchmark.py | Load benchmark results |
+
+**Batch design chi tiết:**
+
+```python
+# ≤ BATCH_ASYNC_THRESHOLD=10: sync NDJSON streaming
+# Content-Type: application/x-ndjson
+# Lines: {"type":"meta","total":N} → N×{"type":"result","mirna":"...","status":"ok/error",...} → {"type":"done","succeeded":X,"failed":Y}
+
+# > BATCH_ASYNC_THRESHOLD=10: async 202
+# Response: {"job_id":"batch_xxxx","total":N,"mode":"async","status":"queued","warnings":[...]}
+# Poll: GET /api/batch-status/<job_id> → {"status":"queued|running|done","completed":X,...}
+
+# BATCH_MAX_SIZE=50 — truncate với warning
+# Dedup: seen set, giữ thứ tự
+# Circuit breaker: chỉ record_failure() cho 5xx / network, KHÔNG cho 404
+```
+
+**design_pipeline.run(seq, params, mirna_name):**
+- Single source of truth cho cả `/api/design` và `/api/batch-design`
+- Input: seq (RNA uppercase, đã validated), params (flat dict), mirna_name
+- Output: dict matching /api/design response schema
+- signalMethod default: `"taqman"` (KHÔNG `"sybr"`)
+
+---
+
+## 18. LNA Tm Module (algorithm/lna_tm.py)
+
+```python
+# Sources: SantaLucia 1998 (DNA-DNA), McTigue 2004 (one-LNA), Owczarzy 2011 (LNA-LNA)
+# Doublet classification: dna_dna | one_lna | lna_lna
+# Public API:
+calc_lna_tm(sequence, lna_positions, params) → {
+  tm_dna, tm_lna, delta_tm, lna_positions,
+  method, per_doublet, warnings
+}
+suggest_lna_positions(sequence, target_tm, params, max_lna, mode, sibling_mismatch_positions) → {
+  suggested_positions, tm_achieved, target_met,
+  search,  # "exhaustive" | "greedy"
+  mode, warnings
+}
+# Exhaustive khi C(eligible, ≤max_lna) ≤ LNA_EXHAUSTIVE_LIMIT=5000, else greedy
+# RT primer role → rejected (DNA:RNA context out of scope)
+```
+
+---
+
+## 19. Scoring V4 (15 criteria, sum = 1.00)
+
+```python
+SCORING_WEIGHTS_V4 = {
+  "tm_accuracy":             0.20,  # forward primer Tm vs TM_FORWARD_TARGET=60°C
+  "mfe_stemloop":            0.14,  # RT primer hairpin MFE (ViennaRNA preferred)
+  "tm_binding_accuracy":     0.10,  # specific region Tm vs TM_BINDING_TARGET=45°C
+  "hairpin_penalty":         0.08,  # forward hairpin ΔG
+  "dimer_penalty":           0.08,  # 3'-end & full-structure dimer ΔG
+  "end_stability":           0.08,  # 3' end stability kcal/mol
+  "gc_content":              0.08,  # GC% vs optimal 50%
+  "bound_fraction_binding":  0.05,  # specific region at 42°C (RT step)
+  "family_discrimination":   0.05,  # cross-reactivity risk [Chen05]
+  "gc_clamp":                0.04,  # 3'-end G/C count
+  "bound_fraction_full":     0.03,  # full primer at 55°C (qPCR annealing)
+  "primer_size":             0.02,  # specific_length vs FORWARD_SPECIFIC_LEN_REF=17
+  "amplicon_size":           0.02,  # amplicon bp
+  "tm_pair_match":           0.01,  # |Tm_fwd - Tm_rev|
+  "gc_skew":                 0.02,  # GC-skew (more C than G optimal)
+}
+assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
+```
+
+**Quan trọng:**
+- RT primer: quality-checked ONLY — KHÔNG scored
+- TaqMan probe: quality-checked ONLY — KHÔNG scored
+- LNA Tm: informational ONLY — KHÔNG vào V4
+- Dimer breakpoints: derived from `SELF_DIMER_DG_3PRIME_MAX ± 1.0`
+- `scoring.py:261`: dùng `"specific_region"` key (không phải `"specific_sequence"`)
+
+---
+
+## 20. Data contract — POST /api/design
+
+### Request body
+```json
+{
+  "sequence": { "matureSequence": "UAGCUUAUCAGACUGAUGUUGA", "mirnaId": "hsa-miR-21-5p", ... },
+  "thermodynamic": { "tmMin":58,"tmMax":62,"saltConcentration":50,"primerConcentration":200,
+                     "magnesiumConcentration":1.5,"dntpTotal":0.8,"kPlusConc":50,"bufferPH":8.4 },
+  "primerConstraints": { "gcMin":40,"gcMax":60,"lengthMin":20,"lengthMax":27,
+                          "gcClamp3prime":true,"bindingRegion3prime":6 },
+  "qpcr": { "annealingTemp":60,"ampliconMin":60,"ampliconMax":150,"totalCycles":40,
+             "pcrEfficiencyMin":90,"pcrEfficiencyMax":110 },
+  "detectionMethod": { "signalMethod":"taqman","quantMode":"relative","referenceGene":"miR-16",
+                        "enableFamilyDiscrimination":true,"enablePrecursorCheck":false,
+                        "enableRefoldingProtocol":true },
+  "experimentalContext": { "sampleType":"tissue","qpcrSystem":"other","rtEnzyme":"mmlv",
+                            "exportFormat":["copy"],"userLevel":"advanced" },
+  "_computed": { "freeMagnesium":0.70,"naEquivalent":149.23 }
+}
+```
+
+### Response body (200)
+```json
+{
+  "top3": [{
+    "rank": 1,
+    "sequence": "ACGGATCGATCG...",
+    "specific_region": "AUGCAUGCAUGC",
+    "specific_length": 12,
+    "tail_length": 10,
+    "gc_percent": 50.0,
+    "tm_full": 60.1,
+    "tm_binding": 46.3,
+    "amplicon_size": 72,
+    "total_score": 0.873,
+    "grade": "Excellent",
+    "scores": { "tm_accuracy":95, "mfe_stemloop":88, ... },
+    "weights": { ...SCORING_WEIGHTS_V4 },
+    "explanations": { "tm_accuracy": "Forward primer Tm = 60.1°C...", ... },
+    "structure_checks": { "hairpin":{...},"self_dimer":{...},"end_stability":{...} },
+    "heterodimer_checks": { "fwd_stemloop":{...},"fwd_reverse":{...},"any_high_risk":false },
+    "template_structure": { "has_strong_local_hairpin":false },
+    "isomir_flag": { "isomir_discrimination_risk":false, ... },
+    "binding_start_1based": 1,
+    "binding_end_1based": 12
+  }],
+  "probe": { "sequence":"...", "tm":70.2, "gc":55, ... },
+  "probe_note": null,
+  "stemloop_rt": {
+    "sequence": "GTCGTATCCAGTGCAGG...UCAACA",
+    "mfe": -27.5, "mfe_method": "ViennaRNA",
+    "tm_hybrid_c": 52.3, "tm_chemistry": "DNA:RNA",
+    "overhang_rna": "UCAACA", "binding_length": 6
+  },
+  "universal_reverse": {
+    "sequence": "CCAGTGCAGGGTCCGAGGTA",
+    "tm": 60.4, "gc_percent": 65.0,
+    "stemloop_reverse_heterodimer": { "dg":-4.1,"risk_level":"LOW" }
+  },
+  "global_warnings": [{ "field":"signalMethod","severity":"critical","message":"..." }],
+  "edge_cases": [{ "code":"E4","severity":"warning","message":"..." }],
+  "protocol_advice": { ... },
+  "normalization_advice": null,
+  "lna_hints": null,
+  "specificity_warnings": {
+    "cross_reactivity": { "family":"miR-21","cross_reactivity":[],"recommendation":{...} }
+  },
+  "metadata": {
+    "mirna_id":"hsa-miR-21-5p","mirna_length":22,
+    "binding_region_nt":6,"candidates_generated":45,
+    "elapsed_seconds":0.84,
+    "algorithm_version":"3.0.0","scoring_version":"V4 (15 criteria)",
+    "output_label":"predicted design quality",
+    "output_note":"Score reflects in-silico design quality. NOT PCR efficiency."
   }
-  onError('fieldName', val < min || val > max ? 'Error message...' : '');
-  onChange('fieldName', val);
 }
 ```
 
 ---
 
-## 16. Shared component: RangeSlider.jsx
-
-```jsx
-// Props:
-// - min, max: absolute limits
-// - valueMin, valueMax: current values
-// - step: default 1
-// - unit: "°C" | "%" | "nt" | "bp"
-// - label, tooltip: string (tooltip được render — không bỏ qua)
-// - onChange: function(newMin, newMax)
-
-// Behavior:
-// - Track fill: teal-600 (#0d9488), không dùng blue
-// - Thumbs: teal-600, hover teal-700
-// - Value display: badge chip teal bên dưới (tabular-nums)
-// - Drag callout: bubble teal-700 hiện phía trên thumb đang kéo
-//   (onPointerDown set dragging state, onPointerUp clear)
-// - Constraints: valueMin <= valueMax - step (thumbs không overlap)
-// - Guard: if (max === min) range = 1 để tránh NaN trong gradient
-```
-
----
-
-## 17. Submit button — Sticky bottom (v3.0)
-
-```jsx
-// Vị trí: sticky bottom-0 bên trong main scroll container
-// Background: gradient fade from-white from-70% via-white/90 to-transparent
-// z-index: 10
-
-// States:
-// 1. Ready:   teal gradient, "Design Primers →"
-// 2. Errors:  gray bg, "✕ Fix errors to continue", cursor-not-allowed
-// 3. Loading: gray bg, "⟳ Processing…" (spin animation)
-
-// Below button (khi isSeqReady && !hasErrors):
-// "Stem-loop primer · Forward primer · Universal reverse primer"
-```
-
----
-
-## 18. CollapsibleSection.jsx — quy tắc
-
-```jsx
-// Title style: text-sm font-semibold text-gray-500 (KHÔNG uppercase)
-// Arrow: Unicode ▸ (rotate 90° khi open) — màu teal-600
-// Status dots (khi collapsed):
-//   - Error: w-1.5 h-1.5 rounded-full bg-red-500
-//   - Warning: w-1.5 h-1.5 rounded-full bg-amber-400
-// Animation: grid-template-rows transition (0fr ↔ 1fr)
-// onFirstOpen: fired once on first expand, dùng để mark section visited
-// openRequested: increment để trigger open từ mini-nav
-```
-
----
-
-## 19. Backend Flask
-
-### File: backend/app.py
+## 21. Backend Flask (app.py)
 
 ```python
 from flask import Flask
 from flask_cors import CORS
 from routes.mirbase import mirbase_bp
+from routes.design import design_bp
+from routes.batch_design import batch_design_bp
+from routes.lna_suggest import lna_suggest_bp
+from routes.blast_check import blast_check_bp
+from routes.multiplex_check import multiplex_check_bp
+from routes.export import export_bp
+from routes.benchmark import benchmark_bp
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://localhost:3000"]}})
-app.register_blueprint(mirbase_bp, url_prefix='/api')
 
-@app.route('/api/health')
-def health():
-    return {"status": "ok", "message": "Backend is running", "version": "2.0.0"}
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
-```
-
-### File: backend/routes/mirbase.py
-
-```python
-# GET /api/mirbase/<mirna_id>
-# Request flow (3 tiers):
-#   1. Local SQLite DB (local_db.lookup) — zero latency, Homo sapiens prioritized
-#   2. miRBase REST API (nếu circuit breaker closed)
-#      - Tries ?accession= first (MIMAT…), then ?name=
-#   3. RNAcentral fallback (nếu miRBase fails hoặc circuit breaker open)
-# Returns: { id, accession, sequence, family, species, length }
-# HTTP errors: 400 (invalid input), 404 (not found), 503 (connection), 504 (timeout)
-# Note: khi miRBase.org down → circuit breaker kích hoạt → invalid IDs trả 504, không phải 404
-```
-
-### File: backend/db/local_db.py
-
-```python
-# init_schema()  — idempotent, gọi khi app start
-# lookup(mirna_id) → dict | None
-#   ORDER BY CASE: Homo sapiens ưu tiên hơn các species khác
-# upsert(record)  — INSERT OR REPLACE
-```
-
-### File: backend/db/circuit_breaker.py
-
-```python
-# check() → tuple[bool, int]  — atomic: (is_open, failure_count)
-# is_open property             — delegate to check()
-# record_failure()             — +1 failure; nếu >= 3 → open
-# record_success()             — reset failure count
-# Cooldown: 60s sau lần failure cuối → tự reset sang closed
-```
-
-### File: backend/scripts/seed_db.py
-
-```python
-# 85 offline entries không cần internet:
-# - Human oncomiRs: miR-21, miR-155, miR-210, miR-221/222, miR-31, miR-200 family
-# - let-7 family: let-7a/b/c/d/e/f/g/i
-# - miR-17-92 cluster: miR-17/18a/19a/19b/20a/92a
-# - Cardiac: miR-1-3p, miR-133a/b, miR-208a/b
-# - Liver: miR-122-5p, miR-192-5p
-# - Immune: miR-146a, miR-223-3p
-# - Circulating: miR-16-5p, miR-451a
-# - Mouse orthologs: mmu-miR-21-5p, mmu-let-7a-5p, mmu-miR-122-5p
-# - Rat orthologs: rno-miR-21-5p, rno-miR-155-5p
-```
-
-### File: backend/scripts/fetch_and_seed.py
-
-```python
-# Usage:
-#   python scripts/fetch_and_seed.py hsa-miR-21-5p MIMAT0000076
-#   python scripts/fetch_and_seed.py --file my_mirnas.txt
-#   python scripts/fetch_and_seed.py --all   # full ~38k entries từ mature.fa.gz
-#
-# Fallback chain: miRBase API → RNAcentral
-# RNAcentral species parsing: regex r'\bfrom\s+([A-Z][a-z]+ [a-z]+)' (đã fix v3.1)
-```
-
-### File: backend/requirements.txt
-```
-flask==3.0.3
-flask-cors==4.0.1
-requests==2.31.0
+for bp in [mirbase_bp, design_bp, batch_design_bp, lna_suggest_bp,
+           blast_check_bp, multiplex_check_bp, export_bp, benchmark_bp]:
+    app.register_blueprint(bp, url_prefix='/api')
 ```
 
 ---
 
-## 20. Tooltip.jsx — quy tắc
+## 22. Chạy dự án
 
-```jsx
-// aria-label: "More information" (English only)
-// Show delay: 250ms (clearTimeout on mouseleave)
-// Keyboard focus: show immediately (no delay)
-// Position: right side by default, flip to left if < 290px to viewport edge
-// Renders into document.body via createPortal (position: fixed)
-// Style: bg-white border border-gray-200 text-gray-700 shadow-xl rounded-xl
-```
-
----
-
-## 21. Test cases đầy đủ
-
-### Test miRBase API
 ```bash
-curl http://localhost:5000/api/health
-curl http://localhost:5000/api/mirbase/hsa-miR-21-5p   # → UAGCUUAUCAGACUGAUGUUGA
-curl http://localhost:5000/api/mirbase/MIMAT0000076     # same
-curl http://localhost:5000/api/mirbase/hsa-miR-16-5p   # → UAGCAGCACGUAAAUAUUGGCG
-curl http://localhost:5000/api/mirbase/hsa-let-7a-5p
-curl http://localhost:5000/api/mirbase/invalid-id-xyz   # → 404
-```
-
-### Test Form & UI
-```
-Test 1  — NumInput clear: xóa hết số → field trống, không hiện "0"
-Test 2  — NumInput focus: click vào ô số → text được select all
-Test 3  — Reset 2-step: click Reset → "Confirm reset?" → click lại → reset
-Test 4  — Reset cancel: click Reset → chờ 2.5s → tự huỷ về "Reset"
-Test 5  — Sticky button: scroll xuống giữa form → button vẫn hiện dưới màn hình
-Test 6  — Error state button: nhập giá trị lỗi → button hiện "✕ Fix errors to continue"
-Test 7  — Tooltip delay: di chuột nhanh qua icon → không flash, phải dừng 250ms
-Test 8  — RangeSlider drag callout: kéo thumb → bubble hiện giá trị phía trên
-Test 9  — Tm slider: kéo min/max, thumbs không overlap
-Test 10 — Mg²⁺ chelation: nhập Mg=1.5, dNTP=0.8 → freeMg=0.7 → red indicator
-Test 11 — K⁺ warning: nhập K+=80 → warning "upper recommended limit"
-Test 12 — pH warning: nhập pH=7.2 → warning về polymerase activity
-Test 13 — miRBase lookup: nhập hsa-miR-21-5p → Tab → sequence auto-fill
-Test 14 — TaqMan/SYBR toggle → info box thay đổi đúng
-Test 15 — Sample type Serum → preset banner → Apply → Group 4 values update
-Test 16 — Page title: navigate Home/Roadmap/Designer → browser tab title đúng
-Test 17 — Warning style: tất cả warning banners cùng bg-amber-50 rounded-lg
-```
-
----
-
-## 22. README.md
-
-```markdown
-# HG Lab: Stem-loop RT-qPCR Primer Designer
-
-Automated primer design tool for Stem-loop RT-qPCR miRNA quantification.
-
-## Requirements
-- Node.js 20+
-- Python 3.11+
-- Internet connection (for miRBase API)
-
-## Running (open 2 terminals)
-
-### Terminal 1 — Backend
-cd primer-designer/backend
+# Terminal 1 — Backend
+cd backend
 pip install -r requirements.txt
 python app.py          # → http://localhost:5000
 
-### Terminal 2 — Frontend
-cd primer-designer/frontend
+# Terminal 2 — Frontend
+cd frontend
 npm install
 npm run dev            # → http://localhost:5173
 
-## Quick check
-1. Open http://localhost:5173 → tab title "HG Lab | Primer Designer"
-2. Click Designer tab
-3. Enter hsa-miR-21-5p → Tab → sequence auto-fills
-4. Select TaqMan or SYBR Green → observe info box change
-
-## Contact
-https://hglab.hcmus.edu.vn
+# Tests
+cd backend
+python -m pytest tests/ -q
+# Expected: 36 passed (29 lna_tm + 7 batch_design)
 ```
 
 ---
 
-## 23. Definition of "Week 1 complete"
+## 23. Definition of Done — Phase 8 Complete
 
-> **STATUS: ✅ HOÀN THÀNH** — Verified 2026-06-20
+> **STATUS: ✅ TẤT CẢ PHASES HOÀN THÀNH** — Verified 2026-07-09
 
-**Required 100%:**
-- [x] `python app.py` runs without error, port 5000
-- [x] `npm run dev` runs without error, port 5173
-- [x] Browser tab: "HG Lab | Primer Designer" on Designer page
-- [x] Navbar: "HG Lab" brand + teal color, tab "Designer" active
-- [x] Layout correct: navbar + main + chatbot panel + footer
-- [x] Footer: lab name + version + teal link  *(v0.1.0-dev — user added manually)*
-- [x] Tab switching works, page titles update
-- [x] All 6 form groups display with correct default values
-- [x] RangeSlider: teal track/thumb, drag callout bubble, tooltips visible
-- [x] RangeSlider: thumbs do not overlap
-- [x] NumInput: click → select all; clear → empty field (not "0")
-- [x] miRBase ID → Tab → sequence auto-fills (hsa-miR-21-5p → UAGCUUAUCAGACUGAUGUUGA)
-- [x] Sequence validation: T character → "Character 'T' detected. use 'U' instead of 'T'"
-- [x] ThermodynamicGroup: 6 ionic/buffer parameters display correctly
-- [x] Effective free [Mg²⁺] indicator changes color correctly
-- [x] All warnings display in English, consistent amber style
-- [x] Reset button: 2-step confirmation (Confirm reset? → execute)
-- [x] Submit button: sticky at bottom, shows "Fix errors" state when errors exist
-- [x] TaqMan/SYBR radio → info box changes correctly
-- [x] Relative/Absolute radio → reference gene field shows/hides
-- [x] Sample type Serum → preset suggestion banner
-- [x] Design Primers → spinner → console.log shows all 6 groups
+**Phase 8 checklist:**
+- [x] Batch design endpoint POST /api/batch-design (sync NDJSON ≤10, async >10)
+- [x] Batch status polling GET /api/batch-status/<job_id>
+- [x] BatchDesignPanel.jsx: NDJSON streaming reader, polling, progress display
+- [x] useBatchDesign.js: cleanup interval on unmount
+- [x] Circuit breaker: chỉ trip trên 5xx, không phải 404
+- [x] LNA Tm calculator (lna_tm.py): McTigue 2004 + Owczarzy 2011 doublet tables
+- [x] POST /api/lna-suggest: validate sequence, role, mode, max_lna (with try/except)
+- [x] LnaPanel.jsx: display LNA suggestions (informational only)
+- [x] 29 unit tests cho lna_tm.py
+- [x] 7 unit tests cho batch_design.py
+- [x] historyDB.js: IndexedDB FIFO, atomic eviction, collision-safe key
+- [x] useHistory.js hook
+- [x] HistoryPanel.jsx: list, load, delete
+- [x] Auto-save: single design (SearchPage), batch design (BatchPage)
+- [x] design_pipeline.py: signalMethod default = "taqman"
+- [x] routes/design.py: collapsed to 30-line wrapper (no duplication)
+- [x] 9 algorithm inconsistencies fixed (key mismatch, hardcoded salt, stale comments)
 
-**Nice to have:**
-- [ ] Tooltips complete for all fields
-- [ ] Responsive on tablet at 768px
-- [ ] Error boundary (friendly crash page)
-
-**Not in week 1:**
-- Primer calculation algorithm (weeks 2–3)
-- Family discrimination scoring (week 3)
-- Real results page (week 4)
-- Real AI chatbot (later)
-- Real PDF/CSV export (later)
-- Server deployment (optional)
-
-### Bugs fixed trong Week 1
-| Bug | Mô tả | File | Fix |
-|-----|-------|------|-----|
-| Bug 2 | Tab key không trigger miRBase search | SequenceGroup.jsx:148 | `e.key === 'Tab'` thêm vào onKeyDown |
-| Bug 3 | T validation là dead code (regex `[AUGCU]+` bỏ T) | SequenceGroup.jsx:10 | Đổi regex thành `[AUGCUT]+` |
-| Bug DB | RNAcentral species parse sai ("ncRNA from" thay vì "Homo sapiens") | fetch_and_seed.py:96 | Regex `r'\bfrom\s+([A-Z][a-z]+ [a-z]+)'` |
-
-### Trạng thái database (2026-06-20)
-- 95 entries trong SQLite (`backend/db/mirbase.db`)
-- 85 từ seed_db.py (offline, curated) + 10 từ RNAcentral fallback
-- miRBase.org đang DOWN — khi online chạy `python scripts/fetch_and_seed.py --all` để seed ~38k entries
-- DB không commit vào git (xem `.gitignore`)
+**Known issues (out of scope):**
+- ViennaRNA Python bindings required cho RNA MFE (fallback: primer3-py DNA proxy)
+- BLAST local DB phải tự build với scripts/build_blast_db.sh
+- miRBase.org thỉnh thoảng down → circuit breaker active, dùng local SQLite
 
 ---
 
@@ -929,177 +880,6 @@ https://hglab.hcmus.edu.vn
 
 | Version | Ngày | Thay đổi chính |
 |---------|------|----------------|
-| v1.0 | — | Initial spec: 4 nhóm input cơ bản |
-| v2.0 | — | +DetectionMethodGroup, +ExperimentalContextGroup, +Mg²⁺ param |
-| v3.0 | 2026-06-20 | +6 ionic/buffer params (dNTP, K⁺, pH), NumInput component, UI/UX polish toàn bộ: teal color system, sticky submit, reset confirmation, drag callout, tooltip delay, warning style unification, English-only UI |
-| v3.1 | 2026-06-20 | **Week 1 HOÀN THÀNH.** +Backend SQLite cache (local_db.py) với 95 entries; +Circuit breaker (circuit_breaker.py, 3 failures → open, 60s cooldown); +seed_db.py (85 offline curated entries); +fetch_and_seed.py với RNAcentral fallback; Fix Bug 2 (Tab trigger), Bug 3 (T validation dead code), Bug DB (RNAcentral species parse); Cập nhật folder structure, checklist 22/22 PASS |
-| v3.2 | 2026-06-30 | **Sync với SPEC_phase2 v2.8.2.** BUG FIX: `dntpTotal: 0.2→0.8` (tổng 4 dNTPs, không phải per-species); BUG FIX: `primerConcentration: 250→200` nM (IDT default); BUG FIX: `lengthMax: 24→27` (align với P3P Max=27); THÊM: `userLevel: 'advanced'`; THÊM: computed fields `freeMagnesium`/`naEquivalent` (POST body); CẬP NHẬT: LIMITS.dNTP và LIMITS.lengthMax; THÊM: Section 25 Phase 2 status, Section 26 data contract |
-
----
-
-## 25. Phase 2 — Thuật toán thiết kế primer (ĐANG CHẠY)
-
-> **STATUS: 🚧 IN PROGRESS** — Tham chiếu đầy đủ: SPEC_phase2.md v2.8.2
-> Bắt đầu sau khi Section 23 hoàn thành ✅
-
-### Thư viện đã cài (requirements.txt)
-```
-flask==3.0.3
-flask-cors==4.0.1
-requests==2.31.0
-primer3-py==2.0.3    # Tm nearest-neighbor SantaLucia 1998, hairpin/dimer ΔG
-ViennaRNA==2.6.4     # MFE của stem-loop hairpin (RNA.fold)
-biopython==1.83      # sequence utilities
-numpy==1.26.4        # scoring calculations
-```
-
-### Cấu trúc backend mới (Phase 2)
-```
-backend/
-├── algorithm/
-│   ├── constants.py             # tất cả magic numbers, thresholds, weights
-│   ├── stemloop_rt.py           # Primer 1: stem-loop RT primer
-│   ├── forward_primer.py        # Primer 2: forward qPCR candidates
-│   ├── universal_reverse.py     # Primer 3: cố định CCAGTGCAGGGTCCGAGGTA
-│   ├── thermodynamics.py        # SantaLucia 1998 NN Tm, salt correction
-│   ├── scoring.py               # V3 scoring: 11 criteria
-│   ├── sequence_utils.py        # validate_rna_sequence, revcomp, gc_pct
-│   ├── structure_check/
-│   │   ├── heterodimer.py       # fwd×stemloop (RT buffer) + fwd×rev (PCR buffer)
-│   │   └── __init__.py
-│   └── specificity_check/
-│       ├── family_crossreactivity.py  # Hamming + ΔTm vs family members
-│       ├── isomir_flag.py             # 5' isomiR discrimination flag
-│       └── __init__.py
-├── data/
-│   ├── mirbase_family_overhangs.json   # PLACEHOLDER — verify vs miRBase v22+
-│   └── known_5prime_isomir_mirnas.json # PLACEHOLDER — verify vs miRBase v22+
-├── routes/
-│   ├── mirbase.py    # GET /api/mirbase/<id> (Week 1)
-│   └── design.py     # POST /api/design (Phase 2)
-└── tests/
-    ├── test_heterodimer.py
-    ├── test_family_crossreactivity.py
-    └── test_isomir_flag.py
-```
-
-Chi tiết xem SPEC_phase2.md v2.8.2.
-
----
-
-## 26. Data contract — POST /api/design (added v3.2)
-
-### Request body (frontend gửi)
-```json
-{
-  "sequence": {
-    "mirbaseId": "hsa-miR-21-5p",
-    "matureSequence": "UAGCUUAUCAGACUGAUGUUGA",
-    "species": "human",
-    "accession": "MIMAT0000076",
-    "family": "miR-21"
-  },
-  "thermodynamic": {
-    "tmMin": 58, "tmMax": 62,
-    "saltConcentration": 50,
-    "primerConcentration": 200,
-    "magnesiumConcentration": 1.5,
-    "dntpTotal": 0.8,
-    "kPlusConc": 50,
-    "bufferPH": 8.4
-  },
-  "primerConstraints": {
-    "gcMin": 40, "gcMax": 60,
-    "lengthMin": 20, "lengthMax": 27,
-    "gcClamp3prime": true,
-    "bindingRegion3prime": 6
-  },
-  "qpcr": {
-    "annealingTemp": 60,
-    "ampliconMin": 60, "ampliconMax": 150,
-    "totalCycles": 40,
-    "pcrEfficiencyMin": 90, "pcrEfficiencyMax": 110
-  },
-  "detectionMethod": {
-    "signalMethod": "taqman",
-    "quantMode": "relative",
-    "referenceGene": "miR-16",
-    "customReferenceGene": "",
-    "enableFamilyDiscrimination": true,
-    "enablePrecursorCheck": false,
-    "enableRefoldingProtocol": true
-  },
-  "experimentalContext": {
-    "sampleType": "tissue",
-    "qpcrSystem": "other",
-    "rtEnzyme": "mmlv",
-    "exportFormat": ["copy"],
-    "userLevel": "advanced"
-  },
-  "_computed": {
-    "freeMagnesium": 0.7,
-    "naEquivalent": 149.23
-  }
-}
-```
-
-### Response body (backend trả về)
-```json
-{
-  "top3": [
-    {
-      "rank": 1,
-      "sequence": "ACGGATCGATCGATCGATCGATCG",
-      "tail_length": 12,
-      "specific_length": 12,
-      "gc_pct": 50.0,
-      "tm": 60.1,
-      "amplicon_size": 72,
-      "total_score": 87.3,
-      "binding_start_1based": 1,
-      "binding_end_1based": 12,
-      "structure_checks": { "hairpin": {...}, "homodimer": {...} },
-      "heterodimer_checks": {
-        "heterodimer_fwd_stemloop": { "dg": -5.2, "risk_level": "PASS", "three_prime_overlap": false },
-        "heterodimer_fwd_reverse":  { "dg": -4.1, "risk_level": "PASS", "three_prime_overlap": false },
-        "any_high_risk": false,
-        "any_moderate_or_above": false
-      },
-      "isomir_flag": {
-        "isomir_discrimination_risk": false,
-        "mirna_name": "hsa-miR-21-5p",
-        "forward_3prime_position": 12,
-        "risk_window_nt": 2,
-        "note": "..."
-      }
-    }
-  ],
-  "stemloop_rt": { "sequence": "...", "binding_region": "UCAACAU", "tm": 72.3 },
-  "universal_reverse": { "sequence": "CCAGTGCAGGGTCCGAGGTA", "tm": 68.5 },
-  "global_warnings": [
-    { "field": "signalMethod", "severity": "critical", "message": "..." }
-  ],
-  "specificity_warnings": {
-    "cross_reactivity": {
-      "family": "miR-21",
-      "overhang_used": 6,
-      "target_overhang": "UCAACA",
-      "cross_reactivity": [],
-      "recommendation": { "suggested_overhang_length": 6, "resolved": true, "remaining_high_risk_siblings": [] }
-    },
-    "data_note": "Family and isoMiR data are PLACEHOLDER..."
-  },
-  "metadata": {
-    "mirna_sequence": "UAGCUUAUCAGACUGAUGUUGA",
-    "mirna_length": 22,
-    "binding_region_nt": 6,
-    "candidates_generated": 45,
-    "candidates_passed_prefilter": 12,
-    "candidates_rejected": 33,
-    "elapsed_seconds": 0.84,
-    "algorithm_version": "2.8.1",
-    "scoring_version": "V3 (11 criteria)"
-  }
-}
-```
-
+| v1.0–v3.1 | 2026-06-20 | Week 1: setup, form, miRBase API, SQLite cache, circuit breaker |
+| v3.2 | 2026-06-30 | Sync SPEC_phase2: bug fixes defaults (dntpTotal, primerConc, lengthMax), computed fields |
+| v4.0 | 2026-07-09 | **Phase 1–8 HOÀN THÀNH.** Cập nhật toàn bộ: routing (4 tabs), BatchPage, ResultsPage, BenchmarkPage, LnaPanel, HistoryPanel, BatchDesignPanel, historyDB.js, useBatchDesign, useHistory, ThemeContext; merged PrimerConstraintsGroup; V4 scoring 15 criteria; design_pipeline.run() dedup; 9 algorithm inconsistencies fixed; 36 unit tests; data contract V4 |

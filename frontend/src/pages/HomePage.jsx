@@ -27,7 +27,7 @@ const primers = [
   },
   {
     Icon: PadlockIcon,
-    iconClass: 'w-7 h-7 text-slate-400',
+    iconClass: 'w-7 h-7 text-slate-500',
     name: 'Universal Reverse Primer',
     role: 'Shared across all assays',
     desc: "Fixed sequence 5′-CCAGTGCAGGGTCCGAGGTA-3′. Disrupts the stem-loop hairpin and primes from the constant region — identical for every miRNA target.",
@@ -152,7 +152,7 @@ export default function HomePage() {
         </p>
         <div className="flex items-center justify-center gap-3 pt-1">
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate('/design')}
             className="px-7 py-2.5 bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-medium rounded-xl shadow-sm hover:opacity-90 transition-all active:scale-[0.98]"
           >
             Start designing →
@@ -172,6 +172,41 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Two entry points */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          onClick={() => navigate('/design')}
+          className="group text-left rounded-xl border border-teal-200 bg-white px-5 py-4 flex items-start gap-3 shadow-sm hover:shadow-md hover:border-teal-300 transition-all"
+        >
+          <span className="mt-0.5 shrink-0"><ForwardPrimerIcon className="w-7 h-7 text-teal-600" /></span>
+          <div className="flex-1 space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-800">Design new primers</span>
+              <span className="text-teal-600 transition-transform group-hover:translate-x-0.5">→</span>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Start from a miRBase ID or mature sequence and generate the three optimized primers.
+            </p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => navigate('/analyze')}
+          className="group text-left rounded-xl border border-slate-200 bg-white px-5 py-4 flex items-start gap-3 shadow-sm hover:shadow-md hover:border-teal-300 transition-all"
+        >
+          <span className="mt-1 shrink-0 inline-flex w-7 h-7 items-center justify-center scale-[1.6] origin-center"><IconThermo /></span>
+          <div className="flex-1 space-y-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-slate-800">Analyze existing primers</span>
+              <span className="text-teal-600 transition-transform group-hover:translate-x-0.5">→</span>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Already have a primer set? Paste the three primers + miRNA to compute Tm, dimers, and specificity.
+            </p>
+          </div>
+        </button>
+      </div>
+
       {/* Stats bar */}
       <div className="grid grid-cols-4 gap-3">
         {stats.map(({ value, label }) => (
@@ -179,8 +214,8 @@ export default function HomePage() {
             key={label}
             className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-center space-y-1 shadow-sm"
           >
-            <p className="text-lg font-black text-teal-600 leading-none">{value}</p>
-            <p className="text-xs text-slate-400 leading-snug">{label}</p>
+            <p className="text-lg font-black text-teal-600 leading-none tabular-nums">{value}</p>
+            <p className="text-xs text-slate-500 leading-snug">{label}</p>
           </div>
         ))}
       </div>
@@ -205,7 +240,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <p className={`text-xs font-medium ${roleColor}`}>{role}</p>
-                <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
               </div>
             </div>
           ))}
@@ -215,7 +250,7 @@ export default function HomePage() {
       {/* Why stem-loop RT-qPCR */}
       <div>
         <h2 className="text-sm font-semibold text-slate-600 mb-1">Why stem-loop RT-qPCR?</h2>
-        <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+        <p className="text-xs text-slate-500 mb-4 leading-relaxed">
           Mature miRNAs are only ~22 nt — too short for conventional RT-PCR. Chen et al. (2005) solved this with a
           hairpin RT primer that physically discriminates mature from pre-miRNA and extends the cDNA to enable qPCR.
         </p>
@@ -229,7 +264,7 @@ export default function HomePage() {
                 <Icon />
                 <span className="text-sm font-semibold text-slate-700">{title}</span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
+              <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
             </div>
           ))}
         </div>
@@ -246,7 +281,7 @@ export default function HomePage() {
             >
               <span className={`text-3xl font-black ${s.color} leading-none`}>{s.step}</span>
               <p className="text-sm font-semibold text-slate-700">{s.title}</p>
-              <p className="text-xs text-slate-400 leading-relaxed">{s.desc}</p>
+              <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>

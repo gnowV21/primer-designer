@@ -2,7 +2,7 @@
 
 const SEV_STYLES = {
   safe:       'bg-teal-50  border-teal-200  text-teal-700',
-  acceptable: 'bg-blue-50  border-blue-200  text-blue-700',
+  acceptable: 'bg-slate-50  border-slate-200  text-slate-700',
   warning:    'bg-amber-50 border-amber-200 text-amber-700',
   critical:   'bg-red-50   border-red-200   text-red-700',
 };
@@ -52,7 +52,7 @@ export default function StructureChecks({ checks }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Structure checks</p>
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Structure checks</p>
       <div className="space-y-1.5">
         {rows.map(({ key, label, data, detail }) => {
           const sev  = data?.severity ?? (data?.pass === false ? 'warning' : 'safe');

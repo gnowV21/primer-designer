@@ -10,28 +10,39 @@
 # [Chen05] Chen et al. 2005 | [K11] Kramer 2011 | [V07] Varkonyi-Gasic 2007
 # ----------------------------------------------------------------
 
+# Bump on ANY change that alters design output (primers, scores, warnings),
+# so two different results never carry the same version label (audit ENG-01).
+#   3.1.0 (2026-09-18) — audit fixes: overhang 5–7 nt, DNA-parameter stem-loop
+#   MFE, cycle-1 occupancy at Ta (unscored), renormalised total.
+ALGORITHM_VERSION = "3.1.0"
+
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
 
-OVERHANG_LENGTH_DEFAULT = 6   # nt — optimal for steric hindrance vs pre-miRNA [Chen05]
-OVERHANG_LENGTH_MIN = 4
-OVERHANG_LENGTH_MAX = 8
+OVERHANG_LENGTH_DEFAULT = 6   # nt — standard, the only length validated in [Chen05]
+# Supported range (project decision 2026-09-18): 5–7 nt. 5 and 7 nt are used in
+# published assays but not validated in [Chen05], so they always carry a warning.
+OVERHANG_LENGTH_MIN = 5
+OVERHANG_LENGTH_MAX = 7
 
 MFE_STEMLOOP_MIN = -13.0      # kcal/mol — primer3-py DNA proxy calibrated [R2]
 MFE_STEMLOOP_MAX = -10.0      # kcal/mol — primer3-py DNA proxy calibrated [R2]
 MFE_STEMLOOP_OPTIMAL = -11.5  # kcal/mol — primer3-py DNA proxy calibrated [R2]
 
-# ViennaRNA/RNAfold RNA-folding calibrated values.
-# STEMLOOP_BODY alone folds to ≈ −25.7 kcal/mol (RNA.fold).
-# Full RT primer (+ 6 nt overhang) ≈ −27.5 kcal/mol.
-# Range −35 to −20 captures reasonable overhang length variation (4–8 nt).
-MFE_STEMLOOP_MIN_RNA     = -35.0   # kcal/mol [RNA MFE calibrated]
-MFE_STEMLOOP_MAX_RNA     = -20.0   # kcal/mol [RNA MFE calibrated]
-MFE_STEMLOOP_OPTIMAL_RNA = -26.0   # kcal/mol [RNA MFE calibrated]
+# ViennaRNA DNA-parameter window (audit SCI-04, 2026-09-18). The RT primer is a
+# DNA oligo, so it is folded with the DNA energy set (Mathews 2004, 37 °C) —
+# the previous RNA (Turner 2004) values (−35/−20/−26) were for the wrong nucleic acid.
+# Derived the same way as the old RNA window: the old window was the typical
+# full-primer value (RNA −27.5) × 1.273 / 0.727 / 0.945. DNA typical value =
+# median over 2000 random 5–7-nt overhangs on STEMLOOP_BODY = −15.3 kcal/mol
+# (range −15.6 … −14.9; body alone −14.5) → −19.5 / −11.1 / −14.5.
+# Not calibrated on wet-lab data; the body is fixed, so this criterion barely
+# varies between candidates of one miRNA (audit SCI-14).
+MFE_STEMLOOP_MIN_DNA     = -19.5   # kcal/mol [ViennaRNA DNA Mathews2004, derived as above]
+MFE_STEMLOOP_MAX_DNA     = -11.1   # kcal/mol
+MFE_STEMLOOP_OPTIMAL_DNA = -14.5   # kcal/mol
 
 # RT primer concentration [K11]: 1 nM optimal (not 50 nM from Chen 2005)
-RT_PRIMER_CONC_OPTIMAL = 1.0     # nM final [K11]
-RT_PRIMER_CONC_CHEN_2005 = 50.0  # nM original [C05] — deprecated
 
 # Refolding protocol [K11] p.10 — mineral oil overlay critical
 REFOLDING_PROTOCOL = {
@@ -70,7 +81,6 @@ MULTIPLEX_PANEL_MAX = 20   # >20 assays per tube: cross-dimer risk increases sig
 
 # v2.7 UPDATE: 12–17 nt per Kramer 2011 (not 10–12)
 # [K11] p.3: "Take the first 12 to 17 nt of the 5′ end of the mature miRNA"
-FORWARD_SPECIFIC_LENGTH_MIN = 12
 FORWARD_SPECIFIC_LENGTH_MAX = 17
 FORWARD_SPECIFIC_LENGTHS = [12, 13, 14, 15, 16, 17]
 
@@ -82,8 +92,6 @@ FORWARD_EXCLUDES_LAST_NT = 6
 # 5' tail — GC-rich per [V07]: "relatively GC-rich"
 FORWARD_TAIL_MIN = 3
 FORWARD_TAIL_MAX = 12
-FORWARD_TAIL_OPTIMAL_MAX = 7  # nt — Kramer recommends 3-7 [K11]
-FORWARD_TAIL_GC_ENRICHED = True  # tails should be GC-rich [V07]
 
 # Max consecutive identical bases allowed in the generated tail pool.
 # Busk 2014 (DOI 10.1186/1471-2105-15-29) uses G,A,C,G,C tail order —
@@ -106,7 +114,6 @@ TM_FORWARD_TARGET = 60.0    # °C [R2][PAST24]
 TM_FORWARD_TOLERANCE = 2.0  # °C → acceptable 58–62°C
 TM_PAIR_DIFF_MAX = 2.0      # °C [PAST24]
 TM_ANNEALING_TEMP_DEFAULT = TM_FORWARD_TARGET  # alias — same optimum; update TM_FORWARD_TARGET only
-TM_BOUND_FRACTION_TARGET = 97.0    # % [SL04] SantaLucia & Hicks 2004 — Phase 3
 
 # Binding-region Tm target (scoring criterion 2) — v2.8 FIX
 # Old value 35°C was calibrated for probe oligos ≤10 nt, NOT for 12–17 nt regions.
@@ -130,9 +137,6 @@ GC_OPTIMAL = 50.0
 GC_STEMLOOP_MIN = 40.0
 GC_STEMLOOP_MAX = 60.0
 
-GC_CLAMP_3PRIME_WINDOW = 5
-GC_CLAMP_MIN_COUNT = 1
-GC_CLAMP_MAX_CONSECUTIVE = 3
 GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2
 
 # miRNA-specific GC clamp scoring (Busk 2014 DOI 10.1186/1471-2105-15-29)
@@ -152,7 +156,6 @@ MAX_HOMOPOLYMER_RUN = 5       # [P3P Advanced Settings] Max Poly-X = 5
 GC_MAX_IN_3PRIME_WINDOW = 5   # [P3P Advanced Settings] Max End GC = 5
 
 # GC-skew [PAST24]
-GC_SKEW_OPTIMAL_MAX = 0.0
 GC_SKEW_WARNING_THRESHOLD = 0.2
 
 
@@ -186,6 +189,13 @@ AMPLICON_MIN_QPCR = 60    # bp
 AMPLICON_MAX_QPCR = 150   # bp [IDT: 70–150 bp]
 AMPLICON_IDEAL = 80       # bp
 
+# primer3 thermodynamic-alignment hard limit: at least one strand must be <= 60 bp,
+# so amplicon NN ΔH via calc_heterodimer is only available up to this length.
+P3_HETERODIMER_MAX_BP = 60           # bp [primer3-py thermoanalysis limit]
+# SYBR: product and primer-dimer melt peaks closer than this may be mistaken for
+# one another on a single melt curve (P3 discrimination rule). [Lagatie17]
+AMPLICON_DIMER_TM_GAP_WARN = 10.0    # °C [Lagatie17] DOI 10.1371/journal.pone.0163435
+
 
 # ----------------------------------------------------------------
 # SECTION H: SCORING WEIGHTS (deprecated — use V3)
@@ -208,26 +218,8 @@ SCORING_WEIGHTS = {
 # SECTION I: CANDIDATE GENERATION
 # ----------------------------------------------------------------
 
-CANDIDATES_TARGET = 50
 CANDIDATES_TOP_N = 3
 
-REJECTION_REASONS = [
-    "tm_out_of_range",
-    "tm_binding_too_low",
-    "gc_out_of_range",
-    "gc_clamp_fail",
-    "gc_end_window_fail",
-    "too_short",
-    "too_long",
-    "homopolymer_run",
-    "amplicon_out_of_range",
-    "candidate_too_similar",
-    "hairpin_fail",
-    "self_dimer_fail",
-    "hetero_dimer_fail",
-    "end_stability_fail",
-    "t_at_3prime_warning",   # WARNING ONLY — does not block candidate
-]
 
 
 # ----------------------------------------------------------------
@@ -239,6 +231,20 @@ P3_DEFAULT_DV_CONC = 1.5      # mM Mg2+ [P3P]
 P3_DEFAULT_DNTP_CONC = 0.8    # mM total dNTP (4 × 0.2 mM) [P3P][IDT] — BUG FIX v2.1
 P3_DEFAULT_DNA_CONC = 200.0   # nM — IDT PrimerQuest default
 P3_DEFAULT_TEMP_C = 37.0      # °C for ΔG calculation
+
+# Monovalent-cation model for the Tm salt correction. Na+ and K+ are both
+# monovalent and stabilize the duplex equivalently, so the effective monovalent
+# concentration = [Na+] + [K+] + protonated Tris (Tris+). primer3 then applies
+# the SantaLucia 1998 monovalent correction + von Ahsen 2001 divalent (Mg2+).
+# NOTE: K+ has NO backend default — effective_monovalent_mM() uses params.get(
+# "kPlusConc", 0.0), i.e. absent K+ contributes 0 ("do not invent ions"). The
+# design form always sends kPlusConc; validator/API callers that omit it stay on
+# the Na+-only baseline by design. (Deliberately no P3_DEFAULT_KPLUS_CONC.)
+TRIS_PKA_25C          = 8.06  # Tris pKa at 25 °C (Good buffers); Tris+ = protonated fraction
+# Assumption (audit ENG-06): the 25 °C pKa is used at every temperature although
+# Tris pKa falls as temperature rises (coefficient not verified here). Effect is
+# bounded: 10 mM Tris adds at most 10 mM to the ~50–100 mM monovalent total.
+TRIS_CONC_DEFAULT_MM  = 10.0  # mM total Tris — standard 1× PCR buffer (10 mM Tris-HCl)
 
 P3_TM_FORMULA = 1                          # SantaLucia 1998 [P3P Advanced Settings]
 P3_SALT_CORRECTIONS = 1                    # SantaLucia 1998 [P3P Advanced Settings]
@@ -255,14 +261,11 @@ PROBE_TM_IDEAL_ABOVE_PRIMER = 8.0
 PROBE_TM_MIN = 66.0
 PROBE_TM_OPT = 70.0
 PROBE_TM_MAX = 74.0
-PROBE_TM_TARGET = PROBE_TM_OPT   # alias for test compatibility
 
 PROBE_MIN_LENGTH_SINGLE_Q = 18
-PROBE_OPT_LENGTH_SINGLE_Q = 20
 PROBE_MAX_LENGTH_SINGLE_Q = 27
 
 PROBE_MIN_LENGTH_MGB = 13
-PROBE_OPT_LENGTH_MGB = 16
 PROBE_MAX_LENGTH_MGB = 20
 PROBE_MGB_TM_BOOST = 15.0
 # [RESEARCH_INSIGHTS_probe §2.2] +15°C is too imprecise to filter/reject candidates;
@@ -273,7 +276,6 @@ PROBE_MIN_LENGTH_LNA = 13        # [Liu25] LNA probe: shorter + higher Tm per nt
 PROBE_MAX_LENGTH_LNA = 18
 
 PROBE_GC_MIN = 40.0
-PROBE_GC_OPT = 50.0
 PROBE_GC_MAX = 60.0
 
 PROBE_NO_G_AT_5PRIME = True         # [IDT-TQ] golden rule
@@ -281,7 +283,6 @@ PROBE_G_NOT_EXCEED_C = True         # [patent 10036062]
 PROBE_MAX_CONSECUTIVE_G = 3
 PROBE_MIN_DIST_FROM_PRIMER = 1      # nt
 
-PROBE_POSITION = "junction"
 PROBE_JUNCTION_OVERLAP_MIRNA_SIDE = 7
 PROBE_JUNCTION_OVERLAP_STEMLOOP_SIDE = 4
 
@@ -292,54 +293,51 @@ PROBE_MODE_DEFAULT = PROBE_MODE_CUSTOM
 PROBE_HAIRPIN_DG_MAX = -3.0
 PROBE_SELF_DIMER_DG_MAX = -6.0
 PROBE_HETERO_DIMER_DG_MAX = -6.0
-PROBE_MAX_POLY_X = 5
 PROBE_DV_CONC_DEFAULT = 1.5
 PROBE_DNA_CONC = 200.0
-PROBE_MIN_END_DISTANCE = -1
-PROBE_MAX_FAMILY_MISHYB_SCORE = 12.0
 
 
 # ----------------------------------------------------------------
 # SECTION L: BOUND FRACTION (Phase 3)
 # ----------------------------------------------------------------
 
-# Round 1 uses RT extension temperature; Round 2 uses qPCR annealing temperature.
-# RT extension: 42°C from RT_REACTION_CONDITIONS (SuperScript III, [K11] protocol).
-# qPCR Ta: 55°C (= Tm_target − 5°C). Evaluating at exactly Tm=60°C would always
+# Round 1 (specific region vs first-strand cDNA, PCR cycle 1) is evaluated at the
+# user's Ta and is informational only — see UNSCORED_CRITERIA_V4 (audit SCI-02).
+# Round 2 (scored) uses qPCR Ta: 55°C (= Tm_target − 5°C). Evaluating at exactly Tm=60°C would always
 # give ~50% bound fraction by thermodynamic definition of Tm (meaningless score).
 # Evaluating at Tm−5°C represents actual primer binding during the annealing step
 # and gives ~80–90% fraction for well-designed primers — scientifically actionable.
 #
 # Thresholds recalibrated for short oligonucleotides (12–24 nt):
-#   Round 1 specific region (12–17 nt at 42°C): OPT 80%, floor 60%
 #   Round 2 full primer   (~22–24 nt at 55°C):  OPT 80%, floor 60%
 # These reflect achievable fractions. Original 97%/90% were set for long (~27 nt)
 # symmetric-duplex hybridization assays, not short PCR primer conditions.
-BOUND_FRACTION_RT_TEMP        = 42.0  # °C — Round 1: specific region binds cDNA during RT
+# 3' isomiR tiers on isomiRdb's median 3'-isoform read fraction (audit SCI-10).
+# Project convention, not a published cut-off: HIGH = the canonical 3' form is a
+# minority of the miRNA's molecules, so a stem-loop assay measures a minority.
+ISOMIR_3P_FRACTION_HIGH     = 0.50
+ISOMIR_3P_FRACTION_MODERATE = 0.20
+
+# Controls & contamination (audit SCI-11) — lab policy, not literature values.
+NTC_DELTA_CQ_MIN          = 10   # cycles: NTC must be ≥10 Cq later than the latest sample (HG Lab, 2026-09-19)
+ABUNDANCE_PERCENTILE_HIGH = 95   # miRNA in the top 5 % by median isomiRdb RPM → elevated contamination risk
+
+# Amplicon Tm is reported with its Mg2+ sensitivity (audit SCI-07): the same
+# product melts ~3 °C apart across this Mg2+ span, and the user's master-mix Mg2+
+# is often unknown. Display span only — not a claim about any specific mix.
+AMPLICON_TM_MG_SPAN_MM = (1.5, 3.0)
+
+# (Removed BOUND_FRACTION_RT_TEMP = 42 °C — audit SCI-02, 2026-09-18. The forward
+#  primer is absent from the RT step; round 1 is PCR cycle 1 at the user's Ta.)
 BOUND_FRACTION_ANNEALING_TEMP = 55.0  # °C — Round 2: full primer binds amplicon at Ta=Tm−5°C
 BOUND_FRACTION_MIN = 60.0
 BOUND_FRACTION_OPT = 80.0
-BOUND_FRACTION_MAX = 100.0
 
 
 # ----------------------------------------------------------------
 # SECTION M: PENALTY WEIGHTS (Primer3Plus Penalties tab)
 # ----------------------------------------------------------------
 
-PENALTY_WT_SIZE_LT = 1.0
-PENALTY_WT_SIZE_GT = 1.0
-PENALTY_WT_TM_LT = 1.0
-PENALTY_WT_TM_GT = 1.0
-PENALTY_WT_GC_LT = 0.5    # HG Lab departure from P3P default 0.0
-PENALTY_WT_GC_GT = 0.5
-PENALTY_WT_BOUND_LT = 1.0  # Phase 3 [SL04] SantaLucia & Hicks 2004
-PENALTY_WT_BOUND_GT = 1.0
-PENALTY_WT_END_STABILITY = 0.5
-PENALTY_WT_SELF_COMP = 0.0
-PENALTY_WT_END_SELF_COMP = 0.0
-PENALTY_WT_HAIRPIN = 0.0
-PENALTY_PRIMER_PAIR_WEIGHT = 1.0
-PENALTY_HYB_OLIGO_WEIGHT = 0.0   # Phase 2; Phase 4: 1.0
 
 # v2.5: 10-criterion weights
 SCORING_WEIGHTS_V2 = {
@@ -362,7 +360,6 @@ SCORING_WEIGHTS_V2 = {
 
 OUTPUT_BASE_INDEX = 1          # 1-based output [P3P PRIMER_FIRST_BASE_INDEX=1]
 PRIMER_AVOID_T_AT_3PRIME = True
-PRIMER_T_AT_3PRIME_SEVERITY = "warning"   # warn, not fail
 
 
 # ----------------------------------------------------------------
@@ -394,52 +391,12 @@ HETERODIMER_3PRIME_MIN_BP  = 3     # bp — min consecutive 3' end bp → extens
 # ----------------------------------------------------------------
 
 # B: Discrimination [Chen05]
-DISCRIMINATION_CROSS_REACTION_MAX = 3.7    # % [C05] Figure 7
-DISCRIMINATION_SINGLE_NT_THRESHOLD = 3.7   # %
-DISCRIMINATION_MISMATCH_CUTOFF = 3         # mismatches → 100% specific [C05]
-PRECURSOR_CT_OFFSET_MIN = 11.0             # cycles [C05] Table 2
-PRECURSOR_SIGNAL_CONTRIBUTION = 0.05       # % maximum [C05]
-STEMLOOP_VS_LINEAR_SENSITIVITY_FOLD = 100  # × [C05] Figure 9
-STEMLOOP_VS_LINEAR_SPECIFICITY_FOLD = 100  # × [C05]
-MISMATCH_GT_WOBBLE_PENALTY_WEIGHT = 0.7   # G-T wobble — main cross-reaction source [C05]
-MISMATCH_TRUE_PENALTY_WEIGHT = 1.0
 
 # D: qPCR reaction conditions [K11]
-RT_REACTION_CONDITIONS = {
-    "temperature_profile": [
-        {"temp_c": 16, "duration_min": 30, "note": "Low temp annealing"},
-        {"temp_c": 42, "duration_min": 30, "note": "Reverse transcription"},
-        {"temp_c": 85, "duration_min": 5,  "note": "RT inactivation"},
-    ],
-    "rt_primer_final_conc_nM": 1.0,
-    "source": "Kramer 2011 Table 2",
-}
 
-QPCR_CYCLING_CONDITIONS = {
-    "initial_denaturation": {"temp_c": 95, "duration_min": 10, "cycles": 1},
-    "amplification": {
-        "cycles": 40,
-        "denaturation": {"temp_c": 95, "duration_sec": 15},
-        "annealing_extension": {"temp_c": 60, "duration_min": 1},
-    },
-    "note": "Standard TaqMan conditions.",
-    "source": "Kramer 2011 Step 12",
-}
 
-PCR_PRIMER_CONCENTRATIONS = {
-    "forward_primer_uM": 1.5,
-    "reverse_primer_uM": 0.7,
-    "probe_uM": 0.8,
-    "source": "Kramer 2011 — optimized from Chen et al. 2005",
-}
 
 # E: IDT [IDT-G]
-IDT_TYPICAL_MG_CONC = 3.0
-IDT_TYPICAL_DNTP_TOTAL = 0.8
-IDT_TM_PRIMER_OPTIMAL = 62.0
-IDT_TM_PRIMER_RANGE = (60, 64)
-IDT_PROBE_TM_ABOVE_PRIMER_MIN = 5.0
-IDT_PROBE_TM_ABOVE_PRIMER_MAX = 10.0
 
 # H: SYBR Green risk [V07]
 SYBR_GREEN_NON_SPECIFIC_RISK = "HIGH"
@@ -449,7 +406,6 @@ SYBR_GREEN_WARNING_MESSAGE = (
     "run. Consider switching to TaqMan (hydrolysis probe) for definitive "
     "quantification. Source: Varkonyi-Gasic et al. 2007, Plant Methods."
 )
-UPL_PROBE_OPTION = True  # Phase 4
 
 # v2.8.3: 12-criterion scoring weights [PAST24][IDT]
 SCORING_WEIGHTS_V3 = {
@@ -503,14 +459,18 @@ SCORING_WEIGHTS_V4 = {
 # Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.04+0.02+0.02+0.02 = 1.00
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
-# Family discrimination risk → score mapping [Chen05]
-FAMILY_DISCRIMINATION_RISK_SCORE = {
-    "SAFE":           100,
-    "LOW":             70,
-    "HIGH":            30,
-    "IDENTICAL":        0,
-    "no_family_data": 100,  # score 100 but explanation notes data absence
-}
+# Criteria kept in SCORING_WEIGHTS_V4 (weights are locked) but NOT scored.
+# The total is renormalised over the criteria actually scored, so the other
+# weights keep their relative proportions.
+#   bound_fraction_binding — audit SCI-02 (project decision 2026-09-18): the
+#   specific region alone binds cDNA only in PCR cycle 1, at Ta (≈2–10 % for
+#   12–17 nt at 60 °C). No published threshold exists for that number, so it
+#   is reported as information, not scored.
+UNSCORED_CRITERIA_V4 = frozenset({"bound_fraction_binding"})
+
+# (Removed FAMILY_DISCRIMINATION_RISK_SCORE — legacy seed-axis mapping. Family
+# discrimination is scored on the primer-binding axis via COMBINED_RISK_SCORE
+# (Week2 C5); the seed axis is biological context only, never scored.)
 
 # BLAST off-target parameters [Ye12] Ye et al. 2012 BMC Bioinformatics 13:134
 BLAST_WORD_SIZE        = 7       # [Ye12] — vs standard 11
@@ -525,6 +485,15 @@ PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specifi
 PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
 PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
+# Off-target priming requires the primer's 3' terminus to anneal so the polymerase
+# can extend. BLAST reports the local alignment only, so the number of primer 3' nt
+# left OUTSIDE that alignment (dangling) tells us whether the 3' end is annealed.
+BLAST_3PRIME_DANGLE_SAFE = 2   # ≥2 primer 3' nt unaligned → 3' end cannot prime → SAFE
+# Even a perfectly-matched 3' anchor cannot seed extension if it is too short: a
+# <10 bp duplex has a Tm far below a typical qPCR annealing temperature (≈60°C),
+# so it never anneals during cycling. Guards against a short 3'-terminal k-mer
+# match to an unrelated miRNA being scored as a critical off-target.
+PRIMER_BLAST_MIN_3PRIME_ANCHOR = 10   # nt — shorter 3'-anchored match → SAFE
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
 
@@ -561,12 +530,14 @@ KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
 KWOK_REDUCING_PAIRS  = {("A","A")}                          # ~5% yield
 # All other pairs → TOLERANT (~100% yield or context-dependent)
 
-# [Kwok90] Position-weighted distance for family cross-reactivity discrimination.
-# Weight[i] = contribution of a mismatch at position i from the 3' end (0 = 3'-terminal).
-# 3'-proximal mismatches block extension far more than 5'-proximal ones [Kwok90 Fig.3].
-# Used in check_family_crossreactivity() to reclassify 1-mismatch siblings whose mismatch
-# sits at the 3' end — such siblings are much less likely to be co-amplified.
-KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]  # positions 0–5 from 3' end
+# [Kwok90] Position-weighted mismatch distance, indexed from the PRIMER 3' TERMINUS.
+# Weight[i] = contribution of a mismatch i positions away from the primer 3' end
+# (0 = the 3'-terminal base pair). A 3'-terminal mismatch blocks extension [Kwok90 Fig.3].
+# WARNING: for the stem-loop RT primer the primer 3' terminus pairs with the 5'-MOST
+# nucleotide of the miRNA 3' overhang window (the RT primer is the reverse complement).
+# Always go through specificity_check.kwok.kwok_weighted_distance() — never index this
+# list directly.
+KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]
 KWOK_DIST_DISCRIMINATING = 3.0   # weighted dist ≥ this → 3'-proximal mismatch; classify as LOW
 
 # BLAST cache / infra
@@ -612,13 +583,60 @@ LNA_MAX_SUBSTITUTIONS     = 4       # max LNA positions to suggest per primer
 LNA_TARGET_TM_DEFAULT     = 60.0    # °C — default Tm target (mode="tm")
 LNA_AVOID_3PRIME_TERMINAL = True    # True → warning (NOT hard-skip) when LNA at 3' terminal
 LNA_EXHAUSTIVE_LIMIT      = 5000    # max combinations for exhaustive search; > → greedy
-LNA_HAIRPIN_RECHECK       = True    # check primer3 hairpin after LNA → warning if worse
-USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8)
+USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8). ON: NN tables are the VERIFIED
+                                    # Owczarzy 2011 Table 2 values (McTigue 2004 32NN), and
+                                    # tests/test_lna_benchmark.py passes the empirical
+                                    # McTigue Table 1 benchmark (ΔTm RMSD 0.78 °C, absolute
+                                    # Tm RMSD 1.54 °C, ≤ 2 °C). [A2]
 
 # ----------------------------------------------------------------
-# SECTION V: Batch design (Phase 8) — A1
+# SECTION V: Batch design (Phase 8) — REMOVED
+# Batch design was deliberately dropped when the project refocused on
+# single primer design (branch feat/design-focus). The A1 batch constants
+# (BATCH_ASYNC_THRESHOLD / BATCH_MAX_SIZE / BATCH_JOB_TTL_SEC) were removed
+# with it. Restore from commit 269a4c9 if batch is ever reinstated.
 # ----------------------------------------------------------------
 
-BATCH_ASYNC_THRESHOLD = 10    # ≤10 miRNAs → sync NDJSON; >10 → async job
-BATCH_MAX_SIZE        = 50    # maximum miRNAs per batch request (warn if exceeded)
-BATCH_JOB_TTL_SEC     = 3600  # 1h in-memory job TTL
+
+# ================================================================
+# Primer-axis collision analysis (Week 2 P1)
+# Specificity of stem-loop RT-qPCR = RT capture (3' overhang) x forward
+# discrimination (5' prefix). An off-target co-amplifies only when BOTH axes
+# fail. See specificity_check/overhang_collision.py.
+# ================================================================
+RT_MM_REPORT_MAX        = 2      # report RT-axis colliders with <= 2 mismatches in the window
+FWD_MM_REPORT_MAX       = 2      # report FWD-axis colliders with <= 2 mismatches in the prefix
+FWD_PREFIX_LEN_FALLBACK = 12     # used when forward specific_length is unavailable (lower bound of [12..17])
+COLLISION_MAX_REPORT    = 25     # cap rows returned to the client
+# The recommender's RT-overhang ceiling reuses OVERHANG_LENGTH_MAX (=7) from Section A.
+
+# Combined risk keyed by (rt_risk, fwd_risk). CRITICAL only when the RT primer
+# fails to discriminate (IDENTICAL/HIGH) AND the forward primer also fails.
+COMBINED_RISK_MATRIX = {
+    ("IDENTICAL", "IDENTICAL"): "CRITICAL",
+    ("IDENTICAL", "HIGH"):      "CRITICAL",
+    ("IDENTICAL", "LOW"):       "LOW",
+    ("IDENTICAL", "SAFE"):      "SAFE",
+    ("HIGH", "IDENTICAL"):      "CRITICAL",
+    ("HIGH", "HIGH"):           "CRITICAL",
+    ("HIGH", "LOW"):            "LOW",
+    ("HIGH", "SAFE"):           "SAFE",
+    ("LOW", "IDENTICAL"):       "LOW",
+    ("LOW", "HIGH"):            "LOW",
+    ("LOW", "LOW"):             "SAFE",
+    ("LOW", "SAFE"):            "SAFE",
+    ("SAFE", "IDENTICAL"):      "SAFE",
+    ("SAFE", "HIGH"):           "SAFE",
+    ("SAFE", "LOW"):            "SAFE",
+    ("SAFE", "SAFE"):           "SAFE",
+}
+
+# Score contribution of the worst combined risk (used by scoring.py, Week 2 C5).
+# no_index_data → 100 (criterion cannot contribute; must be stated in the explanation).
+COMBINED_RISK_SCORE = {"SAFE": 100, "LOW": 70, "CRITICAL": 0, "no_index_data": 100}
+
+# ---- Short-duplex reporting (Week 2 P4) --------------------------
+# NN parameters are calibrated on longer duplexes; below this length the initiation
+# term and terminal fraying dominate, so a point Tm is not a defensible display value.
+SHORT_DUPLEX_NT_THRESHOLD     = 8     # nt — report dG37 + a Tm band below this, not a point Tm
+TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; NOT a statistical CI)

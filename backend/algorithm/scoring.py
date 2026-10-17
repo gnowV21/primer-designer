@@ -6,13 +6,11 @@
 # ================================================================
 
 from .constants import (
-    SCORING_WEIGHTS_V3, SCORING_WEIGHTS_V4,
-    FAMILY_DISCRIMINATION_RISK_SCORE,
+    SCORING_WEIGHTS_V3, SCORING_WEIGHTS_V4, UNSCORED_CRITERIA_V4,
+    COMBINED_RISK_SCORE,
     TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
     TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
-    MFE_STEMLOOP_MIN, MFE_STEMLOOP_MAX, MFE_STEMLOOP_OPTIMAL,
-    MFE_STEMLOOP_MIN_RNA, MFE_STEMLOOP_MAX_RNA, MFE_STEMLOOP_OPTIMAL_RNA,
     HAIRPIN_DG_MAX_INTERNAL, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR, AMPLICON_IDEAL,
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
@@ -22,7 +20,9 @@ from .constants import (
     PRIMER_SIZE_MODE, FORWARD_SPECIFIC_LEN_REF,
 )
 from .sequence_utils import calculate_gc_skew
+from .stemloop_rt import mfe_thresholds
 from .bound_fraction import (
+    annealing_temp_c,
     calculate_bound_fraction_binding,
     calculate_bound_fraction_full,
     score_bound_fraction,
@@ -36,12 +36,15 @@ def score_candidate(
     params: dict,
     cross_reactivity: dict | None = None,
     use_v4: bool = True,
+    overhang_collision: dict | None = None,
 ) -> dict:
     """
     Score a complete primer set.
     use_v4=True (default): 15 criteria (SCORING_WEIGHTS_V4, Phase 3).
     use_v4=False: 12 criteria (SCORING_WEIGHTS_V3, Phase 2 compat).
-    cross_reactivity: output from check_family_crossreactivity (needed for V4).
+    cross_reactivity: seed-family output (kept for the biological-context panel; NOT scored).
+    overhang_collision: primer-axis output from check_overhang_collision — drives the
+        family_discrimination criterion (RT 3' overhang x forward 5' prefix). [Week2 C5]
     """
     scores = {}
     explanations = {}
@@ -98,33 +101,37 @@ def score_candidate(
     )
 
     # ── 5. Stem-loop MFE (0.15) ──────────────────────────────────
-    mfe        = stemloop["mfe"]
+    mfe        = stemloop.get("mfe")
     mfe_method = stemloop.get("mfe_method", "")
-    # Exact-match only: "primer3-py (ViennaRNA unavailable)" contains "ViennaRNA"
-    # as substring but must NOT use RNA thresholds — it is a DNA proxy value.
-    _rna_method = mfe_method in ("ViennaRNA", "RNAfold")
-    _mfe_opt   = MFE_STEMLOOP_OPTIMAL_RNA if _rna_method else MFE_STEMLOOP_OPTIMAL
-    mfe_min    = float(params.get("mfeMin", MFE_STEMLOOP_MIN_RNA if _rna_method else MFE_STEMLOOP_MIN))
-    mfe_max    = float(params.get("mfeMax", MFE_STEMLOOP_MAX_RNA if _rna_method else MFE_STEMLOOP_MAX))
-    if mfe_min <= mfe <= mfe_max:
-        # Piecewise-linear: score=60 at both boundaries, score=100 at _mfe_opt.
-        if mfe <= _mfe_opt:
-            frac = (mfe - mfe_min) / (_mfe_opt - mfe_min) if (_mfe_opt - mfe_min) > 0 else 1.0
-        else:
-            frac = (mfe_max - mfe) / (mfe_max - _mfe_opt) if (mfe_max - _mfe_opt) > 0 else 1.0
-        mfe_score = 60.0 + 40.0 * max(0.0, frac)
-    elif mfe < mfe_min:
-        mfe_score = max(0, 60 + (mfe - mfe_min) * 5)
+    _t_min, _t_max, _mfe_opt = mfe_thresholds(mfe_method)
+    mfe_min    = float(params.get("mfeMin", _t_min))
+    mfe_max    = float(params.get("mfeMax", _t_max))
+    if mfe is None:
+        # No folding engine: leave the criterion out (total is renormalised) — SCI-03.
+        explanations["mfe_stemloop"] = (
+            "Stem-loop MFE could not be computed (no folding engine available) — "
+            "excluded from the total score."
+        )
     else:
-        mfe_score = max(0, 60 - (mfe - mfe_max) * 5)
-    scores["mfe_stemloop"] = round(mfe_score, 1)
-    explanations["mfe_stemloop"] = (
-        f"Stem-loop MFE = {mfe:.2f} kcal/mol (valid: {mfe_min} to {mfe_max} kcal/mol, "
-        f"target: {_mfe_opt} kcal/mol). "
-        f"Sweet spot balances RT efficiency vs PCR denaturability. "
-        f"Method: {mfe_method}. "
-        f"Source: Report 2 HG Lab, Chen et al. 2005."
-    )
+        if mfe_min <= mfe <= mfe_max:
+            # Piecewise-linear: score=60 at both boundaries, score=100 at _mfe_opt.
+            if mfe <= _mfe_opt:
+                frac = (mfe - mfe_min) / (_mfe_opt - mfe_min) if (_mfe_opt - mfe_min) > 0 else 1.0
+            else:
+                frac = (mfe_max - mfe) / (mfe_max - _mfe_opt) if (mfe_max - _mfe_opt) > 0 else 1.0
+            mfe_score = 60.0 + 40.0 * max(0.0, frac)
+        elif mfe < mfe_min:
+            mfe_score = max(0, 60 + (mfe - mfe_min) * 5)
+        else:
+            mfe_score = max(0, 60 - (mfe - mfe_max) * 5)
+        scores["mfe_stemloop"] = round(mfe_score, 1)
+        explanations["mfe_stemloop"] = (
+            f"Stem-loop MFE = {mfe:.2f} kcal/mol (valid: {mfe_min} to {mfe_max} kcal/mol, "
+            f"target: {_mfe_opt} kcal/mol). "
+            f"The 44-nt body is fixed, so this barely differs between candidates. "
+            f"Method: {mfe_method}. "
+            f"Source: Chen et al. 2005; window derived in constants.py (not wet-lab calibrated)."
+        )
 
     # ── 6. Hairpin penalty (0.10 V3 / 0.08 V4) ───────────────────
     hp = sc.get("hairpin", {})
@@ -262,16 +269,17 @@ def score_candidate(
     if use_v4:
         # ── 13. Bound fraction — binding region (0.05) [SL04] ────
         specific_region = forward.get("specific_region") or forward["sequence"][-forward.get("specific_length", len(forward["sequence"])):]
+        # Informational only (UNSCORED_CRITERIA_V4, audit SCI-02): no score key,
+        # so it never enters the total or the score breakdown.
         bf_binding = calculate_bound_fraction_binding(specific_region, params)
-        bf_binding_result = score_bound_fraction(bf_binding)
-        scores["bound_fraction_binding"] = bf_binding_result["score"]
-        # [RESEARCH_QUESTIONS_UX A1] expose raw % alongside score for display in Tab B
         scores["bound_fraction_binding_pct"] = bf_binding
         explanations["bound_fraction_binding"] = (
-            f"Specific region bound fraction = {bf_binding:.1f}% at 42°C (RT extension step) "
-            f"(optimal ≥ 80%, acceptable ≥ 60%). "
-            f"Round 1: specific region ({forward.get('specific_length', '?')} nt) binds cDNA. "
-            f"Formula: [SL04] SantaLucia & Hicks 2004 (dH/dS from primer3-py heterodimer)."
+            f"Cycle-1 occupancy = {bf_binding:.1f}% of the specific region "
+            f"({forward.get('specific_length', '?')} nt) bound to first-strand cDNA at "
+            f"Ta = {annealing_temp_c(params):g}°C. In cycle 1 only the specific region has a "
+            f"template (the 5' tail pairs from cycle 2 on), so low values are normal. "
+            f"Shown for information — not scored (no published threshold). "
+            f"Formula: [SL04] SantaLucia & Hicks 2004."
         )
 
         # ── 14. Bound fraction — full primer (0.03) [SL04] ───────
@@ -287,29 +295,50 @@ def score_candidate(
             f"Formula: [SL04] SantaLucia & Hicks 2004."
         )
 
-        # ── 15. Family discrimination (0.05) [Chen05] ────────────
-        worst_risk = _extract_worst_family_risk(cross_reactivity)
-        fam_score = FAMILY_DISCRIMINATION_RISK_SCORE.get(worst_risk, 50)
+        # ── 15. Family discrimination — PRIMER-BINDING axis (0.05) [Chen05][Kwok90] ──
+        # Scored on the RT 3'-overhang x forward 5'-prefix collision analysis, NOT the seed
+        # family (which is the mRNA-targeting axis). [Week2 C5]
+        worst_risk = _extract_worst_primer_axis_risk(overhang_collision)
+        fam_score = COMBINED_RISK_SCORE.get(worst_risk, 100)
         scores["family_discrimination"] = fam_score
-        family_name = cross_reactivity.get("family") if cross_reactivity else None
-        overhang_used = cross_reactivity.get("overhang_used", 6) if cross_reactivity else 6
-        explanations["family_discrimination"] = (
-            f"Family cross-reactivity risk: {worst_risk} "
-            f"(family: {family_name or 'unknown'}, overhang: {overhang_used} nt). "
-            f"Score 100=SAFE/no data, 70=LOW, 30=HIGH, 0=IDENTICAL. "
-            f"Risk uses Kwok 1990 position-weighted distance: 3'-proximal mismatches "
-            f"block extension and are reclassified from HIGH→LOW [Kwok90 NAR 18:999]. "
-            f"Source: Chen et al. 2005 Fig.7; Kwok et al. 1990."
-        )
+        if worst_risk == "no_index_data":
+            explanations["family_discrimination"] = (
+                "No overhang index available — this criterion did not contribute discriminating "
+                "information (scored 100). Run scripts/build_overhang_index.py to enable it."
+            )
+        else:
+            oc = overhang_collision or {}
+            n_crit = oc.get("summary", {}).get("CRITICAL", 0)
+            worst_name = next((e.get("mirna") for e in oc.get("collisions", [])
+                               if e.get("combined_risk") == "CRITICAL"), None)
+            explanations["family_discrimination"] = (
+                f"Primer-binding specificity — worst combined risk: {worst_risk}. "
+                f"Axis: RT 3' overhang ({oc.get('overhang_len', 6)} nt) x forward 5' prefix "
+                f"({oc.get('forward_specific_len', '?')} nt). {n_crit} CRITICAL collider(s)"
+                + (f"; worst = {worst_name}" if worst_name else "") + ". "
+                "Score 100=SAFE, 70=LOW, 0=CRITICAL. Seed-family membership (positions 2-8) is "
+                "the mRNA-targeting axis and is NOT used for scoring. Source: Chen 2005; Kwok 1990."
+            )
 
     # ── Total weighted score ──────────────────────────────────────
-    total = round(sum(scores[k] * weights[k] for k in weights if k in scores), 1)
+    # Renormalised over the criteria actually scored: an unscored criterion
+    # (UNSCORED_CRITERIA_V4) or one that could not be computed (e.g. MFE with no
+    # folding engine, audit SCI-03) is left out instead of being given a fake
+    # value. The locked nominal weights keep their relative proportions.
+    unscored = UNSCORED_CRITERIA_V4 if use_v4 else frozenset()
+    scored = [k for k in weights
+              if k not in unscored and isinstance(scores.get(k), (int, float))]
+    w_sum = sum(weights[k] for k in scored)
+    effective = {k: round(weights[k] / w_sum, 4) for k in scored} if w_sum else {}
+    total = round(sum(scores[k] * weights[k] for k in scored) / w_sum, 1) if w_sum else 0.0
 
     return {
         "total_score": total,
         "grade": _grade(total),
         "scores": scores,
-        "weights": weights,
+        "weights": effective,
+        "weights_nominal": weights,
+        "unscored_criteria": sorted(set(weights) - set(scored)),
         "explanations": explanations,
         "scoring_version": "V4" if use_v4 else "V3",
         "pass_all_structure_checks": sc.get("overall_pass", False),
@@ -317,16 +346,16 @@ def score_candidate(
     }
 
 
-def _extract_worst_family_risk(cross_reactivity: dict | None) -> str:
-    """Return the worst risk label from cross_reactivity result dict."""
-    if not cross_reactivity:
-        return "no_family_data"
-    hits = cross_reactivity.get("cross_reactivity", [])
-    if not hits:
-        return "no_family_data"
-    rank = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
-    worst = min(hits, key=lambda h: rank.get(h.get("risk", "SAFE"), 3))
-    return worst.get("risk", "no_family_data")
+def _extract_worst_primer_axis_risk(overhang_collision: dict | None) -> str:
+    """Worst combined RT+forward risk from check_overhang_collision (Week2 C5).
+
+    Returns 'no_index_data' when the overhang index is unavailable so the criterion stays
+    neutral (100) instead of silently penalising or crediting a design.
+    """
+    if not overhang_collision:
+        return "no_index_data"
+    worst = overhang_collision.get("worst_combined_risk", "no_index_data")
+    return worst if worst in ("SAFE", "LOW", "CRITICAL") else "no_index_data"
 
 
 def _grade(total: float) -> str:

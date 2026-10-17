@@ -21,12 +21,6 @@ const QPCR_SYSTEM_OPTIONS = [
 ];
 
 
-const EXPORT_OPTIONS = [
-  { value: 'copy', label: 'Copy to clipboard' },
-  { value: 'pdf',  label: 'PDF report' },
-  { value: 'csv',  label: 'CSV for ordering' },
-];
-
 export default function ExperimentalContextGroup({ data, onChange, onApplyPreset, onFirstOpen, openRequested }) {
   const [presetDismissed, setPresetDismissed] = useState(false);
   const [prevSample, setPrevSample] = useState(data.sampleType); // eslint-disable-line no-unused-vars
@@ -36,14 +30,6 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
     onChange('sampleType', val);
     setPresetDismissed(false);
     setPrevSample(val);
-  }
-
-  function handleExportToggle(value) {
-    const current = data.exportFormat;
-    const next = current.includes(value)
-      ? current.filter((v) => v !== value)
-      : [...current, value];
-    onChange('exportFormat', next);
   }
 
   const preset = SAMPLE_TYPE_PRESETS[data.sampleType] || {};
@@ -67,13 +53,14 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">Sample type</label>
+            <label htmlFor="ctx-sample-type" className="text-sm font-medium text-slate-700">Sample type</label>
             <Tooltip text="Sample type affects optimal amplicon size, primer concentration, and reference gene selection. Serum and FFPE samples require shorter amplicons due to RNA fragmentation." />
           </div>
           <select
+            id="ctx-sample-type"
             value={data.sampleType}
             onChange={handleSampleChange}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
+            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
           >
             {SAMPLE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -83,13 +70,14 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
 
         <div className="space-y-1">
           <div className="flex items-center gap-1.5">
-            <label className="text-sm font-medium text-gray-700">qPCR system</label>
+            <label htmlFor="ctx-qpcr-system" className="text-sm font-medium text-slate-700">qPCR system</label>
             <Tooltip text="Your qPCR platform affects the choice of reference dye (ROX or none), reaction volume, and compatible master mix." />
           </div>
           <select
+            id="ctx-qpcr-system"
             value={data.qpcrSystem}
             onChange={(e) => onChange('qpcrSystem', e.target.value)}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
+            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 bg-white"
           >
             {QPCR_SYSTEM_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -128,38 +116,18 @@ export default function ExperimentalContextGroup({ data, onChange, onApplyPreset
 
       {/* Sample warning (no preset adjustments, just a note) */}
       {!hasPresetChanges && sampleWarning && (
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-          ⚠ {sampleWarning}
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+          {sampleWarning}
         </p>
       )}
 
       {/* System note */}
       {systemNote && (
-        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded px-3 py-2 leading-relaxed">
-          ℹ {systemNote}
+        <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 leading-relaxed">
+          {systemNote}
         </p>
       )}
 
-      {/* Export format */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Export format</label>
-          <Tooltip text="CSV format is suitable for submitting directly to oligo synthesis vendors. PDF is ideal for lab notebooks or sharing with collaborators." />
-        </div>
-        <div className="flex gap-4">
-          {EXPORT_OPTIONS.map(({ value, label }) => (
-            <label key={value} className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={data.exportFormat.includes(value)}
-                onChange={() => handleExportToggle(value)}
-                className="accent-teal-600"
-              />
-              <span className="text-sm text-gray-700">{label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
     </CollapsibleSection>
   );
 }

@@ -57,7 +57,7 @@ export default function ExportButtons({ set, stemloop, reverse }) {
           className={`text-xs px-3 py-1.5 rounded-lg border transition-all
             ${copied === key
               ? 'bg-teal-600 border-teal-600 text-white'
-              : 'bg-white border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700'
+              : 'bg-white border-slate-200 text-slate-600 hover:border-teal-400 hover:text-teal-700'
             }`}
         >
           {copied === key ? '✓ Copied' : label}

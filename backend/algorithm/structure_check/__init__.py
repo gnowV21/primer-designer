@@ -120,13 +120,15 @@ def _check_self_dimer(seq: str, p3: dict, temp_c: float) -> dict:
         "critical_3prime": critical_3prime,
         "threshold_overall": SELF_DIMER_DG_MAX,
         "threshold_3prime": SELF_DIMER_DG_3PRIME_MAX,
-        "note": _dimer_note("self", dg_any, dg_end, critical_3prime),
+        "note": _dimer_note("Self-dimer", dg_any, dg_end, critical_3prime,
+                            pass_overall, SELF_DIMER_DG_MAX),
     }
 
 
-def _check_hetero_dimer(seq1: str, seq2: str, p3: dict, temp_c: float) -> dict:
+def _check_hetero_dimer(seq1: str, seq2: str, p3: dict, temp_c: float,
+                        label: str = "Hetero-dimer (forward + reverse)") -> dict:
     """
-    Hetero-dimer: forward primer vs universal reverse.
+    Hetero-dimer between two primers (default: forward vs universal reverse).
     3' complementarity creates extendable primer-dimer artifacts. [IDT]
     """
     try:
@@ -164,7 +166,8 @@ def _check_hetero_dimer(seq1: str, seq2: str, p3: dict, temp_c: float) -> dict:
         "critical_3prime": critical_3prime,
         "threshold_overall": HETERO_DIMER_DG_MAX,
         "threshold_3prime": HETERO_DIMER_DG_3PRIME_MAX,
-        "note": _dimer_note("hetero", dg_any, dg_end, critical_3prime),
+        "note": _dimer_note(label, dg_any, dg_end, critical_3prime,
+                            pass_overall, HETERO_DIMER_DG_MAX),
     }
 
 
@@ -210,12 +213,15 @@ def _hairpin_note(dg: float, severity: str) -> str:
     return notes.get(severity, "")
 
 
-def _dimer_note(dimer_type: str, dg_any: float, dg_end: float, critical: bool) -> str:
-    label = "Self-dimer" if dimer_type == "self" else "Hetero-dimer (forward + reverse)"
+def _dimer_note(label: str, dg_any: float, dg_end: float, critical: bool,
+                pass_overall: bool = True, threshold_overall: float = 0.0) -> str:
     if critical:
         return (f"{label}: 3'-end ΔG = {dg_end:.2f} kcal/mol — CRITICAL. "
                 "Polymerase can extend this dimer, generating primer-dimer artifacts.")
     elif dg_end <= SELF_DIMER_DG_3PRIME_MAX:
         return f"{label}: 3'-end ΔG = {dg_end:.2f} kcal/mol — WARNING. Close to the acceptable limit."
+    elif not pass_overall:
+        return (f"{label}: overall ΔG = {dg_any:.2f} kcal/mol exceeds the limit ({threshold_overall}) "
+                f"but the 3' end is free (3'-end: {dg_end:.2f}) — not extendable; may reduce free primer.")
     else:
         return f"{label}: ΔG = {dg_any:.2f} kcal/mol (3'-end: {dg_end:.2f}) — within acceptable range."

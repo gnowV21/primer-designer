@@ -3,7 +3,10 @@
 #
 # Extends SQLiteKVCache (utils/sqlite_kv_cache.py).
 # TTL: 30 days (BLAST_CACHE_TTL_DAYS) — databases update infrequently.
-# Key: SHA-256(fwd | rev | db_version)[:32]
+# Key: SHA-256(fwd | rev | db_version | mirna_id)[:32]
+# mirna_id is part of the key because it changes the RESULT: the on-target
+# miRNA (and its precursor/same-family variants) is excluded per mirna_id, so
+# the same forward primer under two different mirna_id values must not collide.
 # ================================================================
 
 import hashlib
@@ -27,9 +30,9 @@ class BlastCache(SQLiteKVCache):
             default_ttl_days=BLAST_CACHE_TTL_DAYS,
         )
 
-    def get_result(self, fwd: str, rev: str, db_version: str) -> Optional[dict]:
+    def get_result(self, fwd: str, rev: str, db_version: str, mirna_id: str = "") -> Optional[dict]:
         """Return cached BLAST result dict or None."""
-        key = self._compute_key(fwd, rev, db_version)
+        key = self._compute_key(fwd, rev, db_version, mirna_id)
         entry = self.get(key)
         if entry:
             return json.loads(entry["value"])
@@ -41,16 +44,21 @@ class BlastCache(SQLiteKVCache):
         rev: str,
         result: dict,
         db_version: str,
+        mirna_id: str = "",
     ) -> None:
         """Cache a BLAST result dict with the default TTL."""
-        key = self._compute_key(fwd, rev, db_version)
+        key = self._compute_key(fwd, rev, db_version, mirna_id)
         self.set(
             key=key,
             value=json.dumps(result),
-            metadata={"forward": fwd, "reverse": rev, "db_version": db_version},
+            metadata={"forward": fwd, "reverse": rev, "db_version": db_version,
+                      "mirna_id": mirna_id},
         )
 
     @staticmethod
-    def _compute_key(fwd: str, rev: str, db_version: str) -> str:
-        raw = f"{fwd.upper()}|{rev.upper()}|{db_version}"
+    def _compute_key(fwd: str, rev: str, db_version: str, mirna_id: str = "") -> str:
+        # mirna_id is normalised (lower) because the on-target exclusion is
+        # case-insensitive; it is included so two different targets sharing a
+        # forward primer get distinct cache entries.
+        raw = f"{fwd.upper()}|{rev.upper()}|{db_version}|{mirna_id.lower()}"
         return hashlib.sha256(raw.encode()).hexdigest()[:32]

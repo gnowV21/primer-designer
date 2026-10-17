@@ -20,7 +20,7 @@ test.describe('BLAST DB status — OffTargetPanel', () => {
 
     // Navigate to a results page (need to have results state)
     // For testing purposes we mock the blast-status on the search page
-    await page.goto('/search');
+    await page.goto('/design/advanced');
 
     // The OffTargetPanel appears inside PrimerSetCard after a design result.
     // Since we can't easily trigger a full design, just check the API mock works.
@@ -46,7 +46,7 @@ test.describe('BLAST DB status — OffTargetPanel', () => {
         }),
       })
     );
-    await page.goto('/search');
+    await page.goto('/design/advanced');
     const resp = await page.evaluate(async () => {
       const r = await fetch('/api/blast-status');
       return r.json();

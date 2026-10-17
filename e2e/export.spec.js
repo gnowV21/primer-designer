@@ -2,12 +2,13 @@
 // Covers: download triggers, content-type, file name, CSV structure.
 
 import { test, expect } from '@playwright/test';
+import { PLACEHOLDER } from './helpers.js';
 
 const SEQUENCE = 'UAGCUUAUCAGACUGAUGUUGA'; // hsa-miR-21-5p 22 nt
 
 async function runDesign(page) {
-  await page.goto('/search');
-  const input = page.locator('input[placeholder*="hsa-miR"]');
+  await page.goto('/design/advanced');
+  const input = page.getByPlaceholder(PLACEHOLDER);
   await input.fill(SEQUENCE);
   await page.evaluate(() => {
     const btns = [...document.querySelectorAll('button')];
@@ -125,7 +126,7 @@ test('POST /api/export with csv returns text/csv', async ({ request }) => {
       structure_checks: { hairpin: { dg: 0.41 }, self_dimer: { dg: -2.8 },
         end_stability: { stability_kcal_mol: 0 }, overall_pass: true, has_critical_flag: false },
       heterodimer_checks: { fwd_reverse: { dg: -1.73 }, fwd_stemloop: { dg: -1.82 } },
-      scores: { bound_fraction_binding: 65.3, gc_clamp: 100 },
+      scores: { bound_fraction_binding_pct: 3.1, gc_clamp: 100 },
       isomir_flag: { isomir_discrimination_risk: false },
     }],
     stemloop_rt: { sequence: 'GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCAACA',

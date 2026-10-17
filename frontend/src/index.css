@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens (HG Lab Design System) ────────────────────────────────
+   Only the font families are defined here — they are wired into Tailwind via
+   tailwind.config.js (fontFamily.sans/mono → var(--font-*)). Type scale,
+   spacing, radii and status colors intentionally live in Tailwind's config /
+   utility classes (text-sm, rounded-lg, bg-amber-50, …) so there is a single
+   source of truth; do not re-declare them here as CSS vars — that drifts from
+   the Tailwind scale the components actually use. */
+:root {
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
 /* ── Theme: Pink ─────────────────────────────────── */
 [data-theme="pink"] {
   --brand-50:  #fdf2f8;
@@ -44,6 +56,16 @@
 html {
   font-size: 110%;
   scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
 }
 
 *:focus-visible {

@@ -205,3 +205,21 @@ class TestSuggestLnaPositions:
         res = suggest_lna_positions(seq, target_tm=60.0, params=_PARAMS)
         for pos in res["suggested_positions"]:
             assert 0 <= pos < len(seq)
+
+
+# ── Week2 C10: benchmark-coverage caveat scope ────────────────────
+_C10_PARAMS = {"saltConcentration": 50.0, "magnesiumConcentration": 1.5,
+               "dntpTotal": 0.8, "primerConcentration": 200.0}
+
+
+def test_single_lna_claims_benchmark_coverage():
+    res = calc_lna_tm("ACGTACGTACGT", [2, 6], _C10_PARAMS)   # non-adjacent
+    assert res["benchmark_coverage"] == "single_lna"
+    assert any("Benchmarked against McTigue 2004" in w for w in res["warnings"])
+    assert not any("NOT covered by our benchmark" in w for w in res["warnings"])
+
+
+def test_consecutive_lna_flagged_unbenchmarked():
+    res = calc_lna_tm("ACGTACGTACGT", [5, 6], _C10_PARAMS)   # adjacent LNA:LNA
+    assert res["benchmark_coverage"] in ("consecutive_lna_unbenchmarked", "mixed")
+    assert any("NOT covered by our benchmark" in w for w in res["warnings"])

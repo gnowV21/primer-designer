@@ -30,7 +30,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
           <button
             type="button"
             onClick={handleRun}
-            className="text-xs text-slate-400 hover:text-slate-600 underline"
+            className="text-xs text-slate-500 hover:text-slate-600 underline"
           >
             Re-check
           </button>
@@ -49,7 +49,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
               disabled
               title="Off-target database is being prepared. Please try again shortly."
               className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border
-                bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed"
             >
               Check off-target
             </button>
@@ -70,7 +70,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
         {status === 'loading' && (
           <div className="flex items-center gap-3">
             <BlastCheckButton status={status} onClick={() => {}} />
-            <p className="text-xs text-slate-400">Running BLAST… (up to 70 s)</p>
+            <p className="text-xs text-slate-500">Running BLAST… (up to 70 s)</p>
           </div>
         )}
 
@@ -99,7 +99,7 @@ function BlastCheckButton({ status, onClick }) {
       disabled={loading}
       className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
         ${loading
-          ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+          ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed'
           : 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100'
         }`}
     >
@@ -142,11 +142,11 @@ function RateLimitError({ error, onRetry }) {
 
 function CircuitOpenError({ error }) {
   return (
-    <div className="rounded-lg bg-orange-50 border border-orange-200 px-3 py-2 space-y-1">
-      <p className="text-xs font-semibold text-orange-700">BLAST temporarily unavailable</p>
-      <p className="text-xs text-orange-700">{error.message}</p>
+    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 space-y-1">
+      <p className="text-xs font-semibold text-amber-700">BLAST temporarily unavailable</p>
+      <p className="text-xs text-amber-700">{error.message}</p>
       {error.retryAfter && (
-        <p className="text-xs text-orange-500">Try again in ~{error.retryAfter}s.</p>
+        <p className="text-xs text-amber-500">Try again in ~{error.retryAfter}s.</p>
       )}
       <p className="text-xs text-slate-500 mt-1">Primer design results above are unaffected.</p>
     </div>
@@ -200,10 +200,10 @@ function ResultDisplay({ result }) {
       )}
 
       {/* Footnote */}
-      <div className="text-xs text-slate-400 border-t border-slate-100 pt-2">
+      <div className="text-xs text-slate-500 border-t border-slate-100 pt-2">
         {result.cache?.hit ? 'Cached result · ' : ''}
         DB: miRBase {dbInfo.mirbase_version} (all species)
-        {dbInfo.outdated_warning && ' · ⚠ DB may be outdated'}
+        {dbInfo.outdated_warning && ' · DB may be outdated'}
         {' · built '}{dbInfo.build_date}
       </div>
     </div>
@@ -233,10 +233,15 @@ function OverallRiskRow({ summary }) {
           <span className="text-amber-600 font-medium">{summary.medium_risk_count.toLocaleString()} medium</span>
         )}
         {summary.safe_count > 0 && (
-          <span className="text-slate-400">{summary.safe_count.toLocaleString()} safe</span>
+          <span className="text-slate-500">{summary.safe_count.toLocaleString()} safe</span>
+        )}
+        {summary.same_family_count > 0 && (
+          <span className="text-purple-600" title="Same seed-family members that share the primer's binding region. This cross-reactivity is expected for this miRNA family and is analysed separately in the Family Cross-reactivity panel — it is not counted as an out-of-family off-target here.">
+            {summary.same_family_count.toLocaleString()} same-family
+          </span>
         )}
         {summary.cross_species_excluded > 0 && (
-          <span className="text-slate-400" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
+          <span className="text-slate-500" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
             {summary.cross_species_excluded.toLocaleString()} excluded
           </span>
         )}

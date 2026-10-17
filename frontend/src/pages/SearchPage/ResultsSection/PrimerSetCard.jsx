@@ -17,7 +17,7 @@ const RISK_STYLE = {
 export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
   const [expanded, setExpanded] = useState(set.rank === 1);
 
-  const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-blue-700 bg-blue-50 border-blue-300', 'text-slate-600 bg-slate-50 border-slate-300'];
+  const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-slate-700 bg-slate-50 border-slate-300', 'text-slate-600 bg-slate-50 border-slate-300'];
   const rankColor  = rankColors[(set.rank || 1) - 1] ?? rankColors[2];
   const isomirRisk = set.isomir_flag?.isomir_discrimination_risk;
 
@@ -42,8 +42,8 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
             </span>
           )}
           <div>
-            <p className="text-sm font-semibold text-gray-800 font-mono">{set.sequence}</p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-sm font-semibold text-slate-800 font-mono">{set.sequence}</p>
+            <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
               {set.length} nt · Tm {set.tm_full?.toFixed(1)}°C · GC {set.gc_percent}%
               {set.amplicon_size && ` · ~${set.amplicon_size} bp amplicon`}
             </p>
@@ -51,7 +51,7 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId }) {
         </div>
         <div className="flex items-center gap-4 shrink-0">
           <ScoreGauge score={set.total_score} grade={set.grade} compact />
-          <span className="text-gray-400 text-sm">{expanded ? '▲' : '▼'}</span>
+          <span className="text-slate-500 text-sm">{expanded ? '▲' : '▼'}</span>
         </div>
       </button>
 
@@ -140,10 +140,10 @@ function HeterodimersPanel({ checks }) {
             <div key={key} className="px-3 py-2 flex items-center justify-between gap-3" title={h.note}>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-slate-700">{label}</p>
-                <p className="text-xs text-slate-400">{subtitle}</p>
+                <p className="text-xs text-slate-500">{subtitle}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-mono text-slate-600">
+                <span className="text-xs font-mono text-slate-600 tabular-nums">
                   ΔG {h.dg?.toFixed(2)} kcal/mol
                 </span>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${style}`}>
@@ -160,12 +160,12 @@ function HeterodimersPanel({ checks }) {
 
 function PrimerRow({ label, seq, detail }) {
   return (
-    <div className="bg-gray-50 rounded-lg px-3 py-2.5 space-y-1">
+    <div className="bg-slate-50 rounded-lg px-3 py-2.5 space-y-1">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-gray-500 shrink-0">{label}</span>
-        <span className="text-xs text-gray-400 truncate">{detail}</span>
+        <span className="text-xs font-semibold text-slate-500 shrink-0">{label}</span>
+        <span className="text-xs text-slate-500 truncate">{detail}</span>
       </div>
-      <p className="font-mono text-xs text-gray-800 break-all">5'–{seq}–3'</p>
+      <p className="font-mono text-xs text-slate-800 break-all">5'–{seq}–3'</p>
     </div>
   );
 }

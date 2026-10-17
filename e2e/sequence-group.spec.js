@@ -3,7 +3,7 @@ import { PLACEHOLDER } from './helpers.js';
 
 test.describe('SequenceGroup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/design/advanced');
   });
 
   test('lowercase sequence input is accepted (auto-uppercase)', async ({ page }) => {
@@ -14,11 +14,19 @@ test.describe('SequenceGroup', () => {
     await expect(page.getByText('22 nt')).toBeVisible();
   });
 
-  test("T character shows error", async ({ page }) => {
+  test('DNA paste is converted T→U (audit UX-01)', async ({ page }) => {
+    const searchInput = page.getByPlaceholder(PLACEHOLDER);
+    await searchInput.fill('TAGCTTATCAGACTGATGTTGA');
+    await page.getByRole('button', { name: 'Search' }).click();
+    await expect(page.getByText('converted T→U')).toBeVisible();
+    await expect(page.getByText('22 nt')).toBeVisible();
+  });
+
+  test('mixed T and U is rejected', async ({ page }) => {
     const searchInput = page.getByPlaceholder(PLACEHOLDER);
     await searchInput.fill('TAGCUUAUCAGACUGAUGUUGA');
     await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.getByText("Character 'T' detected")).toBeVisible();
+    await expect(page.getByText('mixes T and U')).toBeVisible();
   });
 
   test('valid sequence shows info bar', async ({ page }) => {

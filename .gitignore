@@ -28,6 +28,13 @@ npm-debug.log*
 
 # Test output
 playwright-report/
+.playwright-mcp/
+
+# Phase 1 chatbot knowledge base — rebuilt from PubMed via POST /api/ingest.
+# Generated data, not source: papers.db is user-specific and chroma/ holds ~440 MB
+# of embeddings that are cheaper to regenerate than to version.
+backend/data/papers.db
+backend/data/chroma/
 test-results/
 .playwright-mcp/
 
@@ -52,5 +59,6 @@ backend/data/blast_db/*.not
 backend/data/blast_db/*.ntf
 backend/data/blast_db/*.nto
 
-# BLAST SQLite cache (ephemeral, not committed)
+# Ephemeral SQLite caches (regenerated at runtime, not committed)
 backend/data/blast_cache.sqlite
+backend/data/visualize_cache.sqlite

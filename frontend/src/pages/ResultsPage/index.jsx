@@ -2,22 +2,33 @@
 // State arrives via useLocation().state from SearchPage after POST /api/design.
 // Empty-state fallback when accessed directly without state.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EdgeCaseBanner from './EdgeCaseBanner.jsx';
 import QualitySummary from './QualitySummary.jsx';
 import ThermoTable from './ThermoTable.jsx';
 import ExportBar from './ExportBar.jsx';
-import ProtocolAdvisor from './ProtocolAdvisor.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 import ProbeCard from '../../components/ProbeCard.jsx';
 import MultiplexPanel from '../../components/MultiplexPanel.jsx';
 import NormalizationAdvisor from '../../components/NormalizationAdvisor.jsx';
+import VisualizationPanel from '../../components/VisualizationPanel.jsx';
+import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
 
 export default function ResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state;
+  // Lifted so the page-level BLAST result (run inside QualitySummary) can be
+  // handed to ExportBar and embedded in the exported report.
+  const [blastResult, setBlastResult] = useState(null);
+
+  // Which designer the user came from. Basic users get exactly the same data,
+  // but the deep-science panels start collapsed so the result reads at a glance.
+  // Derived before the early return so the hook order stays stable.
+  const isBasic = state?.params?.experimentalContext?.userLevel === 'basic';
+  const backPath = isBasic ? '/design' : '/design/advanced';
+  const [showDetails, setShowDetails] = useState(!isBasic);
 
   useEffect(() => { document.title = 'HG Lab | Primer Design Results'; }, []);
 
@@ -25,9 +36,8 @@ export default function ResultsPage() {
   if (!state?.results) {
     return (
       <div className="max-w-lg mx-auto mt-20 text-center space-y-4">
-        <p className="text-4xl">🔬</p>
-        <h1 className="text-xl font-semibold text-gray-700">No results yet</h1>
-        <p className="text-sm text-gray-500">Run a primer design first to see results here.</p>
+        <h1 className="text-xl font-semibold text-slate-700">No results yet</h1>
+        <p className="text-sm text-slate-500">Run a primer design first to see results here.</p>
         <button
           onClick={() => navigate('/')}
           className="mt-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition"
@@ -38,7 +48,9 @@ export default function ResultsPage() {
     );
   }
 
-  const { results } = state;
+  const { results, params } = state;
+  const signalMethod = params?.detectionMethod?.signalMethod ?? 'taqman';
+  const isTaqMan = signalMethod === 'taqman';
   const { top3, metadata, edge_cases = [], protocol_advice = [], lna_hints = null, probe, probe_note, normalization_advice = null } = results;
 
   return (
@@ -47,8 +59,8 @@ export default function ResultsPage() {
       {/* ── Page header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Design Results</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-slate-800">Design Results</h1>
+          <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
             {metadata?.mirna_id && <span className="font-medium">{metadata.mirna_id} · </span>}
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
@@ -59,7 +71,7 @@ export default function ResultsPage() {
             v{metadata?.algorithm_version}
           </span>
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => navigate(backPath)}
             className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition"
           >
             ← Back
@@ -70,14 +82,14 @@ export default function ResultsPage() {
       {/* ── Edge-case banners (critical + warning) ── */}
       <EdgeCaseBanner edgeCases={edge_cases} />
 
-      {/* ── Quality summary ── */}
-      <QualitySummary results={results} />
-
       {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
       <ResultsSection results={results} error={null} hideHeader />
 
-      {/* ── TaqMan probe (Phase 6 §A) — only shown when signalMethod=taqman or SYBR note ── */}
-      {(probe || probe_note) && (
+      {/* ── Quality summary (below the primer sets) ── */}
+      <QualitySummary results={results} onBlastResult={setBlastResult} />
+
+      {/* ── Detection mode section ── */}
+      {isTaqMan && probe && (
         <div>
           <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
             TaqMan Probe
@@ -85,50 +97,94 @@ export default function ResultsPage() {
           <ProbeCard probe={probe} probeNote={probe_note} />
         </div>
       )}
-
-      {/* ── Thermodynamics table (tabs) ── */}
-      <div>
-        <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-          Thermodynamic Parameters
-        </h2>
-        <ThermoTable results={results} />
-      </div>
-
-      {/* ── Protocol Advisor (Phase 5 §A) — collapsed by default ── */}
-      <ProtocolAdvisor advice={protocol_advice} />
-
-      {/* ── Normalization Advisor (Phase 7 §D) — shown when sample_type provided ── */}
-      {normalization_advice && (
-        <NormalizationAdvisor advice={normalization_advice} />
-      )}
-
-      {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
-      {lna_hints?.applicable && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">LNA Assist Suggestion</p>
-          <p className="text-xs text-amber-800">{lna_hints.rationale}</p>
-          <div className="flex gap-2 text-xs text-amber-700">
-            {lna_hints.sources?.map((s, i) => (
-              <a key={i} href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
-                 className="underline hover:text-amber-900">
-                [{s.tag}]
-              </a>
-            ))}
-          </div>
-          <p className="text-xs italic text-amber-600">{lna_hints.disclaimer}</p>
+      {!isTaqMan && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-sm font-medium text-slate-700">SYBR Green mode</p>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Melting-curve analysis after every run confirms product specificity; amplicon is constrained to ≤ 120 bp.
+          </p>
         </div>
       )}
 
-      {/* ── Export bar ── */}
-      <ExportBar results={results} />
+      {/* ── Reaction / Melting / Gel visualization (SPEC_visualization) ──
+           Outside the scientific-details toggle so it opens in one click; still
+           collapsed by default because three large SVGs otherwise dominate the page. */}
+      <CollapsibleCard
+        title="Reaction & Product Visualization"
+        summary="reaction · melting curve · gel"
+      >
+        <VisualizationPanel results={results} params={params} />
+      </CollapsibleCard>
 
-      {/* ── Multiplex panel check (Phase 6 §B) — standalone tool, always available ── */}
-      <div>
-        <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-          Multiplex Panel Check
-        </h2>
-        <MultiplexPanel />
-      </div>
+      {/*
+        Scientific detail. Identical content in both modes — only the initial
+        open/closed state differs, so a Basic user is never shown less data,
+        just less at once.
+      */}
+      {isBasic && (
+        <button
+          type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          aria-expanded={showDetails}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200
+            bg-slate-50 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-teal-700 transition"
+        >
+          <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
+          {showDetails ? 'Hide scientific details' : 'Show scientific details'}
+          <span className="text-xs font-normal text-slate-500">
+            thermodynamics · normalization · multiplex
+          </span>
+        </button>
+      )}
+
+      {showDetails && (
+        <>
+          {/* ── Thermodynamics table (tabs) ── */}
+          <div>
+            <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+              Thermodynamic Parameters
+            </h2>
+            <ThermoTable results={results} params={params} />
+          </div>
+
+          {/* Protocol Advisor moved to the exported PDF report (declutters the page). */}
+
+          {/* ── Normalization Advisor (Phase 7 §D) — shown when sample_type provided ── */}
+          {normalization_advice && (
+            <NormalizationAdvisor advice={normalization_advice} />
+          )}
+
+          {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
+          {lna_hints?.applicable && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
+              <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">LNA Assist Suggestion</p>
+              <p className="text-xs text-amber-800">{lna_hints.rationale}</p>
+              <div className="flex gap-2 text-xs text-amber-700">
+                {lna_hints.sources?.map((s, i) => (
+                  <a key={i} href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
+                     className="underline hover:text-amber-900">
+                    [{s.tag}]
+                  </a>
+                ))}
+              </div>
+              <p className="text-xs italic text-amber-600">{lna_hints.disclaimer}</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Export bar — always available, both modes ── */}
+      <ExportBar results={results} blastResult={blastResult} />
+
+      {/* ── Multiplex panel check (Phase 6 §B) — standalone tool ── */}
+      {showDetails && (
+        <div>
+          <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
+            Multiplex Panel Check
+          </h2>
+          <MultiplexPanel />
+        </div>
+      )}
     </div>
   );
 }
