@@ -140,8 +140,7 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
              else "moderate" if f >= ISOMIR_3P_FRACTION_MODERATE else "low")
     summary = (
         f"In isomiRdb, a median {f:.0%} of {mirna_name} reads are 3'-end isoforms "
-        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples; "
-        "serum/plasma are under-represented in this data)."
+        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples)."
     )
     top = entry.get("top_3prime_variants", [])
     return {

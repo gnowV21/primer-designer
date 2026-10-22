@@ -34,6 +34,7 @@
 | 2026-10-08 | **Mở rộng bộ kiểm chứng** với mồi đã công bố → 783/783; xuất file benchmark so sánh mồi tool vs mồi công bố |
 | 2026-10-09 | Thêm 46 assay từ 7 bài (bm_01–04 thân Chen, bm_11–13 hệ khác) → **1382/1382**; logic so sánh gom vào `compare_published()` (dùng chung validate + export) |
 | 2026-10-10 | Thêm 89 assay: Busk 2014 miRprimer (80/82 assay đã kiểm chứng wet-lab, nhóm `polyA_system`, chỉ chấm lõi forward) + bm_001–003 → **2439/2439**; 2 ca từ chối mới ghi là giới hạn đã biết |
+| 2026-10-22 | Chỉ mục isomiR 3' dựng lại trên **đủ 42.494 mẫu isomiRdb** (ma trận read-count, trước đó 20.635); algorithm **v3.1.1** (chỉ đổi mức cảnh báo 3', không đổi điểm) |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -60,7 +61,7 @@
 - `SCORING_WEIGHTS_V4` (15 tiêu chí) **khóa**; RT primer và probe không chấm điểm; LNA chỉ tham khảo. Occupancy forward ở Ta (SCI-02) chỉ hiển thị, không chấm.
 - MFE stem-loop gấp bằng ViennaRNA **tham số DNA** (Mathews 2004, 37 °C).
 - Hiệu chỉnh muối: giữ primer3 `santalucia` (+ von Ahsen 2001 cho Mg²⁺).
-- Dữ liệu isomiR 3' từ **isomiRdb** (PMID 36243964) — giới hạn: chỉ 20.635/42.498 mẫu (server cắt file ~1 GB), serum/plasma ít đại diện.
+- Dữ liệu isomiR 3' từ **isomiRdb** (PMID 36243964) — đủ 42.494/42.494 mẫu (từ 2026-10-22; trước đó 20.635 do tải chậm bị server cắt ở ≈1 GiB).
 - Family miRNA: nhóm theo seed (nt 2–8) từ `mature.fa` (miFam.dat đã bị miRBase gỡ).
 - Thí nghiệm miR-16 exp 220826 của lab chỉ là **case study minh họa** — không dùng để calibrate.
 - Đã hoãn: song ngữ VI/EN (UX-02), mẫu đặt hàng nhà cung cấp (UX-05), Batch design, Docker (B2), form nhập dữ liệu calibration (B1a), trang diễn giải Cq sau chạy (SCI-11 phần 3).

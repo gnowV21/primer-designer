@@ -7,7 +7,10 @@ doi:10.1093/nar/gkac884. https://ccb-compute.cs.uni-saarland.de/isomirdb/downloa
 
 Inputs (download from the page above, keep gzipped, same directory):
   isomirs.tsv.gz      — isomiR repertoire: "sequence:matureName", isoLabel
-  isomiR_RPM.tsv.gz   — isomiR RPM matrix, rows = samples, cols = 90,481 isomiRs
+  isomiR_RC.tsv.gz    — isomiR read-count matrix, rows = samples, cols = 90,481 isomiRs
+                        (preferred: 1.2 GB vs 1.9 GB for the RPM matrix)
+  isomiR_RPM.tsv.gz   — isomiR RPM matrix, same layout (used if the RC matrix is absent)
+  miRNA_RC.tsv.gz     — per-miRNA read counts, same layout as miRNA_RPM (RC -> RPM scale)
   miRNA_RPM.tsv.gz    — per-miRNA RPM, rows = 2,655 miRNAs, cols = 42,494 samples
   metadata.tsv.gz     — sample annotation (tissue), used to report composition
 
@@ -20,9 +23,15 @@ Per mature human miRNA:
   abundance    = median RPM over ALL samples (miRNA_RPM) and its percentile rank
                  among all miRNAs — used for the contamination-risk flag.
 
-The isomiR matrix download is cut by the server at ~1 GB (≈20.6k of 42.5k samples,
-tested 4 times). Reading stops cleanly at the truncation and the sample count and
-tissue composition actually used are written into the output metadata.
+Download alone, with nothing else on the link: the server (nginx) ignores HTTP Range and
+truncates a response at ≈1 GiB + a few MB when the client reads slower than it buffers
+(observed at ~0.3 MB/s; a ~2 MB/s solo download of the RC matrix arrived complete).
+Check the byte count against Content-Length and `gzip -t` before building. The
+read-count matrix is smaller (1.2 GB vs 1.9 GB) and is preferred; it is
+converted to RPM per sample with scale = Σ miRNA_RPM / Σ miRNA_RC (both small, complete
+files). The 3' fraction is a within-sample ratio, so it does not depend on that scale;
+only the ≥ MIN_RPM expression threshold does. Reading stops cleanly at any truncation and
+the matrix, sample count and tissue composition actually used go into the metadata.
 
 Usage (from backend/):
   python scripts/build_isomir_3prime_index.py <dir-with-the-files> [max_rows]
@@ -93,9 +102,27 @@ def abundance(src: Path) -> dict:
     return {n: (med[n], 100.0 * (r + 1) / len(names)) for n, r in zip(names, ranks)}
 
 
-def three_prime(src: Path, labels: dict, max_rows: int | None):
+def _column_sums(path: Path) -> tuple[list[str], np.ndarray]:
+    """Sample ids (header) and per-sample column sums of a miRNA × sample matrix."""
+    with gzip.open(path, "rt") as f:
+        samples = [h.strip('"') for h in f.readline().rstrip("\n").split("\t")[1:]]
+    total = np.zeros(len(samples), dtype=np.float64)
+    for _, vals in _rows(path, None):
+        total += np.nan_to_num(vals[-len(samples):])
+    return samples, total
+
+
+def rpm_scale(src: Path) -> dict:
+    """{sample: RPM per read}, from the complete per-miRNA RC and RPM matrices."""
+    s_rc, rc = _column_sums(src / "miRNA_RC.tsv.gz")
+    s_rpm, rpm = _column_sums(src / "miRNA_RPM.tsv.gz")
+    rpm_by = dict(zip(s_rpm, rpm))
+    return {s: rpm_by[s] / n for s, n in zip(s_rc, rc) if n > 0 and s in rpm_by}
+
+
+def three_prime(src: Path, labels: dict, max_rows: int | None, matrix: str, scale: dict | None):
     """Per-miRNA 3'-fraction histograms + pooled isoform RPM, and the sample ids used."""
-    with gzip.open(src / "isomiR_RPM.tsv.gz", "rt") as f:
+    with gzip.open(src / matrix, "rt") as f:
         header = [h.strip('"') for h in f.readline().rstrip("\n").split("\t")[1:]]
     names = [h.split(":", 1)[1] for h in header]
     mirnas = sorted(set(names))
@@ -123,9 +150,14 @@ def three_prime(src: Path, labels: dict, max_rows: int | None):
         np.add.at(hist, (c, b[r, c]), 1)
 
     block = []
-    for sid, vals in _rows(src / "isomiR_RPM.tsv.gz", max_rows):
+    for sid, vals in _rows(src / matrix, max_rows):
         if vals.size != len(header):
             break                                           # corrupt row at the cut
+        if scale is not None:
+            sid = sid.strip('"')
+            if sid not in scale:
+                continue                                    # no library size -> no RPM
+            vals *= scale[sid]
         block.append(vals)
         used.append(sid)
         if len(block) == CHUNK:
@@ -150,7 +182,10 @@ def composition(src: Path, sample_ids: list[str]) -> dict:
 
 def main(src: Path, max_rows: int | None = None) -> None:
     labels = load_labels(src / "isomirs.tsv.gz")
-    header, labels, idx, col_mir, col_3p, hist, pooled, used = three_prime(src, labels, max_rows)
+    matrix = "isomiR_RC.tsv.gz" if (src / "isomiR_RC.tsv.gz").exists() else "isomiR_RPM.tsv.gz"
+    scale = rpm_scale(src) if matrix == "isomiR_RC.tsv.gz" else None
+    header, labels, idx, col_mir, col_3p, hist, pooled, used = three_prime(
+        src, labels, max_rows, matrix, scale)
     abund = abundance(src)
 
     entries = {}
@@ -194,11 +229,12 @@ def main(src: Path, max_rows: int | None = None) -> None:
             "method": {
                 "three_prime_labels": list(THREE_PRIME_TAGS),
                 "expressed_threshold_rpm": MIN_RPM,
+                "three_prime_matrix": matrix,
                 "three_prime_samples_used": len(used),
                 "three_prime_samples_note": (
-                    "isomiR_RPM.tsv.gz is cut by the server at ~1 GB; the 3' fractions use the "
-                    "complete rows before the cut. Body fluids (serum, plasma, blood) are "
-                    "under-represented — see sample_composition."
+                    f"{matrix}; only complete rows are used (a truncated download stops "
+                    "early — compare three_prime_samples_used with sample_composition). Read "
+                    "counts are converted to RPM per sample (Σ miRNA_RPM / Σ miRNA_RC)."
                 ),
                 "sample_composition": composition(src, used),
                 "abundance": "median RPM over all samples of miRNA_RPM.tsv.gz (complete, "
