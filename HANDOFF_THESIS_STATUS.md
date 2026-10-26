@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-10-08)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-10-26)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -9,9 +9,7 @@
 
 ## 1. Git
 
-- Nhánh làm việc: `feat/design-focus` (base: `master`). Đi trước `origin/feat/design-focus` **22 commit, chưa push**. Chưa mở PR.
-- HEAD: `59a6e35` (2026-10-08, "store family-grouping report db_path repo-relative").
-- Chưa commit: sửa smoke test `backend/tests/smoke/test_design_e2e.py` + file handoff này. (`VALIDATION_REPORT.md` bị ghi đè bản cũ 184/184 đã được khôi phục về 783/783.)
+- Nhánh làm việc: `feat/design-focus` (base: `master`). Chưa mở PR. Xem `git status -sb` để biết số commit chưa push.
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
 
@@ -35,10 +33,11 @@
 | 2026-10-09 | Thêm 46 assay từ 7 bài (bm_01–04 thân Chen, bm_11–13 hệ khác) → **1382/1382**; logic so sánh gom vào `compare_published()` (dùng chung validate + export) |
 | 2026-10-10 | Thêm 89 assay: Busk 2014 miRprimer (80/82 assay đã kiểm chứng wet-lab, nhóm `polyA_system`, chỉ chấm lõi forward) + bm_001–003 → **2439/2439**; 2 ca từ chối mới ghi là giới hạn đã biết |
 | 2026-10-22 | Chỉ mục isomiR 3' dựng lại trên **đủ 42.494 mẫu isomiRdb** (ma trận read-count, trước đó 20.635); algorithm **v3.1.1** (chỉ đổi mức cảnh báo 3', không đổi điểm) |
+| 2026-10-26 | **Determinism invariant, algorithm v3.1.2**: mỗi pool tail 7–12 nt tự tạo RNG riêng, seed = SHA-256(trình tự, tail_len, max_pool) — trước đó 6 pool dùng chung 1 RNG/lần thiết kế. Sửa kèm lỗi nhánh dự phòng tạo lại `Random(0)` mỗi vòng (pool chỉ còn 1 tail). Mồi xuôi đổi tail ở phần lớn target (1 ca đổi vùng đặc hiệu: miR-10a 14→16 nt); RT + reverse không đổi. So điểm V4 mồi #1 cũ/mới trên 181 miRNA: TB 93,82 → 93,84, tốt hơn 54 / kém 56 / bằng 71, lệch tối đa ±2,2 → tương đương. Validation vẫn **2439/2439**; results.json, VALIDATION_REPORT, benchmark export đã sinh lại |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
-- **Validation in-silico:** `validation/results.json` — **783/783 check pass (100 %)**, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md` (bản đã commit), phương pháp: `validation/VALIDATION_PLAN.md`.
+- **Validation in-silico (hiện tại, v3.1.2, chạy 2026-10-26):** `validation/results.json` — **2439/2439 check pass (100 %)**, 201 target (197 mục `mirnas` + 4 edge case trong `reference_mirnas.json`; report ghi "193 miRNAs + 4 edge cases"). Bộ gốc ban đầu: 783/783, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md` (bản đã commit), phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
   - Kiểm tra cửa sổ nhiệt động (Fwd Tm ≈ 60 °C, GC %, amplicon 63–73 bp), độ đặc hiệu let-7 (so với Wang 2017), edge cases E1/E4/E5/E6.
 - **Mở rộng 2026-10-09 (46 assay, cột `benchmark_group`):** `chen_body` = Mashayekhi 2019 (let-7b, 200b, 145: RT trùng byte-to-byte), Zhang 2007 (let-7a, overhang in 5 nt: thân trùng), Zheng 2014 (143, 145, overhang 8 nt: thân trùng), Bagheri 2021 (15b, 195, 103a-2-5p: thân **biến thể** CGAGAG → chỉ chấm overhang 7 nt + lõi forward). `other_body` = Wang 2018 (9 let-7/miR-98; let-7c/7i dùng thân Chen → RT trùng byte-to-byte), Cao 2023 (21 miRNA chuột; 2 lỗi in RT miR-467a-5p/34c-5p, xác nhận bằng probe trong bài → không chấm; 5 lõi forward 9 nt < 10 → không chấm), Mou 2013 (7 miRNA lúa, overhang 8 nt).

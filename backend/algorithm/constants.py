@@ -16,7 +16,10 @@
 #   MFE, cycle-1 occupancy at Ta (unscored), renormalised total.
 #   3.1.1 (2026-10-22) — isomiRdb 3' isomiR index rebuilt on all 42,494 samples
 #   (was 20,635); informational 3' flag levels change, no scoring change.
-ALGORITHM_VERSION = "3.1.1"
+#   3.1.2 (2026-10-26) — each forward tail pool (len 7–12) seeds its own RNG from
+#   (sequence, tail_len, max_pool) instead of sharing one per-design RNG across
+#   pools; some sampled tails, hence some forward primers, change. No scoring change.
+ALGORITHM_VERSION = "3.1.2"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
