@@ -747,7 +747,7 @@
   ],
   "validation": {
     "purpose": "Independent scientific validation of the design engine against published-methodology ground truth AND real published primer tables: one byte-identical exact match (same universal system) plus cross-system RT-overhang & forward concordance from independent labs/chemistries.",
-    "run_date": "2026-10-09",
+    "run_date": "2026-10-26",
     "method": "Deterministic ground truth from the Chen 2005 stem-loop method (RT primer = fixed universal body + revcomp of 3'-terminal 6 nt; universal reverse = fixed constant; forward specific region = 5' prefix of the miRNA), recomputed independently from the sequence the tool used. Plus thermodynamic-plausibility windows and let-7 specificity concordance with Wang 2017.",
     "sources": [
       "[Chen05] Chen C et al. Nucleic Acids Res. 2005;33(20):e179 — original stem-loop RT-qPCR; RT primer hybridizes 6-8 nt at 3' end of mature miRNA.",
@@ -765,8 +765,8 @@
         "rt_overhang_actual": "TCAACA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-let-7a-5p",
@@ -774,8 +774,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "hsa-let-7c-5p",
@@ -783,8 +783,8 @@
         "rt_overhang_actual": "AACCAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "hsa-let-7f-5p",
@@ -792,8 +792,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-16-5p",
@@ -801,8 +801,8 @@
         "rt_overhang_actual": "CGCCAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 66
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-155-5p",
@@ -810,8 +810,8 @@
         "rt_overhang_actual": "AACCCC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 40.7,
-        "amplicon_bp": 73
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-122-5p",
@@ -873,8 +873,8 @@
         "rt_overhang_actual": "ACTCAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 47.8,
-        "amplicon_bp": 67
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-125b-5p",
@@ -891,8 +891,8 @@
         "rt_overhang_actual": "GCCAAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-9-3p",
@@ -900,7 +900,7 @@
         "rt_overhang_actual": "ACTTTC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
+        "forward_gc_pct": 42.3,
         "amplicon_bp": 69
       },
       {
@@ -927,8 +927,8 @@
         "rt_overhang_actual": "CACAAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 68
+        "forward_gc_pct": 60.0,
+        "amplicon_bp": 64
       },
       {
         "id": "hsa-miR-22-3p",
@@ -936,8 +936,8 @@
         "rt_overhang_actual": "ACAGTT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 65
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
       },
       {
         "id": "hsa-miR-26b-5p",
@@ -945,8 +945,8 @@
         "rt_overhang_actual": "ACCTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 42.3,
-        "amplicon_bp": 70
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-let-7b-5p",
@@ -954,8 +954,8 @@
         "rt_overhang_actual": "AACCAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-7-5p",
@@ -972,8 +972,8 @@
         "rt_overhang_actual": "CACAAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 68
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-20a-5p",
@@ -981,8 +981,8 @@
         "rt_overhang_actual": "CTACCT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 44.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 45.8,
+        "amplicon_bp": 68
       },
       {
         "id": "hsa-let-7d-5p",
@@ -1025,7 +1025,7 @@
         "rt_overhang_expected": "GGGGAA",
         "rt_overhang_actual": "GGGGAA",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.1,
+        "forward_tm_c": 60.0,
         "forward_gc_pct": 60.0,
         "amplicon_bp": 66
       },
@@ -1035,8 +1035,8 @@
         "rt_overhang_actual": "TAGATC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 65
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 68
       },
       {
         "id": "ebv-miR-BHRF1-1",
@@ -1169,7 +1169,7 @@
         "rt_overhang_expected": "GGCAGT",
         "rt_overhang_actual": "GGCAGT",
         "rt_overhang_match": true,
-        "forward_tm_c": 59.9,
+        "forward_tm_c": 60.0,
         "forward_gc_pct": 60.0,
         "amplicon_bp": 66
       },
@@ -1197,8 +1197,8 @@
         "rt_overhang_actual": "ATCCCT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 69
       },
       {
         "id": "ebv-miR-BART15",
@@ -1224,8 +1224,8 @@
         "rt_overhang_actual": "CTTGTA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.1,
-        "amplicon_bp": 66
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 67
       },
       {
         "id": "ebv-miR-BART17-3p",
@@ -1269,7 +1269,7 @@
         "rt_overhang_actual": "AGCATT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 47.8,
+        "forward_gc_pct": 43.5,
         "amplicon_bp": 67
       },
       {
@@ -1278,8 +1278,8 @@
         "rt_overhang_actual": "GGAATG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.4,
-        "amplicon_bp": 66
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 65
       },
       {
         "id": "ebv-miR-BART20-3p",
@@ -1287,8 +1287,8 @@
         "rt_overhang_actual": "GGTAAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 65
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 68
       },
       {
         "id": "ebv-miR-BART22",
@@ -1296,8 +1296,8 @@
         "rt_overhang_actual": "ACTACT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 44.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-let-7b-5p (Mashayekhi 2019)",
@@ -1305,8 +1305,8 @@
         "rt_overhang_actual": "AACCAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-200b-3p",
@@ -1332,8 +1332,8 @@
         "rt_overhang_actual": "TGTAAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 63
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 66
       },
       {
         "id": "hsa-miR-195-5p (Bagheri 2021)",
@@ -1341,8 +1341,8 @@
         "rt_overhang_actual": "GCCAAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-103a-2-5p",
@@ -1359,8 +1359,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "hsa-miR-143-3p",
@@ -1386,8 +1386,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "hsa-let-7b-5p (Wang 2018)",
@@ -1395,8 +1395,8 @@
         "rt_overhang_actual": "AACCAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-let-7c-5p (Wang 2018)",
@@ -1404,8 +1404,8 @@
         "rt_overhang_actual": "AACCAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "hsa-let-7d-5p (Wang 2018)",
@@ -1431,8 +1431,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-let-7g-5p",
@@ -1440,8 +1440,8 @@
         "rt_overhang_actual": "AACTGT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 66
       },
       {
         "id": "hsa-let-7i-5p",
@@ -1449,8 +1449,8 @@
         "rt_overhang_actual": "AACAGC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 68
       },
       {
         "id": "hsa-miR-98-5p",
@@ -1458,8 +1458,8 @@
         "rt_overhang_actual": "AACAAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 42.3,
-        "amplicon_bp": 69
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 68
       },
       {
         "id": "mmu-miR-223-5p",
@@ -1476,8 +1476,8 @@
         "rt_overhang_actual": "TGGGGT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "mmu-miR-501-3p",
@@ -1494,8 +1494,8 @@
         "rt_overhang_actual": "AGACAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "mmu-miR-129b-5p",
@@ -1512,8 +1512,8 @@
         "rt_overhang_actual": "CGCATA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.4,
-        "amplicon_bp": 68
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 66
       },
       {
         "id": "mmu-miR-335-3p",
@@ -1521,7 +1521,7 @@
         "rt_overhang_actual": "GGTCAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 41.7,
+        "forward_gc_pct": 45.8,
         "amplicon_bp": 67
       },
       {
@@ -1566,8 +1566,8 @@
         "rt_overhang_actual": "CATATA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 65
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
       },
       {
         "id": "mmu-miR-1983",
@@ -1584,8 +1584,8 @@
         "rt_overhang_actual": "TCAACA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "mmu-miR-34c-5p",
@@ -1602,8 +1602,8 @@
         "rt_overhang_actual": "GGTCCA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 66
       },
       {
         "id": "mmu-miR-19a-3p",
@@ -1620,8 +1620,8 @@
         "rt_overhang_actual": "AGTACA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.2,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 68
       },
       {
         "id": "mmu-miR-511-5p",
@@ -1647,8 +1647,8 @@
         "rt_overhang_actual": "GACAGC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.1,
-        "amplicon_bp": 68
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "osa-miR164a",
@@ -1656,17 +1656,17 @@
         "rt_overhang_actual": "TGCACG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 68
       },
       {
         "id": "osa-miR164c",
         "rt_overhang_expected": "TGCACG",
         "rt_overhang_actual": "TGCACG",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.1,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 63
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 65
       },
       {
         "id": "osa-miR164d",
@@ -1674,8 +1674,8 @@
         "rt_overhang_actual": "AGCACG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 68
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
       },
       {
         "id": "osa-miR164e",
@@ -1683,8 +1683,8 @@
         "rt_overhang_actual": "CTCACG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.1,
-        "amplicon_bp": 67
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 68
       },
       {
         "id": "osa-miR530-5p",
@@ -1710,8 +1710,8 @@
         "rt_overhang_actual": "GCCCCA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 59.1,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-1 (Busk 2014)",
@@ -1719,8 +1719,8 @@
         "rt_overhang_actual": "TACATA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 44.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 43.5,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-let-7a (Busk 2014)",
@@ -1728,8 +1728,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 71
       },
       {
         "id": "ssc-let-7d (Busk 2014)",
@@ -1746,8 +1746,8 @@
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR15a (Busk 2014)",
@@ -1782,8 +1782,8 @@
         "rt_overhang_actual": "CTACCT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 44.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 45.8,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-21 (Busk 2014)",
@@ -1791,8 +1791,8 @@
         "rt_overhang_actual": "TCAACA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-22-3p (Busk 2014)",
@@ -1800,8 +1800,8 @@
         "rt_overhang_actual": "ACAGTT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 65
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
       },
       {
         "id": "ssc-miR-23a (Busk 2014)",
@@ -1809,8 +1809,8 @@
         "rt_overhang_actual": "TGGAAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 52.2,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-23b (Busk 2014)",
@@ -1818,8 +1818,8 @@
         "rt_overhang_actual": "GTGGTA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 65
       },
       {
         "id": "hsa-miR-25 (Busk 2014)",
@@ -1827,8 +1827,8 @@
         "rt_overhang_actual": "TCAGAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 63
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-26a (Busk 2014)",
@@ -1845,8 +1845,8 @@
         "rt_overhang_actual": "GCGGAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 68
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 67
       },
       {
         "id": "mmu-miR-27b (Busk 2014)",
@@ -1854,8 +1854,8 @@
         "rt_overhang_actual": "GCAGAA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 65
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-29c (Busk 2014)",
@@ -1863,8 +1863,8 @@
         "rt_overhang_actual": "TAACCG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 41.7,
-        "amplicon_bp": 69
+        "forward_gc_pct": 47.6,
+        "amplicon_bp": 66
       },
       {
         "id": "ssc-miR-30a-3p (Busk 2014)",
@@ -1881,7 +1881,7 @@
         "rt_overhang_actual": "GCTGAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 45.8,
+        "forward_gc_pct": 50.0,
         "amplicon_bp": 68
       },
       {
@@ -1917,8 +1917,8 @@
         "rt_overhang_actual": "TCATAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 67
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
       },
       {
         "id": "ssc-miR-106a (Busk 2014)",
@@ -1926,8 +1926,8 @@
         "rt_overhang_actual": "GCTACC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 47.8,
-        "amplicon_bp": 68
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 70
       },
       {
         "id": "ssc-miR-107 (Busk 2014)",
@@ -1935,8 +1935,8 @@
         "rt_overhang_actual": "TGATAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 67
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 66
       },
       {
         "id": "ssc-miR-122 (Busk 2014)",
@@ -1962,8 +1962,8 @@
         "rt_overhang_actual": "CGCATT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 54.5,
+        "amplicon_bp": 69
       },
       {
         "id": "ssc-miR-129-3p (Busk 2014)",
@@ -1971,8 +1971,8 @@
         "rt_overhang_actual": "ATGCTT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 54.5,
-        "amplicon_bp": 67
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 66
       },
       {
         "id": "ssc-miR-133a-3p (Busk 2014)",
@@ -2026,7 +2026,7 @@
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 70
+        "amplicon_bp": 72
       },
       {
         "id": "ssc-miR-143-3p (Busk 2014)",
@@ -2043,8 +2043,8 @@
         "rt_overhang_actual": "ACTTAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 46.2,
-        "amplicon_bp": 70
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-146a (Busk 2014)",
@@ -2070,8 +2070,8 @@
         "rt_overhang_actual": "GCCTAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 66
       },
       {
         "id": "gga-miR-146c-5p (Busk 2014)",
@@ -2088,7 +2088,7 @@
         "rt_overhang_actual": "ACAAAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.4,
+        "forward_gc_pct": 57.1,
         "amplicon_bp": 66
       },
       {
@@ -2151,8 +2151,8 @@
         "rt_overhang_actual": "AGCGGG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 66
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-195 (Busk 2014)",
@@ -2160,8 +2160,8 @@
         "rt_overhang_actual": "GCCAAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 52.4,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-199b-3p (Busk 2014)",
@@ -2204,9 +2204,9 @@
         "rt_overhang_expected": "TCAGCC",
         "rt_overhang_actual": "TCAGCC",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.1,
-        "forward_gc_pct": 60.0,
-        "amplicon_bp": 66
+        "forward_tm_c": 60.0,
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 67
       },
       {
         "id": "hsa-miR-223-3p (Busk 2014)",
@@ -2214,8 +2214,8 @@
         "rt_overhang_actual": "TGGGGT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-335 (Busk 2014)",
@@ -2223,8 +2223,8 @@
         "rt_overhang_actual": "CATTTT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 45.8,
-        "amplicon_bp": 68
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 69
       },
       {
         "id": "ssc-miR-423-5p (Busk 2014)",
@@ -2241,8 +2241,8 @@
         "rt_overhang_actual": "AACTCA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-486 (Busk 2014)",
@@ -2277,8 +2277,8 @@
         "rt_overhang_actual": "CTTGGG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.9,
-        "amplicon_bp": 67
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-670 (Busk 2014)",
@@ -2286,8 +2286,8 @@
         "rt_overhang_actual": "TTCACC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 48.0,
-        "amplicon_bp": 69
+        "forward_gc_pct": 57.1,
+        "amplicon_bp": 65
       },
       {
         "id": "ssc-miR-673 (Busk 2014)",
@@ -2313,8 +2313,8 @@
         "rt_overhang_actual": "ACTAAT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.2,
-        "amplicon_bp": 68
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 69
       },
       {
         "id": "ssc-miR-1246 (Busk 2014)",
@@ -2322,8 +2322,8 @@
         "rt_overhang_actual": "CCTGCT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 45.8,
-        "amplicon_bp": 67
+        "forward_gc_pct": 44.0,
+        "amplicon_bp": 68
       },
       {
         "id": "ssc-miR-1290 (Busk 2014)",
@@ -2349,15 +2349,15 @@
         "rt_overhang_actual": "GCACCC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 52.4,
-        "amplicon_bp": 64
+        "forward_gc_pct": 55.0,
+        "amplicon_bp": 63
       },
       {
         "id": "ssc-miR-7134-3p (Busk 2014)",
         "rt_overhang_expected": "CCGTAT",
         "rt_overhang_actual": "CCGTAT",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.0,
+        "forward_tm_c": 60.3,
         "forward_gc_pct": 60.0,
         "amplicon_bp": 65
       },
@@ -2421,8 +2421,8 @@
         "rt_overhang_actual": "TCAGCA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 57.1,
-        "amplicon_bp": 67
+        "forward_gc_pct": 57.9,
+        "amplicon_bp": 65
       },
       {
         "id": "mmu-miR-125a-5p",
@@ -2466,8 +2466,8 @@
         "rt_overhang_actual": "AACCCC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 40.7,
-        "amplicon_bp": 73
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-146a-5p",
@@ -2504,7 +2504,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCATACAGTCTAGCTTATCAGACTG",
+        "forward_tool": "CGCTGCTCTAGCTTATCAGACTG",
         "forward_published": "GCCCGCTAGCTTATCAGACTGATG",
         "forward_tool_specific": "TAGCTTATCAGACTG",
         "forward_pub_specific": "TAGCTTATCAGACTGATG",
@@ -2517,7 +2517,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCGGCCGATGAGGTAGTAGG",
+        "forward_tool": "TGGTAGAGGCTTTGAGGTAGTAGG",
         "forward_published": "GCCGCTGAGGTAGTAGGTTGTA",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGTA",
@@ -2530,7 +2530,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGTGCGCATGAGGTAGTAGG",
+        "forward_tool": "CAACCGTGATTGTGAGGTAGTAGG",
         "forward_published": "GCCGCTGAGGTAGTAGGTTGTA",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGTA",
@@ -2543,7 +2543,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCTCGTTAGCAGCACGTA",
+        "forward_tool": "CGCATCCATAGCAGCACGTA",
         "forward_published": "GCGCCCGTAGCAGCACGTAAATA",
         "forward_tool_specific": "TAGCAGCACGTA",
         "forward_pub_specific": "TAGCAGCACGTAAATA",
@@ -2556,7 +2556,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGAACCAAGACTTTAATGCTAATCGTG",
+        "forward_tool": "CGAAGCGCTTAATGCTAATCGTG",
         "forward_published": "GTGGGTTAATGCTAATCGTGAT",
         "forward_tool_specific": "TTAATGCTAATCGTG",
         "forward_pub_specific": "TTAATGCTAATCGTGAT",
@@ -2569,7 +2569,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACTCTAGCTCTCCCAACCCT",
+        "forward_tool": "GTCGTCTAGTCTCCCAACCCT",
         "forward_published": "GCTCTCCCAACCCTTGTACC",
         "forward_tool_specific": "TCTCCCAACCCT",
         "forward_pub_specific": "TCTCCCAACCCTTGTACC",
@@ -2582,7 +2582,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGCCAGGTGGAATGTAAAGAAGT",
+        "forward_tool": "GGCCACCTGGAATGTAAAGAAGT",
         "forward_published": "GTTGGGTGGAATGTAAAGAAGT",
         "forward_tool_specific": "TGGAATGTAAAGAAGT",
         "forward_pub_specific": "TGGAATGTAAAGAAGT",
@@ -2595,7 +2595,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCAGTCGAACATTCAACGCTG",
+        "forward_tool": "GACGCTCAACATTCAACGCTG",
         "forward_published": "GGAACATTCAACGCTGTCG",
         "forward_tool_specific": "AACATTCAACGCTG",
         "forward_pub_specific": "AACATTCAACGCTGTCG",
@@ -2621,7 +2621,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TACGACCGAACATTCAACCTGTC",
+        "forward_tool": "AACCTCCTGTAACATTCAACCTGTC",
         "forward_published": "GGGAACATTCAACCTGTCG",
         "forward_tool_specific": "AACATTCAACCTGTC",
         "forward_pub_specific": "AACATTCAACCTGTCG",
@@ -2634,7 +2634,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCGCTTATTCCCTGAGACCC",
+        "forward_tool": "AGACTTGGTCCCTGAGACCC",
         "forward_published": "GACTCCCTGAGACCCTAAC",
         "forward_tool_specific": "TCCCTGAGACCC",
         "forward_pub_specific": "TCCCTGAGACCCTAAC",
@@ -2647,7 +2647,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACGTGTGTAGCAGCACAGA",
+        "forward_tool": "ACCTGATCCTAGCAGCACAGA",
         "forward_published": "TAGCAGCACAGAAATAT",
         "forward_tool_specific": "TAGCAGCACAGA",
         "forward_pub_specific": "TAGCAGCACAGAAATAT",
@@ -2660,7 +2660,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTCGACGACATAAAGCTAGATAACC",
+        "forward_tool": "TCCGCATTCGATAAAGCTAGATAACC",
         "forward_published": "GGCGCCATAAAGCTAGATAAC",
         "forward_tool_specific": "ATAAAGCTAGATAACC",
         "forward_pub_specific": "ATAAAGCTAGATAAC",
@@ -2673,7 +2673,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCACTGGAGCTACATCTGGCT",
+        "forward_tool": "TGGTACCAGCTACATCTGGCT",
         "forward_published": "GGCAGCTACATCTGGCT",
         "forward_tool_specific": "AGCTACATCTGGCT",
         "forward_pub_specific": "AGCTACATCTGGCT",
@@ -2686,7 +2686,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GAAGCACTAGCTACATTGTCTGCT",
+        "forward_tool": "CTCGGTTAAGCTACATTGTCTGCT",
         "forward_published": "GGCGAGCTACATTGTCTG",
         "forward_tool_specific": "AGCTACATTGTCTGCT",
         "forward_pub_specific": "AGCTACATTGTCTG",
@@ -2699,11 +2699,11 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCCGTGTTTACCCTGTAGATCC",
+        "forward_tool": "CCGCTACCCTGTAGATCCGA",
         "forward_published": "TGCGGTACCCTGTAGATCCG",
-        "forward_tool_specific": "TACCCTGTAGATCC",
+        "forward_tool_specific": "TACCCTGTAGATCCGA",
         "forward_pub_specific": "TACCCTGTAGATCCG",
-        "forward_specific_overlap_nt": 14,
+        "forward_specific_overlap_nt": 15,
         "source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
       },
       {
@@ -2712,7 +2712,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACAGGAAGCTGCCAGTTGA",
+        "forward_tool": "CTCGATGAAGCTGCCAGTTGA",
         "forward_published": "GCCTGAAGCTGCCAGTTGA",
         "forward_tool_specific": "AAGCTGCCAGTTGA",
         "forward_pub_specific": "AAGCTGCCAGTTGA",
@@ -2725,7 +2725,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTTCAGACGCGTTTCAAGTAATTCAG",
+        "forward_tool": "CGCCTCATGCATTCAAGTAATTCAG",
         "forward_published": "CGCCGCTTCAAGTAATTCAGGAT",
         "forward_tool_specific": "TTCAAGTAATTCAG",
         "forward_pub_specific": "TTCAAGTAATTCAGGAT",
@@ -2738,7 +2738,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTAAGCGCGATTGAGGTAGTAGG",
+        "forward_tool": "ACGCGTAGACTGAGGTAGTAGG",
         "forward_published": "GCCGCTGAGGTAGTAGGTTGTGT",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGTGT",
@@ -2751,7 +2751,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACTGCGGTGGAAGACTAGTG",
+        "forward_tool": "CGTGCCTGTGGAAGACTAGTG",
         "forward_published": "CGGCGGTGGAAGACTAGTGATT",
         "forward_tool_specific": "TGGAAGACTAGTG",
         "forward_pub_specific": "TGGAAGACTAGTGATT",
@@ -2764,7 +2764,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTGGCGATACCCTGTAGAACC",
+        "forward_tool": "AGGTCCGTACCCTGTAGAACC",
         "forward_published": "TCGGGTACCCTGTAGAACCG",
         "forward_tool_specific": "TACCCTGTAGAACC",
         "forward_pub_specific": "TACCCTGTAGAACCG",
@@ -2777,7 +2777,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGCGCCAATTAAAGTGCTTATAGTG",
+        "forward_tool": "AGCCGGTGTAAAGTGCTTATAGTG",
         "forward_published": "GCGGCGGTAAAGTGCTTATAGTG",
         "forward_tool_specific": "TAAAGTGCTTATAGTG",
         "forward_pub_specific": "TAAAGTGCTTATAGTG",
@@ -2790,7 +2790,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCGTGAAAGAGGTAGTAGGTTGC",
+        "forward_tool": "AAGGAGGTAGAGGTAGTAGGTTGC",
         "forward_published": "GCCGCAGAGGTAGTAGGTTGC",
         "forward_tool_specific": "AGAGGTAGTAGGTTGC",
         "forward_pub_specific": "AGAGGTAGTAGGTTGC",
@@ -2803,7 +2803,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TGTCCATCCATGAGGTAGGAGG",
+        "forward_tool": "AGCCATTAGGTGAGGTAGGAGG",
         "forward_published": "TGCCGGTGAGGTAGGAGG",
         "forward_tool_specific": "TGAGGTAGGAGG",
         "forward_pub_specific": "TGAGGTAGGAGG",
@@ -2816,7 +2816,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCCAAGGTGACAGAAGAGAG",
+        "forward_tool": "GGCACTGCTGACAGAAGAGAG",
         "forward_published": "GCGGCGGTGACAGAAGAGAGT",
         "forward_tool_specific": "TGACAGAAGAGAG",
         "forward_pub_specific": "TGACAGAAGAGAGT",
@@ -2829,7 +2829,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AACGCAGTTTGGATTGAAGGGA",
+        "forward_tool": "AACACGCTTTGGATTGAAGGGA",
         "forward_published": "CGGCGGTTTGGATTGAAGGGA",
         "forward_tool_specific": "TTTGGATTGAAGGGA",
         "forward_pub_specific": "TTTGGATTGAAGGGA",
@@ -2842,7 +2842,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTGACTACTCGGACCAGGCT",
+        "forward_tool": "CTATAGCCTCGGACCAGGCT",
         "forward_published": "TCGCTTCGGACCAGGCTTCA",
         "forward_tool_specific": "TCGGACCAGGCT",
         "forward_pub_specific": "TCGGACCAGGCTTCA",
@@ -2855,7 +2855,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TATGCCGTGAAGCTGCCAG",
+        "forward_tool": "GGTACCTATGTGAAGCTGCCAG",
         "forward_published": "TCGCGTGAAGCTGCCAGCAT",
         "forward_tool_specific": "TGAAGCTGCCAG",
         "forward_pub_specific": "TGAAGCTGCCAGCAT",
@@ -2868,7 +2868,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTACCGGTAACCTGATCAGCC",
+        "forward_tool": "CTCACAGCTAACCTGATCAGCC",
         "forward_published": "ACACTCCAGCTGGGTAACCTGATCAGCCCC",
         "forward_tool_specific": "TAACCTGATCAGCC",
         "forward_pub_specific": "TAACCTGATCAGCCCC",
@@ -2894,7 +2894,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGTGCGGTATTTTCTGCATTCG",
+        "forward_tool": "GCCACGGTATTTTCTGCATTCG",
         "forward_published": "ACACTCCAGCTGGGTATTTTCTGCATTCGC",
         "forward_tool_specific": "TATTTTCTGCATTCG",
         "forward_pub_specific": "TATTTTCTGCATTCGC",
@@ -2907,7 +2907,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACTGACGAAGGAGCGATTTGG",
+        "forward_tool": "ACGACTCAAGGAGCGATTTGG",
         "forward_published": "ACACTCCAGCTGGGAAGGAGCGATTTGGAG",
         "forward_tool_specific": "AAGGAGCGATTTGG",
         "forward_pub_specific": "AAGGAGCGATTTGGAG",
@@ -2920,7 +2920,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GAAGACCACGCACCACTAGTC",
+        "forward_tool": "GTTCCAGTCGCACCACTAGTC",
         "forward_published": "ACACTCCAGCTGGGCGCACCACTAGTCACC",
         "forward_tool_specific": "CGCACCACTAGTC",
         "forward_pub_specific": "CGCACCACTAGTCACC",
@@ -2946,7 +2946,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGAGTGACCAAGGTGAATATAGCTG",
+        "forward_tool": "GGTCCAGTCAAGGTGAATATAGCTG",
         "forward_published": "ACACTCCAGCTGGGCAAGGTGAATATAGCT",
         "forward_tool_specific": "CAAGGTGAATATAGCTG",
         "forward_pub_specific": "CAAGGTGAATATAGCT",
@@ -2959,7 +2959,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTTCCGACGTAAGGTTGGTCC",
+        "forward_tool": "CGGTTCGAGTAAGGTTGGTCC",
         "forward_published": "ACACTCCAGCTGGGTAAGGTTGGTCCAATC",
         "forward_tool_specific": "TAAGGTTGGTCC",
         "forward_pub_specific": "TAAGGTTGGTCCAATC",
@@ -2972,7 +2972,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTGCCACCATCATAGTCCAGTG",
+        "forward_tool": "CCACAGCCATCATAGTCCAGTG",
         "forward_published": "ACACTCCAGCTGGGCATCATAGTCCAGTGT",
         "forward_tool_specific": "CATCATAGTCCAGTG",
         "forward_pub_specific": "CATCATAGTCCAGTGT",
@@ -2985,7 +2985,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCGAGTAACCTGGACCTTGAC",
+        "forward_tool": "TAGCTCCTCCTGGACCTTGAC",
         "forward_published": "ACACTCCAGCTGGGCCTGGACCTTGACTAT",
         "forward_tool_specific": "CCTGGACCTTGAC",
         "forward_pub_specific": "CCTGGACCTTGACTAT",
@@ -2998,7 +2998,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AACTGGCTCTACGGTTTCCTAGA",
+        "forward_tool": "CAACGCTGTTACGGTTTCCTAGA",
         "forward_published": "ACACTCCAGCTGGGTACGGTTTCCTAGATT",
         "forward_tool_specific": "TACGGTTTCCTAGA",
         "forward_pub_specific": "TACGGTTTCCTAGATT",
@@ -3011,7 +3011,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AAGGAGAGCTACTGGACCCTG",
+        "forward_tool": "AGCAGTCTCTACTGGACCCTG",
         "forward_published": "ACACTCCAGCTGGGTACTGGACCCTGAATT",
         "forward_tool_specific": "TACTGGACCCTG",
         "forward_pub_specific": "TACTGGACCCTGAATT",
@@ -3024,7 +3024,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGTAAGAGGCCACCTCTTTGG",
+        "forward_tool": "CGACACTAGCCACCTCTTTGG",
         "forward_published": "ACACTCCAGCTGGGGCCACCTCTTTGGTTC",
         "forward_tool_specific": "GCCACCTCTTTGG",
         "forward_pub_specific": "GCCACCTCTTTGGTTC",
@@ -3037,7 +3037,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCAGCACTCAGACAGTTTGGTG",
+        "forward_tool": "TTCCAGCTCAGACAGTTTGGTG",
         "forward_published": "ACACTCCAGCTGGGTCAGACAGTTTGGTGC",
         "forward_tool_specific": "TCAGACAGTTTGGTG",
         "forward_pub_specific": "TCAGACAGTTTGGTGC",
@@ -3050,7 +3050,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTCTCGATACGCACACCAGG",
+        "forward_tool": "CGCTATAGACGCACACCAGG",
         "forward_published": "ACACTCCAGCTGGGACGCACACCAGGCTGA",
         "forward_tool_specific": "ACGCACACCAGG",
         "forward_pub_specific": "ACGCACACCAGGCTGA",
@@ -3063,7 +3063,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TTGGTCACTGTAACTTGCCAGG",
+        "forward_tool": "TTGGTGAGTGTAACTTGCCAGG",
         "forward_published": "ACACTCCAGCTGGGTGTAACTTGCCAGGGA",
         "forward_tool_specific": "TGTAACTTGCCAGG",
         "forward_pub_specific": "TGTAACTTGCCAGGGA",
@@ -3076,7 +3076,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GAGATCGTAACCGGCTCGTG",
+        "forward_tool": "CTATGCCTAACCGGCTCGTG",
         "forward_published": "ACACTCCAGCTGGGAACCGGCTCGTGGCTC",
         "forward_tool_specific": "AACCGGCTCGTG",
         "forward_pub_specific": "AACCGGCTCGTGGCTC",
@@ -3089,7 +3089,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCTGCCATAAATGCTGCAG",
+        "forward_tool": "AGGATGGCTCTAAATGCTGCAG",
         "forward_published": "ACACTCCAGCTGGGTAAATGCTGCAGTAGT",
         "forward_tool_specific": "TAAATGCTGCAG",
         "forward_pub_specific": "TAAATGCTGCAGTAGT",
@@ -3115,7 +3115,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGTTGGTGTTAGATAGAGTGGGTG",
+        "forward_tool": "CACGTGGTTTAGATAGAGTGGGTG",
         "forward_published": "ACACTCCAGCTGGGTTAGATAGAGTGGGTG",
         "forward_tool_specific": "TTAGATAGAGTGGGTG",
         "forward_pub_specific": "TTAGATAGAGTGGGTG",
@@ -3128,7 +3128,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CAGTGTGTAAGAGGACGCAGG",
+        "forward_tool": "GGCTAAGTTAAGAGGACGCAGG",
         "forward_published": "ACACTCCAGCTGGGTAAGAGGACGCAGGCA",
         "forward_tool_specific": "TAAGAGGACGCAGG",
         "forward_pub_specific": "TAAGAGGACGCAGGCA",
@@ -3141,7 +3141,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGTGATCTGTATGCCTGGTGTC",
+        "forward_tool": "GGATCACTGTATGCCTGGTGTC",
         "forward_published": "ACACTCCAGCTGGGTGTATGCCTGGTGTCC",
         "forward_tool_specific": "TGTATGCCTGGTGTC",
         "forward_pub_specific": "TGTATGCCTGGTGTCC",
@@ -3167,7 +3167,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACAGGCGTATCGGAAGTTTGG",
+        "forward_tool": "ACGCCTGTATCGGAAGTTTGG",
         "forward_published": "ACACTCCAGCTGGGTATCGGAAGTTTGGGC",
         "forward_tool_specific": "TATCGGAAGTTTGG",
         "forward_pub_specific": "TATCGGAAGTTTGGGC",
@@ -3180,7 +3180,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CAATCCGACATTCCCCGCA",
+        "forward_tool": "CGATTGGACATTCCCCGCA",
         "forward_published": "ACACTCCAGCTGGGACATTCCCCGCAAACA",
         "forward_tool_specific": "ACATTCCCCGCA",
         "forward_pub_specific": "ACATTCCCCGCAAACA",
@@ -3193,7 +3193,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTCCGATCCTTTTGTTTGCTTGG",
+        "forward_tool": "ATGCGATCCTTTTGTTTGCTTGG",
         "forward_published": "ACACTCCAGCTGGGTTTTGTTTGCTTGGGA",
         "forward_tool_specific": "TTTTGTTTGCTTGG",
         "forward_pub_specific": "TTTTGTTTGCTTGGGA",
@@ -3206,7 +3206,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACGAACTGTAGCAGGCATGTC",
+        "forward_tool": "ATGGCCATAGCAGGCATGTC",
         "forward_published": "ACACTCCAGCTGGGTAGCAGGCATGTCTTC",
         "forward_tool_specific": "TAGCAGGCATGTC",
         "forward_pub_specific": "TAGCAGGCATGTCTTC",
@@ -3219,7 +3219,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCCGCCATGAAGGCACAG",
+        "forward_tool": "GCTAGACTCCATGAAGGCACAG",
         "forward_published": "ACACTCCAGCTGGGCATGAAGGCACAGCCT",
         "forward_tool_specific": "CATGAAGGCACAG",
         "forward_pub_specific": "CATGAAGGCACAGCCT",
@@ -3232,7 +3232,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGGTTCCAGTTACAAAGTCATGGTC",
+        "forward_tool": "TCGACCGTTACAAAGTCATGGTC",
         "forward_published": "ACACTCCAGCTGGGTTACAAAGTCATGGTC",
         "forward_tool_specific": "TTACAAAGTCATGGTC",
         "forward_pub_specific": "TTACAAAGTCATGGTC",
@@ -3245,7 +3245,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTAAGCGCGATTGAGGTAGTAGG",
+        "forward_tool": "ACGCGTAGACTGAGGTAGTAGG",
         "forward_published": "GCTCTTGAGGTAGTAGGTTGTGTG",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGTGTG",
@@ -3258,7 +3258,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCGACCTAATACTGCCTGGT",
+        "forward_tool": "AGGACCGTAATACTGCCTGGT",
         "forward_published": "CGCTAATACTGCCTGGTAATGATGA",
         "forward_tool_specific": "TAATACTGCCTGGT",
         "forward_pub_specific": "TAATACTGCCTGGTAATGATGA",
@@ -3271,7 +3271,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTGACGAGTCCAGTTTTCCCA",
+        "forward_tool": "TCCTCTGAGTCCAGTTTTCCCA",
         "forward_published": "CATCCGTCCAGTTTTCCCAGG",
         "forward_tool_specific": "GTCCAGTTTTCCCA",
         "forward_pub_specific": "GTCCAGTTTTCCCAGG",
@@ -3284,7 +3284,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCGCTAGCAGCACATCATGG",
+        "forward_tool": "GACTACCTAGCAGCACATCATGG",
         "forward_published": "GCAGCACATCATGGTTTACA",
         "forward_tool_specific": "TAGCAGCACATCATGG",
         "forward_pub_specific": "GCAGCACATCATGGTTTACA",
@@ -3297,7 +3297,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACGTGTGTAGCAGCACAGA",
+        "forward_tool": "ACCTGATCCTAGCAGCACAGA",
         "forward_published": "GCAGCACAGAAATATTGGC",
         "forward_tool_specific": "TAGCAGCACAGA",
         "forward_pub_specific": "GCAGCACAGAAATATTGGC",
@@ -3323,7 +3323,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCGGCCGATGAGGTAGTAGG",
+        "forward_tool": "TGGTAGAGGCTTTGAGGTAGTAGG",
         "forward_published": "GCCGCTGAGGTAGTAGGTTGTA",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGTA",
@@ -3336,7 +3336,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGCCTAGTGAGATGAAGCACTG",
+        "forward_tool": "GGTAGGCTGAGATGAAGCACTG",
         "forward_published": "ATGGTTCGTGGGTGAGATGAAGCACTG",
         "forward_tool_specific": "TGAGATGAAGCACTG",
         "forward_pub_specific": "TGAGATGAAGCACTG",
@@ -3349,7 +3349,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTGACGAGTCCAGTTTTCCCA",
+        "forward_tool": "TCCTCTGAGTCCAGTTTTCCCA",
         "forward_published": "ATGGTTCGTGGGGTCCAGTTTTCCCAG",
         "forward_tool_specific": "GTCCAGTTTTCCCA",
         "forward_pub_specific": "GTCCAGTTTTCCCAG",
@@ -3362,7 +3362,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCGGCCGATGAGGTAGTAGG",
+        "forward_tool": "TGGTAGAGGCTTTGAGGTAGTAGG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGGTTGT",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGT",
@@ -3375,7 +3375,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTAAGCGCGATTGAGGTAGTAGG",
+        "forward_tool": "ACGCGTAGACTGAGGTAGTAGG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGGTTGT",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGT",
@@ -3388,7 +3388,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGTGCGCATGAGGTAGTAGG",
+        "forward_tool": "CAACCGTGATTGTGAGGTAGTAGG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGGTTGT",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGT",
@@ -3401,7 +3401,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCGTGAAAGAGGTAGTAGGTTGC",
+        "forward_tool": "AAGGAGGTAGAGGTAGTAGGTTGC",
         "forward_published": "CCAGCTGGGAGAGGTAGTAGGTTGC",
         "forward_tool_specific": "AGAGGTAGTAGGTTGC",
         "forward_pub_specific": "AGAGGTAGTAGGTTGC",
@@ -3414,7 +3414,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TGTCCATCCATGAGGTAGGAGG",
+        "forward_tool": "AGCCATTAGGTGAGGTAGGAGG",
         "forward_published": "CCAGCTGGGTGAGGTAGGAGGTTGT",
         "forward_tool_specific": "TGAGGTAGGAGG",
         "forward_pub_specific": "TGAGGTAGGAGGTTGT",
@@ -3427,7 +3427,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCAGGAGGTGAGGTAGTAGATTG",
+        "forward_tool": "CGGCACGATGAGGTAGTAGATTG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGATTGT",
         "forward_tool_specific": "TGAGGTAGTAGATTG",
         "forward_pub_specific": "TGAGGTAGTAGATTGT",
@@ -3440,7 +3440,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGTAGCCGTTGAGGTAGTAGTTTG",
+        "forward_tool": "CCGGCCATGAGGTAGTAGTTTG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGTTTGT",
         "forward_tool_specific": "TGAGGTAGTAGTTTG",
         "forward_pub_specific": "TGAGGTAGTAGTTTGT",
@@ -3453,7 +3453,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TACACCTCCTCTGAGGTAGTAGTTTG",
+        "forward_tool": "CATGTCCGGTGAGGTAGTAGTTTG",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGTTTGT",
         "forward_tool_specific": "TGAGGTAGTAGTTTG",
         "forward_pub_specific": "TGAGGTAGTAGTTTGT",
@@ -3466,7 +3466,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGAGCAGAGATGAGGTAGTAAGTTGT",
+        "forward_tool": "TAGTCGTGGTGAGGTAGTAAGTTGT",
         "forward_published": "CCAGCTGGGTGAGGTAGTAAGTTGT",
         "forward_tool_specific": "TGAGGTAGTAAGTTGT",
         "forward_pub_specific": "TGAGGTAGTAAGTTGT",
@@ -3492,7 +3492,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCCAGTGTTTGTCAGTTTGTC",
+        "forward_tool": "TCCGCGAGTGTCAGTTTGTC",
         "forward_published": "CGTCAGTGTGTGTCAGTTTGT",
         "forward_tool_specific": "TGTCAGTTTGTC",
         "forward_pub_specific": "TGTCAGTTTGT",
@@ -3518,7 +3518,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CATGCCACAGTTGTGTGTGC",
+        "forward_tool": "CAAGTTGTCGAGTTGTGTGTGC",
         "forward_published": "CTCGTCGGTTAGTTGTGTGT",
         "forward_tool_specific": "AGTTGTGTGTGC",
         "forward_pub_specific": "AGTTGTGTGT",
@@ -3544,7 +3544,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACGTACCATAAGTGCCTGCA",
+        "forward_tool": "CGGCAGATAAGTGCCTGCA",
         "forward_published": "CCAAGGACGTAAGTGCCTGC",
         "forward_tool_specific": "TAAGTGCCTGCA",
         "forward_pub_specific": "TAAGTGCCTGC",
@@ -3557,7 +3557,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "N/A (published core 9 nt < 10)",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGACGCGCTTTTTCATTATTGCTC",
+        "forward_tool": "CCGACCGGTTTTTCATTATTGCTC",
         "forward_published": "CTTGGTTGTGGTTGGTTTTTCATT",
         "forward_tool_specific": "TTTTTCATTATTGCTC",
         "forward_pub_specific": "TTTTTCATT",
@@ -3570,7 +3570,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TGGAGGTCATCAAGAGCAATAACG",
+        "forward_tool": "CGGAAGCTTTCAAGAGCAATAACG",
         "forward_published": "CTCCTCCCTATCAAGAGCAA",
         "forward_tool_specific": "TCAAGAGCAATAACG",
         "forward_pub_specific": "TCAAGAGCAA",
@@ -3596,7 +3596,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTGCGTGTGGAAGACTAGTG",
+        "forward_tool": "CGGCACTGTGGAAGACTAGTG",
         "forward_published": "CTCGTGCATGATGGAAGACTA",
         "forward_tool_specific": "TGGAAGACTAGTG",
         "forward_pub_specific": "TGGAAGACTA",
@@ -3609,7 +3609,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCAGCAGTCTCACACAGAAATCG",
+        "forward_tool": "TCTGCAGTCTCACACAGAAATCG",
         "forward_published": "CAACCACACTCTCACACAGA",
         "forward_tool_specific": "TCTCACACAGAAATCG",
         "forward_pub_specific": "TCTCACACAGA",
@@ -3622,7 +3622,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGGATGCGTAAGTGCCTGC",
+        "forward_tool": "CTCCTCTGTGTAAGTGCCTGC",
         "forward_published": "CTTGCTGTCTCGTAAGTGCCT",
         "forward_tool_specific": "GTAAGTGCCTGC",
         "forward_pub_specific": "GTAAGTGCCT",
@@ -3635,7 +3635,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCACGATACTCACCTGGAGC",
+        "forward_tool": "GTGACAACCTCACCTGGAGC",
         "forward_published": "CTTTCTGTCTCTCACCTGGA",
         "forward_tool_specific": "CTCACCTGGAGC",
         "forward_pub_specific": "CTCACCTGGA",
@@ -3648,7 +3648,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCATACAGTCTAGCTTATCAGACTG",
+        "forward_tool": "CGCTGCTCTAGCTTATCAGACTG",
         "forward_published": "CATCACCCTCGTAGCTTATCA",
         "forward_tool_specific": "TAGCTTATCAGACTG",
         "forward_pub_specific": "TAGCTTATCA",
@@ -3661,7 +3661,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGTAAGTCAGGCAGTGTAGTTAGC",
+        "forward_tool": "GAGTGAAGAGGCAGTGTAGTTAGC",
         "forward_published": "CCATGGTAGTAGGCAGTGTA",
         "forward_tool_specific": "AGGCAGTGTAGTTAGC",
         "forward_pub_specific": "AGGCAGTGTA",
@@ -3674,7 +3674,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCCGGATACCATCGACCGT",
+        "forward_tool": "GCAATGGACCATCGACCGT",
         "forward_published": "CAAGAGCACCATCGACCGTT",
         "forward_tool_specific": "ACCATCGACCGT",
         "forward_pub_specific": "ACCATCGACCGTT",
@@ -3687,7 +3687,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCCGAACTGTGCAAATCTATGC",
+        "forward_tool": "GGACGCTTGTGCAAATCTATGC",
         "forward_published": "CCGTGTCGTGTGCAAATCTA",
         "forward_tool_specific": "TGTGCAAATCTATGC",
         "forward_pub_specific": "TGTGCAAATCTA",
@@ -3700,7 +3700,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "N/A (published core 9 nt < 10)",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCGGTGGTGTACAGTATAGATG",
+        "forward_tool": "GCCTGCACGGATACAGTATAGATG",
         "forward_published": "CGTTCCGATGAGTAATACAGTATA",
         "forward_tool_specific": "TACAGTATAGATG",
         "forward_pub_specific": "TACAGTATA",
@@ -3713,7 +3713,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "N/A (published core 9 nt < 10)",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCACAACATGCCTTTTGCTCTG",
+        "forward_tool": "CTTGTCACATGCCTTTTGCTCTG",
         "forward_published": "CCTTCGCTTCCATGCCTTTT",
         "forward_tool_specific": "ATGCCTTTTGCTCTG",
         "forward_pub_specific": "ATGCCTTTT",
@@ -3739,7 +3739,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCCAGTACCAACAGCAGTCG",
+        "forward_tool": "ACGAGTGACAACAGCAGTCG",
         "forward_published": "CAACAGAACACCAACAGCAGT",
         "forward_tool_specific": "CAACAGCAGTCG",
         "forward_pub_specific": "CAACAGCAGT",
@@ -3752,7 +3752,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCTATGGCTGGAGAAGCAGG",
+        "forward_tool": "GCACTAGTGATGGAGAAGCAGG",
         "forward_published": "ACACTCCAGCTGGGTGGAGAAGCA",
         "forward_tool_specific": "TGGAGAAGCAGG",
         "forward_pub_specific": "TGGAGAAGCA",
@@ -3765,7 +3765,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACACCTGGAGAAGCAGGGT",
+        "forward_tool": "CTCCTAGTGGAGAAGCAGGGT",
         "forward_published": "ACACTCCAGCTGGGTGGAGAAGCA",
         "forward_tool_specific": "TGGAGAAGCAGGGT",
         "forward_pub_specific": "TGGAGAAGCA",
@@ -3778,7 +3778,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTTCGATCTTGGAGAAGCAGG",
+        "forward_tool": "CTGTTACCGTGGAGAAGCAGG",
         "forward_published": "ACACTCCAGCTGGGTGGAGAAGCA",
         "forward_tool_specific": "TGGAGAAGCAGG",
         "forward_pub_specific": "TGGAGAAGCA",
@@ -3791,7 +3791,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGTTACAGGTGGAGAAGCAGG",
+        "forward_tool": "GTATGTCTGCTGGAGAAGCAGG",
         "forward_published": "ACACTCCAGCTGGGTGGAGAAGCA",
         "forward_tool_specific": "TGGAGAAGCAGG",
         "forward_pub_specific": "TGGAGAAGCA",
@@ -3804,7 +3804,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTGTCCATGCATTTGCACCTG",
+        "forward_tool": "GGTTCCATGCATTTGCACCTG",
         "forward_published": "ACACTCCAGCTGGGTGCATTTGCACC",
         "forward_tool_specific": "TGCATTTGCACCTG",
         "forward_pub_specific": "TGCATTTGCACC",
@@ -3817,7 +3817,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TATGGCCTAGTGAGGAGGCC",
+        "forward_tool": "GATGATGCAGTGAGGAGGCC",
         "forward_published": "ACACTCCAGCTGGGAGTGAGGAGG",
         "forward_tool_specific": "AGTGAGGAGGCC",
         "forward_pub_specific": "AGTGAGGAGG",
@@ -3830,7 +3830,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TATACCGCGAGAGGAGGACG",
+        "forward_tool": "GAAGAGAGGAGAGAGGAGGACG",
         "forward_published": "ACACTCCAGCTGGGGAGAGGAGGA",
         "forward_tool_specific": "GAGAGGAGGACG",
         "forward_pub_specific": "GAGAGGAGGA",
@@ -3843,7 +3843,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCACACTCACCTGGAATGTAAAGAA",
+        "forward_tool": "TGCGCGTACTGGAATGTAAAGAA",
         "forward_published": "CGCAGTGGAATGTAAAGAAG",
         "forward_tool_specific": "TGGAATGTAAAGAA",
         "forward_pub_specific": "TGGAATGTAAAGAAG",
@@ -3856,7 +3856,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCGGCCGATGAGGTAGTAGG",
+        "forward_tool": "TGGTAGAGGCTTTGAGGTAGTAGG",
         "forward_published": "GCAGTGAGGTAGTAGGTTGT",
         "forward_tool_specific": "TGAGGTAGTAGG",
         "forward_pub_specific": "TGAGGTAGTAGGTTGT",
@@ -3869,7 +3869,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCGTGAAAGAGGTAGTAGGTTGC",
+        "forward_tool": "AAGGAGGTAGAGGTAGTAGGTTGC",
         "forward_published": "AGAGAGGTAGTAGGTTGCAT",
         "forward_tool_specific": "AGAGGTAGTAGGTTGC",
         "forward_pub_specific": "AGAGGTAGTAGGTTGCAT",
@@ -3882,7 +3882,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCAGGAGGTGAGGTAGTAGATTG",
+        "forward_tool": "CGGCACGATGAGGTAGTAGATTG",
         "forward_published": "CGCAGTGAGGTAGTAGATTG",
         "forward_tool_specific": "TGAGGTAGTAGATTG",
         "forward_pub_specific": "TGAGGTAGTAGATTG",
@@ -3908,7 +3908,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CATTGGCCAAAGTGCTTACAGTG",
+        "forward_tool": "GCTTCTGCAAAGTGCTTACAGTG",
         "forward_published": "CAAAGTGCTTACAGTGCAG",
         "forward_tool_specific": "CAAAGTGCTTACAGTG",
         "forward_pub_specific": "CAAAGTGCTTACAGTGCAG",
@@ -3921,7 +3921,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTACACGACTGCAGTGAAGG",
+        "forward_tool": "CCGTCTACACTGCAGTGAAGG",
         "forward_published": "GACTGCAGTGAAGGCA",
         "forward_tool_specific": "ACTGCAGTGAAGG",
         "forward_pub_specific": "ACTGCAGTGAAGGCA",
@@ -3934,7 +3934,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGCGCCAATTAAAGTGCTTATAGTG",
+        "forward_tool": "AGCCGGTGTAAAGTGCTTATAGTG",
         "forward_published": "ACAGTAAAGTGCTTATAGTGCA",
         "forward_tool_specific": "TAAAGTGCTTATAGTG",
         "forward_pub_specific": "TAAAGTGCTTATAGTGCA",
@@ -3947,7 +3947,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCATACAGTCTAGCTTATCAGACTG",
+        "forward_tool": "CGCTGCTCTAGCTTATCAGACTG",
         "forward_published": "TCAGTAGCTTATCAGACTGATG",
         "forward_tool_specific": "TAGCTTATCAGACTG",
         "forward_pub_specific": "TAGCTTATCAGACTGATG",
@@ -3960,7 +3960,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACAGGAAGCTGCCAGTTGA",
+        "forward_tool": "CTCGATGAAGCTGCCAGTTGA",
         "forward_published": "CAGAAGCTGCCAGTTGA",
         "forward_tool_specific": "AAGCTGCCAGTTGA",
         "forward_pub_specific": "AAGCTGCCAGTTGA",
@@ -3973,7 +3973,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCGACATATCACATTGCCAGG",
+        "forward_tool": "CCAGGAGATATCACATTGCCAGG",
         "forward_published": "CATCACATTGCCAGGGAT",
         "forward_tool_specific": "ATCACATTGCCAGG",
         "forward_pub_specific": "ATCACATTGCCAGGGAT",
@@ -3986,7 +3986,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCCGAAGATCACATTGCCAGG",
+        "forward_tool": "AGCCGATCACATTGCCAGG",
         "forward_published": "CATCACATTGCCAGGGAT",
         "forward_tool_specific": "ATCACATTGCCAGG",
         "forward_pub_specific": "ATCACATTGCCAGGGAT",
@@ -3999,7 +3999,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCGCATTGCACTTGTCTC",
+        "forward_tool": "ACTCGTCTCATTGCACTTGTCTC",
         "forward_published": "CATTGCACTTGTCTCGGT",
         "forward_tool_specific": "CATTGCACTTGTCTC",
         "forward_pub_specific": "CATTGCACTTGTCTCGGT",
@@ -4012,7 +4012,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGATGCAGTTCAAGTAATCCAGGA",
+        "forward_tool": "CGATGCACTTCAAGTAATCCAGGA",
         "forward_published": "GCAGTTCAAGTAATCCAGGA",
         "forward_tool_specific": "TTCAAGTAATCCAGGA",
         "forward_pub_specific": "TTCAAGTAATCCAGGA",
@@ -4025,7 +4025,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GAGTCAACCTTTCACAGTGGCT",
+        "forward_tool": "GTACGCTGATTCACAGTGGCT",
         "forward_published": "CAGTTCACAGTGGCTAAGT",
         "forward_tool_specific": "TTCACAGTGGCT",
         "forward_pub_specific": "TTCACAGTGGCTAAGT",
@@ -4038,7 +4038,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCGGCTATTCACAGTGGCT",
+        "forward_tool": "GTCTCCTGTTTTCACAGTGGCT",
         "forward_published": "CAGTTCACAGTGGCTAAGT",
         "forward_tool_specific": "TTCACAGTGGCT",
         "forward_pub_specific": "TTCACAGTGGCTAAGT",
@@ -4051,7 +4051,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCATATGGCGTAGCACCATTTGAA",
+        "forward_tool": "ACGGCGATAGCACCATTTGAA",
         "forward_published": "GCAGTAGCACCATTTGAAATC",
         "forward_tool_specific": "TAGCACCATTTGAA",
         "forward_pub_specific": "TAGCACCATTTGAAATC",
@@ -4064,7 +4064,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGGACGGACTTTCAGTCGGA",
+        "forward_tool": "GTGACGTGCTTTCAGTCGGA",
         "forward_published": "GCTTTCAGTCGGATGTTTG",
         "forward_tool_specific": "CTTTCAGTCGGA",
         "forward_pub_specific": "CTTTCAGTCGGATGTTTG",
@@ -4077,7 +4077,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCGCCACTGTAAACATCCTACAC",
+        "forward_tool": "GGACGGAGTGTAAACATCCTACAC",
         "forward_published": "CAGTGTAAACATCCTACACTCT",
         "forward_tool_specific": "TGTAAACATCCTACAC",
         "forward_pub_specific": "TGTAAACATCCTACACTCT",
@@ -4090,7 +4090,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCTGAGAGTGTAAACATCCCCGA",
+        "forward_tool": "TCTCAGACTGTAAACATCCCCGA",
         "forward_published": "TGTAAACATCCCCGACTG",
         "forward_tool_specific": "TGTAAACATCCCCGA",
         "forward_pub_specific": "TGTAAACATCCCCGACTG",
@@ -4103,7 +4103,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCACGATGAAAGTGCTGTTCG",
+        "forward_tool": "CTAAGCGCAAAGTGCTGTTCG",
         "forward_published": "GCAAAGTGCTGTTCGTG",
         "forward_tool_specific": "AAAGTGCTGTTCG",
         "forward_pub_specific": "AAAGTGCTGTTCGTG",
@@ -4116,7 +4116,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGGTGCACCTACAGTACTGTG",
+        "forward_tool": "CGCAGGTGGTACAGTACTGTG",
         "forward_published": "CGCAGTACAGTACTGTGATAAC",
         "forward_tool_specific": "TACAGTACTGTG",
         "forward_pub_specific": "TACAGTACTGTGATAAC",
@@ -4129,7 +4129,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGAGGAGAGCAGCATTGTACAG",
+        "forward_tool": "CAACGCAGCAGCATTGTACAG",
         "forward_published": "AGAGCAGCATTGTACAGG",
         "forward_tool_specific": "AGCAGCATTGTACAG",
         "forward_pub_specific": "AGCAGCATTGTACAGG",
@@ -4142,7 +4142,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CATGGCCAAAAGTGCTTACAGTG",
+        "forward_tool": "GCTAACACCAAAAGTGCTTACAGTG",
         "forward_published": "GAAAAGTGCTTACAGTGCAG",
         "forward_tool_specific": "AAAAGTGCTTACAGTG",
         "forward_pub_specific": "AAAAGTGCTTACAGTGCAG",
@@ -4155,7 +4155,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGAGGAGAGCAGCATTGTACAG",
+        "forward_tool": "CAACGCAGCAGCATTGTACAG",
         "forward_published": "GCAGAGCAGCATTGTACAG",
         "forward_tool_specific": "AGCAGCATTGTACAG",
         "forward_pub_specific": "AGCAGCATTGTACAG",
@@ -4181,7 +4181,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCGCTTATTCCCTGAGACCC",
+        "forward_tool": "AGACTTGGTCCCTGAGACCC",
         "forward_published": "GTCCCTGAGACCCTAACT",
         "forward_tool_specific": "TCCCTGAGACCC",
         "forward_pub_specific": "TCCCTGAGACCCTAACT",
@@ -4194,7 +4194,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GATCCGCTTCGTACCGTGAG",
+        "forward_tool": "TAGGTCAGGATCGTACCGTGAG",
         "forward_published": "GCAGTCGTACCGTGAGTAA",
         "forward_tool_specific": "TCGTACCGTGAG",
         "forward_pub_specific": "TCGTACCGTGAGTAA",
@@ -4207,7 +4207,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GATAGGAGAAGCCCTTACCCCA",
+        "forward_tool": "GACCTAGAAGCCCTTACCCCA",
         "forward_published": "CAGAAGCCCTTACCCCA",
         "forward_tool_specific": "AAGCCCTTACCCCA",
         "forward_pub_specific": "AAGCCCTTACCCCA",
@@ -4220,7 +4220,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTCGACTTTGGTCCCCTTCAA",
+        "forward_tool": "GTTGTCCATTGGTCCCCTTCAA",
         "forward_published": "GTTGGTCCCCTTCAACC",
         "forward_tool_specific": "TTGGTCCCCTTCAA",
         "forward_pub_specific": "TTGGTCCCCTTCAACC",
@@ -4259,7 +4259,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCTGAGGTACCACAGGGTAGA",
+        "forward_tool": "GAGTGGCTACCACAGGGTAGA",
         "forward_published": "GTACCACAGGGTAGAACC",
         "forward_tool_specific": "TACCACAGGGTAGA",
         "forward_pub_specific": "TACCACAGGGTAGAACC",
@@ -4272,7 +4272,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCCGTGCTCCATAAAGTAGAAAGC",
+        "forward_tool": "TTCTCCGGCCATAAAGTAGAAAGC",
         "forward_published": "GCAGCATAAAGTAGAAAGCAC",
         "forward_tool_specific": "CATAAAGTAGAAAGC",
         "forward_pub_specific": "CATAAAGTAGAAAGCAC",
@@ -4285,7 +4285,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGGTTGGTGCTGTAGTGTTTCC",
+        "forward_tool": "GGACCAGACGTATGTAGTGTTTCC",
         "forward_published": "GCAGTGTAGTGTTTCCTACT",
         "forward_tool_specific": "TGTAGTGTTTCC",
         "forward_pub_specific": "TGTAGTGTTTCCTACT",
@@ -4298,7 +4298,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGCCTAGTGAGATGAAGCACTG",
+        "forward_tool": "GGTAGGCTGAGATGAAGCACTG",
         "forward_published": "CAGTGAGATGAAGCACTGT",
         "forward_tool_specific": "TGAGATGAAGCACTG",
         "forward_pub_specific": "TGAGATGAAGCACTGT",
@@ -4311,7 +4311,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCGCGTGCTAGGATATCATCATATAC",
+        "forward_tool": "AGCGCGCGGATATCATCATATAC",
         "forward_published": "CGCAGGGATATCATCATATACT",
         "forward_tool_specific": "GGATATCATCATATAC",
         "forward_pub_specific": "GGATATCATCATATACT",
@@ -4324,7 +4324,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GACCGTCTCTGAGAACTGAATTCC",
+        "forward_tool": "GACCTCGACTGAGAACTGAATTCC",
         "forward_published": "CAGTGAGAACTGAATTCCATG",
         "forward_tool_specific": "TGAGAACTGAATTCC",
         "forward_pub_specific": "TGAGAACTGAATTCCATG",
@@ -4337,7 +4337,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTTAGCACCCCTGTGAAGTTTAGTT",
+        "forward_tool": "GATGTCCACCCTGTGAAGTTTAGTT",
         "forward_published": "CAGCCTGTGAAGTTTAGTTC",
         "forward_tool_specific": "CCTGTGAAGTTTAGTT",
         "forward_pub_specific": "CCTGTGAAGTTTAGTTC",
@@ -4350,7 +4350,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTCGAGACCTGAGAACTGAATTCC",
+        "forward_tool": "TCGTCACGTGAGAACTGAATTCC",
         "forward_published": "GCAGTGAGAACTGAATTCCA",
         "forward_tool_specific": "TGAGAACTGAATTCC",
         "forward_pub_specific": "TGAGAACTGAATTCCA",
@@ -4363,7 +4363,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GACGAGTCCTGAGAACTGAATTCC",
+        "forward_tool": "GGTCGAGACTGAGAACTGAATTCC",
         "forward_published": "GCAGTGAGAACTGAATTCCA",
         "forward_tool_specific": "TGAGAACTGAATTCC",
         "forward_pub_specific": "TGAGAACTGAATTCCA",
@@ -4376,7 +4376,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGCTGCATCAGTGCACTACAG",
+        "forward_tool": "CGGACCTTCAGTGCACTACAG",
         "forward_published": "AGTCAGTGCACTACAGAAC",
         "forward_tool_specific": "TCAGTGCACTACAG",
         "forward_pub_specific": "TCAGTGCACTACAGAAC",
@@ -4389,7 +4389,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACTCTAGCTCTCCCAACCCT",
+        "forward_tool": "GTCGTCTAGTCTCCCAACCCT",
         "forward_published": "GTCTCCCAACCCTTGTAC",
         "forward_tool_specific": "TCTCCCAACCCT",
         "forward_pub_specific": "TCTCCCAACCCTTGTAC",
@@ -4402,7 +4402,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCGGTGTCAGTGCATGACAG",
+        "forward_tool": "ACGTCCATCAGTGCATGACAG",
         "forward_published": "GTCAGTGCATGACAGAAC",
         "forward_tool_specific": "TCAGTGCATGACAG",
         "forward_pub_specific": "TCAGTGCATGACAGAAC",
@@ -4415,7 +4415,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCCGTAGGCTTTAATGCTAATTGTG",
+        "forward_tool": "GAGCGGCTTCTTAATGCTAATTGTG",
         "forward_published": "CGCAGTTAATGCTAATTGTG",
         "forward_tool_specific": "TTAATGCTAATTGTG",
         "forward_pub_specific": "TTAATGCTAATTGTG",
@@ -4428,7 +4428,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCGAACGAACATTCAACGCTG",
+        "forward_tool": "GAGCGACAACATTCAACGCTG",
         "forward_published": "CATTCAACGCTGTCGGT",
         "forward_tool_specific": "AACATTCAACGCTG",
         "forward_pub_specific": "CATTCAACGCTGTCGGT",
@@ -4441,7 +4441,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TACGGCCTTTTGGCAATGGT",
+        "forward_tool": "TGGCATCCTTTGGCAATGGT",
         "forward_published": "TTTGGCAATGGTAGAACTCA",
         "forward_tool_specific": "TTTGGCAATGGT",
         "forward_pub_specific": "TTTGGCAATGGTAGAACTCA",
@@ -4454,7 +4454,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATCGTGCCAACGGAATCCC",
+        "forward_tool": "ATCACGCCAACGGAATCCC",
         "forward_published": "CAACGGAATCCCAAAAGCA",
         "forward_tool_specific": "CAACGGAATCCC",
         "forward_pub_specific": "CAACGGAATCCCAAAAGCA",
@@ -4467,7 +4467,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTTCACCAACTGGCCCACA",
+        "forward_tool": "CCAGCTAAAACTGGCCCACA",
         "forward_published": "AGAACTGGCCCACAAAGTC",
         "forward_tool_specific": "AACTGGCCCACA",
         "forward_pub_specific": "AACTGGCCCACAAAGTC",
@@ -4480,7 +4480,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACGTGTGTAGCAGCACAGA",
+        "forward_tool": "ACCTGATCCTAGCAGCACAGA",
         "forward_published": "GCAGTAGCAGCACAGAA",
         "forward_tool_specific": "TAGCAGCACAGA",
         "forward_pub_specific": "TAGCAGCACAGAA",
@@ -4493,7 +4493,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCAAGGCTCTACAGTAGTCTGCA",
+        "forward_tool": "TCTCAGGCTTACAGTAGTCTGCA",
         "forward_published": "CAGTACAGTAGTCTGCACAT",
         "forward_tool_specific": "TACAGTAGTCTGCA",
         "forward_pub_specific": "TACAGTAGTCTGCACAT",
@@ -4506,7 +4506,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCGACCTAATACTGCCTGGT",
+        "forward_tool": "AGGACCGTAATACTGCCTGGT",
         "forward_published": "GCAGTAATACTGCCTGGTAATG",
         "forward_tool_specific": "TAATACTGCCTGGT",
         "forward_pub_specific": "TAATACTGCCTGGTAATG",
@@ -4519,7 +4519,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACTCCAGTAATACTGCCGGGT",
+        "forward_tool": "AGGTCTGTAATACTGCCGGGT",
         "forward_published": "AGTAATACTGCCGGGTAATG",
         "forward_tool_specific": "TAATACTGCCGGGT",
         "forward_pub_specific": "TAATACTGCCGGGTAATG",
@@ -4532,7 +4532,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGGCCTGTACTGGAATGTAAGG",
+        "forward_tool": "CGGCTACCACTGGAATGTAAGG",
         "forward_published": "CGCAGTGGAATGTAAGGA",
         "forward_tool_specific": "TGGAATGTAAGG",
         "forward_pub_specific": "TGGAATGTAAGGA",
@@ -4545,7 +4545,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GAGAGTCCTGTGCGTGTGAC",
+        "forward_tool": "GACTAGGACTGTGCGTGTGAC",
         "forward_published": "CTGTGCGTGTGACAGC",
         "forward_tool_specific": "CTGTGCGTGTGAC",
         "forward_pub_specific": "CTGTGCGTGTGACAGC",
@@ -4558,7 +4558,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CGCCAGTGTTTGTCAGTTTGTC",
+        "forward_tool": "TCCGCGAGTGTCAGTTTGTC",
         "forward_published": "CGCAGTGTCAGTTTGTCA",
         "forward_tool_specific": "TGTCAGTTTGTC",
         "forward_pub_specific": "TGTCAGTTTGTCA",
@@ -4571,7 +4571,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCAGGTCCATCAAGAGCAATAACG",
+        "forward_tool": "GCCTAATGCTTCAAGAGCAATAACG",
         "forward_published": "GCAGTCAAGAGCAATAACGA",
         "forward_tool_specific": "TCAAGAGCAATAACG",
         "forward_pub_specific": "TCAAGAGCAATAACGA",
@@ -4584,7 +4584,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCTACCGATGAGGGGCAGAG",
+        "forward_tool": "CTTATGCGTGAGGGGCAGAG",
         "forward_published": "TGAGGGGCAGAGAGCGA",
         "forward_tool_specific": "TGAGGGGCAGAG",
         "forward_pub_specific": "TGAGGGGCAGAGAGCGA",
@@ -4597,7 +4597,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GGAACCTTGGAAACCGTTACCA",
+        "forward_tool": "CGTGGACGAAACCGTTACCA",
         "forward_published": "GCAGAAACCGTTACCATTACT",
         "forward_tool_specific": "AAACCGTTACCA",
         "forward_pub_specific": "AAACCGTTACCATTACT",
@@ -4623,7 +4623,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGGCGTCCTTATGCAAGATTCC",
+        "forward_tool": "AGGACCGCTTATGCAAGATTCC",
         "forward_published": "CGCAGCTTATGCAAGATTC",
         "forward_tool_specific": "CTTATGCAAGATTCC",
         "forward_pub_specific": "CTTATGCAAGATTC",
@@ -4649,7 +4649,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GTGTGTGTGACACCTGCCA",
+        "forward_tool": "GTCCAACATGACACCTGCCA",
         "forward_published": "TGACACCTGCCACCCA",
         "forward_tool_specific": "TGACACCTGCCA",
         "forward_pub_specific": "TGACACCTGCCACCCA",
@@ -4662,7 +4662,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCCTAACAAGATCCCTGAGTGTATG",
+        "forward_tool": "CGCGCTATCCCTGAGTGTATG",
         "forward_published": "ACAGATCCCTGAGTGTATGT",
         "forward_tool_specific": "ATCCCTGAGTGTATG",
         "forward_pub_specific": "ATCCCTGAGTGTATGT",
@@ -4675,7 +4675,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCATATGCCTCACAGCTCCG",
+        "forward_tool": "CTACGATGCTCACAGCTCCG",
         "forward_published": "CTCACAGCTCCGGTC",
         "forward_tool_specific": "CTCACAGCTCCG",
         "forward_pub_specific": "CTCACAGCTCCGGTC",
@@ -4688,7 +4688,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CAGTGCATGAACTGTGTCTTTTCTG",
+        "forward_tool": "TGGATCTGGAACTGTGTCTTTTCTG",
         "forward_published": "GCAGAACTGTGTCTTTTCTGA",
         "forward_tool_specific": "AACTGTGTCTTTTCTG",
         "forward_pub_specific": "AACTGTGTCTTTTCTGA",
@@ -4701,7 +4701,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ATAGAGCGGAGGAGAGAGTTAGC",
+        "forward_tool": "GAGCAAGTTCAGGAGAGAGTTAGC",
         "forward_published": "AGGAGAGAGTTAGCGCA",
         "forward_tool_specific": "AGGAGAGAGTTAGC",
         "forward_pub_specific": "AGGAGAGAGTTAGCGCA",
@@ -4714,7 +4714,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCATCGGACCAAATGGATTTTTGG",
+        "forward_tool": "GCGGTAATCGAGAATGGATTTTTGG",
         "forward_published": "GCAGAATGGATTTTTGGAGC",
         "forward_tool_specific": "AATGGATTTTTGG",
         "forward_pub_specific": "AATGGATTTTTGGAGC",
@@ -4727,7 +4727,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACTCGCCAACTGGATTTTTGGA",
+        "forward_tool": "ACGTTGAGCCTGGATTTTTGGA",
         "forward_published": "CGCAGTGGATTTTTGGATCA",
         "forward_tool_specific": "TGGATTTTTGGA",
         "forward_pub_specific": "TGGATTTTTGGATCA",
@@ -4740,7 +4740,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCATTGCAATCCCGGACGA",
+        "forward_tool": "CCATGCAAATCCCGGACGA",
         "forward_published": "CAGAATCCCGGACGAG",
         "forward_tool_specific": "AATCCCGGACGA",
         "forward_pub_specific": "AATCCCGGACGAG",
@@ -4753,7 +4753,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGCATACCGTCTTGGGAAACG",
+        "forward_tool": "TGTCGTCGTCTTGGGAAACG",
         "forward_published": "GCAGGTCTTGGGAAACG",
         "forward_tool_specific": "GTCTTGGGAAACG",
         "forward_pub_specific": "GTCTTGGGAAACG",
@@ -4766,7 +4766,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GATCTAGGTGCGGAACCTGC",
+        "forward_tool": "CTCGACTATGCGGAACCTGC",
         "forward_published": "GCGGAACCTGCGGAT",
         "forward_tool_specific": "TGCGGAACCTGC",
         "forward_pub_specific": "GCGGAACCTGCGGAT",
@@ -4779,7 +4779,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGTACGGTCCGTATCCGCA",
+        "forward_tool": "ACGGTACTCCGTATCCGCA",
         "forward_published": "TCCGTATCCGCAGGT",
         "forward_tool_specific": "TCCGTATCCGCA",
         "forward_pub_specific": "TCCGTATCCGCAGGT",
@@ -4818,7 +4818,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TACGTCAGCTGTAACAGCAACTC",
+        "forward_tool": "TCGTAGTGCTGTAACAGCAACTC",
         "forward_published": "GCTGTAACAGCAACTCCA",
         "forward_tool_specific": "CTGTAACAGCAACTC",
         "forward_pub_specific": "CTGTAACAGCAACTCCA",
@@ -4857,7 +4857,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTCTGTCTCTCCGTTTGCCTG",
+        "forward_tool": "AGCGATCTCCGTTTGCCTG",
         "forward_published": "GTCTCCGTTTGCCTGT",
         "forward_tool_specific": "TCTCCGTTTGCCTG",
         "forward_pub_specific": "TCTCCGTTTGCCTGT",
@@ -4870,7 +4870,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGTCACTGTCCCTGAGACCC",
+        "forward_tool": "AGATAGCGTCCCTGAGACCC",
         "forward_published": "AGCGTTCCCTGAGACCCTT",
         "forward_tool_specific": "TCCCTGAGACCC",
         "forward_pub_specific": "TCCCTGAGACCCTT",
@@ -4883,7 +4883,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GCGCTTATTCCCTGAGACCC",
+        "forward_tool": "AGACTTGGTCCCTGAGACCC",
         "forward_published": "CAGCATCCCTGAGACCCTAA",
         "forward_tool_specific": "TCCCTGAGACCC",
         "forward_pub_specific": "TCCCTGAGACCCTAA",
@@ -4896,7 +4896,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCGAGTCATCCTTCATTCCACC",
+        "forward_tool": "CGATCAGGTCCTTCATTCCACC",
         "forward_published": "CGCGGCATCCTTCATTCCA",
         "forward_tool_specific": "TCCTTCATTCCACC",
         "forward_pub_specific": "TCCTTCATTCCA",
@@ -4935,7 +4935,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "GACCGTCTCTGAGAACTGAATTCC",
+        "forward_tool": "GACCTCGACTGAGAACTGAATTCC",
         "forward_published": "GCGCCTGAGAACTGAATTCCATGGGTT",
         "forward_tool_specific": "TGAGAACTGAATTCC",
         "forward_pub_specific": "TGAGAACTGAATTCCATGGGTT",
@@ -4948,7 +4948,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TCCAACGCTCTTTGGTTATCTAGC",
+        "forward_tool": "TTCGCCTGTCTTTGGTTATCTAGC",
         "forward_published": "GCGCCGTCTTTGGTTATCTAG",
         "forward_tool_specific": "TCTTTGGTTATCTAGC",
         "forward_pub_specific": "TCTTTGGTTATCTAG",
@@ -4961,7 +4961,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACTCCAGTAATACTGCCGGGT",
+        "forward_tool": "AGGTCTGTAATACTGCCGGGT",
         "forward_published": "CTGCTTTAATACTGCCGGG",
         "forward_tool_specific": "TAATACTGCCGGGT",
         "forward_pub_specific": "TAATACTGCCGGG",

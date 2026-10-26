@@ -749,11 +749,13 @@ available_region = miRNA[0 : len(miRNA) - FORWARD_EXCLUDES_LAST_NT]  # = miRNA[0
 ### Tail generation (v2.8)
 
 ```python
-def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
+def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") -> list:
     """
     tail_len ≤ 6: Exhaustive enumerate 4^n, filter GC≥50% + no homopolymer≥4
                   SORT BY GC% DESCENDING trước khi cap (v2.8.1 fix #8a — không alphabetical)
-    tail_len > 6: Weighted-random, GC biased 2× (A:C:G:T = 1:2:2:1), seed=42
+    tail_len > 6: Weighted-random, GC biased 2× (A:C:G:T = 1:2:2:1). Mỗi lần gọi tự tạo
+                  random.Random riêng, seed = SHA-256(sequence|tail_len|max_pool) — không
+                  có RNG dùng chung giữa các pool hay giữa các lần thiết kế (v3.1.2).
     """
 ```
 

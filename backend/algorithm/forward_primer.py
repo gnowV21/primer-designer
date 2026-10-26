@@ -40,12 +40,13 @@ _AMPLICON_OFFSET = STEMLOOP_BODY_LENGTH - _UNIV_REV_POS    # = 37
 
 # Determinism: the len-7..12 tail pools use weighted-random sampling. A module-global
 # RNG would carry state ACROSS design calls, so the same miRNA designed twice would
-# yield different primers (state-order dependence). Instead we build a LOCAL RNG per
-# call, seeded deterministically from the mature sequence — same input → same primers,
-# every time, independent of call order or process. [determinism invariant]
-def _rng_for(sequence: str) -> random.Random:
-    seed = int(hashlib.sha256(sequence.encode("utf-8")).hexdigest()[:12], 16)
-    return random.Random(seed)
+# yield different primers (state-order dependence). Instead each _generate_tail_pool
+# call builds its OWN RNG, seeded from that call's inputs (sequence, tail_len,
+# max_pool) — no generator is shared or passed around, so a pool depends only on its
+# arguments, never on call order, other pools, or the process. [determinism invariant]
+def _rng_for(*key) -> random.Random:
+    digest = hashlib.sha256("|".join(map(str, key)).encode("utf-8")).hexdigest()
+    return random.Random(int(digest[:12], 16))
 
 
 def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
@@ -64,7 +65,6 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     """
     dna_seq    = rna_to_dna(mature_sequence).upper()
     miRNA_len  = len(dna_seq)
-    rng        = _rng_for(dna_seq)   # per-call, deterministic from the sequence
     excludes   = int(params.get("bindingRegion3prime", FORWARD_EXCLUDES_LAST_NT))
     available  = dna_seq[: miRNA_len - excludes]
 
@@ -78,7 +78,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     # Previously called _generate_tail_pool inside _find_tails_for_target_tm which
     # was called 6 times — resulting in 60 pool builds instead of 10.
     _tail_pool_cache = {
-        tl: _generate_tail_pool(tl, rng=rng)
+        tl: _generate_tail_pool(tl, sequence=dna_seq)
         for tl in range(FORWARD_TAIL_MIN, FORWARD_TAIL_MAX + 1)
     }
 
@@ -198,7 +198,7 @@ def _find_tails_for_target_tm(
     return selected[:200]
 
 
-def _generate_tail_pool(tail_len: int, max_pool: int = 400, rng: random.Random | None = None) -> list:
+def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") -> list:
     """
     Build a pool of GC-rich (≥50 %), no-homopolymer-run (< 4) tail sequences.
 
@@ -207,7 +207,8 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400, rng: random.Random |
     v2.8 fix: previously capped BEFORE sorting → alphabetically-first 400
     sequences were kept, discarding 83 % of valid len-6 tails (A-biased pool).
 
-    Lengths 7–12: weighted-random sampling (GC bases biased 2×) until max_pool.
+    Lengths 7–12: weighted-random sampling (GC bases biased 2×) until max_pool,
+    from an RNG local to this call and seeded from (sequence, tail_len, max_pool).
 
     Pool sizes (approximate, after GC and homopolymer filtering):
       len 3 → ~32     len 4 → ~176     len 5 → ~480     len 6 → ~2 400
@@ -234,13 +235,16 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400, rng: random.Random |
         result.sort(key=lambda s: -sum(1 for b in s if b in GC_BASES))
         result = result[:max_pool]
     else:
+        # Build the RNG ONCE, before the loop: re-creating it per attempt would replay
+        # the same draw every time and collapse the pool to a single tail.
+        rng      = _rng_for(sequence, tail_len, max_pool)
         seen     = set()
         attempts = 0
         max_att  = max_pool * 30
         while len(result) < max_pool and attempts < max_att:
             attempts += 1
             # Weight G/C 2× over A/T to bias toward GC-rich tails
-            tail = "".join((rng or random.Random(0)).choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
+            tail = "".join(rng.choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
             if tail in seen:
                 continue
             seen.add(tail)

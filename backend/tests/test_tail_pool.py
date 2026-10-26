@@ -67,6 +67,58 @@ def test_pool_not_empty_long_lengths():
         assert len(pool) > 0, f"Tail pool is empty for tail_len={tail_len} after Busk14 filter."
 
 
+def test_long_pool_is_diverse():
+    """Sampling must yield a real pool, not one tail replayed."""
+    for tail_len in range(7, FORWARD_TAIL_MAX + 1):
+        pool = _generate_tail_pool(tail_len)
+        assert len(pool) >= 100, f"Only {len(pool)} tails for tail_len={tail_len}."
+
+
+# ── Determinism invariant ────────────────────────────────────────
+
+def _fwd_seqs(seq):
+    return [c["sequence"] for c in generate_forward_candidates(seq, {})[0]]
+
+
+def test_same_mirna_twice_gives_same_primers():
+    """Designing the same miRNA again, after other designs, must not change the result."""
+    mir21, let7a = "UAGCUUAUCAGACUGAUGUUGA", "UGAGGUAGUAGGUUGUAUAGUU"
+    first = _fwd_seqs(mir21)
+    _fwd_seqs(let7a)
+    assert _fwd_seqs(mir21) == first
+
+
+def test_global_random_state_does_not_leak_in():
+    """Output must not depend on the module-global `random` state."""
+    import random
+    seq = "UAGCUUAUCAGACUGAUGUUGA"
+    random.seed(1)
+    a = _fwd_seqs(seq)
+    random.seed(12345)
+    random.random()
+    assert _fwd_seqs(seq) == a
+
+
+def test_long_pool_reproducible():
+    for tail_len in range(7, FORWARD_TAIL_MAX + 1):
+        assert _generate_tail_pool(tail_len, sequence="ACGT") == _generate_tail_pool(tail_len, sequence="ACGT")
+
+
+def test_pool_independent_of_other_pools():
+    """Each pool seeds its own RNG: building other pools first must not change it."""
+    alone = _generate_tail_pool(9, sequence="TAGCTTATCAGACTGATGTTGA")
+    for tl in (7, 8, 10):
+        _generate_tail_pool(tl, sequence="TAGCTTATCAGACTGATGTTGA")
+    assert _generate_tail_pool(9, sequence="TAGCTTATCAGACTGATGTTGA") == alone
+
+
+def test_pool_seed_comes_from_input():
+    """Different inputs → different samples (seed is derived from the call's inputs)."""
+    a = _generate_tail_pool(10, sequence="TAGCTTATCAGACTGATGTTGA")
+    b = _generate_tail_pool(10, sequence="TGAGGTAGTAGGTTGTATAGTT")
+    assert a != b
+
+
 # ── Pool is GC-rich (≥50% GC) ────────────────────────────────────
 
 def test_all_tails_gc_rich():
