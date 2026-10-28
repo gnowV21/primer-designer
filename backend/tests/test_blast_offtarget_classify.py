@@ -199,6 +199,38 @@ def test_custom_margins():
     assert classify_hit_risk(_PRIMER, _tm_aln(38.0), 20.0, 5.0)[0] == "MEDIUM"
 
 
+# ── Terminal pair seen through BLAST's trim; Kwok categories in the top tier ──
+
+def test_top_tier_tolerant_terminal_is_critical():
+    """T:G is efficiently extended [Kwok90] → co-amplification, not just HIGH."""
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(44.0, mm=1, p3="T", t3="G", mm_pos=[14]))
+    assert risk == "CRITICAL"
+    assert "T:G" in reason
+
+
+def test_top_tier_gg_terminal_is_high():
+    """G:G amplifies but depends on context and dNTP [Kwok90 abstract] → HIGH."""
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(44.0, mm=1, p3="G", t3="G", mm_pos=[14]))
+    assert risk == "HIGH"
+    assert "G:G" in reason
+
+
+def test_top_tier_reducing_terminal_is_high():
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(44.0, mm=1, p3="A", t3="A", mm_pos=[14]))
+    assert risk == "HIGH"
+
+
+def test_double_terminal_mismatch_is_safe_unless_terminal_t():
+    """Adjacent mismatches at the last two positions block extension, except a
+    terminal T, which still amplifies significantly [Kwok90 abstract]."""
+    kw = dict(mm=2, mm_pos=[13, 14])
+    assert classify_hit_risk(_PRIMER, _tm_aln(44.0, p3="A", t3="C", **kw))[0] == "SAFE"
+    assert classify_hit_risk(_PRIMER, _tm_aln(44.0, p3="T", t3="C", **kw))[0] == "MEDIUM"
+    assert classify_hit_risk(_PRIMER, _aln(dangling=0, cols=15, p3="T", t3="C", **kw))[0] == "MEDIUM"
+    # A terminal-T double mismatch far below the target Tm is still SAFE.
+    assert classify_hit_risk(_PRIMER, _tm_aln(30.0, p3="T", t3="C", **kw))[0] == "SAFE"
+
+
 # ── (a) DB paths with spaces ─────────────────────────────────────────
 
 def test_blast_db_located_via_blastdb_env_not_spaced_path():
@@ -373,3 +405,37 @@ def test_get_family_id_groups_let7_members():
 
 def test_get_family_id_unknown_returns_none():
     assert get_family_id("not-a-real-mirna-xyz") is None
+
+
+def test_trimmed_terminal_mismatch_is_restored_from_full_subject(monkeypatch):
+    """BLAST drops a mismatched 3'-terminal base (local alignment). The full subject
+    gives the real opposite base, so the hit is judged on the true terminal pair
+    instead of a blanket 'unpaired' label [Ye12 Fig.5]."""
+    from algorithm.specificity_check import blast_offtarget as bo
+    primer = "CGCTGCTCTAGCTTATCAGACTG"          # specific region TAGCTTATCAGACTG
+    other = "TAGCTTATCAGACTAATGTTGA"            # sense G→A at the primer's 3' end
+    hit = _fake_hit("hsa-miR-x", "TAGCTTATCAGACT")
+    hit.update(q_end=22, s_end=14)             # BLAST stopped 1 nt short
+    monkeypatch.setattr(bo, "run_blastn", lambda *a, **k: [hit])
+    monkeypatch.setattr(bo, "fetch_sequences", lambda ids, *a, **k: {"hsa-miR-x": other})
+    p3 = bo.resolve_p3_conditions(None)
+    target = "TAGCTTATCAGACTGATGTTGA"
+    hits, safe, *_ = bo._check_primer(
+        primer, [bo._MIRBASE_DB], "hsa-miR-21-5p", bo._normalize_mirna_name("hsa-miR-21-5p"),
+        "hsa-", 60, tm_on=bo.duplex_tm(primer, target, p3), p3=p3, target_sequence=target)
+    assert len(hits) == 1
+    a = hits[0]["alignment"]
+    # Primer G faces template T (complement of sense A): G:T, Kwok TOLERANT.
+    assert a["three_prime_dangling"] == 0
+    assert (a["primer_3prime_base"], a["template_3prime_base"]) == ("G", "T")
+    assert a["terminal_category"] == "TOLERANT"
+
+
+def test_register_window_reproduces_full_target_tm():
+    """Tm_off is taken on the subject window opposite the primer (+1 downstream base
+    for thal's dangling-end term). On the target that window gives exactly the
+    full-sequence Tm_on, so the two stay comparable."""
+    from algorithm.specificity_check import blast_offtarget as bo
+    p3 = bo.resolve_p3_conditions(None)
+    primer, target = "CGCTGCTCTAGCTTATCAGACTG", "TAGCTTATCAGACTGATGTTGA"
+    assert bo.duplex_tm(primer, target[:16], p3) == bo.duplex_tm(primer, target, p3)

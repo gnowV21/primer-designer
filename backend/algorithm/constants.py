@@ -527,8 +527,10 @@ PRIMER_BLAST_MIN_3PRIME_ANCHOR = 10   # nt — shorter 3'-anchored match → SAF
 # Tm of the same primer (primer3 calc_heterodimer, design salt conditions), NOT
 # with Ta: the forward primer's specific region is designed to bind at ~45 °C
 # (TM_BINDING_TARGET) and the 5' tail only raises the Tm after cycle 1, so an
-# off-target follows the same priming route as the target. Mirrors Primer3's
-# *_TH defaults, set 10 °C below the primer's own Tm (PRIMER_MIN_TM 57 → 47).
+# off-target follows the same priming route as the target. The 10 °C gap follows
+# Primer3's convention: its thermodynamic limits (*_TH, absolute Tm values) sit
+# 10 °C below PRIMER_MIN_TM (57 → 47). Measuring the gap from Tm_on is this tool's
+# choice and is not calibrated against wet-lab data.
 #   Tm_off <  Tm_on − SAFE_MARGIN               → SAFE
 #   Tm_on − SAFE_MARGIN ≤ Tm_off < Tm_on − CRIT → Ye12/Kwok90 rules, capped at MEDIUM
 #   Tm_off ≥ Tm_on − CRITICAL_MARGIN            → CRITICAL (HIGH if 3' blocked/unpaired)
@@ -536,10 +538,14 @@ BLAST_TM_SAFE_MARGIN     = 10.0   # °C
 BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 # Bump whenever classify_hit_risk's rules change — part of the BLAST cache key, so
 # cached results computed under older rules are never served.
+#   4 = trimmed 3'-terminal bases restored from the full subject (true Kwok pair);
+#       Tm_off on the primer's register window; Kwok tiers in the top Tm zone
+#       (TOLERANT → CRITICAL, G:G/BLOCKING/REDUCING → HIGH); adjacent double
+#       terminal mismatch → SAFE unless terminal T (→ MEDIUM) (2026-10-29)
 #   3 = self-hit by name + compatible sequence; hits under other names with an
 #       identical/compatible sequence folded into identical_sequence
 #   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
-BLAST_CLASSIFIER_VERSION = "3"
+BLAST_CLASSIFIER_VERSION = "4"
 # Self-hit identification. A hit named like the target is the target only if its
 # sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
 # the spread seen between miRBase 22.1 and sequences published against older

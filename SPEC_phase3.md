@@ -661,10 +661,12 @@ PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6    # Ye12 - safe nếu >=6 mismatch
 | G | A | 1/100 (~1%) | **BLOCKING** |
 | C | C | 1/100 (~1%) | **BLOCKING** |
 | A | A | 1/20 (~5%) | **REDUCING** |
-| T | any (T/C/G/A) | 1.0 | **TOLERANT** |
-| any | T | 1.0 | **TOLERANT** |
-| G | G | 1.0 (800 μM); poor (50 μM) | context-dep, mặc định **TOLERANT** |
-| còn lại (C:A, A:C, G:T, T:G, C:T, T:C, T:T, G:C, C:G) | | 1.0 | **TOLERANT** |
+| T | C/G/T | 1.0 | **TOLERANT** |
+| C/G | T | 1.0 | **TOLERANT** |
+| G | G | 1.0 (800 μM); poor (50 μM) | context-dep, mặc định **TOLERANT**; ở vùng Tm sát đích (classifier v4) hạ CRITICAL → **HIGH** |
+| còn lại (C:A, A:C) | | 1.0 | **TOLERANT** |
+
+Các cặp Watson–Crick (A:T, T:A, G:C, C:G) là MATCH, không thuộc bảng này. Abstract Kwok 1990 (PMID 2179874): *"All other 3'-terminal mismatches were efficiently amplified, although the G:G mismatches appeared to be more sensitive to sequence context and dNTP concentrations"*; *"mismatches of T with either G, C, or T had a minimal effect"*; *"The presence of a mismatched T at the 3'-terminus, however, allowed significant amplification even when coupled with an adjacent mismatch."*
 
 Trích Kwok 1990 §Conclusions:
 > "A:G and C:C resulted in approximately a 100-fold reduction... A:A mismatch moderately reduced PCR amplification efficiency per cycle... some 3'-terminal mismatches (T:C, T:G, T:T, G:G, and A:C) appear to amplify as efficiently as the fully complementary primer-template duplex."
@@ -917,7 +919,7 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Performance (v2.0):** `m_norm` được tính 1 lần trong `check_offtarget` rồi truyền xuống `_check_primer` → `_is_self_hit`. Trước v2.0, mỗi BLAST hit gọi `_normalize_mirna_name(mirna_id)` lại từ đầu (N lần tính cùng 1 giá trị).
 
-### 8.10 Cổng Tm duplex — bộ phân loại v2 (2026-10-28)
+### 8.13 Cổng Tm duplex — bộ phân loại v2 (2026-10-28)
 
 **Thứ tự cổng trong `classify_hit_risk`:**
 1. **Neo 3′** — ≥2 nt đầu 3′ của mồi nằm ngoài vùng căn → SAFE. Đứng trước vì Tm của cả duplex không thấy được đầu 3′ có bắt cặp hay không.
@@ -931,21 +933,21 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Vì sao so với Tm đúng đích chứ không phải Ta.** Vùng đặc hiệu được thiết kế để bám ở ~45 °C (`TM_BINDING_TARGET`); đuôi 5′ chỉ nâng Tm lên ~60 °C từ chu kỳ 2. Đo trên 189 mồi xuôi của bộ validation: Tm duplex đúng đích trung vị **45,5 °C** (33,1–58,6); **161/189 (85 %) < 50 °C** — nếu dùng `Tm_off < Ta − 10` thì chính miRNA đích cũng bị xếp SAFE. Off-target đi đúng con đường bám chu kỳ 1 như đích, nên câu hỏi là "bám kém đích bao nhiêu".
 
-**Cơ sở của biên 10 °C.** Primer3 đặt các ngưỡng nhiệt động thấp hơn **Tm của chính mồi** 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`) — đã đối chiếu manual primer3.org. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
+**Cơ sở của biên 10 °C.** Theo quy ước của Primer3, ngưỡng mispriming nhiệt động được đặt thấp hơn Tm tối thiểu của mồi (`PRIMER_MIN_TM`) 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`, mặc định −1 = tắt trong Primer3, 47 trong Primer3Plus) — đã đối chiếu manual primer3.org. Các ngưỡng `*_TH` của Primer3 là giá trị Tm tuyệt đối, không phải độ chênh; việc đo khoảng 10 °C từ Tm_on của vùng đặc hiệu là lựa chọn của tool, chưa hiệu chỉnh bằng thực nghiệm. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
 
-**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v3): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
+**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v4): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
 
-Số liệu dưới đây dùng mồi #1 của **algorithm v3.2.0** (chạy lại 2026-10-28; bản v3.1.2 trước đó: stem-loop 127 → 26 hit CRITICAL).
+Số liệu dưới đây dùng mồi #1 của **algorithm v3.2.0**, bộ phân loại v4 (chạy lại 2026-10-29). Bộ phân loại v3 (2026-10-28) cho stem-loop 166 → 29 hit CRITICAL; v4 tăng lên 234 → 32 vì base đầu 3′ bị BLAST cắt nay được khôi phục từ trình tự đầy đủ (§8.15).
 
 | Biên SAFE (stem-loop, 100 mồi) | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
 |---|---|---|
-| 5 °C | 87 / 0 / 0 / 13 | 29 / 2 / 0 |
-| **10 °C** | **79 / 8 / 0 / 13** | **29 / 2 / 29** |
-| 15 °C | 68 / 19 / 0 / 13 | 29 / 2 / 56 |
-| 20 °C | 58 / 29 / 0 / 13 | 29 / 2 / 104 |
-| Không có cổng Tm | 24 / 17 / 0 / 59 | 166 / 4 / 322 |
+| 5 °C | 87 / 0 / 0 / 13 | 32 / 0 / 0 |
+| **10 °C** | **77 / 10 / 0 / 13** | **32 / 0 / 33** |
+| 15 °C | 61 / 26 / 0 / 13 | 32 / 0 / 80 |
+| 20 °C | 44 / 43 / 0 / 13 | 32 / 0 / 174 |
+| Không có cổng Tm | 17 / 10 / 10 / 63 | 234 / 110 / 505 |
 
-Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 100 → 21 (mồi có CRITICAL 50 → 18). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
+Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 119 → 25 (mồi có CRITICAL 52 → 20). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
 
 CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ thuộc biên 5 °C), không phải bằng chứng thực nghiệm; biên SAFE chỉ dời hit giữa SAFE và MEDIUM, và số MEDIUM tăng đều chứ không có "bình nguyên" quanh 10 °C. Lựa chọn 10 °C vì thế dựa trên quy ước Primer3 + ước tính van 't Hoff, không dựa trên độ nhạy.
 
@@ -960,13 +962,13 @@ CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ 
 
 **Sửa kèm.** Bảng Kwok tra theo base **mạch khuôn** (= bổ sung của base sense off-target); mồi ngược universal không còn BLAST; khóa cache gồm `BLAST_CLASSIFIER_VERSION` + trình tự đích + điều kiện muối; DB tìm qua `BLASTDB` (đường dẫn có dấu cách).
 
-### 8.11 Chính đích và hit trùng trình tự — bộ phân loại v3 (2026-10-28)
+### 8.14 Chính đích và hit trùng trình tự — bộ phân loại v3 (2026-10-28)
 
 Mỗi hit BLAST cùng loài được xét theo thứ tự (trình tự đầy đủ lấy bằng `blastdbcmd`):
 
 1. **Chính đích** — tên khớp với `mirna_id` **có ranh giới**: bằng nhau, hoặc tên này nối dài tên kia bằng `-` sau khi chuẩn hóa số bản sao tiền chất (`hsa-miR-16-1-5p` ↔ `hsa-miR-16-5p`; `ssc-miR-21` ↔ `ssc-miR-21-5p`). Khi biết cả hai trình tự, phải **tương thích**: giống hệt trên phần giao nhau ≥ 15 nt, mỗi đầu lệch ≤ 2 nt (`SELF_MAX_END_SHIFT`). → bỏ qua.
 2. **Trùng trình tự** — tên khác nhưng trình tự giống hệt hoặc tương thích: bản sao ở locus khác (ath-miR156a = 156b–f) hoặc mục đã đổi tên/chú giải (Busk `ssc-miR-20` = 22.1 `ssc-miR-20a-5p`, lệch 1 nt đầu 3′). → `identical_sequence_hits`, không phân loại rủi ro, không tính vào `overall_risk`.
-3. Khác loài → `cross_species_excluded`. 4. Còn lại → các cổng của §8.10.
+3. Khác loài → `cross_species_excluded`. 4. Còn lại → các cổng của §8.13 và §8.15.
 
 **Vì sao không còn so chuỗi con.** Luật cũ `mirna_id in subject_id` làm `ssc-miR-21` khớp `ssc-miR-210` (che off-target thật); tên sai định dạng (`ssc-miR15a`) thì không khớp và chính đích bị báo CRITICAL.
 
@@ -975,6 +977,27 @@ Mỗi hit BLAST cùng loài được xét theo thứ tự (trình tự đầy đ
 Khi không biết trình tự đích (mirna_id không có trong DB, không gửi `mirna_sequence`), chỉ dùng luật tên — vì vậy route vẫn bắt buộc `-5p/-3p`: ID thiếu nhánh khớp tên với cả hai nhánh. `check_offtarget(species=…)` cho phép chỉ định loài khi tên không có tiền tố.
 
 ---
+
+
+### 8.15 Bộ phân loại v4 — base đầu 3′ thật và Tm theo khung đọc (2026-10-29)
+
+**Base đầu 3′ bị BLAST cắt.** Căn chỉnh cục bộ không bao giờ kết thúc bằng một mismatch, nên base cuối 3′ của mồi bị lệch luôn bị cắt và hiện ra như "dangling" (Ye 2012 Fig. 5). Đo trên 175 mồi: 234 hit sợi plus thiếu 1 nt (148 thực ra là TOLERANT, 46 BLOCKING, 20 REDUCING) và 262 hit thiếu 2 nt (63 có base cuối khớp thật — trước đây bị gán SAFE sai). Với hit sợi plus (mồi = trình tự sense của off-target, bám vào cDNA của nó), v4 lấy các base đối diện từ trình tự đầy đủ của off-target, nối vào alignment rồi căn lại Needleman–Wunsch; chỉ các base vượt quá đầu off-target mới còn là "dangling".
+
+**Luật Kwok 1990 (abstract, PMID 2179874) ở vùng Tm sát đích** (Tm_off ≥ Tm_on − 5 °C):
+
+| Cặp mồi:khuôn ở đầu 3′ | Mức |
+|---|---|
+| khớp | CRITICAL |
+| TOLERANT (trừ G:G) — *"efficiently amplified"* | CRITICAL |
+| G:G — *"more sensitive to sequence context and dNTP concentrations"* | HIGH |
+| BLOCKING (A:G, G:A, C:C) / REDUCING (A:A) | HIGH |
+| base cuối vượt quá đầu off-target (không có khuôn) | HIGH |
+
+**Hai base cuối cùng lệch** (bất kể Tm): SAFE — *"double mismatches … reduced PCR product yield dramatically"* — trừ khi base cuối của mồi là T → MEDIUM (*"a mismatched T at the 3'-terminus … allowed significant amplification even when coupled with an adjacent mismatch"*); nếu Tm_off thấp hơn Tm_on quá 10 °C thì vẫn SAFE.
+
+**Tm_off theo khung đọc.** `calc_heterodimer` trên toàn off-target trả về duplex bền nhất ở bất kỳ đâu, có thể không phải duplex mà đầu 3′ của mồi kéo dài được. v4 chỉ tính Tm trên đoạn off-target đối diện mồi trong khung BLAST, cộng 1 base phía sau (thal chỉ tính năng lượng dangling của 1 base liền kề — trên chính đích, cửa sổ này cho Tm **trùng khớp** Tm_on tính trên cả miRNA, 111/111 mồi, nên Tm_on và Tm_off vẫn so sánh trực tiếp). Trên 542 hit có đầu 3′ bắt cặp: Tm toàn trình tự cao hơn Tm khung đọc trung bình 2,1 °C (tối đa 19 °C); 27 hit chuyển vùng xám → SAFE, 4 CRITICAL → vùng xám, 1 SAFE → vùng xám.
+
+Hit sợi minus (mồi bổ sung với off-target sense, không bám cDNA của nó) giữ cách tính cũ; với cổng Tm chúng đều ra SAFE (1 MEDIUM trên 175 mồi).
 
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 

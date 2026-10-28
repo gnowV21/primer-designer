@@ -34,9 +34,10 @@
 | 2026-10-10 | Thêm 89 assay: Busk 2014 miRprimer (80/82 assay đã kiểm chứng wet-lab, nhóm `polyA_system`, chỉ chấm lõi forward) + bm_001–003 → **2439/2439**; 2 ca từ chối mới ghi là giới hạn đã biết |
 | 2026-10-22 | Chỉ mục isomiR 3' dựng lại trên **đủ 42.494 mẫu isomiRdb** (ma trận read-count, trước đó 20.635); algorithm **v3.1.1** (chỉ đổi mức cảnh báo 3', không đổi điểm) |
 | 2026-10-26 | **Determinism invariant, algorithm v3.1.2**: mỗi pool tail 7–12 nt tự tạo RNG riêng, seed = SHA-256(trình tự, tail_len, max_pool) — trước đó 6 pool dùng chung 1 RNG/lần thiết kế. Sửa kèm lỗi nhánh dự phòng tạo lại `Random(0)` mỗi vòng (pool chỉ còn 1 tail). Mồi xuôi đổi tail ở phần lớn target (1 ca đổi vùng đặc hiệu: miR-10a 14→16 nt); RT + reverse không đổi. So điểm V4 mồi #1 cũ/mới trên 181 miRNA: TB 93,82 → 93,84, tốt hơn 54 / kém 56 / bằng 71, lệch tối đa ±2,2 → tương đương. Validation vẫn **2439/2439**; results.json, VALIDATION_REPORT, benchmark export đã sinh lại |
-| 2026-10-28 | **BLAST bộ phân loại v2** (AUDIT §10.1, SPEC_phase3 §8.10): sửa BLAST không chạy khi đường dẫn có dấu cách (dùng `BLASTDB`); sửa bảng Kwok tra sai mạch (sense thay vì khuôn); **cổng Tm duplex so với Tm đúng đích** (SAFE nếu kém > 10 °C, CRITICAL nếu trong 5 °C) thay luật neo 10 nt; bỏ BLAST mồi universal; khóa cache có phiên bản bộ phân loại. Xóa DB Ensembl; DB giữ miRBase **22.1**. Không đổi thiết kế mồi (`ALGORITHM_VERSION` giữ 3.1.2) |
-| 2026-10-28 | **BLAST bộ phân loại v3** (AUDIT BLAST-07, SPEC_phase3 §8.11): chính đích = tên khớp có ranh giới + trình tự tương thích (lệch đầu ≤ 2 nt); hit khác tên nhưng trùng/tương thích trình tự → nhóm `identical_sequence`. Sửa lỗi script độ nhạy (tra `id` thay vì `label`) — "35 mồi Busk bị bỏ qua" là do lỗi này, không phải do tên. Độ nhạy 175/178 mồi (loại 3 putative): stem-loop CRITICAL 127 hit/51 mồi → **26/12**; Busk 87/46 → 25/21 |
+| 2026-10-28 | **BLAST bộ phân loại v2** (AUDIT §10.1, SPEC_phase3 §8.13): sửa BLAST không chạy khi đường dẫn có dấu cách (dùng `BLASTDB`); sửa bảng Kwok tra sai mạch (sense thay vì khuôn); **cổng Tm duplex so với Tm đúng đích** (SAFE nếu kém > 10 °C, CRITICAL nếu trong 5 °C) thay luật neo 10 nt; bỏ BLAST mồi universal; khóa cache có phiên bản bộ phân loại. Xóa DB Ensembl; DB giữ miRBase **22.1**. Không đổi thiết kế mồi (`ALGORITHM_VERSION` giữ 3.1.2) |
+| 2026-10-28 | **BLAST bộ phân loại v3** (AUDIT BLAST-07, SPEC_phase3 §8.14): chính đích = tên khớp có ranh giới + trình tự tương thích (lệch đầu ≤ 2 nt); hit khác tên nhưng trùng/tương thích trình tự → nhóm `identical_sequence`. Sửa lỗi script độ nhạy (tra `id` thay vì `label`) — "35 mồi Busk bị bỏ qua" là do lỗi này, không phải do tên. Độ nhạy 175/178 mồi (loại 3 putative): stem-loop CRITICAL 127 hit/51 mồi → **26/12**; Busk 87/46 → 25/21 |
 | 2026-10-28 | **Algorithm v3.2.0 — chấm điểm trước, chọn đa dạng sau** (SPEC_algorithm §C): bộ lọc đa dạng cũ chạy trước khi chấm, giữ 1 mồi/đầu 3' theo \|Tm−60\| (hòa → thứ tự sinh) và bỏ đầu 3' cách 1 nt → 76/169 miRNA (45 %) chỉ có 1 bộ mồi, vd. miR-21-3p mất vùng 13 nt mà sRNAPrimerDB chọn. Nay chấm 20 đuôi/đầu 3' rồi `select_diverse_top` chọn 3 theo điểm, nới dần (≥2 nt → 1 nt → biến thể đuôi, có nhãn). Kẹp GC: chỉ loại 0 G/C; 1 G/C cảnh báo + 75 điểm (trọng số V4 không đổi). Kết quả: **165/165 miRNA thiết kế được có đủ 3 bộ**; #1 luôn điểm cao nhất (60/165 #1 có kẹp 1 G/C). Validation vẫn **2439/2439**; mồi xuôi #1 đổi ở 175/201 target; benchmark export 220/220. BLAST với mồi mới: stem-loop CRITICAL 166/59 → **29/13**. Sửa kèm **ENG-08**: backend sập khi có yêu cầu đồng thời (primer3 không an toàn đa luồng) → `primer3_safe.py` |
+| 2026-10-29 | **BLAST bộ phân loại v4** (SPEC_phase3 §8.15): base đầu 3′ bị BLAST cắt (căn chỉnh cục bộ không kết thúc bằng mismatch) được khôi phục từ trình tự đầy đủ → phân loại Kwok theo cặp thật; Tm_off tính trên khung đọc của mồi (+1 base, trùng khớp Tm_on trên đích); vùng Tm sát đích: TOLERANT → CRITICAL, G:G/BLOCKING/REDUCING → HIGH; hai base cuối lệch → SAFE trừ base cuối T → MEDIUM (Kwok 1990 abstract). Sửa trích dẫn Primer3 (`*_TH` là Tm tuyệt đối, đặt dưới `PRIMER_MIN_TM` 10 °C). Độ nhạy stem-loop, biên 10 °C: 29 → **32** hit CRITICAL, 13 mồi (không đổi) |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -85,7 +86,7 @@
 - BLAST: chỉ mục family chỉ có hsa/mmu/rno → paralog ở loài khác (ath, osa, ssc, gga) không được gộp "same-family" và hiện CRITICAL.
 - BLAST: phân tích độ nhạy biên CRITICAL (3/5/7 °C) — biên này mới quyết định số CRITICAL.
 - Bug dữ liệu: `/api/mirbase/hsa-miR-155-5p` trả `UUAAUGCUAAUCGUGAUAGGGGUU` (24 nt, biến thể) thay vì canonical MIMAT0000646 (23 nt) — chưa điều tra.
-- ~~BLAST: thay ngưỡng neo 10 nt bằng cổng Tm~~ — xong 2026-10-28 (so với Tm đúng đích, không phải Ta: SPEC_phase3 §8.10).
+- ~~BLAST: thay ngưỡng neo 10 nt bằng cổng Tm~~ — xong 2026-10-28 (so với Tm đúng đích, không phải Ta: SPEC_phase3 §8.13).
 - Self-host font IBM Plex (đang dùng Google Fonts CDN).
 - Family lookup dựa vào tên → dán trình tự trần không tìm được family.
 
@@ -94,7 +95,7 @@
 - `CLAUDE.md` — lệnh chạy, kiến trúc, quy tắc.
 - `AUDIT_REPORT.md` — audit khoa học + trạng thái xử lý (§10) + mục cần wet-lab (§4).
 - `validation/VALIDATION_PLAN.md`, `validation/VALIDATION_REPORT.md` — phương pháp và kết quả kiểm chứng.
-- `SPEC_algorithm.md`, `SPEC_phase3.md` (BLAST, §8.10–8.11), `SPEC_visualization.md`.
+- `SPEC_algorithm.md`, `SPEC_phase3.md` (BLAST, §8.10–8.15), `SPEC_visualization.md`.
 - `docs/archive/` — spec/kế hoạch của các phase đã xong (vd. `SPEC_week1.md`: bảng trạng thái các phase; `SPEC_phase2.md`, `SPEC_phase4…8.md`, `RESEARCH_INSIGHTS*.md`). Tài liệu nhắc tới các file này chỉ bằng tên.
 - `benchmark/primer_benchmark_export.csv` — so sánh mồi tool vs mồi công bố.
 
