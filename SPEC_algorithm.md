@@ -102,8 +102,12 @@ Stem-loop RT-qPCR (Chen et al. 2005): thiết kế 3 primer cho định lượng
         ↓
 [§1.5. prefilter_candidates()]    [Phase 2]
         Loại: Tm ngoài range, GC ngoài range, homopolymer >5, amplicon out-of-range,
-               GC clamp fail, GC end window fail, diversity distance
+               GC clamp fail (0 G/C trong 3 nt cuối; 1 G/C chỉ cảnh báo — v3.2.0),
+               GC end window fail
         Log rejection reasons
+        Giữ FORWARD_TAILS_PER_LENGTH = 20 đuôi tốt nhất (|Tm − Ta|) cho MỖI độ dài
+        vùng đặc hiệu → mọi đầu 3' dùng được đều được chấm điểm (v3.2.0; trước đây
+        bộ lọc đa dạng chạy ở đây, trước khi chấm điểm)
         ↓
 [§1.6. check_structures()]        [Phase 2 + Phase 3]
         Hairpin ΔG, self-dimer ΔG (overall + 3'), hetero-dimer ΔG (fwd×stemloop RT buffer,
@@ -113,7 +117,12 @@ Stem-loop RT-qPCR (Chen et al. 2005): thiết kế 3 primer cho định lượng
         + bound_fraction_binding (0.05)  [Phase 3]
         + bound_fraction_full    (0.03)  [Phase 3]
         + family_discrimination  (0.05)  [Phase 3]
-        Rank → chọn Top 3
+        Rank theo điểm (hòa: |Tm − Ta| rồi trình tự) → select_diverse_top(3) [v3.2.0]:
+          1. đầu 3' cách mọi bộ đã chọn ≥ 2 nt (MIN_CANDIDATE_3PRIME_DISTANCE)
+          2. nếu chưa đủ 3: đầu 3' cách ≥ 1 nt  → nhãn adjacent_3prime
+          3. nếu vẫn chưa đủ: cùng vùng bám, khác đuôi → nhãn tail_variant
+             (+ same_binding_as_rank)
+          #1 luôn là bộ điểm cao nhất
         ↓
 [§1.8. format_output()]           [Phase 2 + Phase 3]
         JSON đầy đủ: Top 3 + stemloop + reverse + rejection_log + metadata
@@ -348,8 +357,14 @@ FORWARD_MAX_LENGTH = 27   # [P3P General Settings] — v2.1 fix từ 30→27
 FORWARD_OPTIMAL_LENGTH = 22
 
 # [P3P] — adjusted để accommodate template 22 nt
-MIN_CANDIDATE_3PRIME_DISTANCE = 2
+MIN_CANDIDATE_3PRIME_DISTANCE = 2   # v3.2.0: khoảng cách ƯU TIÊN giữa các bộ trả về,
+                                    # nới 2 → 1 → 0 (biến thể đuôi) khi thiếu bộ
+FORWARD_TAILS_PER_LENGTH = 20       # v3.2.0: số đuôi/đầu 3' được chấm điểm
 ```
+
+**v3.2.0 — chấm điểm trước, chọn đa dạng sau (2026-10-28).** Đến v3.1.2, bộ lọc đa dạng chạy *trước* khi chấm điểm: mỗi đầu 3' giữ đúng 1 mồi chọn theo |Tm_full − 60| (hòa thì theo thứ tự sinh, nên bản 12 nt luôn thắng bản 13 nt), và loại các đầu 3' cách bản đã giữ 1 nt. Hệ quả trên 169 miRNA của bộ validation: 76 (45 %) chỉ nhận 1 bộ mồi, 66 nhận 2, 23 nhận 3; ví dụ hsa-miR-21-3p mất vùng 13 nt `CAACACCAGTCGA` (vùng sRNAPrimerDB chọn) trước khi 15 tiêu chí được áp dụng. Nay mọi đầu 3' được chấm (20 đuôi mỗi đầu), rồi `select_diverse_top` chọn 3 bộ theo điểm với ràng buộc đa dạng nới dần. Chọn K = 20 vì so với chấm toàn bộ ứng viên, K = 3 chọn khác vùng bám #1 ở 19/165 miRNA, còn K = 20 chỉ kém trung bình ~0,05 điểm với thời gian ~0,45 s thay vì ~3,3 s.
+
+**Kẹp GC của mồi xuôi (v3.2.0).** Đầu 3' của mồi xuôi do trình tự miRNA quyết định (vùng đặc hiệu là tiền tố 5' của miRNA), tool không chọn được. Vì vậy chỉ loại cứng khi 3 nt cuối **không có G/C**; 1 G/C được qua kèm cảnh báo `gc_clamp_weak_warning` và chấm 75/100 ở tiêu chí `gc_clamp` sẵn có (Busk 2014 chấp nhận 1 G/C); 2 G/C vẫn là tối ưu (100). Bảng trọng số V4 không đổi. Nhánh "nới về 1 G/C khi không còn ứng viên" cũ đã bỏ vì nay là mặc định.
 
 ### Section D: Thermodynamics — Tm Targets
 
@@ -379,7 +394,8 @@ GC_STEMLOOP_MIN = 40.0
 GC_STEMLOOP_MAX = 60.0
 
 # [IDT-PQ] "3' GC clamp(nt) = 2" — v2.1
-GC_CLAMP_MIN_IN_LAST3 = 2      # tối thiểu 2 G/C trong 3 base cuối
+GC_CLAMP_MIN_IN_LAST3 = 2      # 2 G/C trong 3 base cuối: ưu tiên (thiếu → cảnh báo, v3.2.0)
+GC_CLAMP_HARD_MIN_IN_LAST3 = 1 # mồi xuôi: chỉ loại khi 0 G/C (v3.2.0)
 GC_CLAMP_3PRIME_WINDOW = 5
 GC_CLAMP_MIN_COUNT = 1
 GC_CLAMP_MAX_CONSECUTIVE = 3

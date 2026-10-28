@@ -9,7 +9,7 @@ const LABELS = {
   too_short:             'Primer too short',
   too_long:              'Primer too long',
   homopolymer_run:       'Homopolymer run ≥ 5 nt',
-  gc_clamp_fail:         'GC clamp fail (< 2 G/C in last 3 nt)',
+  gc_clamp_fail:         'No G/C in last 3 nt (all-A/T 3′ end)',
   gc_end_window_fail:    '3\' GC window too dense (> 5 in last 5 nt)',
   amplicon_out_of_range: 'Amplicon size out of range',
 };

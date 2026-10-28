@@ -19,7 +19,16 @@
 #   3.1.2 (2026-10-26) — each forward tail pool (len 7–12) seeds its own RNG from
 #   (sequence, tail_len, max_pool) instead of sharing one per-design RNG across
 #   pools; some sampled tails, hence some forward primers, change. No scoring change.
-ALGORITHM_VERSION = "3.1.2"
+#   3.2.0 (2026-10-28) — forward selection: score first, diversify after. The old
+#   pre-score diversity filter kept ONE candidate per 3' end chosen by |Tm−60| (ties
+#   broken by generation order) and dropped 3' ends 1 nt apart, so the 15-criterion
+#   score often never saw the best primer and 45 % of miRNAs got a single set. Now the
+#   best FORWARD_TAILS_PER_LENGTH tails per 3' end are all scored, and the top
+#   CANDIDATES_TOP_N are picked by score with relaxing diversity (3' ends ≥2 nt apart →
+#   1 nt apart → same binding region, other tail; each pick labelled). GC clamp: only
+#   0 G/C in the last 3 nt is rejected; 1 G/C passes with a warning and the existing
+#   gc_clamp criterion (75 vs 100) scores it. Weights unchanged.
+ALGORITHM_VERSION = "3.2.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -109,6 +118,14 @@ FORWARD_MAX_LENGTH = 27    # nt [P3P General Settings Max:27]
 FORWARD_OPTIMAL_LENGTH = 22  # nt — scoring target
 
 MIN_CANDIDATE_3PRIME_DISTANCE = 2  # nt [P3P PRIMER_MIN_LEFT_THREE_PRIME_DISTANCE adjusted]
+# — preferred spacing between the 3' ends of the returned sets; relaxed to 1 nt, then
+#   to tail variants (same 3' end), only when fewer than CANDIDATES_TOP_N would remain.
+# Tails kept per specific length (= per 3' end) for scoring, chosen by |Tm_full − Ta|.
+# Measured on 165 designable validation miRNAs against scoring EVERY prefiltered
+# candidate: K=3 picked a different #1 binding region in 19/165; K=20 matches it to
+# within 0.05 score points on average (#1 gain +0.37 vs +0.42) at ~0.45 s per design
+# instead of ~3.3 s. (2026-10-28)
+FORWARD_TAILS_PER_LENGTH = 20
 
 
 # ----------------------------------------------------------------
@@ -142,7 +159,11 @@ GC_OPTIMAL = 50.0
 GC_STEMLOOP_MIN = 40.0
 GC_STEMLOOP_MAX = 60.0
 
-GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2
+GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2 — preferred (else warning)
+# Hard floor for the forward primer. Its 3' end is fixed by the miRNA sequence, not
+# chosen by the tool, so a 1-G/C end is allowed (Busk 2014 accepts it) and left to the
+# gc_clamp score criterion (75 vs 100); an all-A/T end is still rejected. (v3.2.0)
+GC_CLAMP_HARD_MIN_IN_LAST3 = 1
 
 # miRNA-specific GC clamp scoring (Busk 2014 DOI 10.1186/1471-2105-15-29)
 # Two-tier logic: multi-source locked (a) vs single-source pending calibration (b).

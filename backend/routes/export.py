@@ -225,6 +225,7 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
             s.get("grade", ""),
             "; ".join(filter(None, [
                 f"Binding region {s.get('specific_length', '?')} nt",
+                _selection_note(s),
                 _isomir_note(s),
             ])),
         ])
@@ -567,6 +568,8 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Forward Tm",     lambda s: f"{_fmt(s.get('tm_full'))}°C"),
         ("GC%",            lambda s: f"{_fmt(s.get('gc_percent'))}%"),
         ("Amplicon",       lambda s: f"{s.get('amplicon_size', '?')} bp"),
+        ("Binding region", lambda s: f"{s.get('specific_length', '?')} nt"
+                                     + (f" — {_selection_note(s)}" if _selection_note(s) else "")),
         ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
         ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg_overall")),
         ("Cycle-1 occupancy % (Ta)", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding_pct'))}"),
@@ -900,6 +903,17 @@ def _isomir_note(s: dict) -> str:
     flag = s.get("isomir_flag") or {}
     if flag.get("isomir_discrimination_risk"):
         return f"isoMiR co-amplification risk: {flag.get('note', 'yes')}"
+    return ""
+
+
+def _selection_note(s: dict) -> str:
+    """How a lower-ranked set relates to the higher ones (select_diverse_top), or ''."""
+    sel = s.get("selection")
+    if sel == "tail_variant":
+        return (f"same binding region as rank {s.get('same_binding_as_rank', '?')}, "
+                f"other 5' tail (same specificity)")
+    if sel == "adjacent_3prime":
+        return "3' end 1 nt from a higher-ranked set"
     return ""
 
 
