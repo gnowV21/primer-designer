@@ -13,7 +13,7 @@
 #          [Chen05] Chen 2005 NAR; [patent 10036062]; [Hoffman08] J Clin Microbiol
 # ================================================================
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 
 from .constants import (
     STEMLOOP_BODY,

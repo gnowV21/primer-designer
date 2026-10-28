@@ -3,7 +3,7 @@
 # Fixed sequence — no design needed. Return constants only.
 # ================================================================
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from functools import lru_cache
 from .constants import (
     UNIVERSAL_REVERSE, UNIVERSAL_REVERSE_TM_PRECALC,
