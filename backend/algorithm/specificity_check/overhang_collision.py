@@ -1,42 +1,35 @@
 """
-overhang_collision.py — dual-axis primer-binding specificity for stem-loop RT-qPCR
-(SPEC_week2 P1 / C4).
+overhang_collision.py — assay-level specificity screen for stem-loop RT-qPCR.
 
-Specificity here is the product of two INDEPENDENT primer-binding axes, not the seed:
-  * RT axis  — the stem-loop RT primer binds the 3'-terminal `overhang_len` nt of the
-               mature miRNA. Its 3' terminus (the discriminating end, [Kwok90]) pairs
-               with the 5'-most nt of that window (the RT primer is the reverse complement).
-  * FWD axis — the forward qPCR primer binds the 5' prefix; its 3' terminus is the
-               3'-most nt of the prefix window.
+Every mature miRNA of the species (data/mirbase_overhang_index.json) is run through
+the ΔCq model of assay_model.py: RT capture by the 3' overhang + forward priming on
+the cDNA, each offset-aware, ΔCq_assay = ΔCq_RT + ΔCq_FWD (2026-10-29; replaces the
+Week 2 RT x FWD risk matrix and its fixed-position windows).
 
-An off-target is co-amplified only when BOTH axes fail to discriminate. Seed-family
-membership (positions 2-8) is the mRNA-targeting axis and is reported for CONTEXT only
-(via `same_seed_family`), never used to classify risk.
+Off-targets fall into two groups:
+  * other miRNAs — labelled CO-AMPLIFIED / PARTIAL / DISCRIMINATED; the worst label
+    drives scoring and the headline;
+  * isomiRs (5'/3' end shifted ≤ 2 nt) and identical-sequence copies — reported
+    with their predicted ΔCq but not scored: no primer design can avoid them, the
+    assay measures the sum of isoforms [Magee17].
 
-Screens the full per-species mature index (data/mirbase_overhang_index.json), so it
-catches colliders that share a 3' overhang but sit in different seed families — exactly
-the case the seed map is blind to.
+Seed-family membership (positions 2-8) is the mRNA-targeting axis and is reported
+for context only (`same_seed_family`), never used to classify risk.
 """
 
 import json
 import os
 
+import algorithm.primer3_safe as primer3
+
 from ..constants import (
-    RT_MM_REPORT_MAX,
-    FWD_MM_REPORT_MAX,
     FWD_PREFIX_LEN_FALLBACK,
     COLLISION_MAX_REPORT,
-    COMBINED_RISK_MATRIX,
-    KWOK_DIST_DISCRIMINATING,
-    OVERHANG_LENGTH_DEFAULT,
     OVERHANG_LENGTH_MAX,
     FORWARD_SPECIFIC_LENGTH_MAX,
 )
-from .kwok import (
-    kwok_weighted_distance,
-    PRIMER_3P_AT_WINDOW_START,
-    PRIMER_3P_AT_WINDOW_END,
-)
+from ..thermodynamics import _get_p3_params
+from .assay_model import evaluate
 from .family_crossreactivity import _resolve_species_prefix, get_family_id
 
 _INDEX_PATH = os.path.normpath(
@@ -51,8 +44,8 @@ _OFF_LABEL_WARNING = (
     "(Chen et al. 2005)."
 )
 
-_RT_RISK_ORDER = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
-_COMBINED_ORDER = {"CRITICAL": 0, "LOW": 1, "SAFE": 2}
+_LABEL_ORDER = {"CO-AMPLIFIED": 0, "PARTIAL": 1, "DISCRIMINATED": 2}
+_ISOMIR_CATEGORIES = ("identical", "isomir_5p", "isomir_3p")
 
 
 # ── helpers ───────────────────────────────────────────────────────
@@ -65,20 +58,6 @@ def _revcomp(dna: str) -> str:
     return "".join(_COMP.get(b, "N") for b in reversed(dna))
 
 
-def _hamming(a: str, b: str) -> int:
-    return sum(x != y for x, y in zip(a, b))
-
-
-def _axis_risk(mismatch: int, kwok: float) -> str:
-    if mismatch == 0:
-        return "IDENTICAL"
-    if mismatch == 1:
-        return "LOW" if kwok >= KWOK_DIST_DISCRIMINATING else "HIGH"
-    if mismatch == 2:
-        return "LOW"
-    return "SAFE"
-
-
 def _load_index() -> dict:
     global _INDEX_CACHE
     if _INDEX_CACHE is not None:
@@ -88,81 +67,88 @@ def _load_index() -> dict:
     return _INDEX_CACHE
 
 
-def _evaluate_pair(target_dna: str, other_dna: str, overhang_len: int, fwd_len: int) -> dict:
-    """Evaluate both binding axes for one target/collider pair. Pure; reused by the
-    main scan and by the recommender's what-if recomputations."""
-    # RT axis — 3' overhang window (compare on equal length only).
-    t_rt = target_dna[-overhang_len:]
-    o_rt = other_dna[-overhang_len:]
-    if len(o_rt) < overhang_len:
-        rt_mm = overhang_len          # miRNA shorter than the window → treat as fully divergent
-        rt_kwok = 0.0
-    else:
-        rt_mm = _hamming(t_rt, o_rt)
-        rt_kwok = kwok_weighted_distance(t_rt, o_rt, PRIMER_3P_AT_WINDOW_START)
-    rt_risk = _axis_risk(rt_mm, rt_kwok)
+def _duplex_tm(region: str, sense_window: str, p3: dict) -> float:
+    """Tm of the forward specific region on the cDNA of `sense_window`."""
+    return float(primer3.calc_heterodimer(region, _revcomp(sense_window), **p3).tm)
 
-    # FWD axis — 5' prefix window (compare on the overlap when the collider is shorter).
-    lc = min(fwd_len, len(other_dna))
-    t_fwd = target_dna[:lc]
-    o_fwd = other_dna[:lc]
-    forward_truncated = len(other_dna) < fwd_len
-    fwd_mm = _hamming(t_fwd, o_fwd)
-    fwd_positions = [i + 1 for i in range(lc) if t_fwd[i] != o_fwd[i]]
-    fwd_kwok = kwok_weighted_distance(t_fwd, o_fwd, PRIMER_3P_AT_WINDOW_END)
-    fwd_risk = _axis_risk(fwd_mm, fwd_kwok)
 
-    combined = COMBINED_RISK_MATRIX[(rt_risk, fwd_risk)]
-    return {
-        "rt_window_dna": o_rt,
-        "rt_mismatch": rt_mm,
-        "rt_kwok": round(rt_kwok, 2),
-        "rt_risk": rt_risk,
-        "fwd_window_dna": o_fwd,
-        "fwd_mismatch": fwd_mm,
-        "fwd_mismatch_positions_1based": fwd_positions,
-        "fwd_kwok": round(fwd_kwok, 2),
-        "fwd_risk": fwd_risk,
-        "forward_truncated": forward_truncated,
-        "combined_risk": combined,
-    }
+def _tm_gap_fn(target_dna: str, fwd_len: int, p3: dict):
+    """tm_gap(other, r) = Tm_on − Tm_off for the forward specific region in register r.
+
+    Window = off-target bases opposite the region + 1 downstream base (thal's
+    dangling-end term): on the target it gives exactly the full-sequence Tm, the
+    same convention as the BLAST classifier v4.
+    """
+    region = target_dna[:fwd_len]
+    tm_on = _duplex_tm(region, target_dna[:fwd_len + 1], p3)
+    cache: dict = {}
+
+    def gap(other: str, r: int):
+        key = (other, r)
+        if key not in cache:
+            window = other[max(r, 0): fwd_len + r + 1]
+            cache[key] = tm_on - _duplex_tm(region, window, p3) if window else None
+        return cache[key]
+    return gap
+
+
+def _opposite(other: str, start: int, length: int) -> str:
+    """other[start:start+length] with '-' where the index falls outside other."""
+    return "".join(other[j] if 0 <= j < len(other) else "-" for j in range(start, start + length))
+
+
+def _evaluate_pair(target_dna, other_dna, overhang_len, fwd_len, tm_gap) -> dict:
+    """ΔCq evaluation of one off-target plus the windows the UI diffs against."""
+    ev = evaluate(target_dna, other_dna, overhang_len, fwd_len, tm_gap)
+    rt, fwd = ev["rt"], ev["fwd"]
+    ev["rt_window_dna"] = _opposite(other_dna, len(other_dna) - rt["shift_3p"] - overhang_len,
+                                    overhang_len)
+    ev["rt_mismatch"] = len(rt["mismatch_positions"])
+    if fwd is not None:
+        ev["fwd_window_dna"] = _opposite(other_dna, fwd["shift_5p"], fwd_len)
+        ev["fwd_mismatch"] = len(fwd["mismatch_from_3p"])
+        ev["fwd_mismatch_positions_1based"] = sorted(fwd_len - q + 1 for q in fwd["mismatch_from_3p"])
+    return ev
 
 
 # ── recommendation (§1.4) ─────────────────────────────────────────
 
-def _recommend(target_dna, overhang_len, fwd_len, crit_colliders, worst_combined):
+def _recommend(target_dna, overhang_len, fwd_len, coamp_seqs, p3):
     """Only ever suggest a fix the module can VERIFY by recomputation in this response."""
-    if worst_combined == "SAFE" or not crit_colliders:
+    if not coamp_seqs:
         return {
             "action": "none",
-            "reason": "Both primer axes discriminate every co-amplifiable miRNA screened.",
+            "reason": "No other miRNA is predicted to co-amplify (ΔCq_assay ≥ 3.3 for all).",
         }
 
-    # 1. Try a longer RT overhang (7, 8) — re-evaluate every CRITICAL collider.
+    def all_resolved(n, lp):
+        gap = _tm_gap_fn(target_dna, lp, p3)
+        return all(evaluate(target_dna, o, n, lp, gap)["assay_label"] != "CO-AMPLIFIED"
+                   for o in coamp_seqs)
+
+    # 1. Try a longer RT overhang (up to OVERHANG_LENGTH_MAX).
     for n in range(overhang_len + 1, OVERHANG_LENGTH_MAX + 1):
-        if all(_evaluate_pair(target_dna, o, n, fwd_len)["combined_risk"] != "CRITICAL"
-               for o in crit_colliders):
+        if all_resolved(n, fwd_len):
             return {
                 "action": "increase_overhang",
                 "suggested_overhang_len": n,
                 "off_label_warning": _OFF_LABEL_WARNING,
                 "reason": (
-                    f"Extending the RT overhang to {n} nt makes every currently-CRITICAL "
-                    "collider discriminable on the RT axis (verified by recomputation)."
+                    f"Extending the RT overhang to {n} nt lifts every currently co-amplified "
+                    "miRNA above ΔCq 3.3 (verified by recomputation)."
                 ),
             }
 
-    # 2. Try a longer forward specific region — re-evaluate the forward axis.
+    # 2. Try a longer forward specific region.
     for lp in range(fwd_len + 1, FORWARD_SPECIFIC_LENGTH_MAX + 1):
-        if all(_evaluate_pair(target_dna, o, overhang_len, lp)["combined_risk"] != "CRITICAL"
-               for o in crit_colliders):
+        if all_resolved(overhang_len, lp):
             return {
                 "action": "increase_forward_specific_len",
                 "suggested_forward_specific_len": lp,
                 "reason": (
-                    f"Extending the forward specific region to {lp} nt places the discriminating "
-                    "mismatch within the forward primer 3' end for every CRITICAL collider "
-                    "(verified by recomputation)."
+                    f"Extending the forward specific region to {lp} nt brings the differing "
+                    "base(s) close enough to the primer 3' end to lift every co-amplified "
+                    "miRNA above ΔCq 3.3 (verified by recomputation)."
                 ),
             }
 
@@ -173,7 +159,7 @@ def _recommend(target_dna, overhang_len, fwd_len, crit_colliders, worst_combined
             "These miRNAs cannot be distinguished by stem-loop RT-qPCR geometry alone: the "
             "RT overhang and the forward primer both fail to discriminate even at their length "
             "limits. Use a hydrolysis (TaqMan) probe spanning the differing region, an LNA-"
-            "substituted primer, or an orthogonal method.",
+            "substituted primer, or an orthogonal method."
         ),
     }
 
@@ -189,8 +175,8 @@ def check_overhang_collision(
     species: str | None = None,
     max_report: int = COLLISION_MAX_REPORT,
 ) -> dict:
-    """Dual-axis (RT 3' overhang + forward 5' prefix) collision screen vs the full
-    per-species mature index. See module docstring for the science."""
+    """Assay-level (RT + forward) ΔCq screen vs the full per-species mature index.
+    See the module docstring and assay_model.py for the science."""
     mature = (mature_seq or "").upper().strip()
     target_dna = _dna(mature)
 
@@ -210,7 +196,7 @@ def check_overhang_collision(
     }
 
     base = {
-        "axis_model": "dual",
+        "axis_model": "delta_cq",
         "species": sp,
         "overhang_len": overhang_len,
         "forward_specific_len": fwd_len,
@@ -224,21 +210,26 @@ def check_overhang_collision(
         },
         "data_provenance": provenance,
         "interpretation": (
-            "Specificity of stem-loop RT-qPCR is the product of two independent axes: the RT "
-            "primer binds the 3'-terminal 6 nt, the forward primer binds the 5' region. An "
-            "off-target is co-amplified only when BOTH axes fail. Seed-family membership "
-            "(positions 2-8) is a biological mRNA-targeting axis and is reported separately for "
-            "context only."
+            "An off-target gives signal only if the RT overhang captures it AND the forward "
+            "primer primes its cDNA; the delays add (ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD, cross-"
+            "reactivity ≈ 2^−ΔCq). Values are lower bounds of published data (Chen 2005, "
+            "Czimmerer 2013, Schamberger 2014, Stadhouders 2010) measured with TaqMan probes; "
+            "for SYBR the prediction is optimistic. isomiRs and identical copies cannot be "
+            "designed away: the assay measures the sum of isoforms (Magee 2017). Seed-family "
+            "membership is reported for context only."
         ),
+        "thresholds": {"co_amplified_below": 3.3, "discriminated_at": 4.3},
     }
 
     if not mature_map:
         base.update({
             "n_screened": 0,
             "collisions": [],
-            "summary": {"CRITICAL": 0, "LOW": 0, "rt_identical": 0, "n_reported": 0, "truncated": False},
-            "worst_rt_risk": "no_index_data",
-            "worst_combined_risk": "no_index_data",
+            "isomirs": [],
+            "summary": {"CO-AMPLIFIED": 0, "PARTIAL": 0, "rt_identical": 0,
+                        "isomir_5p": 0, "isomir_3p": 0, "identical": 0,
+                        "n_reported": 0, "truncated": False, "n_total_flagged": 0},
+            "worst_assay_label": "no_index_data",
             "recommendation": {"action": "none", "reason": "No overhang index for this species."},
             "data_note": (
                 f"No mature index for species '{sp}'. Run scripts/build_overhang_index.py "
@@ -247,80 +238,67 @@ def check_overhang_collision(
         })
         return base
 
+    p3 = _get_p3_params(params or {})
+    tm_gap = _tm_gap_fn(target_dna, fwd_len, p3)
     target_family = get_family_id(mirna_name)
-    _target_has_name = bool(mirna_name)
-    entries = []
+    target_rt = target_dna[-overhang_len:]
+    others, variants = [], []
     n_screened = 0
     for name, seq_rna in mature_map.items():
         o_dna = _dna(seq_rna)
-        # Exclude ONLY the target itself. When the target name is known, exclude by
-        # name so a DIFFERENT miRNA sharing an identical mature sequence (paralogous
-        # locus / duplicated mature) is still screened — that byte-identical collider
-        # (RT + forward both IDENTICAL → combined CRITICAL) is the single worst
-        # co-amplification case and must not be silently dropped. Fall back to
-        # sequence identity only when the target has no name (raw sequence pasted).
-        if _target_has_name:
+        # Exclude ONLY the target itself: by name when known, so a DIFFERENT miRNA with
+        # an identical mature sequence (paralogous locus) is still reported; by
+        # sequence only when the target has no name (raw sequence pasted).
+        if mirna_name:
             if name == mirna_name:
                 continue
         elif o_dna == target_dna:
             continue
         n_screened += 1
-
-        # Cheap early prune before the weighted work (O(n), n ~ 2.7k → < 5 ms).
-        rt_mm_quick = (
-            overhang_len if len(o_dna) < overhang_len
-            else _hamming(target_dna[-overhang_len:], o_dna[-overhang_len:])
-        )
-        lc = min(fwd_len, len(o_dna))
-        fwd_mm_quick = _hamming(target_dna[:lc], o_dna[:lc])
-        if rt_mm_quick > RT_MM_REPORT_MAX and fwd_mm_quick > FWD_MM_REPORT_MAX:
-            continue
-
-        ev = _evaluate_pair(target_dna, o_dna, overhang_len, fwd_len)
+        ev = _evaluate_pair(target_dna, o_dna, overhang_len, fwd_len, tm_gap)
         ev["mirna"] = name
         ev["same_seed_family"] = (target_family is not None and target_family == get_family_id(name))
-        entries.append(ev)
+        ev["rt_identical"] = o_dna.endswith(target_rt) and len(o_dna) >= overhang_len
+        (variants if ev["category"] in _ISOMIR_CATEGORIES else others).append(ev)
 
-    # Keep every non-SAFE collision, PLUS every rt-IDENTICAL one (needed for multiplex /
-    # RT-primer pooling even when the forward primer rescues specificity).
-    reported = [e for e in entries if e["combined_risk"] != "SAFE" or e["rt_risk"] == "IDENTICAL"]
-    reported.sort(key=lambda e: (
-        _COMBINED_ORDER.get(e["combined_risk"], 9), e["rt_mismatch"], e["fwd_mismatch"]
-    ))
+    # Report every non-discriminated other miRNA, plus every RT-identical one (needed
+    # for multiplex / RT-primer pooling even when the forward primer resolves it).
+    flagged = [e for e in others if e["assay_label"] != "DISCRIMINATED" or e["rt_identical"]]
+    flagged.sort(key=lambda e: (_LABEL_ORDER[e["assay_label"]], e["delta_cq"], e["mirna"]))
+    truncated = len(flagged) > max_report
+    reported = flagged[:max_report]
+    variants.sort(key=lambda e: (e["delta_cq"], e["mirna"]))
 
-    n_total_non_safe = sum(1 for e in entries if e["combined_risk"] != "SAFE")
-    truncated = len(reported) > max_report
-    reported = reported[:max_report]
-
-    worst_rt = min((e["rt_risk"] for e in entries), key=lambda r: _RT_RISK_ORDER.get(r, 9), default="SAFE")
-    worst_combined = min((e["combined_risk"] for e in entries), key=lambda r: _COMBINED_ORDER.get(r, 9), default="SAFE")
-
-    crit_seqs = [_dna(mature_map[e["mirna"]]) for e in entries if e["combined_risk"] == "CRITICAL"]
+    worst = min((e["assay_label"] for e in others), key=_LABEL_ORDER.get, default="DISCRIMINATED")
+    coamp_seqs = [_dna(mature_map[e["mirna"]]) for e in others if e["assay_label"] == "CO-AMPLIFIED"]
 
     for e in reported:
-        if e["combined_risk"] == "CRITICAL":
-            if e["rt_risk"] in ("IDENTICAL", "HIGH") and e["fwd_mismatch"] == 0:
-                e["note"] = ("RT and forward windows are both non-discriminating; this off-target "
-                             "will co-amplify. An orthogonal discriminator is required.")
-            else:
-                pos = e["fwd_mismatch_positions_1based"]
-                e["note"] = (f"The only discriminator is the forward primer, whose mismatch"
-                             f"{'es' if len(pos) != 1 else ''} at position {pos} sits too far from "
-                             "its 3' end to block extension.")
+        if e["assay_label"] == "CO-AMPLIFIED":
+            e["note"] = (f"Predicted cross-signal ≈ {e['cross_reactivity_pct']:.1f} % "
+                         f"(RT: {e['rt']['basis']}; forward: {e['fwd']['basis']}).")
+    for e in variants:
+        e["note"] = {
+            "identical": "Identical mature sequence under another name — indistinguishable.",
+            "isomir_5p": "5′-end variant: both primers bind it; co-amplified, cannot be designed away.",
+            "isomir_3p": "3′-end variant: the RT overhang resolves it only partly.",
+        }[e["category"]]
 
     base.update({
         "n_screened": n_screened,
         "collisions": reported,
+        "isomirs": variants,
         "summary": {
-            "CRITICAL": sum(1 for e in reported if e["combined_risk"] == "CRITICAL"),
-            "LOW": sum(1 for e in reported if e["combined_risk"] == "LOW"),
-            "rt_identical": sum(1 for e in reported if e["rt_risk"] == "IDENTICAL"),
+            "CO-AMPLIFIED": sum(1 for e in others if e["assay_label"] == "CO-AMPLIFIED"),
+            "PARTIAL": sum(1 for e in others if e["assay_label"] == "PARTIAL"),
+            "rt_identical": sum(1 for e in others if e["rt_identical"]),
+            "isomir_5p": sum(1 for e in variants if e["category"] == "isomir_5p"),
+            "isomir_3p": sum(1 for e in variants if e["category"] == "isomir_3p"),
+            "identical": sum(1 for e in variants if e["category"] == "identical"),
             "n_reported": len(reported),
             "truncated": truncated,
-            "n_total_non_safe": n_total_non_safe,
+            "n_total_flagged": len(flagged),
         },
-        "worst_rt_risk": worst_rt,
-        "worst_combined_risk": worst_combined,
-        "recommendation": _recommend(target_dna, overhang_len, fwd_len, crit_seqs, worst_combined),
+        "worst_assay_label": worst,
+        "recommendation": _recommend(target_dna, overhang_len, fwd_len, coamp_seqs, p3),
     })
     return base

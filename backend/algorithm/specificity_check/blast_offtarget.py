@@ -17,6 +17,7 @@
 # ================================================================
 
 import concurrent.futures
+import math
 import os
 import re
 import subprocess
@@ -37,6 +38,7 @@ from algorithm.constants import (
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
 from algorithm.sequence_utils import reverse_complement, rna_to_dna
+from algorithm.specificity_check.assay_model import variant_category
 from algorithm.thermodynamics import _get_p3_params
 from .family_crossreactivity import get_family_id
 
@@ -424,6 +426,13 @@ def fetch_sequences(ids: list[str], db_path: str, timeout: int = 60) -> dict[str
     return {i: by_lower[i.lower()] for i in wanted if i.lower() in by_lower}
 
 
+def primer_matches_target(primer: str, target_dna: str, min_len: int = 8) -> bool:
+    """True when the primer ends with the target's 5' prefix (≥ min_len nt) — the
+    forward primer geometry (5' tail + specific region)."""
+    p, t = primer.upper(), rna_to_dna(target_dna).upper()
+    return any(p.endswith(t[:k]) for k in range(min_len, len(t) + 1))
+
+
 def duplex_tm(primer: str, target_mature: str, p3: dict) -> float:
     """Tm (°C) of the primer annealed to the cDNA of a mature miRNA.
 
@@ -473,7 +482,11 @@ def resolve_p3_conditions(conditions: Optional[dict]) -> dict:
     for k in _P3_KEYS:
         v = (conditions or {}).get(k)
         if v is not None:
-            p3[k] = float(v)
+            v = float(v)
+            # mv/dna must be > 0 (primer3 divides by them); dv/dNTP may be 0.
+            if not math.isfinite(v) or v < 0 or (v == 0 and k in ("mv_conc", "dna_conc")):
+                raise ValueError(f"{k} must be a finite positive concentration, got {v}")
+            p3[k] = v
     return p3
 
 
@@ -525,7 +538,15 @@ def check_offtarget(
         target_source = "mirbase_db" if target_sequence else None
     if target_sequence:
         target_sequence = rna_to_dna(target_sequence).upper()
-    tm_on = duplex_tm(forward_primer, target_sequence, p3) if target_sequence else None
+    # Tm_on is only meaningful if the primer really is this target's forward primer
+    # (a typo or the other arm gives a low Tm_on and turns every hit CRITICAL).
+    tm_gate_note = None
+    if target_sequence and not primer_matches_target(forward_primer, target_sequence):
+        tm_gate_note = ("Forward primer does not end with the 5' region of the target "
+                        "sequence — duplex-Tm gate skipped, legacy rules applied.")
+        tm_on = None
+    else:
+        tm_on = duplex_tm(forward_primer, target_sequence, p3) if target_sequence else None
     margins = (safe_margin, critical_margin)
 
     # The fixed universal reverse primer anneals to the stem-loop body the RT primer
@@ -545,6 +566,14 @@ def check_offtarget(
 
     summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs,
                          fwd_fam + rev_fam, len(fwd_ident))
+    # identical / 5' isomiR / 3' isomiR — a 5' shift changes the seed and co-amplifies
+    # through both primers; a 3' shift is resolved only partly by the RT overhang.
+    ident_seqs = fetch_sequences(fwd_ident, _MIRBASE_DB, timeout) if fwd_ident else {}
+    identical_variants = {
+        sid: (variant_category(target_sequence, ident_seqs[sid])
+              if target_sequence and sid in ident_seqs else "identical")
+        for sid in fwd_ident
+    }
     summary["hits_truncated"] = (
         len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
     )
@@ -555,6 +584,7 @@ def check_offtarget(
         # Other names carrying the target's mature sequence (identical, or ends shifted
         # ≤2 nt): indistinguishable by the forward primer, so not risk-classified.
         "identical_sequence_hits": fwd_ident,
+        "identical_sequence_variants": identical_variants,
         "reverse_primer_skipped": (
             "Universal reverse primer anneals to the stem-loop body, not to a miRNA — "
             "a miRBase search does not apply." if skip_reverse else None
@@ -563,6 +593,7 @@ def check_offtarget(
         "classification": {
             "classifier_version": BLAST_CLASSIFIER_VERSION,
             "tm_gate_applied": tm_on is not None,
+            "tm_gate_note": tm_gate_note,
             "tm_ontarget": tm_on,
             "target_sequence_source": target_source,
             "species": species_prefix.rstrip("-"),
@@ -602,11 +633,11 @@ def _check_primer(
     entirely — biologically irrelevant for same-species qPCR and would otherwise
     dominate the hit cap with conserved miRNA orthologs from other organisms.
 
-    same_family_count (Fix B): hits that are the target miRNA's own seed-family
-    members are the EXPECTED, already-surfaced cross-reactivity case (see the
-    Family Cross-reactivity panel). They are folded into one aggregated count
-    instead of listed as separate critical off-targets, so the real out-of-family
-    signal is not drowned. target_family is the seed-family id of mirna_id (or None).
+    same_family_count: how many non-SAFE hits are the target's own seed-family
+    members. They stay in the hit list (flag `same_seed_family`) and count towards
+    overall_risk — until 2026-10-29 they were folded out, which let a let-7 or
+    miR-17/20 member that the forward primer anneals to read as SAFE. target_family
+    is the seed-family id of mirna_id (or None).
 
     tm_on: on-target duplex Tm; when set, each 3'-anchored hit gets its own
     duplex Tm (full off-target sequence from the DB) and the Tm gate applies.
@@ -713,14 +744,16 @@ def _check_primer(
             if risk == "SAFE":
                 safe_count += 1
                 continue
-            # Fix B: fold same-seed-family members into one aggregated count.
+            # Seed-family members are flagged and counted, never exempted: the seed is
+            # the mRNA-targeting axis, not a primer-binding one (2026-10-29).
+            same_family = False
             if target_family is not None:
                 subj_family = get_family_id(h["subject_id"])
-                if subj_family is not None and subj_family == target_family:
-                    same_family_count += 1
-                    continue
+                same_family = subj_family is not None and subj_family == target_family
+                same_family_count += same_family
             non_safe_hits.append({
                 "subject_id":   h["subject_id"],
+                "same_seed_family": same_family,
                 "database":     os.path.basename(db),
                 "alignment": {
                     "identity_pct":        h["identity_pct"],
@@ -757,16 +790,15 @@ def _summarise(
     for h in non_safe_hits:
         risk = h.get("risk", "MEDIUM")
         counts[risk] = counts.get(risk, 0) + 1
-    # overall_risk reflects OUT-of-family off-targets only — same-family cross-
-    # reactivity is expected and surfaced separately (see same_family_count), and
-    # identical-sequence copies cannot be discriminated by any primer.
+    # overall_risk covers every classified hit, seed-family members included;
+    # identical-sequence copies and isomiRs cannot be discriminated by any primer and
+    # are listed separately.
     if counts["CRITICAL"] > 0:    overall = "CRITICAL"
     elif counts["HIGH"] > 0:      overall = "HIGH"
     elif counts["MEDIUM"] > 0:    overall = "MEDIUM"
     else:                          overall = "SAFE"
     return {
-        "total_hits":              (len(non_safe_hits) + safe_count + same_family_count
-                                    + identical_sequence_count),
+        "total_hits":              len(non_safe_hits) + safe_count + identical_sequence_count,
         "critical_count":          counts["CRITICAL"],
         "high_risk_count":         counts["HIGH"],
         "medium_risk_count":       counts["MEDIUM"],

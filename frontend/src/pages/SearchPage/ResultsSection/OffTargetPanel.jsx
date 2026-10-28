@@ -10,11 +10,11 @@ const BLAST_RISK_STYLE = {
   SAFE:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions }) {
+export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions, species }) {
   const { status, result, error, run, reset, dbAvailable, dbMessage } = useBlastCheck();
 
   function handleRun() {
-    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions });
+    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species });
   }
 
   // DB unavailable (Phase 7 PART A) — show disabled state with explanation
@@ -60,7 +60,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, 
         {!dbNotReady && status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Checks primer against miRBase (all species) for miRNA family cross-reactivity using Primer-BLAST rules (Ye 2012).
+              Where else the forward primer anneals in miRBase (Primer-BLAST rules, Ye 2012; duplex-Tm gate). Detail for the Assay Specificity verdict, which also models the RT step.
             </p>
             <BlastCheckButton status={status} onClick={handleRun} />
           </div>
@@ -182,7 +182,8 @@ function ResultDisplay({ result }) {
 
   return (
     <div className="space-y-3">
-      <OverallRiskRow summary={summary} identical={result.identical_sequence_hits ?? []} />
+      <OverallRiskRow summary={summary} identical={result.identical_sequence_hits ?? []}
+                      variants={result.identical_sequence_variants ?? {}} />
 
       {summary.hits_truncated && (
         <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
@@ -207,7 +208,11 @@ function ResultDisplay({ result }) {
             ? `Forward primer on its target: duplex Tm ${clf.tm_ontarget?.toFixed(1)} °C. `
               + `Hits more than ${clf.safe_margin_c} °C weaker are SAFE; within `
               + `${clf.critical_margin_c} °C are CRITICAL.`
-            : 'Target sequence unknown — classified by mismatch rules only (no duplex-Tm gate).'}
+            : (clf.tm_gate_note || 'Target sequence unknown — classified by mismatch rules only (no duplex-Tm gate).')}
+        </p>
+        <p>
+          Forward primer only — the RT overhang is not modelled here; see Assay Specificity for the
+          combined RT + forward prediction.
         </p>
         {result.reverse_primer_skipped && <p>{result.reverse_primer_skipped}</p>}
         <p>
@@ -221,7 +226,9 @@ function ResultDisplay({ result }) {
   );
 }
 
-function OverallRiskRow({ summary, identical }) {
+const VARIANT_TEXT = { identical: 'identical', isomir_5p: "5′ isomiR", isomir_3p: "3′ isomiR" };
+
+function OverallRiskRow({ summary, identical, variants }) {
   const risk  = summary.overall_risk ?? 'SAFE';
   const style = BLAST_RISK_STYLE[risk] ?? BLAST_RISK_STYLE.SAFE;
 
@@ -247,16 +254,16 @@ function OverallRiskRow({ summary, identical }) {
           <span className="text-slate-500">{summary.safe_count.toLocaleString()} safe</span>
         )}
         {summary.same_family_count > 0 && (
-          <span className="text-purple-600" title="Same seed-family members that share the primer's binding region. This cross-reactivity is expected for this miRNA family and is analysed separately in the Family Cross-reactivity panel — it is not counted as an out-of-family off-target here.">
-            {summary.same_family_count.toLocaleString()} same-family
+          <span className="text-purple-600" title="Hits that belong to the target's seed family. They are listed and counted in the risk like any other hit — the seed is the mRNA-targeting axis, not a primer-binding one.">
+            {summary.same_family_count.toLocaleString()} same seed family
           </span>
         )}
         {summary.identical_sequence_count > 0 && (
           <span
             className="text-slate-600"
-            title={`Same mature sequence as the target under another name — copies from other loci, or the same sequence annotated with ends shifted by ≤2 nt: ${identical.join(', ')}. The forward primer cannot tell them apart, so the assay measures their sum — not counted as off-target risk.`}
+            title={`Same mature molecule under another name — ${identical.map((id) => `${id} (${VARIANT_TEXT[variants[id]] || 'identical'})`).join(', ')}. A 5′ isomiR co-amplifies through both primers; a 3′ isomiR is resolved only partly by the RT overhang. No primer design separates them: report the sum of isoforms — not counted as off-target risk.`}
           >
-            {summary.identical_sequence_count.toLocaleString()} identical sequence
+            {summary.identical_sequence_count.toLocaleString()} identical / isomiR
           </span>
         )}
         {summary.cross_species_excluded > 0 && (
@@ -308,7 +315,12 @@ function HitsAccordion({ label, hits }) {
                 : '—';
               return (
                 <tr key={i} title={h.risk_reason}>
-                  <td className="px-2 py-1.5 font-mono text-slate-700 truncate max-w-[160px]">{h.subject_id}</td>
+                  <td className="px-2 py-1.5 font-mono text-slate-700 truncate max-w-[160px]">
+                    {h.subject_id}
+                    {h.same_seed_family && (
+                      <span className="ml-1 font-sans text-purple-600" title="Same seed family as the target (context only)">·fam</span>
+                    )}
+                  </td>
                   <td className="px-2 py-1.5 text-center tabular-nums text-slate-500">{tm}</td>
                   <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">{aln.mismatches ?? '—'}</td>
                   <td className="px-2 py-1.5 text-center font-mono text-slate-600">{termMm}</td>

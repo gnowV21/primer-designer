@@ -7,7 +7,7 @@
 
 from .constants import (
     SCORING_WEIGHTS_V3, SCORING_WEIGHTS_V4, UNSCORED_CRITERIA_V4,
-    COMBINED_RISK_SCORE,
+    ASSAY_LABEL_SCORE,
     TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
     TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
@@ -51,11 +51,15 @@ def score_candidate(
     sc = forward.get("structure_checks", {})
 
     # ── 1. Full primer Tm accuracy (0.20) ────────────────────────
+    # Target = the user's annealing temperature (default TM_FORWARD_TARGET), the same
+    # target the candidate pool and the tie-break use.
     tm = forward["tm_full"]
-    tm_diff = abs(tm - TM_FORWARD_TARGET)
+    tm_target = float((params or {}).get("annealingTemp", TM_FORWARD_TARGET))
+    tm_diff = abs(tm - tm_target)
     scores["tm_accuracy"] = round(max(0, 100 - (tm_diff / TM_FORWARD_TOLERANCE) * 50), 1)
     explanations["tm_accuracy"] = (
-        f"Forward primer Tm = {tm}°C (target: {TM_FORWARD_TARGET}°C, ±{TM_FORWARD_TOLERANCE}°C). "
+        f"Forward primer Tm = {tm}°C (target: annealing temperature {tm_target:g}°C, "
+        f"±{TM_FORWARD_TOLERANCE}°C). "
         f"Δ = {tm_diff:.1f}°C. Method: SantaLucia 1998 nearest-neighbor + Mg²⁺ salt correction."
     )
 
@@ -295,29 +299,34 @@ def score_candidate(
             f"Formula: [SL04] SantaLucia & Hicks 2004."
         )
 
-        # ── 15. Family discrimination — PRIMER-BINDING axis (0.05) [Chen05][Kwok90] ──
-        # Scored on the RT 3'-overhang x forward 5'-prefix collision analysis, NOT the seed
-        # family (which is the mRNA-targeting axis). [Week2 C5]
-        worst_risk = _extract_worst_primer_axis_risk(overhang_collision)
-        fam_score = COMBINED_RISK_SCORE.get(worst_risk, 100)
+        # ── 15. Family discrimination — assay-level ΔCq model (0.05) ──
+        # Worst label among OTHER miRNAs (RT capture + forward priming, ΔCq_assay =
+        # ΔCq_RT + ΔCq_FWD). isomiRs / identical copies are reported, not scored: no
+        # design avoids them. Seed family is the mRNA-targeting axis, never scored.
+        worst_label = _extract_worst_assay_label(overhang_collision)
+        fam_score = ASSAY_LABEL_SCORE.get(worst_label, 100)
         scores["family_discrimination"] = fam_score
-        if worst_risk == "no_index_data":
+        if worst_label == "no_index_data":
             explanations["family_discrimination"] = (
                 "No overhang index available — this criterion did not contribute discriminating "
                 "information (scored 100). Run scripts/build_overhang_index.py to enable it."
             )
         else:
             oc = overhang_collision or {}
-            n_crit = oc.get("summary", {}).get("CRITICAL", 0)
-            worst_name = next((e.get("mirna") for e in oc.get("collisions", [])
-                               if e.get("combined_risk") == "CRITICAL"), None)
+            summ = oc.get("summary", {})
+            worst_e = next((e for e in oc.get("collisions", [])
+                            if e.get("assay_label") == worst_label), None)
+            worst_txt = (f"; worst = {worst_e['mirna']} (ΔCq {worst_e['delta_cq']:.1f}, "
+                         f"≈{worst_e['cross_reactivity_pct']:.1f} % cross-signal)"
+                         if worst_e and worst_label != "DISCRIMINATED" else "")
             explanations["family_discrimination"] = (
-                f"Primer-binding specificity — worst combined risk: {worst_risk}. "
-                f"Axis: RT 3' overhang ({oc.get('overhang_len', 6)} nt) x forward 5' prefix "
-                f"({oc.get('forward_specific_len', '?')} nt). {n_crit} CRITICAL collider(s)"
-                + (f"; worst = {worst_name}" if worst_name else "") + ". "
-                "Score 100=SAFE, 70=LOW, 0=CRITICAL. Seed-family membership (positions 2-8) is "
-                "the mRNA-targeting axis and is NOT used for scoring. Source: Chen 2005; Kwok 1990."
+                f"Assay-level specificity — worst other miRNA: {worst_label}{worst_txt}. "
+                f"{summ.get('CO-AMPLIFIED', 0)} co-amplified (ΔCq < 3.3), "
+                f"{summ.get('PARTIAL', 0)} partial (3.3–4.3). ΔCq = RT ({oc.get('overhang_len', 6)}-nt "
+                f"overhang) + forward ({oc.get('forward_specific_len', '?')} nt), lower bounds of "
+                "published data. Score 100 = DISCRIMINATED, 70 = PARTIAL, 0 = CO-AMPLIFIED. "
+                "isomiRs and identical copies are reported but not scored. Sources: Chen 2005; "
+                "Czimmerer 2013; Schamberger 2014; Stadhouders 2010."
             )
 
     # ── Total weighted score ──────────────────────────────────────
@@ -346,16 +355,16 @@ def score_candidate(
     }
 
 
-def _extract_worst_primer_axis_risk(overhang_collision: dict | None) -> str:
-    """Worst combined RT+forward risk from check_overhang_collision (Week2 C5).
+def _extract_worst_assay_label(overhang_collision: dict | None) -> str:
+    """Worst assay label among other miRNAs from check_overhang_collision.
 
     Returns 'no_index_data' when the overhang index is unavailable so the criterion stays
     neutral (100) instead of silently penalising or crediting a design.
     """
     if not overhang_collision:
         return "no_index_data"
-    worst = overhang_collision.get("worst_combined_risk", "no_index_data")
-    return worst if worst in ("SAFE", "LOW", "CRITICAL") else "no_index_data"
+    worst = overhang_collision.get("worst_assay_label", "no_index_data")
+    return worst if worst in ("DISCRIMINATED", "PARTIAL", "CO-AMPLIFIED") else "no_index_data"
 
 
 def _grade(total: float) -> str:

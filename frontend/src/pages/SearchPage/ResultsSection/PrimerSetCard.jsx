@@ -31,7 +31,7 @@ const RISK_STYLE = {
   PASS:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSequence, conditions }) {
+export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSequence, conditions, species }) {
   const [expanded, setExpanded] = useState(set.rank === 1);
 
   const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-slate-700 bg-slate-50 border-slate-300', 'text-slate-600 bg-slate-50 border-slate-300'];
@@ -139,6 +139,7 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
             mirnaId={mirnaId ?? ''}
             mirnaSequence={mirnaSequence}
             conditions={conditions}
+            species={species}
           />
 
           {/* ── Export ── */}

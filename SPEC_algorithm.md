@@ -366,6 +366,8 @@ FORWARD_TAILS_PER_LENGTH = 20       # v3.2.0: số đuôi/đầu 3' được ch�
 
 **Kẹp GC của mồi xuôi (v3.2.0).** Đầu 3' của mồi xuôi do trình tự miRNA quyết định (vùng đặc hiệu là tiền tố 5' của miRNA), tool không chọn được. Vì vậy chỉ loại cứng khi 3 nt cuối **không có G/C**; 1 G/C được qua kèm cảnh báo `gc_clamp_weak_warning` và chấm 75/100 ở tiêu chí `gc_clamp` sẵn có (Busk 2014 chấp nhận 1 G/C); 2 G/C vẫn là tối ưu (100). Bảng trọng số V4 không đổi. Nhánh "nới về 1 G/C khi không còn ứng viên" cũ đã bỏ vì nay là mặc định.
 
+**v3.3.0 — đặc hiệu cấp assay (2026-10-29).** Tiêu chí `family_discrimination` chuyển từ ma trận RT × FWD (cửa sổ cố định vị trí) sang mô hình ΔCq_assay = ΔCq_RT + ΔCq_FWD có xét lệch đầu ±2 nt (chi tiết, bảng giá trị và nguồn: SPEC_phase3 §8.16). `tm_accuracy` chấm theo Ta người dùng nhập (mặc định 60 °C, nên kết quả mặc định không đổi) — cùng mục tiêu với bước lọc pool và tie-break. Vòng lặp overhang-collision chọn mồi dẫn đầu bằng đúng khóa xếp hạng cuối (điểm, |Tm − Ta|, trình tự) thay vì `max()` theo thứ tự sinh. Trọng số V4 không đổi. Trên 165 miRNA: #1 giữ vùng bám 164/165, điểm #1 trung bình +0,67.
+
 ### Section D: Thermodynamics — Tm Targets
 
 ```python
@@ -936,7 +938,7 @@ condition: complement(seq1[-i]) == seq2[-i] cho i = 1..k
 | 6 | end_stability | 0.08 | [P3P] | ≤ 9.0 kcal/mol |
 | 7 | bound_fraction_binding | **0.05** | [SL04] | **[Phase 3]** cDNA tại 42°C |
 | 8 | gc_content | 0.08 | [PAST24][IDT] | 40–60% |
-| 9 | family_discrimination | **0.05** | [Chen05] | **[Phase 3]** risk từ seed-based grouping |
+| 9 | family_discrimination | **0.05** | [Chen05][Schamberger14][Stadhouders10] | **v3.3.0:** nhãn tệ nhất của miRNA khác theo mô hình ΔCq assay (DISCRIMINATED 100 / PARTIAL 70 / CO-AMPLIFIED 0); isomiR và bản trùng trình tự không chấm — SPEC_phase3 §8.16 |
 | 10 | bound_fraction_full | **0.03** | [SL04] | **[Phase 3]** amplicon tại 55°C |
 | 11 | tm_pair_match | 0.01 | [PAST24] | −0.02 từ V3; reverse cố định → redundant |
 | 12 | gc_clamp | 0.04 | [IDT-PQ] | +0.02 từ V3; 3' GC critical cho extension |

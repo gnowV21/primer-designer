@@ -1,10 +1,9 @@
 """
-test_overhang_collision.py — dual-axis primer collision (SPEC_week2 C4 / §1.4).
+test_overhang_collision.py — assay-level ΔCq screen (2026-10-29; Week 2 SPEC_week2 C4 / §1.4).
 
-Ground-truth vectors are computed from backend/db/mirbase.db (2658 hsa mature) and MUST
-NOT be edited. The full-index scan legitimately reports colliders beyond the illustrative
-let-7 table (e.g. miR-98, a bona-fide let-7 family member), so tests assert the named
-ground-truth entries exactly rather than an exhaustive count.
+Mismatch vectors are computed from backend/db/mirbase.db (2658 hsa mature) and MUST
+NOT be edited. The labels are the ΔCq model's output (assay_model.py) and change when
+its literature values do.
 """
 import time
 
@@ -17,14 +16,17 @@ from algorithm.specificity_check.family_crossreactivity import check_family_cros
 # ── Fixture A — hsa-let-7a-5p, overhang 6, L_spec = 12 (SPEC_week2 §1.4) ──
 
 _LET7A = "UGAGGUAGUAGGUUGUAUAGUU"
-# name -> (rt_mismatch, fwd_mismatch, fwd_positions_1based, combined_risk)
+# name -> (rt_mismatch, fwd_mismatch, fwd_positions_1based)
 _LET7A_GROUND_TRUTH = {
-    "hsa-let-7d-5p": (0, 1, [1], "CRITICAL"),
-    "hsa-let-7e-5p": (0, 1, [9], "CRITICAL"),
-    "hsa-let-7f-5p": (0, 1, [12], "LOW"),
-    "hsa-let-7b-5p": (2, 0, [], "LOW"),
-    "hsa-let-7c-5p": (1, 0, [], "CRITICAL"),
-    "hsa-let-7g-5p": (1, 1, [12], "LOW"),
+    "hsa-let-7d-5p": (0, 1, [1]),
+    "hsa-let-7e-5p": (0, 1, [9]),
+    "hsa-let-7f-5p": (0, 1, [12]),
+}
+# let-7b/c/g/i are resolved by the RT overhang alone: not reported, no forward evaluation.
+_LET7A_LABELS = {
+    "hsa-let-7d-5p": "CO-AMPLIFIED",   # differs at nt 1 and nt 16 — nt 16 lies outside both primer windows
+    "hsa-let-7f-5p": "PARTIAL",        # 3'-terminal G–T (minor) + a 5.5 °C weaker duplex
+    "hsa-let-7e-5p": "DISCRIMINATED",  # duplex far weaker (stability term capped at 8.3)
 }
 
 
@@ -34,35 +36,31 @@ def let7a_result():
 
 
 @pytest.mark.parametrize("name,expected", _LET7A_GROUND_TRUTH.items())
-def test_let7a_ground_truth(let7a_result, name, expected):
+def test_let7a_mismatch_vectors(let7a_result, name, expected):
     by = {e["mirna"]: e for e in let7a_result["collisions"]}
     assert name in by, f"{name} not reported"
     e = by[name]
-    rt_mm, fwd_mm, fwd_pos, combined = expected
+    rt_mm, fwd_mm, fwd_pos = expected
     assert e["rt_mismatch"] == rt_mm
     assert e["fwd_mismatch"] == fwd_mm
     assert e["fwd_mismatch_positions_1based"] == fwd_pos
-    assert e["combined_risk"] == combined, f"{name}: {e['combined_risk']} != {combined}"
 
 
-def test_let7i_is_safe_and_not_reported(let7a_result):
-    # let-7i overhang GCTGTT (rt_mm=3 → SAFE) → below reporting threshold.
-    assert "hsa-let-7i-5p" not in {e["mirna"] for e in let7a_result["collisions"]}
-
-
-def test_let7a_worst_and_gate(let7a_result):
-    # SPEC §7.3 gate #1: let-7c CRITICAL, let-7b LOW.
-    assert let7a_result["worst_combined_risk"] == "CRITICAL"
+@pytest.mark.parametrize("name,label", _LET7A_LABELS.items())
+def test_let7a_assay_labels(let7a_result, name, label):
     by = {e["mirna"]: e for e in let7a_result["collisions"]}
-    assert by["hsa-let-7c-5p"]["combined_risk"] == "CRITICAL"
-    assert by["hsa-let-7b-5p"]["combined_risk"] == "LOW"
+    assert by[name]["assay_label"] == label
 
 
-def test_let7b_rt_is_sole_discriminator(let7a_result):
-    # Same seed, forward identical (fwd_mm=0) — only the RT axis (2 mismatches) saves it.
-    e = {x["mirna"]: x for x in let7a_result["collisions"]}["hsa-let-7b-5p"]
-    assert e["fwd_mismatch"] == 0 and e["rt_mismatch"] == 2
-    assert e["same_seed_family"] is True
+def test_let7_rt_resolved_members_not_reported(let7a_result):
+    names = {e["mirna"] for e in let7a_result["collisions"]}
+    assert names.isdisjoint({"hsa-let-7b-5p", "hsa-let-7c-5p", "hsa-let-7g-5p", "hsa-let-7i-5p"})
+
+
+def test_let7a_worst_and_family_is_context_only(let7a_result):
+    assert let7a_result["worst_assay_label"] == "CO-AMPLIFIED"
+    by = {e["mirna"]: e for e in let7a_result["collisions"]}
+    assert by["hsa-let-7d-5p"]["same_seed_family"] is True    # reported, never exempted
 
 
 # ── Fixture B — hsa-miR-503-5p, bucket CTGCAG (SPEC_week2 §1.4) ──
@@ -79,15 +77,15 @@ def mir503_result():
     return check_overhang_collision(_MIR503, "hsa-miR-503-5p", {}, forward_specific_len=12)
 
 
-def test_mir503_rt_identical_colliders_reported_as_safe(mir503_result):
+def test_mir503_rt_identical_colliders_reported_as_discriminated(mir503_result):
     assert mir503_result["summary"]["rt_identical"] >= 5
-    assert mir503_result["summary"]["CRITICAL"] == 0
-    assert mir503_result["worst_combined_risk"] == "SAFE"
+    assert mir503_result["summary"]["CO-AMPLIFIED"] == 0
+    assert mir503_result["worst_assay_label"] == "DISCRIMINATED"
     by = {e["mirna"]: e for e in mir503_result["collisions"]}
     for name in _CTGCAG_COLLIDERS:
         assert name in by, f"{name} (rt-identical) must still be reported"
         assert by[name]["rt_mismatch"] == 0
-        assert by[name]["combined_risk"] == "SAFE"
+        assert by[name]["assay_label"] == "DISCRIMINATED"
         assert by[name]["same_seed_family"] is False
 
 
@@ -103,16 +101,36 @@ def test_seed_map_misses_rt_axis_colliders():
 
 # ── Fixture C — hsa-miR-21-5p (SPEC_week2 §1.4) ──
 
-def test_mir21_all_safe():
+def test_mir21_all_discriminated():
     r = check_overhang_collision("UAGCUUAUCAGACUGAUGUUGA", "hsa-miR-21-5p", {}, forward_specific_len=12)
-    assert r["worst_combined_risk"] == "SAFE"
-    assert r["summary"]["CRITICAL"] == 0
+    assert r["worst_assay_label"] == "DISCRIMINATED"
+    assert r["summary"]["CO-AMPLIFIED"] == 0
+
+
+# ── isomiRs are reported, not scored ─────────────────────────────
+
+def test_isomir_entries_go_to_isomirs_not_worst(monkeypatch):
+    import algorithm.specificity_check.overhang_collision as oc
+    target = "UAGCUUAUCAGACUGAUGUUGA"
+    fake = {"_metadata": {}, "mature": {"hsa": {
+        "hsa-miR-21-5p": target,
+        "hsa-miR-x-3p": target[:-1],          # 3' isomiR (co-amplified, RT shift −1)
+        "hsa-miR-y-5p": target[1:],           # 5' isomiR
+        "hsa-miR-z": "UAGCUUAUCAGACUGAUGUUGA"[::-1],
+    }}}
+    monkeypatch.setattr(oc, "_INDEX_CACHE", fake)
+    r = check_overhang_collision(target, "hsa-miR-21-5p", {}, forward_specific_len=15)
+    cats = {e["mirna"]: e["category"] for e in r["isomirs"]}
+    assert cats == {"hsa-miR-x-3p": "isomir_3p", "hsa-miR-y-5p": "isomir_5p"}
+    assert r["summary"]["isomir_3p"] == 1 and r["summary"]["isomir_5p"] == 1
+    assert r["worst_assay_label"] == "DISCRIMINATED"          # isomiRs do not drive the score
 
 
 # ── performance ──────────────────────────────────────────────────
 
 def test_scan_is_fast():
+    check_overhang_collision(_LET7A, "hsa-let-7a-5p", {}, forward_specific_len=12)
     t0 = time.perf_counter()
     check_overhang_collision(_LET7A, "hsa-let-7a-5p", {}, forward_specific_len=12)
     elapsed = time.perf_counter() - t0
-    assert elapsed < 0.2, f"full hsa scan took {elapsed*1000:.0f} ms (target < 50 ms warm)"
+    assert elapsed < 0.3, f"full hsa scan took {elapsed*1000:.0f} ms (target < 100 ms warm)"

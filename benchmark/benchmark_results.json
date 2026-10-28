@@ -1639,7 +1639,7 @@
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 69
+        "amplicon_bp": 66
       },
       {
         "id": "mmu-miR-21a-3p",
@@ -3726,9 +3726,9 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "N/A (published core 9 nt < 10)",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CATCCTATCGTAAGTGCGTGCA",
+        "forward_tool": "AACCTGCTAAGTGCGTGCAT",
         "forward_published": "CTCTTCCTATTCCTAAGTGCGT",
-        "forward_tool_specific": "TAAGTGCGTGCA",
+        "forward_tool_specific": "TAAGTGCGTGCAT",
         "forward_pub_specific": "TAAGTGCGT",
         "forward_specific_overlap_nt": 9,
         "source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."

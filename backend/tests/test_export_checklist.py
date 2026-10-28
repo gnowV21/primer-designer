@@ -147,14 +147,17 @@ def results_with_overhang(sample_results):
     r["specificity_warnings"] = {
         **sample_results["specificity_warnings"],
         "overhang_collision": {
-            "worst_rt_risk": "HIGH",
-            "worst_combined_risk": "CRITICAL",
-            "summary": {"CRITICAL": 1, "LOW": 2, "rt_identical": 0, "n_reported": 3, "truncated": False},
+            "axis_model": "delta_cq",
+            "worst_assay_label": "CO-AMPLIFIED",
+            "summary": {"CO-AMPLIFIED": 1, "PARTIAL": 1, "rt_identical": 0, "isomir_5p": 0,
+                        "isomir_3p": 1, "identical": 0, "n_reported": 2, "truncated": False},
             "collisions": [
-                {"mirna": "hsa-let-7c-5p", "combined_risk": "CRITICAL", "rt_risk": "HIGH", "fwd_risk": "IDENTICAL"},
-                {"mirna": "hsa-let-7f-5p", "combined_risk": "LOW", "rt_risk": "IDENTICAL", "fwd_risk": "LOW"},
+                {"mirna": "hsa-let-7d-5p", "assay_label": "CO-AMPLIFIED", "delta_cq": 0.09,
+                 "cross_reactivity_pct": 93.95},
+                {"mirna": "hsa-let-7f-5p", "assay_label": "PARTIAL", "delta_cq": 3.65,
+                 "cross_reactivity_pct": 7.97},
             ],
-            "interpretation": "Specificity is the product of the RT 3' overhang and forward 5' prefix axes.",
+            "interpretation": "ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD.",
         },
     }
     return r
@@ -162,8 +165,8 @@ def results_with_overhang(sample_results):
 
 class TestDualAxisExport:
     _COLS = [
-        "rt_axis_worst_risk", "fwd_axis_worst_risk", "combined_worst_risk",
-        "n_critical_colliders", "top_critical_collider",
+        "assay_worst_label", "n_co_amplified", "n_partial",
+        "top_off_target", "n_isomir_or_identical",
     ]
 
     def test_csv_has_dual_axis_columns(self, client, results_with_overhang):
@@ -174,15 +177,15 @@ class TestDualAxisExport:
         body = resp.data.decode("utf-8")
         for col in self._COLS:
             assert col in body, f"CSV missing dual-axis column '{col}'"
-        assert "hsa-let-7c-5p" in body   # top_critical_collider value
-        assert "CRITICAL" in body
+        assert "hsa-let-7d-5p" in body   # top_off_target value
+        assert "CO-AMPLIFIED" in body
 
     def test_csv_dual_axis_absent_when_no_overhang(self, client, sample_results):
         resp = client.post("/api/export", json={
             "format": "csv", "results": sample_results, "include_checklist": True,
         })
         body = resp.data.decode("utf-8")
-        assert "combined_worst_risk" not in body   # no overhang_collision → no rows
+        assert "assay_worst_label" not in body   # no overhang_collision → no rows
 
     def test_pdf_ok_with_overhang(self, client, results_with_overhang):
         try:
