@@ -20,7 +20,7 @@ from .specificity_check.isomir_flag import check_3prime_isomir_flag
 from .sequence_utils import rna_to_dna, reverse_complement, calculate_gc
 from .thermodynamics import calculate_tm_nn, calculate_end_stability, _get_p3_params
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 
 # ViennaRNA — optional, fallback to primer3 MFE estimate when unavailable.
 # The RT primer is DNA, so it is folded with the DNA energy set (Mathews 2004).

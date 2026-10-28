@@ -22,7 +22,7 @@ import re
 import subprocess
 from typing import Optional
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 
 from algorithm.constants import (
     BLAST_WORD_SIZE, BLAST_EVALUE_CUTOFF, BLAST_MAX_TARGET_SEQS,

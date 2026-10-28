@@ -8,7 +8,7 @@
 #                    from algorithm.structure_check.heterodimer import check_all_heterodimers
 # ================================================================
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from ..constants import (
     HAIRPIN_DG_MAX_INTERNAL,
     SELF_DIMER_DG_MAX, SELF_DIMER_DG_3PRIME_MAX,

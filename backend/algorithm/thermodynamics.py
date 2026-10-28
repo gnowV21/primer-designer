@@ -11,7 +11,7 @@
 # ================================================================
 
 import math
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from functools import lru_cache
 from .constants import (
     P3_DEFAULT_MV_CONC, P3_DEFAULT_DV_CONC,

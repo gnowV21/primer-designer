@@ -12,7 +12,7 @@
 #          [IDT] OligoAnalyzer; [Kang17] dimer −9 kcal/mol threshold
 # ================================================================
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 
 from .constants import (
     HETERODIMER_HIGH_RISK_DG, HETERODIMER_LOW_RISK_DG, HETERODIMER_3PRIME_MIN_BP,
