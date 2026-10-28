@@ -545,11 +545,13 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         oc_rows, oc_interp = _overhang_axis_summary(results)
         if oc_interp:
             oc = results.get("specificity_warnings", {}).get("overhang_collision", {})
-            worst = oc.get("worst_combined_risk", "")
-            n_crit = oc.get("summary", {}).get("CRITICAL", 0)
+            worst = oc.get("worst_assay_label", "")
+            summ = oc.get("summary", {})
             notes.append(
-                f"<b>Primer-binding specificity:</b> worst combined risk {esc(str(worst))}, "
-                f"{n_crit} CRITICAL collider(s). {esc(oc_interp)}"
+                f"<b>Assay specificity (ΔCq model):</b> worst other miRNA {esc(str(worst))}; "
+                f"{summ.get('CO-AMPLIFIED', 0)} co-amplified, {summ.get('PARTIAL', 0)} partial; "
+                f"{summ.get('isomir_5p', 0) + summ.get('isomir_3p', 0) + summ.get('identical', 0)} "
+                f"isomiR/identical entr(ies) not scored. {esc(oc_interp)}"
             )
         prov = _family_provenance_note(results)
         if prov:
@@ -930,26 +932,23 @@ def _family_provenance_note(results: dict) -> str:
 
 
 def _overhang_axis_summary(results: dict):
-    """Return ([(label, value), ...], interpretation) for the dual primer-binding axes."""
+    """Return ([(label, value), ...], interpretation) for the assay-level ΔCq screen."""
     oc = results.get("specificity_warnings", {}).get("overhang_collision", {}) or {}
     if not oc:
         return [], ""
     summ = oc.get("summary", {})
-    fwd_order = {"IDENTICAL": 0, "HIGH": 1, "LOW": 2, "SAFE": 3}
-    fwd_worst = min(
-        (e.get("fwd_risk", "SAFE") for e in oc.get("collisions", [])),
-        key=lambda r: fwd_order.get(r, 3), default="SAFE",
-    )
-    top_crit = next(
-        (e.get("mirna") for e in oc.get("collisions", []) if e.get("combined_risk") == "CRITICAL"),
-        "none",
-    )
+    top = next(iter(oc.get("collisions", [])), None)
+    top_txt = "none"
+    if top and top.get("assay_label") != "DISCRIMINATED":
+        top_txt = (f"{top.get('mirna')} (ΔCq {top.get('delta_cq')}, "
+                   f"{top.get('cross_reactivity_pct')} %)")
     rows = [
-        ("rt_axis_worst_risk",   str(oc.get("worst_rt_risk", ""))),
-        ("fwd_axis_worst_risk",  str(fwd_worst)),
-        ("combined_worst_risk",  str(oc.get("worst_combined_risk", ""))),
-        ("n_critical_colliders", str(summ.get("CRITICAL", 0))),
-        ("top_critical_collider", str(top_crit)),
+        ("assay_worst_label",      str(oc.get("worst_assay_label", ""))),
+        ("n_co_amplified",         str(summ.get("CO-AMPLIFIED", 0))),
+        ("n_partial",              str(summ.get("PARTIAL", 0))),
+        ("top_off_target",         top_txt),
+        ("n_isomir_or_identical",  str(summ.get("isomir_5p", 0) + summ.get("isomir_3p", 0)
+                                       + summ.get("identical", 0))),
     ]
     return rows, oc.get("interpretation", "")
 

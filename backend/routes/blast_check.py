@@ -46,7 +46,8 @@ def blast_check():
           "mirna_id": "hsa-miR-21-5p",                // optional, to skip self-hit
           "mirna_sequence": "UAGCUUAUCAGACUGAUGUUGA", // optional, on-target for the Tm gate
           "conditions": {"mv_conc": 50, "dv_conc": 1.5,
-                         "dntp_conc": 0.8, "dna_conc": 200}  // optional, design effective_p3
+                         "dntp_conc": 0.8, "dna_conc": 200}, // optional, design effective_p3
+          "species": "hsa"                            // optional, design species
         }
 
     Response: see SPEC_phase3.md §8.9
@@ -64,7 +65,13 @@ def blast_check():
     try:
         p3 = resolve_p3_conditions(data.get("conditions"))
     except (TypeError, ValueError, AttributeError):
-        return jsonify({"error": "conditions must map mv_conc/dv_conc/dntp_conc/dna_conc to numbers"}), 400
+        return jsonify({"error": "conditions must map mv_conc/dv_conc/dntp_conc/dna_conc to "
+                                 "finite concentrations (mv_conc, dna_conc > 0)"}), 400
+    # Species of the design (3-letter miRBase code). Without it the scan defaults to
+    # mirna_id's prefix, or human when designing from a raw sequence.
+    species = (data.get("species") or "").strip().lower() or None
+    if species and not (len(species) == 3 and species.isalpha()):
+        return jsonify({"error": "species must be a 3-letter miRBase code, e.g. 'mmu'"}), 400
 
     if not fwd:
         return jsonify({"error": "forward_primer is required"}), 400
@@ -87,7 +94,7 @@ def blast_check():
 
     # ── 3. Cache lookup ─────────────────────────────────────────
     db_version = db_info.get("build_date", "unknown")
-    context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq]
+    context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq, species or ""]
                        + [f"{k}={p3[k]:g}" for k in sorted(p3)])
     cache_key = BlastCache._compute_key(fwd, rev, db_version, mirna_id, context)
     cached = _cache.get_result(fwd, rev, db_version, mirna_id, context)
@@ -113,6 +120,7 @@ def blast_check():
             timeout=60,
             target_sequence=mirna_seq or None,
             conditions=p3,
+            species=species,
         )
         _circuit_breaker.record_success()
     except subprocess.TimeoutExpired:

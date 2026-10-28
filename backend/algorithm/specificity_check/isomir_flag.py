@@ -103,12 +103,21 @@ def check_isomir_flag(
     }
 
 
-def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
+_BIOFLUIDS = ("serum", "plasma", "urine")
+
+
+def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
+                             sample_type: str | None = None) -> dict:
     """
     How much of this miRNA exists as 3'-end isoforms (isomiRdb, audit SCI-10).
-    The stem-loop RT primer pairs with the canonical 3'-terminal `overhang_len` nt,
-    so 3'-extended/trimmed/tailed isoforms are captured poorly [Nejad18]: the assay
-    measures the canonical 3' form, not the whole miRNA. Informational — not scored.
+    The stem-loop RT primer pairs with the canonical 3'-terminal `overhang_len` nt.
+    Variants 1 nt shorter or 1–2 nt longer are captured about as well as the
+    canonical form, 2 nt shorter ~3 Ct later [Schamberger14], so the signal is a
+    capture-weighted sum of 3' isoforms, not the canonical form alone [Magee17].
+    Informational — not scored.
+
+    sample_type: the design's sampleType. For biofluids a note says the fraction is
+    a median over all isomiRdb samples, of which serum + plasma are a small share.
     """
     db = _load_db3()
     meta = db.get("_metadata", {})
@@ -119,6 +128,7 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
         "overhang_len": overhang_len,
         "data_warning": meta.get("coverage_warning", ""),
         "source": f"{source.get('name', '?')} (PMID {source.get('pmid', '?')})" if source else None,
+        "sample_type_note": _biofluid_note(meta, sample_type),
     }
 
     # Entries may carry abundance only (no 3' isoform data) — same as no data here.
@@ -155,15 +165,32 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6) -> dict:
         "summary": summary,
         "warning": (
             summary + f" The stem-loop RT primer pairs with the canonical 3'-terminal "
-            f"{overhang_len} nt, so 3'-variant isoforms are captured less efficiently (±1-nt "
-            "variants partly, longer shifts poorly) [Nejad18]. The signal therefore reflects "
-            "mainly the canonical 3' form — here a minority of this miRNA. Report the target "
-            "as the canonical 3' isoform, or consider a 3'-tolerant chemistry (e.g. poly(A)-tailing RT)."
+            f"{overhang_len} nt, yet variants 1 nt shorter or 1–2 nt longer are detected about "
+            "as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. "
+            "The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical "
+            "form alone — here the canonical form is a minority. Report the result as the sum "
+            "of isoforms [Magee17]; isoform-resolved quantification needs sequencing."
+            + (" " + base["sample_type_note"] if base["sample_type_note"] else "")
         ) if level == "high" else None,
     }
 
 
 # ── Internal helpers ──────────────────────────────────────────────
+
+def _biofluid_note(meta: dict, sample_type: str | None) -> str | None:
+    """For serum/plasma/urine designs: the isomiRdb median pools every sample type."""
+    if (sample_type or "").lower() not in _BIOFLUIDS:
+        return None
+    method = meta.get("method") or {}
+    comp = method.get("sample_composition") or {}      # largest groups only
+    total = method.get("three_prime_samples_used") or sum(v.get("used", 0) for v in comp.values())
+    fluid = sum(comp.get(k, {}).get("used", 0) for k in ("serum", "plasma"))
+    share = (f"serum + plasma are {fluid:,} of {total:,} samples ({fluid / total:.0%}); "
+             if total else "")
+    return (f"This fraction is a median over all isomiRdb samples — {share}circulating "
+            "miRNAs can carry different 3' trimming and tailing, so the share in a "
+            f"{sample_type.lower()} sample may differ.")
+
 
 def _load_db3() -> dict:
     global _DB3_CACHE

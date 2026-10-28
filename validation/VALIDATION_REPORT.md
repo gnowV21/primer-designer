@@ -107,7 +107,7 @@ Every value below is recomputed independently from the exact sequence the tool u
 | mmu-miR-19a-3p | 13/13 PASS | `TCAGTT` = `TCAGTT` | 60.0 | 50.0 | 67 | — |
 | mmu-miR-144-3p | 12/12 PASS | `AGTACA` = `AGTACA` | 60.0 | 47.8 | 66 | — |
 | mmu-miR-511-5p | 12/12 PASS | `TGAGTG` = `TGAGTG` | 60.0 | 50.0 | 65 | — |
-| mmu-miR-467c-5p | 12/12 PASS | `CACATA` = `CACATA` | 60.0 | 50.0 | 69 | — |
+| mmu-miR-467c-5p | 12/12 PASS | `CACATA` = `CACATA` | 60.0 | 50.0 | 66 | — |
 | mmu-miR-21a-3p | 13/13 PASS | `GACAGC` = `GACAGC` | 60.0 | 52.4 | 67 | — |
 | osa-miR164a | 13/13 PASS | `TGCACG` = `TGCACG` | 60.0 | 57.1 | 67 | — |
 | osa-miR164c | 13/13 PASS | `TGCACG` = `TGCACG` | 60.0 | 54.5 | 68 | — |

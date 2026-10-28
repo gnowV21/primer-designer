@@ -28,7 +28,14 @@
 #   1 nt apart → same binding region, other tail; each pick labelled). GC clamp: only
 #   0 G/C in the last 3 nt is rejected; 1 G/C passes with a warning and the existing
 #   gc_clamp criterion (75 vs 100) scores it. Weights unchanged.
-ALGORITHM_VERSION = "3.2.0"
+#   3.3.0 (2026-10-29) — assay-level specificity: family_discrimination now scores the
+#   worst OTHER miRNA on a ΔCq model (ΔCq_RT + ΔCq_FWD, offset-aware, lower bounds of
+#   Chen05/Czimmerer13/Schamberger14/Stadhouders10) instead of the RT x FWD risk matrix
+#   with fixed-position windows; isomiRs / identical copies reported, not scored.
+#   tm_accuracy targets the user's annealing temperature (same as the pool and the
+#   tie-break); the overhang fixpoint ranks with the final key. 3' isomiR warning text
+#   follows Schamberger14 (±1 nt captured alike). Weights unchanged.
+ALGORITHM_VERSION = "3.3.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -495,8 +502,8 @@ assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 UNSCORED_CRITERIA_V4 = frozenset({"bound_fraction_binding"})
 
 # (Removed FAMILY_DISCRIMINATION_RISK_SCORE — legacy seed-axis mapping. Family
-# discrimination is scored on the primer-binding axis via COMBINED_RISK_SCORE
-# (Week2 C5); the seed axis is biological context only, never scored.)
+# discrimination is scored on the assay-level ΔCq model via ASSAY_LABEL_SCORE
+# (2026-10-29); the seed axis is biological context only, never scored.)
 
 # BLAST off-target parameters [Ye12] Ye et al. 2012 BMC Bioinformatics 13:134
 BLAST_WORD_SIZE        = 7       # [Ye12] — vs standard 11
@@ -545,7 +552,7 @@ BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 #   3 = self-hit by name + compatible sequence; hits under other names with an
 #       identical/compatible sequence folded into identical_sequence
 #   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
-BLAST_CLASSIFIER_VERSION = "4"
+BLAST_CLASSIFIER_VERSION = "5"
 # Self-hit identification. A hit named like the target is the target only if its
 # sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
 # the spread seen between miRBase 22.1 and sequences published against older
@@ -657,41 +664,72 @@ USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8). ON: NN tables are th
 
 
 # ================================================================
-# Primer-axis collision analysis (Week 2 P1)
-# Specificity of stem-loop RT-qPCR = RT capture (3' overhang) x forward
-# discrimination (5' prefix). An off-target co-amplifies only when BOTH axes
-# fail. See specificity_check/overhang_collision.py.
+# Assay-level cross-reactivity (ΔCq model, 2026-10-29; replaces the Week 2
+# RT x FWD risk matrix). An off-target gives signal only if the RT overhang
+# captures it AND the forward primer primes its cDNA; the delays add:
+#     ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD,   cross-reactivity ≈ 2^−ΔCq × 100 %.
+# Every value is the LOWER bound of the published range (project decision
+# 2026-10-29): the model predicts the most cross-reactivity the data allow.
+# Literature values were measured with TaqMan probes (Chen05, Schamberger14,
+# Stadhouders10); a SYBR assay lacks the probe's extra discrimination, so the
+# prediction is an optimistic bound there. See specificity_check/assay_model.py.
+# [Chen05] NAR 33:e179 | [Czimmerer13] PLoS One 8:e55168 | [Schamberger14] PLoS One
+# 9:e106315 (Fig. 6) | [Stadhouders10] J Mol Diagn 12:109 (PMC2797725) | [Kwok90] NAR
+# 18:999 | [Ye12] BMC Bioinformatics 13:134 | [Magee17] Non-Coding RNA 3:18
 # ================================================================
-RT_MM_REPORT_MAX        = 2      # report RT-axis colliders with <= 2 mismatches in the window
-FWD_MM_REPORT_MAX       = 2      # report FWD-axis colliders with <= 2 mismatches in the prefix
 FWD_PREFIX_LEN_FALLBACK = 12     # used when forward specific_length is unavailable (lower bound of [12..17])
 COLLISION_MAX_REPORT    = 25     # cap rows returned to the client
 # The recommender's RT-overhang ceiling reuses OVERHANG_LENGTH_MAX (=7) from Section A.
 
-# Combined risk keyed by (rt_risk, fwd_risk). CRITICAL only when the RT primer
-# fails to discriminate (IDENTICAL/HIGH) AND the forward primer also fails.
-COMBINED_RISK_MATRIX = {
-    ("IDENTICAL", "IDENTICAL"): "CRITICAL",
-    ("IDENTICAL", "HIGH"):      "CRITICAL",
-    ("IDENTICAL", "LOW"):       "LOW",
-    ("IDENTICAL", "SAFE"):      "SAFE",
-    ("HIGH", "IDENTICAL"):      "CRITICAL",
-    ("HIGH", "HIGH"):           "CRITICAL",
-    ("HIGH", "LOW"):            "LOW",
-    ("HIGH", "SAFE"):           "SAFE",
-    ("LOW", "IDENTICAL"):       "LOW",
-    ("LOW", "HIGH"):            "LOW",
-    ("LOW", "LOW"):             "SAFE",
-    ("LOW", "SAFE"):            "SAFE",
-    ("SAFE", "IDENTICAL"):      "SAFE",
-    ("SAFE", "HIGH"):           "SAFE",
-    ("SAFE", "LOW"):            "SAFE",
-    ("SAFE", "SAFE"):           "SAFE",
-}
+ASSAY_MAX_END_SHIFT = 2          # nt — registers tried at each end (isomiR range, Schamberger14)
 
-# Score contribution of the worst combined risk (used by scoring.py, Week 2 C5).
-# no_index_data → 100 (criterion cannot contribute; must be stated in the explanation).
-COMBINED_RISK_SCORE = {"SAFE": 100, "LOW": 70, "CRITICAL": 0, "no_index_data": 100}
+# RT axis (stem-loop overhang, RNA:DNA). Positions counted from the RT primer's 3'
+# terminus, which pairs with the 5'-most nt of the miRNA's 3'-terminal window.
+ASSAY_DCQ_RT_3P_LONGER   = 0.0   # off-target 3' end 1–2 nt longer: "detected all three isoforms similarly" [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT1   = 0.0   # 1 nt shorter: GACA/GAC assays "detected both … similarly" [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT2   = 3.0   # 2 nt shorter: "detected with ~3 Ct delay" [Schamberger14]
+ASSAY_DCQ_RT_WOBBLE      = 4.75  # single rG·dT pair: 3.7 % cross-signal (let-7a assay on let-7c) [Chen05]
+ASSAY_DCQ_RT_MM_NEAR     = 7.0   # single other mismatch, positions 1–3: 0.1 % ≈ 10 Cq; range 7–10 → 7 [Chen05]
+ASSAY_DCQ_RT_MM_FAR      = 3.5   # single other mismatch, positions 4–6: 6.8–9.0 % cross-signal [Czimmerer13]
+ASSAY_DCQ_RT_MULTI       = 8.0   # ≥2 mismatches: ≤0.3 % [Chen05]
+ASSAY_RT_NEAR_POSITIONS  = 3
+
+# FWD axis (forward primer on the off-target's cDNA, DNA:DNA). The mismatch only
+# costs the first cycles — later products carry the primer sequence — which is the
+# setting Stadhouders10 measured (standard Taq qPCR). Pairs are primer–template.
+# Lower bounds of the per-group ranges (Stadhouders10, Taq qPCR, 3'-terminal):
+ASSAY_DCQ_FWD_TERMINAL = {
+    "severe":       8.3,         # A–A, A–G, G–A, G–G, C–C: 8.29–9.09 Ct
+    "intermediate": 3.8,         # T–C, C–T, T–T: 3.77–4.75 Ct
+    "minor":        1.0,         # A–C, C–A, T–G, G–T: 0.99–1.91 Ct
+}
+ASSAY_FWD_TERMINAL_GROUP = {
+    ("A", "A"): "severe", ("A", "G"): "severe", ("G", "A"): "severe",
+    ("G", "G"): "severe", ("C", "C"): "severe",
+    ("T", "C"): "intermediate", ("C", "T"): "intermediate", ("T", "T"): "intermediate",
+    ("A", "C"): "minor", ("C", "A"): "minor", ("T", "G"): "minor", ("G", "T"): "minor",
+}
+ASSAY_DCQ_FWD_POS2       = 1.9   # penultimate: mean 1.87 Ct (no range reported) [Stadhouders10]
+ASSAY_DCQ_FWD_POS3_5     = 0.5   # positions 3 and 5: means 0.53 / 0.71 Ct; position 4 not tested [Stadhouders10]
+ASSAY_FWD_3P_WINDOW      = 5     # nt — beyond this a single mismatch costs ~0 [Kwok90; Ye12]
+ASSAY_DCQ_FWD_MULTI_3P   = 8.3   # ≥2 mismatches in the last 5 nt: no amplification with Taq [Stadhouders10];
+                                 # except a mismatched terminal T, which still amplifies [Kwok90 abstract]
+                                 # → use the terminal pair's value instead.
+ASSAY_DCQ_FWD_NO_TEMPLATE = 8.3  # primer 3' end runs past the off-target's end: nothing to extend
+# Duplex stability: ΔCq_FWD = max(table, slope × (Tm_on − Tm_off)). Self-derived two-state
+# (van 't Hoff, ΔH ≈ −90 kcal/mol) estimate already used for the BLAST Tm gate: 5 °C
+# weaker ≈ 10 % bound (3.3 Cq), 10 °C ≈ 1 % (6.6 Cq) → 0.66 Cq/°C. Not from literature.
+ASSAY_DCQ_PER_TM_DEGREE  = 0.66
+
+# Labels on ΔCq_assay — thresholds from the thesis proposal's cross-reactivity criteria.
+ASSAY_DCQ_COAMPLIFIED_BELOW = 3.3    # > 10 % cross-signal
+ASSAY_DCQ_DISCRIMINATED_AT  = 4.3    # < 5 % cross-signal; between the two → PARTIAL
+
+# Score contribution of the worst label among OTHER miRNAs (scoring.py criterion 15).
+# isomiRs and identical-sequence copies are reported but not scored: no primer design
+# can avoid them (project decision 2026-10-29). no_index_data → 100 (stated in the
+# explanation).
+ASSAY_LABEL_SCORE = {"DISCRIMINATED": 100, "PARTIAL": 70, "CO-AMPLIFIED": 0, "no_index_data": 100}
 
 # ---- Short-duplex reporting (Week 2 P4) --------------------------
 # NN parameters are calibrated on longer duplexes; below this length the initiation

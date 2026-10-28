@@ -216,10 +216,18 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         overhang_len=binding_len, forward_specific_len=None,
         species=params.get("species"),
     )
+    # One ranking key for the fixpoint and the final order (score, then closer Tm to
+    # Ta, then sequence — never generation order), so the length the winner is
+    # scored against is the reported winner's own length.
+    _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
+
+    def _rank_key(x):
+        return (-x["total_score"], abs(x.get("tm_full", 0) - _ta), x["sequence"])
+
     scored = _score_all(overhang_collision)
     _seen_L = set()
     for _ in range(len(FORWARD_SPECIFIC_LENGTHS) + 1):
-        best_L = max(scored, key=lambda x: x["total_score"]).get("specific_length")
+        best_L = min(scored, key=_rank_key).get("specific_length")
         if not best_L or best_L == overhang_collision.get("forward_specific_len") or best_L in _seen_L:
             break
         _seen_L.add(best_L)
@@ -232,9 +240,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
 
     # Rank by score (ties: closer Tm, then sequence — never generation order), then pick
     # the top N with relaxing diversity (v3.2.0; see select_diverse_top).
-    _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
-    ranked = sorted(scored, key=lambda x: (-x["total_score"],
-                                           abs(x.get("tm_full", 0) - _ta), x["sequence"]))
+    ranked = sorted(scored, key=_rank_key)
     top_n = select_diverse_top(ranked, CANDIDATES_TOP_N)
 
     # Amplicon melting Tm + SYBR dimer proximity warning (SPEC_phase5 PART D).
@@ -290,16 +296,26 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             p["predicted_amplicon_tm_mg_span"] = None
             p["dimer_tm_warning"] = None
 
-    # Primer-axis collision warning — this is the specificity/scoring axis (Week2 C5).
+    # Assay-level specificity warning — the specificity/scoring axis (ΔCq model).
     _oc_sum = overhang_collision.get("summary", {})
-    if _oc_sum.get("CRITICAL", 0) >= 1:
+    _oc_worst = next(iter(overhang_collision.get("collisions", [])), None)
+    if _oc_sum.get("CO-AMPLIFIED", 0) >= 1:
         global_warnings.append({
             "field": "overhang_collision",
             "severity": "critical",
             "message": (
-                f"{_oc_sum['CRITICAL']} miRNA(s) share BOTH the RT 3'-overhang and the forward "
-                f"binding site (combined risk CRITICAL; worst = {overhang_collision.get('worst_combined_risk')}). "
-                "This assay may co-amplify them. See specificity_warnings.overhang_collision."
+                f"{_oc_sum['CO-AMPLIFIED']} other miRNA(s) predicted to co-amplify (ΔCq_assay < 3.3, "
+                f"> 10 % cross-signal; worst {_oc_worst['mirna']}, ≈{_oc_worst['cross_reactivity_pct']:.0f} %). "
+                "See specificity_warnings.overhang_collision."
+            ),
+        })
+    elif _oc_sum.get("PARTIAL", 0) >= 1:
+        global_warnings.append({
+            "field": "overhang_collision",
+            "severity": "warning",
+            "message": (
+                f"{_oc_sum['PARTIAL']} other miRNA(s) only partly discriminated (ΔCq_assay 3.3–4.3, "
+                "5–10 % cross-signal). See specificity_warnings.overhang_collision."
             ),
         })
     elif _oc_sum.get("rt_identical", 0) > 0:
@@ -309,6 +325,17 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "message": (
                 f"{_oc_sum['rt_identical']} miRNA(s) share the RT 3'-overhang (byte-identical RT "
                 "primer) but are resolved by the forward primer. Relevant for multiplex / RT-primer pooling."
+            ),
+        })
+    _n_iso = sum(_oc_sum.get(k, 0) for k in ("isomir_5p", "isomir_3p", "identical"))
+    if _n_iso:
+        global_warnings.append({
+            "field": "overhang_collision",
+            "severity": "info",
+            "message": (
+                f"{_n_iso} miRBase entr{'y is' if _n_iso == 1 else 'ies are'} an isomiR or identical copy "
+                "of the target (5'/3' end shifted ≤ 2 nt). No primer design can separate them: "
+                "report the result as the sum of isoforms (Magee et al. 2017)."
             ),
         })
 
@@ -434,6 +461,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "mirna_id": mirna_name,
             "mirna_accession": params.get("mirna_accession", ""),
             "species": params.get("species") or "",
+            # Resolved miRBase code ('hsa', 'mmu', …) — what the specificity screens used.
+            "species_code": overhang_collision.get("species") or "",
             "mirna_sequence": seq,
             "mirna_length": len(seq),
             "binding_region_nt": binding_len,

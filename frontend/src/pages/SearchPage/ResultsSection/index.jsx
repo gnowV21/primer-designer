@@ -160,23 +160,29 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
             mirnaId={mirnaId}
             mirnaSequence={metadata?.mirna_sequence}
             conditions={metadata?.design_settings?.effective_p3}
+            species={metadata?.species_code}
           />
         ))}
       </div>
 
-      {/* ── Primer-binding specificity (Week 2 P1): the RT + forward axes drive scoring ──
-           Collapsed by default; the worst risk stays visible in the header so a
-           CRITICAL result is never hidden behind a closed panel. */}
+      {/* ── Assay specificity (ΔCq model): the headline specificity verdict, drives scoring ──
+           Collapsed by default; the worst label stays visible in the header so a
+           co-amplified result is never hidden behind a closed panel. */}
       {specificity_warnings?.overhang_collision && (() => {
         const oc = specificity_warnings.overhang_collision;
-        const risk = oc.worst_combined_risk || 'SAFE';
-        const nCollide = (oc.collisions || []).length;
-        const tone = risk === 'CRITICAL' ? 'danger' : risk === 'LOW' ? 'warn' : 'ok';
+        const label = oc.worst_assay_label || 'DISCRIMINATED';
+        const s = oc.summary || {};
+        const nIso = (s.isomir_5p || 0) + (s.isomir_3p || 0) + (s.identical || 0);
+        const tone = label === 'CO-AMPLIFIED' ? 'danger' : label === 'PARTIAL' ? 'warn' : 'ok';
+        const parts = [label];
+        if (s['CO-AMPLIFIED']) parts.push(`${s['CO-AMPLIFIED']} co-amplified`);
+        if (s.PARTIAL) parts.push(`${s.PARTIAL} partial`);
+        if (nIso) parts.push(`${nIso} isomiR/identical`);
         return (
           <CollapsibleCard
-            title="Primer Binding Specificity"
+            title="Assay Specificity"
             tone={tone}
-            summary={`${risk}${nCollide ? ` · ${nCollide} screened collision${nCollide !== 1 ? 's' : ''}` : ''}`}
+            summary={parts.join(' · ')}
           >
             <OverhangCollisionPanel overhangCollision={oc} />
           </CollapsibleCard>

@@ -1,7 +1,7 @@
 {
  "generated_by": "backend/scripts/blast_tm_gate_sensitivity.py",
  "run_date": "2026-10-29",
- "classifier_version": "4",
+ "classifier_version": "5",
  "blast_db": {
   "mirbase_version": "22.1",
   "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
@@ -32,72 +32,72 @@
    "n_primers": 175,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 142,
-     "CRITICAL": 33
+     "SAFE": 127,
+     "CRITICAL": 48
     },
     "hits_by_tier": {
-     "CRITICAL": 57,
+     "CRITICAL": 90,
      "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 7102,
+    "safe_hits": 7104,
     "identical_sequence_hits": 24
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 123,
-     "CRITICAL": 33,
-     "MEDIUM": 19
+     "SAFE": 106,
+     "CRITICAL": 48,
+     "MEDIUM": 21
     },
     "hits_by_tier": {
-     "CRITICAL": 57,
+     "CRITICAL": 90,
      "HIGH": 0,
-     "MEDIUM": 62
+     "MEDIUM": 101
     },
-    "safe_hits": 7001,
+    "safe_hits": 7003,
     "identical_sequence_hits": 24
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 95,
-     "CRITICAL": 33,
-     "MEDIUM": 47
+     "SAFE": 75,
+     "CRITICAL": 48,
+     "MEDIUM": 52
     },
     "hits_by_tier": {
-     "CRITICAL": 57,
+     "CRITICAL": 90,
      "HIGH": 0,
-     "MEDIUM": 144
+     "MEDIUM": 221
     },
-    "safe_hits": 6882,
+    "safe_hits": 6883,
     "identical_sequence_hits": 24
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 68,
-     "MEDIUM": 74,
-     "CRITICAL": 33
+     "SAFE": 58,
+     "CRITICAL": 48,
+     "MEDIUM": 69
     },
     "hits_by_tier": {
-     "CRITICAL": 57,
+     "CRITICAL": 90,
      "HIGH": 0,
-     "MEDIUM": 304
+     "MEDIUM": 402
     },
-    "safe_hits": 6701,
+    "safe_hits": 6702,
     "identical_sequence_hits": 24
    },
    "no_tm_gate": {
     "primers_by_overall_risk": {
-     "CRITICAL": 115,
-     "HIGH": 14,
-     "MEDIUM": 20,
-     "SAFE": 26
+     "CRITICAL": 118,
+     "HIGH": 12,
+     "SAFE": 26,
+     "MEDIUM": 19
     },
     "hits_by_tier": {
-     "CRITICAL": 353,
-     "HIGH": 184,
-     "MEDIUM": 756
+     "CRITICAL": 464,
+     "HIGH": 206,
+     "MEDIUM": 782
     },
-    "safe_hits": 5746,
+    "safe_hits": 5742,
     "identical_sequence_hits": 24
    }
   },
@@ -105,72 +105,72 @@
    "n_primers": 100,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 87,
-     "CRITICAL": 13
+     "SAFE": 73,
+     "CRITICAL": 27
     },
     "hits_by_tier": {
-     "CRITICAL": 32,
+     "CRITICAL": 63,
      "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 4860,
+    "safe_hits": 4862,
     "identical_sequence_hits": 20
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 77,
-     "CRITICAL": 13,
-     "MEDIUM": 10
+     "SAFE": 61,
+     "CRITICAL": 27,
+     "MEDIUM": 12
     },
     "hits_by_tier": {
-     "CRITICAL": 32,
+     "CRITICAL": 63,
      "HIGH": 0,
-     "MEDIUM": 33
+     "MEDIUM": 72
     },
-    "safe_hits": 4788,
+    "safe_hits": 4790,
     "identical_sequence_hits": 20
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 61,
-     "CRITICAL": 13,
-     "MEDIUM": 26
+     "SAFE": 42,
+     "CRITICAL": 27,
+     "MEDIUM": 31
     },
     "hits_by_tier": {
-     "CRITICAL": 32,
+     "CRITICAL": 63,
      "HIGH": 0,
-     "MEDIUM": 80
+     "MEDIUM": 157
     },
-    "safe_hits": 4704,
+    "safe_hits": 4705,
     "identical_sequence_hits": 20
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 44,
-     "MEDIUM": 43,
-     "CRITICAL": 13
+     "SAFE": 34,
+     "CRITICAL": 27,
+     "MEDIUM": 39
     },
     "hits_by_tier": {
-     "CRITICAL": 32,
+     "CRITICAL": 63,
      "HIGH": 0,
-     "MEDIUM": 174
+     "MEDIUM": 271
     },
-    "safe_hits": 4590,
+    "safe_hits": 4591,
     "identical_sequence_hits": 20
    },
    "no_tm_gate": {
     "primers_by_overall_risk": {
-     "CRITICAL": 63,
-     "HIGH": 10,
-     "MEDIUM": 10,
-     "SAFE": 17
+     "CRITICAL": 66,
+     "HIGH": 8,
+     "SAFE": 17,
+     "MEDIUM": 9
     },
     "hits_by_tier": {
-     "CRITICAL": 234,
-     "HIGH": 110,
-     "MEDIUM": 505
+     "CRITICAL": 343,
+     "HIGH": 132,
+     "MEDIUM": 529
     },
-    "safe_hits": 3925,
+    "safe_hits": 3921,
     "identical_sequence_hits": 20
    }
   },
@@ -178,11 +178,11 @@
    "n_primers": 75,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 55,
-     "CRITICAL": 20
+     "SAFE": 54,
+     "CRITICAL": 21
     },
     "hits_by_tier": {
-     "CRITICAL": 25,
+     "CRITICAL": 27,
      "HIGH": 0,
      "MEDIUM": 0
     },
@@ -191,12 +191,12 @@
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 46,
-     "CRITICAL": 20,
+     "SAFE": 45,
+     "CRITICAL": 21,
      "MEDIUM": 9
     },
     "hits_by_tier": {
-     "CRITICAL": 25,
+     "CRITICAL": 27,
      "HIGH": 0,
      "MEDIUM": 29
     },
@@ -206,11 +206,11 @@
    "15": {
     "primers_by_overall_risk": {
      "MEDIUM": 21,
-     "CRITICAL": 20,
-     "SAFE": 34
+     "CRITICAL": 21,
+     "SAFE": 33
     },
     "hits_by_tier": {
-     "CRITICAL": 25,
+     "CRITICAL": 27,
      "HIGH": 0,
      "MEDIUM": 64
     },
@@ -219,14 +219,14 @@
    },
    "20": {
     "primers_by_overall_risk": {
-     "MEDIUM": 31,
-     "CRITICAL": 20,
+     "MEDIUM": 30,
+     "CRITICAL": 21,
      "SAFE": 24
     },
     "hits_by_tier": {
-     "CRITICAL": 25,
+     "CRITICAL": 27,
      "HIGH": 0,
-     "MEDIUM": 130
+     "MEDIUM": 131
     },
     "safe_hits": 2111,
     "identical_sequence_hits": 4
@@ -239,9 +239,9 @@
      "SAFE": 9
     },
     "hits_by_tier": {
-     "CRITICAL": 119,
+     "CRITICAL": 121,
      "HIGH": 74,
-     "MEDIUM": 251
+     "MEDIUM": 253
     },
     "safe_hits": 1821,
     "identical_sequence_hits": 4
@@ -327,7 +327,7 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 4,
+     "MEDIUM": 5,
      "safe": 44,
      "same_family": 1,
      "identical_sequence": 0
@@ -345,8 +345,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 140,
@@ -354,43 +354,62 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 5,
      "safe": 135,
      "same_family": 8,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 134,
      "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 7,
      "safe": 133,
      "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 8,
-     "HIGH": 3,
-     "MEDIUM": 14,
+     "CRITICAL": 16,
+     "HIGH": 4,
+     "MEDIUM": 15,
      "safe": 108,
      "same_family": 10,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7c-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.3,
+     "reason": "duplex Tm 49.3 °C vs 49.3 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.1,
+     "reason": "duplex Tm 48.1 °C vs 49.3 °C on target (1.2 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.4,
+     "reason": "duplex Tm 47.4 °C vs 49.3 °C on target (1.9 °C below) — within 5 °C of the intended target; the 3′-terminal T:G mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-let-7c-5p",
@@ -402,8 +421,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 118,
@@ -411,43 +430,62 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 5,
      "safe": 113,
      "same_family": 8,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 112,
      "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 7,
      "safe": 111,
      "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 8,
-     "HIGH": 3,
-     "MEDIUM": 14,
+     "CRITICAL": 16,
+     "HIGH": 4,
+     "MEDIUM": 15,
      "safe": 86,
      "same_family": 10,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.1,
+     "reason": "duplex Tm 48.1 °C vs 49.3 °C on target (1.2 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.3,
+     "reason": "duplex Tm 49.3 °C vs 49.3 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.4,
+     "reason": "duplex Tm 47.4 °C vs 49.3 °C on target (1.9 °C below) — within 5 °C of the intended target; the 3′-terminal T:G mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-16-5p",
@@ -477,10 +515,10 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 43,
      "same_family": 2,
      "identical_sequence": 0
@@ -489,14 +527,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
+     "MEDIUM": 5,
      "safe": 40,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 2,
      "MEDIUM": 4,
      "safe": 36,
@@ -655,10 +693,10 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 106,
      "same_family": 1,
      "identical_sequence": 0
@@ -667,16 +705,16 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 105,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 2,
-     "MEDIUM": 16,
+     "MEDIUM": 17,
      "safe": 85,
      "same_family": 2,
      "identical_sequence": 0
@@ -721,18 +759,18 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 26,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
-     "HIGH": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
      "MEDIUM": 2,
      "safe": 23,
      "same_family": 2,
@@ -769,10 +807,10 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 52,
      "same_family": 2,
      "identical_sequence": 0
@@ -781,14 +819,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 3,
      "safe": 51,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 5,
      "MEDIUM": 8,
      "safe": 39,
@@ -826,10 +864,10 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 77,
      "same_family": 1,
      "identical_sequence": 0
@@ -838,7 +876,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 3,
      "safe": 75,
      "same_family": 2,
      "identical_sequence": 0
@@ -846,7 +884,7 @@
     "no_tm_gate": {
      "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 1,
+     "HIGH": 4,
      "MEDIUM": 7,
      "safe": 67,
      "same_family": 3,
@@ -866,7 +904,7 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 102,
@@ -875,7 +913,7 @@
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 101,
@@ -884,7 +922,7 @@
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 101,
@@ -893,24 +931,30 @@
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 5,
+     "MEDIUM": 6,
      "safe": 96,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 6,
+     "CRITICAL": 7,
      "HIGH": 1,
-     "MEDIUM": 16,
+     "MEDIUM": 17,
      "safe": 79,
      "same_family": 2,
      "identical_sequence": 0
     }
    },
    "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-125a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.9,
+     "reason": "duplex Tm 48.9 °C vs 50.4 °C on target (1.5 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
     {
      "subject_id": "hsa-miR-4324",
      "risk": "CRITICAL",
@@ -938,10 +982,10 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 89,
      "same_family": 2,
      "identical_sequence": 0
@@ -950,7 +994,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 4,
      "safe": 87,
      "same_family": 3,
      "identical_sequence": 0
@@ -959,15 +1003,15 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
+     "MEDIUM": 9,
      "safe": 82,
      "same_family": 4,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 2,
+     "CRITICAL": 5,
+     "HIGH": 3,
      "MEDIUM": 10,
      "safe": 73,
      "same_family": 4,
@@ -1082,7 +1126,7 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 3,
      "safe": 53,
      "same_family": 1,
      "identical_sequence": 0
@@ -1169,7 +1213,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 62,
      "same_family": 1,
      "identical_sequence": 0
@@ -1178,7 +1222,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 3,
      "safe": 61,
      "same_family": 1,
      "identical_sequence": 0
@@ -1187,14 +1231,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 3,
      "safe": 61,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 4,
      "HIGH": 4,
      "MEDIUM": 7,
      "safe": 49,
@@ -1271,8 +1315,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 139,
@@ -1280,35 +1324,35 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 138,
      "same_family": 2,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 138,
      "same_family": 2,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 137,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 21,
+     "CRITICAL": 23,
      "HIGH": 5,
      "MEDIUM": 7,
      "safe": 105,
@@ -1316,7 +1360,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-1297",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.0 °C on target (0.9 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-let-7b-5p",
@@ -1328,8 +1379,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 127,
@@ -1337,43 +1388,62 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 5,
      "safe": 122,
      "same_family": 8,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 121,
      "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 8,
      "safe": 119,
      "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 7,
-     "HIGH": 2,
-     "MEDIUM": 13,
+     "CRITICAL": 15,
+     "HIGH": 3,
+     "MEDIUM": 14,
      "safe": 98,
      "same_family": 10,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7c-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.5,
+     "reason": "duplex Tm 49.5 °C vs 48.3 °C on target (1.2 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.5,
+     "reason": "duplex Tm 49.5 °C vs 48.3 °C on target (1.2 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.4,
+     "reason": "duplex Tm 47.4 °C vs 48.3 °C on target (0.9 °C below) — within 5 °C of the intended target; the 3′-terminal T:G mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-7-5p",
@@ -1451,10 +1521,10 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 58,
      "same_family": 1,
      "identical_sequence": 0
@@ -1463,7 +1533,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 57,
      "same_family": 1,
      "identical_sequence": 0
@@ -1472,14 +1542,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
+     "MEDIUM": 6,
      "safe": 53,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 4,
      "HIGH": 2,
      "MEDIUM": 4,
      "safe": 49,
@@ -1499,8 +1569,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 90,
@@ -1508,8 +1578,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 90,
@@ -1517,34 +1587,53 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 89,
      "same_family": 4,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 88,
      "same_family": 5,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 4,
-     "HIGH": 1,
+     "CRITICAL": 8,
+     "HIGH": 2,
      "MEDIUM": 3,
      "safe": 80,
      "same_family": 5,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-20b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.7,
+     "reason": "duplex Tm 45.7 °C vs 48.1 °C on target (2.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-miR-106a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.6,
+     "reason": "duplex Tm 46.6 °C vs 48.1 °C on target (1.5 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-miR-17-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.7,
+     "reason": "duplex Tm 46.7 °C vs 48.1 °C on target (1.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-let-7d-5p",
@@ -1556,8 +1645,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 98,
@@ -1565,8 +1654,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 98,
@@ -1574,19 +1663,19 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 92,
      "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 92,
      "same_family": 9,
      "identical_sequence": 0
@@ -1594,14 +1683,33 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 8,
+     "HIGH": 5,
+     "MEDIUM": 12,
      "safe": 82,
      "same_family": 9,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7c-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.5,
+     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.5,
+     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-let-7a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.5,
+     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-let-7e-5p",
@@ -1625,7 +1733,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 5,
      "safe": 120,
      "same_family": 4,
      "identical_sequence": 0
@@ -1634,7 +1742,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
+     "MEDIUM": 8,
      "safe": 117,
      "same_family": 5,
      "identical_sequence": 0
@@ -1643,16 +1751,16 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 9,
+     "MEDIUM": 18,
      "safe": 107,
      "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 12,
      "HIGH": 2,
-     "MEDIUM": 18,
+     "MEDIUM": 19,
      "safe": 92,
      "same_family": 10,
      "identical_sequence": 0
@@ -3645,7 +3753,7 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 13,
+     "MEDIUM": 14,
      "safe": 90,
      "same_family": 1,
      "identical_sequence": 0
@@ -3654,14 +3762,14 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 19,
+     "MEDIUM": 21,
      "safe": 83,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 4,
      "HIGH": 3,
      "MEDIUM": 31,
      "safe": 67,
@@ -3726,7 +3834,7 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 1,
+     "HIGH": 2,
      "MEDIUM": 8,
      "safe": 119,
      "same_family": 1,
@@ -3763,27 +3871,27 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 3,
      "safe": 66,
      "same_family": 3,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 3,
      "safe": 66,
      "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
+     "CRITICAL": 5,
+     "HIGH": 1,
      "MEDIUM": 5,
      "safe": 58,
      "same_family": 3,
@@ -3802,8 +3910,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 74,
@@ -3811,8 +3919,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 74,
@@ -3820,8 +3928,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 74,
@@ -3829,8 +3937,8 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 73,
@@ -3839,7 +3947,7 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 11,
      "safe": 62,
@@ -3847,7 +3955,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-103a-1-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.2,
+     "reason": "duplex Tm 46.2 °C vs 48.2 °C on target (2.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-143-3p",
@@ -3880,7 +3995,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 86,
      "same_family": 1,
      "identical_sequence": 0
@@ -3889,7 +4004,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 86,
      "same_family": 1,
      "identical_sequence": 0
@@ -3897,7 +4012,7 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 20,
      "safe": 64,
      "same_family": 1,
@@ -3928,7 +4043,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 6,
      "safe": 93,
      "same_family": 5,
      "identical_sequence": 0
@@ -3937,7 +4052,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 9,
      "safe": 90,
      "same_family": 8,
      "identical_sequence": 0
@@ -3946,16 +4061,16 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
+     "MEDIUM": 11,
      "safe": 88,
      "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 4,
+     "CRITICAL": 12,
      "HIGH": 5,
-     "MEDIUM": 11,
+     "MEDIUM": 13,
      "safe": 69,
      "same_family": 10,
      "identical_sequence": 0
@@ -3973,8 +4088,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 86,
@@ -3982,43 +4097,56 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 3,
      "safe": 83,
      "same_family": 5,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 6,
      "safe": 80,
      "same_family": 7,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 8,
      "safe": 78,
      "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 10,
      "HIGH": 4,
-     "MEDIUM": 8,
+     "MEDIUM": 10,
      "safe": 64,
      "same_family": 10,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7i-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.8,
+     "reason": "duplex Tm 45.8 °C vs 47.2 °C on target (1.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-miR-4500",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.8,
+     "reason": "duplex Tm 42.8 °C vs 47.2 °C on target (4.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-let-7i-5p",
@@ -4030,8 +4158,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 108,
@@ -4039,43 +4167,56 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 3,
      "safe": 105,
      "same_family": 5,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 102,
      "same_family": 8,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 6,
      "safe": 102,
      "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 10,
      "HIGH": 4,
-     "MEDIUM": 10,
+     "MEDIUM": 12,
      "safe": 84,
      "same_family": 10,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-let-7g-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.2,
+     "reason": "duplex Tm 47.2 °C vs 45.8 °C on target (1.4 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "hsa-miR-4500",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.8,
+     "reason": "duplex Tm 42.8 °C vs 45.8 °C on target (3.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-98-5p",
@@ -4096,10 +4237,10 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 90,
      "same_family": 2,
      "identical_sequence": 0
@@ -4108,7 +4249,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 6,
      "safe": 86,
      "same_family": 4,
      "identical_sequence": 0
@@ -4117,16 +4258,16 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 10,
      "safe": 82,
      "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 3,
-     "MEDIUM": 9,
+     "CRITICAL": 9,
+     "HIGH": 5,
+     "MEDIUM": 10,
      "safe": 68,
      "same_family": 10,
      "identical_sequence": 0
@@ -4276,26 +4417,26 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 37,
      "same_family": 1,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 37,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 35,
@@ -4318,7 +4459,7 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 217,
@@ -4327,7 +4468,7 @@
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 8,
      "safe": 209,
@@ -4336,7 +4477,7 @@
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 12,
      "safe": 205,
@@ -4345,7 +4486,7 @@
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 29,
      "safe": 188,
@@ -4354,7 +4495,7 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 29,
+     "CRITICAL": 31,
      "HIGH": 2,
      "MEDIUM": 26,
      "safe": 161,
@@ -4368,6 +4509,18 @@
      "risk": "CRITICAL",
      "tm_offtarget": 48.4,
      "reason": "duplex Tm 48.4 °C vs 47.1 °C on target (1.3 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "mmu-miR-669l-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.1,
+     "reason": "duplex Tm 47.1 °C vs 47.1 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "mmu-miR-669f-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.1,
+     "reason": "duplex Tm 47.1 °C vs 47.1 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
     }
    ]
   },
@@ -4478,7 +4631,7 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 6,
-     "HIGH": 1,
+     "HIGH": 3,
      "MEDIUM": 9,
      "safe": 42,
      "same_family": 2,
@@ -4698,14 +4851,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 4,
+     "MEDIUM": 5,
      "safe": 111,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 1,
      "MEDIUM": 6,
      "safe": 107,
@@ -4868,17 +5021,17 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 100,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 4,
      "HIGH": 2,
      "MEDIUM": 7,
      "safe": 88,
@@ -4899,7 +5052,7 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 45,
@@ -4908,7 +5061,7 @@
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 45,
@@ -4917,7 +5070,7 @@
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 44,
@@ -4926,7 +5079,7 @@
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 2,
      "safe": 43,
@@ -4936,14 +5089,20 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 1,
-     "MEDIUM": 3,
+     "HIGH": 2,
+     "MEDIUM": 4,
      "safe": 38,
      "same_family": 2,
      "identical_sequence": 0
     }
    },
    "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-21c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.3,
+     "reason": "duplex Tm 46.3 °C vs 46.6 °C on target (0.3 °C below) — within 5 °C of the intended target; the 3′-terminal A:C mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    },
     {
      "subject_id": "mmu-miR-3965",
      "risk": "CRITICAL",
@@ -4971,19 +5130,19 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 95,
      "same_family": 1,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 2,
      "safe": 94,
      "same_family": 2,
      "identical_sequence": 0
@@ -4992,15 +5151,15 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 4,
+     "MEDIUM": 7,
      "safe": 89,
      "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 5,
+     "CRITICAL": 3,
+     "HIGH": 6,
      "MEDIUM": 6,
      "safe": 81,
      "same_family": 3,
@@ -5019,8 +5178,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 15,
@@ -5028,8 +5187,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 14,
@@ -5037,8 +5196,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 14,
@@ -5046,8 +5205,8 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 2,
      "safe": 13,
@@ -5056,7 +5215,7 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 3,
      "safe": 11,
@@ -5064,7 +5223,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-181a-1-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.5,
+     "reason": "duplex Tm 47.5 °C vs 47.5 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "mmu-miR-19a-3p",
@@ -5076,8 +5242,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 53,
@@ -5085,8 +5251,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 53,
@@ -5094,8 +5260,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 53,
@@ -5103,8 +5269,8 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 53,
@@ -5112,8 +5278,8 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 5,
      "MEDIUM": 13,
      "safe": 35,
@@ -5121,7 +5287,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-19b-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.5,
+     "reason": "duplex Tm 43.5 °C vs 47.7 °C on target (4.2 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "mmu-miR-144-3p",
@@ -5240,59 +5413,66 @@
   {
    "target": "mmu-miR-467c-5p",
    "mirna_id": "mmu-miR-467c-5p",
-   "primer": "CATCCTATCGTAAGTGCGTGCA",
+   "primer": "AACCTGCTAAGTGCGTGCAT",
    "group": "stem_loop",
    "target_sequence_source": "blast_db",
-   "tm_ontarget": 45.6,
+   "tm_ontarget": 45.4,
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 37,
-     "same_family": 0,
+     "safe": 39,
+     "same_family": 1,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 35,
+     "MEDIUM": 2,
+     "safe": 37,
      "same_family": 1,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 34,
+     "MEDIUM": 4,
+     "safe": 35,
      "same_family": 1,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 33,
+     "MEDIUM": 5,
+     "safe": 34,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 6,
-     "HIGH": 1,
-     "MEDIUM": 1,
-     "safe": 28,
+     "CRITICAL": 13,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 24,
      "same_family": 1,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-467d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 40.6,
+     "reason": "duplex Tm 40.6 °C vs 45.4 °C on target (4.8 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "mmu-miR-21a-3p",
@@ -7438,8 +7618,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 90,
@@ -7447,8 +7627,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 90,
@@ -7456,8 +7636,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 90,
@@ -7465,25 +7645,38 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 88,
      "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 5,
      "HIGH": 1,
-     "MEDIUM": 12,
+     "MEDIUM": 14,
      "safe": 72,
      "same_family": 4,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-6367",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.9,
+     "reason": "duplex Tm 48.9 °C vs 50.4 °C on target (1.5 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "mmu-miR-125a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.9,
+     "reason": "duplex Tm 48.9 °C vs 50.4 °C on target (1.5 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "ssc-miR-126-3p (Busk 2014)",
@@ -10333,8 +10526,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 68,
@@ -10342,8 +10535,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 68,
@@ -10351,8 +10544,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 68,
@@ -10360,25 +10553,38 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 3,
+     "MEDIUM": 5,
      "safe": 63,
      "same_family": 4,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 5,
      "HIGH": 2,
-     "MEDIUM": 13,
+     "MEDIUM": 15,
      "safe": 48,
      "same_family": 4,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-6367",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.4,
+     "reason": "duplex Tm 47.4 °C vs 47.4 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "mmu-miR-125b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.0,
+     "reason": "duplex Tm 49.0 °C vs 47.4 °C on target (1.6 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "mmu-miR-205-5p",
@@ -10465,26 +10671,26 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 33,
      "same_family": 1,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
+     "MEDIUM": 1,
      "safe": 33,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
      "MEDIUM": 1,
      "safe": 31,
@@ -10504,8 +10710,8 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 73,
@@ -10513,8 +10719,8 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 73,
@@ -10522,8 +10728,8 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 73,
@@ -10531,8 +10737,8 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
      "safe": 73,
@@ -10541,7 +10747,7 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 4,
      "HIGH": 1,
      "MEDIUM": 7,
      "safe": 62,
@@ -10549,7 +10755,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-146b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.5,
+     "reason": "duplex Tm 48.5 °C vs 48.5 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-9-5p",
@@ -10639,7 +10852,7 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
+     "MEDIUM": 2,
      "safe": 41,
      "same_family": 1,
      "identical_sequence": 0
@@ -10648,14 +10861,14 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 3,
      "safe": 40,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 5,
      "safe": 35,

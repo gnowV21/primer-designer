@@ -134,6 +134,7 @@ export default function QualitySummary({ results, onBlastResult }) {
         // so off-target and on-target Tm are computed exactly like the design's own.
         mirna_sequence: metadata?.mirna_sequence || undefined,
         conditions: metadata?.design_settings?.effective_p3 || undefined,
+        species: metadata?.species_code || undefined,
       }, { timeout: 65000 });   // backend allows the search itself up to 60 s
       setBlastResult(resp.data);
       setBlastState('done');

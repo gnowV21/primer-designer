@@ -136,7 +136,8 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
     # (templated shift, non-templated uridylation/adenylation) reduce RT capture of the
     # affected isoforms. Data-driven now — only miRNAs with a documented entry raise a
     # warning; others get a neutral info note (absence of evidence != evidence of absence).
-    three_prime_isomir = check_3prime_isomir_flag(mirna_name, binding_len)
+    three_prime_isomir = check_3prime_isomir_flag(
+        mirna_name, binding_len, sample_type=params.get("sampleType"))
     if three_prime_isomir["three_prime_isomir_risk"]:
         warnings.append({
             "field": "three_prime_isomir",
