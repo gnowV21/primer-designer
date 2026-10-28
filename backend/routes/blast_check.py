@@ -14,6 +14,7 @@ import subprocess
 from flask import Blueprint, jsonify, request
 
 from algorithm.specificity_check.blast_offtarget import (
+    is_mirbase_species,
     check_offtarget, resolve_p3_conditions, _METADATA,
 )
 from algorithm.specificity_check.blast_cache import BlastCache
@@ -70,8 +71,8 @@ def blast_check():
     # Species of the design (3-letter miRBase code). Without it the scan defaults to
     # mirna_id's prefix, or human when designing from a raw sequence.
     species = (data.get("species") or "").strip().lower() or None
-    if species and not (len(species) == 3 and species.isalpha()):
-        return jsonify({"error": "species must be a 3-letter miRBase code, e.g. 'mmu'"}), 400
+    if species and not is_mirbase_species(species):
+        return jsonify({"error": "species must be a miRBase species code, e.g. 'mmu' or 'kshv'"}), 400
 
     if not fwd:
         return jsonify({"error": "forward_primer is required"}), 400

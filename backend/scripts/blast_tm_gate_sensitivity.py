@@ -33,7 +33,9 @@ from datetime import date
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from algorithm.constants import BLAST_TM_CRITICAL_MARGIN, BLAST_CLASSIFIER_VERSION  # noqa: E402
+from algorithm.constants import (  # noqa: E402
+    BLAST_TM_CRITICAL_MARGIN, BLAST_CLASSIFIER_VERSION, MIRBASE_PREFIX_PATTERN,
+)
 from algorithm.sequence_utils import rna_to_dna  # noqa: E402
 from algorithm.specificity_check import blast_offtarget as bo  # noqa: E402
 
@@ -95,7 +97,7 @@ def main() -> int:
     _memoise_blast()
     rows, skipped = [], []
     for t in _targets():
-        if not re.match(r"^[a-z]{3}-", t["mirna_id"]):
+        if not re.match(rf"^{MIRBASE_PREFIX_PATTERN}-", t["mirna_id"]):
             skipped.append({**t, "reason": "no miRBase species prefix (not in miRBase; "
                                            "species not stated) — off-target set undefined"})
             continue

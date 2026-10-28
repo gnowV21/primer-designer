@@ -36,6 +36,7 @@ from algorithm.constants import (
     SELF_MAX_END_SHIFT, SELF_MIN_OVERLAP,
     BLAST_MAX_HITS_RETURNED, MIRBASE_HUMAN_PREFIX, UNIVERSAL_REVERSE,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
+    MIRBASE_PREFIX_PATTERN, VIRUS_HOST_SPECIES,
 )
 from algorithm.sequence_utils import reverse_complement, rna_to_dna
 from algorithm.specificity_check.assay_model import variant_category
@@ -522,9 +523,12 @@ def check_offtarget(
             "Run 'python scripts/build_blast_db.py' to build it first."
         )
 
-    if species and not re.fullmatch(r"[A-Za-z]{3}", species):
-        raise ValueError(f"species must be a 3-letter miRBase code, got {species!r}")
+    if species and not is_mirbase_species(species):
+        raise ValueError(f"species must be a miRBase species code, got {species!r}")
     species_prefix = f"{species.lower()}-" if species else _extract_species_prefix(mirna_id)
+    # A viral miRNA is measured in infected host cells: host miRNAs are off-targets too.
+    host = VIRUS_HOST_SPECIES.get(species_prefix.rstrip("-"))
+    screen_prefixes = (species_prefix, f"{host}-") if host else (species_prefix,)
     # Pre-compute once; passed into every _is_self_hit call to avoid per-hit recomputation
     m_norm = _normalize_mirna_name(mirna_id.lower()) if mirna_id else None
     # Seed-family of the target — used to fold same-family hits into one bucket (Fix B)
@@ -559,8 +563,8 @@ def check_offtarget(
     # The Tm gate applies to the forward primer only: a reverse primer has no
     # miRNA on-target to compare against.
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family, tm_on, p3, margins, target_sequence)
-        rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family) if check_reverse else None
+        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, screen_prefixes, timeout, target_family, tm_on, p3, margins, target_sequence)
+        rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, screen_prefixes, timeout, target_family) if check_reverse else None
         fwd_hits, fwd_safe, fwd_cs, fwd_fam, fwd_ident = fwd_future.result()
         rev_hits, rev_safe, rev_cs, rev_fam, _ = rev_future.result() if rev_future else ([], 0, 0, 0, [])
 
@@ -597,6 +601,7 @@ def check_offtarget(
             "tm_ontarget": tm_on,
             "target_sequence_source": target_source,
             "species": species_prefix.rstrip("-"),
+            "host_species": host,
             "safe_margin_c": safe_margin,
             "critical_margin_c": critical_margin,
             "conditions": p3,
@@ -609,7 +614,7 @@ def _check_primer(
     db_paths: list[str],
     mirna_id: Optional[str],
     m_norm: Optional[str],
-    species_prefix: str,
+    species_prefix: str | tuple[str, ...],
     timeout: int,
     target_family: Optional[str] = None,
     tm_on: Optional[float] = None,
@@ -883,14 +888,22 @@ def sequences_compatible(a: str, b: str,
     return False
 
 
+def is_mirbase_species(code: str) -> bool:
+    """A species code miRBase 22.1 has entries for ('hsa', 'kshv', …) — the pattern
+    alone would accept words such as 'human'."""
+    from algorithm.specificity_check.overhang_collision import known_species
+    code = (code or "").lower()
+    return bool(re.fullmatch(MIRBASE_PREFIX_PATTERN, code)) and code in known_species()
+
+
 def _extract_species_prefix(mirna_id: Optional[str]) -> str:
     """
-    Extract 3-letter miRBase species prefix from a miRNA ID.
-    'hsa-miR-21-5p' → 'hsa-', 'mmu-let-7a' → 'mmu-'.
+    Extract the miRBase species prefix (3–5 characters) from a miRNA ID.
+    'hsa-miR-21-5p' → 'hsa-', 'kshv-miR-K12-1' → 'kshv-'.
     Falls back to MIRBASE_HUMAN_PREFIX when no prefix is detected.
     """
     if mirna_id:
-        m = re.match(r'^([a-z]{3})-', mirna_id.lower())
+        m = re.match(rf'^({MIRBASE_PREFIX_PATTERN})-', mirna_id.lower())
         if m:
             return m.group(1) + "-"
     return MIRBASE_HUMAN_PREFIX

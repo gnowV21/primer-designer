@@ -26,6 +26,7 @@ from ..thermodynamics import calculate_tm_nn
 from ..sequence_utils import rna_to_dna
 from ..constants import (
     KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX, OVERHANG_LENGTH_MAX,
+    MIRBASE_PREFIX_PATTERN,
 )
 from .kwok import kwok_weighted_distance, PRIMER_3P_AT_WINDOW_START
 
@@ -53,7 +54,7 @@ def _resolve_species_prefix(mirna_name: str, species: str | None = None) -> str:
          used when the sequence was pasted without a miRBase name.
       3. Human default.
     """
-    if mirna_name and re.match(r"^[a-z]{3}-", mirna_name.strip().lower()):
+    if mirna_name and re.match(rf"^{MIRBASE_PREFIX_PATTERN}-", mirna_name.strip().lower()):
         from .blast_offtarget import _extract_species_prefix
         return _extract_species_prefix(mirna_name)
     if species:

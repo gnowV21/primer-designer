@@ -935,16 +935,16 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Cơ sở của biên 10 °C.** Theo quy ước của Primer3, ngưỡng mispriming nhiệt động được đặt thấp hơn Tm tối thiểu của mồi (`PRIMER_MIN_TM`) 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`, mặc định −1 = tắt trong Primer3, 47 trong Primer3Plus) — đã đối chiếu manual primer3.org. Các ngưỡng `*_TH` của Primer3 là giá trị Tm tuyệt đối, không phải độ chênh; việc đo khoảng 10 °C từ Tm_on của vùng đặc hiệu là lựa chọn của tool, chưa hiệu chỉnh bằng thực nghiệm. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
 
-**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v5): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
+**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v6): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
 
-Số liệu dưới đây dùng mồi #1 của **algorithm v3.3.0**, bộ phân loại v5 (chạy lại 2026-10-29). Lịch sử stem-loop, biên 10 °C: v3 29 hit CRITICAL / 13 mồi → v4 32 / 13 (base đầu 3′ bị BLAST cắt được khôi phục, §8.15) → **v5 63 / 27** (hit cùng họ seed không còn được miễn trừ, §8.16).
+Số liệu dưới đây dùng mồi #1 của **algorithm v3.4.0**, bộ phân loại v6 (chạy lại 2026-10-29). Lịch sử stem-loop, biên 10 °C: v3 29 hit CRITICAL / 13 mồi → v4 32 / 13 (base đầu 3′ bị BLAST cắt được khôi phục, §8.15) → v5 63 / 27 (hit cùng họ seed không còn được miễn trừ, §8.16) → **v6 65 / 29** (target EBV sàng lọc cả miRNA người, §8.17).
 
 | Biên SAFE (stem-loop, 100 mồi) | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
 |---|---|---|
-| 5 °C | 73 / 0 / 0 / 27 | 63 / 0 / 0 |
-| **10 °C** | **61 / 12 / 0 / 27** | **63 / 0 / 72** |
-| 15 °C | 42 / 31 / 0 / 27 | 63 / 0 / 157 |
-| 20 °C | 34 / 39 / 0 / 27 | 63 / 0 / 271 |
+| 5 °C | 71 / 0 / 0 / 29 | 65 / 0 / 0 |
+| **10 °C** | **55 / 16 / 0 / 29** | **65 / 0 / 78** |
+| 15 °C | 27 / 44 / 0 / 29 | 65 / 0 / 184 |
+| 20 °C | 15 / 56 / 0 / 29 | 65 / 0 / 345 |
 | Không có cổng Tm | 17 / 9 / 8 / 66 | 343 / 132 / 529 |
 
 Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 121 → 27 (mồi có CRITICAL 52 → 21). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
@@ -1041,6 +1041,18 @@ Tm_off tính trên khung đọc của mồi + 1 base phía sau, cùng quy ước
 
 **Kết quả trên 165 miRNA thiết kế được (v3.2.0 → v3.3.0).** Mồi #1 giữ vùng bám ở 164/165 (đổi: mmu-miR-467c-5p, 12 → 13 nt); điểm #1 trung bình +0,67 (−3,7 … +5,3) — chủ yếu vì bản sao trùng trình tự không còn bị tính là CRITICAL. Nhãn tệ nhất: 68 DISCRIMINATED, 6 CO-AMPLIFIED, 1 PARTIAL, **90 không có chỉ mục** (chỉ mục overhang mới có hsa/mmu/rno). Các ca cảnh báo đều là paralog đã biết khó tách: miR-20a ↔ miR-17/106a/20b (ΔCq 1,0–1,7), let-7a ↔ let-7d (1,4), miR-103a-2 ↔ 103a-1 (0,2), miR-19a ↔ 19b (2,8), miR-669 (3,0), miR-27b ↔ 27a (3,5, PARTIAL). 14 mục isomiR/trùng trình tự (10 identical — thường là tên cũ ↔ tên miRBase 22.1, ví dụ hsa-miR-25 ↔ hsa-miR-25-3p; 4 isomiR 5′, ví dụ mmu-miR-467a/b).
 
+
+### 8.17 Chỉ mục mọi loài, virus + loài chủ (2026-10-29, algorithm v3.4.0, BLAST v6)
+
+**Nguồn duy nhất.** `scripts/build_overhang_index.py` mặc định dựng chỉ mục cho **mọi loài** từ chính file `mature.fa` đã dùng để dựng BLAST DB (miRBase **22.1**, 271 loài, 48.885 trình tự). Script dừng nếu số trình tự khác với `data/blast_db/metadata.json`; metadata ghi `mirbase_release` và `mature_fa_sha256`. Tải miRBase CURRENT chỉ khi gọi rõ `--download-current` (nâng cấp phiên bản phải dựng lại cả BLAST). Test `test_index_matches_blast_db_release` khóa sự nhất quán này.
+
+**miRNA virus đo trong tế bào chủ.** Bộ sàng lọc = loài của target + loài chủ tự nhiên có trong miRBase (`VIRUS_HOST_SPECIES`): ebv, kshv, hcmv, hsv1/2, hiv1, hhv6b, bkv, jcv → hsa; rlcv, rrv, sv40, hbv (herpes B) → mml; mcmv, mghv → mmu; mdv1/2, hvt, iltv → gga; dev → apl; bhv1/5, blv → bta; prv → ssc. Virus mà loài chủ không có trong miRBase (hvsa, sfv, bpcv1/2, racpv) chỉ sàng lọc chính nó. Áp dụng cho cả mô hình ΔCq và BLAST (BLAST v6 giữ hit của loài chủ thay vì loại là "khác loài").
+
+**Độ phủ chú giải.** Ngoài hsa/mmu, kết quả kèm `annotation_note`: số miRNA miRBase 22.1 chú giải cho loài đó, và câu "DISCRIMINATED nghĩa là không có off-target **đã được chú giải**". Không thêm loài khác làm proxy (quyết định 2026-10-29) để tránh báo off-target không có thật.
+
+**Tiền tố loài 3–5 ký tự.** Regex cũ `^[a-z]{3}-` đọc `kshv-miR-K12-1`, `hcmv-…`, `mdv1-…` thành người (BLAST loại toàn bộ miRNA virus là "khác loài"). Nay `MIRBASE_PREFIX_PATTERN` = `[a-z][a-z0-9]{2,4}`, và mã loài gửi vào API phải có trong chỉ mục (`is_mirbase_species`). Bộ validation chỉ có `ebv` (3 ký tự) nên số liệu cũ không bị ảnh hưởng.
+
+**Kết quả trên 90 target trước đây `no_index_data`.** 77 DISCRIMINATED, 7 PARTIAL, 6 CO-AMPLIFIED; mồi #1 **không đổi ở cả 90**; điểm #1 trung bình −0,47 (trước là điểm trung tính 100). Ca cảnh báo đều là paralog đã biết: ath-miR156a ↔ 156g (ΔCq 1,3), osa-miR164a/b/c (0,0), ssc-miR-17 ↔ 106a/20b, ssc-miR-30c ↔ 30b (0,0), ssc-miR-103 ↔ 107, ssc-miR-27a ↔ 27b, ssc-miR-133a ↔ 133b (3,5). Còn 3 target "putative" (Busk 2014) không có tiền tố miRBase → vẫn không đánh giá được.
 
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 
