@@ -10,9 +10,14 @@ are stable around 10 °C, the margin is not cherry-picked.
 There is no ground truth here: counts are classifier outputs, not confirmed
 false or true positives. Wet-lab cross-reactivity tests supply that.
 
-On-target sequence: reference_mirnas.json matureSequence if given, else the BLAST
-DB entry for the id. A target is skipped if the primer's specific region is not a
-prefix of that sequence (e.g. a sequence that differs between miRBase releases).
+On-target sequence: reference_mirnas.json matureSequence (matched on the entry's
+`label`, which is what results.json calls `target`), else the BLAST DB entry for
+the id. Self-hits use the name + compatible-sequence rule (classifier v3), so
+pre-2016 names (Busk 2014: 'ssc-miR-21', 'mmu-miR-27b') work without renaming.
+Skipped, with reason: entries without a miRBase species prefix (Busk's 'putative
+miRNA1-3': not in miRBase, species not stated), or a specific region that is not a
+prefix of the target sequence. Results are reported per group — Busk 2014 is a
+poly(A)-tailing chemistry, the rest are stem-loop assays.
 
 Usage (repo root; needs blastn + the BLAST DB, not the Flask server):
     python backend/scripts/blast_tm_gate_sensitivity.py
@@ -65,19 +70,24 @@ def _memoise_blast():
 def _targets():
     results = json.load(open(_RESULTS, encoding="utf-8"))["targets"]
     ref = json.load(open(_REFERENCE, encoding="utf-8"))
-    given = {m["id"]: m.get("matureSequence") for m in ref["mirnas"]}
+    # results.json names each target by the reference entry's label (falls back to id).
+    by_label = {m.get("label", m["id"]): m for m in ref["mirnas"]}
     seen, out = set(), []
     for t in results:
         primer = (t.get("published_forward_tool") or "").upper()
         specific = (t.get("forward_tool_specific") or "").upper()
         if not primer or not specific or t.get("edge_expected"):
             continue
-        mirna_id = re.sub(r"\s*\(.*\)\s*$", "", t["target"]).strip()
+        entry = by_label.get(t["target"], {})
+        # "mmu-miR-194-5p (var)" → the miRBase name; "(Busk 2014)"-style suffixes too.
+        mirna_id = re.sub(r"\s*\(.*$", "", entry.get("id") or t["target"]).strip()
         if (primer, mirna_id) in seen:
             continue
         seen.add((primer, mirna_id))
         out.append({"target": t["target"], "mirna_id": mirna_id, "primer": primer,
-                    "specific": specific, "given_seq": given.get(t["target"])})
+                    "specific": specific, "given_seq": entry.get("matureSequence"),
+                    "group": "busk2014_polyA" if t.get("benchmark_group") == "polyA_system"
+                             else "stem_loop"})
     return out
 
 
@@ -85,6 +95,10 @@ def main() -> int:
     _memoise_blast()
     rows, skipped = [], []
     for t in _targets():
+        if not re.match(r"^[a-z]{3}-", t["mirna_id"]):
+            skipped.append({**t, "reason": "no miRBase species prefix (not in miRBase; "
+                                           "species not stated) — off-target set undefined"})
+            continue
         seq = t["given_seq"]
         source = "reference_mirnas.json"
         if not seq:
@@ -103,24 +117,28 @@ def main() -> int:
             r = bo.check_offtarget(t["primer"], "", t["mirna_id"], target_sequence=seq,
                                    safe_margin=m, critical_margin=BLAST_TM_CRITICAL_MARGIN)
             per_margin[f"{m:g}"] = r
-        # Baseline: the same hits classified without Tm data (tm_on=None → legacy rules).
-        hits, safe, _, fam = bo._check_primer(
+        # Baseline: the same hits and the same self/identity rules, but no Tm data
+        # (tm_on=None → Ye12/Kwok90 rules + legacy 10-nt anchor).
+        hits, safe, _, fam, ident = bo._check_primer(
             t["primer"], [bo._MIRBASE_DB], t["mirna_id"],
-            bo._normalize_mirna_name(t["mirna_id"].lower()),
+            bo._normalize_mirna_name(t["mirna_id"]),
             bo._extract_species_prefix(t["mirna_id"]), 60,
-            bo.get_family_id(t["mirna_id"]))
-        per_margin["no_tm_gate"] = {"summary": bo._summarise(hits, safe, 0, fam),
+            bo.get_family_id(t["mirna_id"]), target_sequence=seq)
+        per_margin["no_tm_gate"] = {"summary": bo._summarise(hits, safe, 0, fam, len(ident)),
                                     "forward_primer_hits": hits}
 
         rows.append({
             "target": t["target"], "mirna_id": t["mirna_id"], "primer": t["primer"],
+            "group": t["group"],
             "target_sequence_source": source,
             "tm_ontarget": per_margin["10"]["classification"]["tm_ontarget"],
+            "identical_sequence_hits": per_margin["10"]["identical_sequence_hits"],
             "results": {k: {"overall_risk": v["summary"]["overall_risk"],
                             **{tier: sum(h["risk"] == tier for h in v["forward_primer_hits"])
                                for tier in TIERS},
                             "safe": v["summary"]["safe_count"],
-                            "same_family": v["summary"]["same_family_count"]}
+                            "same_family": v["summary"]["same_family_count"],
+                            "identical_sequence": v["summary"]["identical_sequence_count"]}
                         for k, v in per_margin.items()},
             "critical_hits_at_10": [
                 {"subject_id": h["subject_id"], "risk": h["risk"],
@@ -133,13 +151,21 @@ def main() -> int:
               flush=True)
 
     settings = [f"{m:g}" for m in SAFE_MARGINS] + ["no_tm_gate"]
-    summary = {}
-    for k in settings:
-        summary[k] = {
-            "primers_by_overall_risk": dict(Counter(r["results"][k]["overall_risk"] for r in rows)),
-            "hits_by_tier": {tier: sum(r["results"][k][tier] for r in rows) for tier in TIERS},
-            "safe_hits": sum(r["results"][k]["safe"] for r in rows),
+
+    def summarise(subset):
+        return {
+            "n_primers": len(subset),
+            **{k: {
+                "primers_by_overall_risk": dict(Counter(r["results"][k]["overall_risk"] for r in subset)),
+                "hits_by_tier": {tier: sum(r["results"][k][tier] for r in subset) for tier in TIERS},
+                "safe_hits": sum(r["results"][k]["safe"] for r in subset),
+                "identical_sequence_hits": sum(r["results"][k]["identical_sequence"] for r in subset),
+            } for k in settings},
         }
+
+    summary = {"all": summarise(rows),
+               **{g: summarise([r for r in rows if r["group"] == g])
+                  for g in ("stem_loop", "busk2014_polyA")}}
 
     out = {
         "generated_by": "backend/scripts/blast_tm_gate_sensitivity.py",
@@ -151,7 +177,10 @@ def main() -> int:
         "conditions": bo.resolve_p3_conditions(None),
         "note": ("Counts are classifier outputs with no ground truth — not confirmed "
                  "false/true positives. 'no_tm_gate' = Ye12/Kwok90 rules + 10-nt anchor "
-                 "(with the Kwok orientation fix), i.e. the rules without the Tm gate."),
+                 "(with the Kwok orientation fix), i.e. the rules without the Tm gate; "
+                 "self/identical-sequence handling is the same in every setting. "
+                 "Hits identical in sequence to the target (other loci) are counted "
+                 "under identical_sequence_hits, not in any risk tier."),
         "n_primers": len(rows),
         "n_skipped": len(skipped),
         "summary": summary,

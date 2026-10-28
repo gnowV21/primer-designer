@@ -32,6 +32,7 @@ from algorithm.constants import (
     PRIMER_BLAST_MIN_TOTAL_MISMATCHES,
     BLAST_3PRIME_DANGLE_SAFE, PRIMER_BLAST_MIN_3PRIME_ANCHOR,
     BLAST_TM_SAFE_MARGIN, BLAST_TM_CRITICAL_MARGIN, BLAST_CLASSIFIER_VERSION,
+    SELF_MAX_END_SHIFT, SELF_MIN_OVERLAP,
     BLAST_MAX_HITS_RETURNED, MIRBASE_HUMAN_PREFIX, UNIVERSAL_REVERSE,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
 )
@@ -441,17 +442,21 @@ def check_offtarget(
     conditions: Optional[dict] = None,
     safe_margin: float = BLAST_TM_SAFE_MARGIN,
     critical_margin: float = BLAST_TM_CRITICAL_MARGIN,
+    species: Optional[str] = None,
 ) -> dict:
     """
     Run BLAST for forward + reverse primers against the miRBase database.
     NW realign each hit. Classify risk. Return structured result.
 
-    mirna_id: if set, skip self-hits where subject contains this ID.
-    target_sequence: mature sequence of the intended target, for the forward
-        primer's on-target duplex Tm. Looked up in the DB by mirna_id if omitted;
-        if neither resolves, the Tm gate is skipped (legacy rules apply).
+    mirna_id: target name; hits with the same name (and, when sequences are
+        known, a compatible sequence) are skipped as self-hits.
+    target_sequence: mature sequence of the intended target — for the forward
+        primer's on-target duplex Tm and for sequence-based self/identity checks.
+        Looked up in the DB by mirna_id if omitted; if neither resolves, the Tm
+        gate is skipped (legacy rules apply) and self-hits go by name only.
     conditions: primer3 conditions (mv_conc, dv_conc, dntp_conc, dna_conc) — pass
         the design's effective_p3 so Tm_on/Tm_off match the design's own Tm.
+    species: miRBase species code ('hsa', 'ssc', …); defaults to mirna_id's prefix.
     """
     db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []
     if not db_available:
@@ -460,7 +465,9 @@ def check_offtarget(
             "Run 'python scripts/build_blast_db.py' to build it first."
         )
 
-    species_prefix = _extract_species_prefix(mirna_id)
+    if species and not re.fullmatch(r"[A-Za-z]{3}", species):
+        raise ValueError(f"species must be a 3-letter miRBase code, got {species!r}")
+    species_prefix = f"{species.lower()}-" if species else _extract_species_prefix(mirna_id)
     # Pre-compute once; passed into every _is_self_hit call to avoid per-hit recomputation
     m_norm = _normalize_mirna_name(mirna_id.lower()) if mirna_id else None
     # Seed-family of the target — used to fold same-family hits into one bucket (Fix B)
@@ -472,6 +479,8 @@ def check_offtarget(
     if not target_sequence and mirna_id:
         target_sequence = fetch_sequences([mirna_id], _MIRBASE_DB, timeout).get(mirna_id)
         target_source = "mirbase_db" if target_sequence else None
+    if target_sequence:
+        target_sequence = rna_to_dna(target_sequence).upper()
     tm_on = duplex_tm(forward_primer, target_sequence, p3) if target_sequence else None
     margins = (safe_margin, critical_margin)
 
@@ -485,12 +494,13 @@ def check_offtarget(
     # The Tm gate applies to the forward primer only: a reverse primer has no
     # miRNA on-target to compare against.
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family, tm_on, p3, margins)
+        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family, tm_on, p3, margins, target_sequence)
         rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, species_prefix, timeout, target_family) if check_reverse else None
-        fwd_hits, fwd_safe, fwd_cs, fwd_fam = fwd_future.result()
-        rev_hits, rev_safe, rev_cs, rev_fam = rev_future.result() if rev_future else ([], 0, 0, 0)
+        fwd_hits, fwd_safe, fwd_cs, fwd_fam, fwd_ident = fwd_future.result()
+        rev_hits, rev_safe, rev_cs, rev_fam, _ = rev_future.result() if rev_future else ([], 0, 0, 0, [])
 
-    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs, fwd_fam + rev_fam)
+    summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs,
+                         fwd_fam + rev_fam, len(fwd_ident))
     summary["hits_truncated"] = (
         len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
     )
@@ -498,6 +508,9 @@ def check_offtarget(
     return {
         "forward_primer_hits": fwd_hits,
         "reverse_primer_hits": rev_hits,
+        # Other names carrying the target's mature sequence (identical, or ends shifted
+        # ≤2 nt): indistinguishable by the forward primer, so not risk-classified.
+        "identical_sequence_hits": fwd_ident,
         "reverse_primer_skipped": (
             "Universal reverse primer anneals to the stem-loop body, not to a miRNA — "
             "a miRBase search does not apply." if skip_reverse else None
@@ -508,6 +521,7 @@ def check_offtarget(
             "tm_gate_applied": tm_on is not None,
             "tm_ontarget": tm_on,
             "target_sequence_source": target_source,
+            "species": species_prefix.rstrip("-"),
             "safe_margin_c": safe_margin,
             "critical_margin_c": critical_margin,
             "conditions": p3,
@@ -526,8 +540,18 @@ def _check_primer(
     tm_on: Optional[float] = None,
     p3: Optional[dict] = None,
     margins: tuple[float, float] = (BLAST_TM_SAFE_MARGIN, BLAST_TM_CRITICAL_MARGIN),
-) -> tuple[list[dict], int, int, int]:
-    """Return (non_safe_hits, safe_count, cross_species_excluded, same_family_count).
+    target_sequence: Optional[str] = None,
+) -> tuple[list[dict], int, int, int, list[str]]:
+    """Return (non_safe_hits, safe_count, cross_species_excluded, same_family_count,
+    identical_sequence_ids).
+
+    Self-hits are skipped. With target_sequence (DNA) known, a name match counts
+    only if the hit's sequence is compatible (sequences_compatible), and any
+    same-species hit under another name whose mature sequence is identical or
+    compatible (ends shifted ≤2 nt) — multi-locus copies such as ath-miR156a…f, or
+    renamed entries such as ssc-miR-20 → ssc-miR-20a-5p — is listed in
+    identical_sequence_ids instead of being risk-classified: the forward primer
+    cannot tell them apart, so the assay measures their sum.
 
     SAFE hits (3' end not annealed, or ≥6 mm) are counted but not included in the
     hit list. Cross-species miRBase hits (not matching species_prefix) are excluded
@@ -547,6 +571,7 @@ def _check_primer(
     safe_count = 0
     cross_species_excluded = 0
     same_family_count = 0
+    identical: set[str] = set()
     primer_len = len(primer)
     for db in db_paths:
         is_mirbase = os.path.basename(db).startswith("mirbase")
@@ -554,22 +579,38 @@ def _check_primer(
             raw = run_blastn(primer, db, timeout=timeout)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             raise   # caller (route) handles circuit breaker
-        # Full sequences only for hits that can reach the Tm gate (3' end annealed).
+
+        def same_species(sid: str) -> bool:
+            return not is_mirbase or sid.lower().startswith(species_prefix)
+
+        # Full sequences of same-species hits: for self/identity checks (needs every
+        # such hit) and the Tm gate (only 3'-anchored ones reach it).
         subject_seqs = {}
-        if tm_on is not None:
+        if target_sequence or tm_on is not None:
             subject_seqs = fetch_sequences(
-                [h["subject_id"] for h in raw
-                 if max(primer_len - h["q_end"], 0) < BLAST_3PRIME_DANGLE_SAFE
-                 and (not is_mirbase or h["subject_id"].lower().startswith(species_prefix))],
-                db, timeout,
+                [h["subject_id"] for h in raw if same_species(h["subject_id"])], db, timeout,
             )
         for h in raw:
-            # Skip self-hit (including precursor variants e.g. hsa-miR-16-1-5p for hsa-miR-16-5p)
-            if mirna_id and _is_self_hit(h["subject_id"], mirna_id, m_norm):
+            sid = h["subject_id"]
+            subject_full = subject_seqs.get(sid)
+            # Self-hit by name (incl. precursor copies, e.g. hsa-miR-16-1-5p), confirmed
+            # by sequence when both are known: a renamed entry with a different
+            # sequence (miRBase 22.1 ssc-miR-670) is a real off-target.
+            if mirna_id and _is_self_hit(sid, mirna_id, m_norm):
+                if not (target_sequence and subject_full) or sequences_compatible(
+                        subject_full, target_sequence):
+                    continue
+            # Same mature molecule under another name — an identical copy from another
+            # locus, or the same sequence annotated with ends shifted ≤2 nt (renamed
+            # entries such as ssc-miR-20 → ssc-miR-20a-5p): indistinguishable by the
+            # forward primer, so listed rather than risk-classified.
+            if target_sequence and subject_full and sequences_compatible(
+                    subject_full, target_sequence):
+                identical.add(sid)
                 continue
             # miRBase DB: skip other-species orthologs — same conserved sequence,
             # different organism → irrelevant for same-species assay
-            if is_mirbase and not h["subject_id"].lower().startswith(species_prefix):
+            if not same_species(sid):
                 cross_species_excluded += 1
                 continue
 
@@ -597,7 +638,6 @@ def _check_primer(
             # Anchoring info drives classify_hit_risk's 3'-end gate.
             aln["three_prime_dangling"] = dangling3
             aln["five_prime_dangling"]  = dangling5
-            subject_full = subject_seqs.get(h["subject_id"])
             if tm_on is not None and subject_full:
                 aln["tm_ontarget"]  = tm_on
                 aln["tm_offtarget"] = duplex_tm(primer, subject_full, p3)
@@ -636,7 +676,8 @@ def _check_primer(
             })
     # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
     non_safe_hits.sort(key=lambda h: (_RISK_ORDER.get(h["risk"], 9), h["evalue"]))
-    return non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded, same_family_count
+    return (non_safe_hits[:BLAST_MAX_HITS_RETURNED], safe_count, cross_species_excluded,
+            same_family_count, sorted(identical))
 
 
 def _summarise(
@@ -644,25 +685,29 @@ def _summarise(
     safe_count: int = 0,
     cross_species_excluded: int = 0,
     same_family_count: int = 0,
+    identical_sequence_count: int = 0,
 ) -> dict:
     counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0}
     for h in non_safe_hits:
         risk = h.get("risk", "MEDIUM")
         counts[risk] = counts.get(risk, 0) + 1
     # overall_risk reflects OUT-of-family off-targets only — same-family cross-
-    # reactivity is expected and surfaced separately (see same_family_count).
+    # reactivity is expected and surfaced separately (see same_family_count), and
+    # identical-sequence copies cannot be discriminated by any primer.
     if counts["CRITICAL"] > 0:    overall = "CRITICAL"
     elif counts["HIGH"] > 0:      overall = "HIGH"
     elif counts["MEDIUM"] > 0:    overall = "MEDIUM"
     else:                          overall = "SAFE"
     return {
-        "total_hits":              len(non_safe_hits) + safe_count + same_family_count,
+        "total_hits":              (len(non_safe_hits) + safe_count + same_family_count
+                                    + identical_sequence_count),
         "critical_count":          counts["CRITICAL"],
         "high_risk_count":         counts["HIGH"],
         "medium_risk_count":       counts["MEDIUM"],
         "safe_count":              safe_count,
         "cross_species_excluded":  cross_species_excluded,
         "same_family_count":       same_family_count,
+        "identical_sequence_count": identical_sequence_count,
         "overall_risk":            overall,
     }
 
@@ -701,29 +746,42 @@ def _normalize_mirna_name(name: str) -> str:
 
 def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -> bool:
     """
-    Return True if this BLAST hit represents the target miRNA itself (not an
-    off-target). Handles precursor variants via _normalize_mirna_name.
+    Return True if the hit's NAME denotes the target miRNA. Handles precursor
+    variants via _normalize_mirna_name.
+
+    Names match when equal, or when one extends the other at a '-' boundary
+    ('hsa-mir-16' ↔ 'hsa-mir-16-5p'; 'ssc-mir-21' ↔ 'ssc-mir-21-5p'). A plain
+    substring test is NOT used: it made 'ssc-mir-21' match 'ssc-mir-210', hiding
+    a real off-target. An arm-less id also matches the other arm ('-3p'), so
+    callers that know the sequences confirm with sequences_compatible().
 
     m_norm: pre-computed _normalize_mirna_name(mirna_id.lower()) — pass from
     caller to avoid recomputing it for every hit in the loop.
     """
-    s = subject_id.lower()
-    m = mirna_id.lower()
-    # mirna_id is a substring of subject (handles accession-suffixed FASTA IDs)
-    if m in s:
-        return True
-    # subject is a word-boundary prefix of mirna_id
-    # e.g. 'hsa-mir-16' matches 'hsa-mir-16-5p' but NOT 'hsa-mir-10-5p'
-    if len(s) <= len(m) and m.startswith(s) and (len(m) == len(s) or m[len(s)] == '-'):
-        return True
-    # Normalised: strip precursor copy numbers then compare with same boundary rules
-    s_norm = _normalize_mirna_name(s)
+    s_norm = _normalize_mirna_name(subject_id)
     if m_norm is None:
-        m_norm = _normalize_mirna_name(m)
-    if m_norm in s_norm:
-        return True
-    if len(s_norm) <= len(m_norm) and m_norm.startswith(s_norm) and (len(m_norm) == len(s_norm) or m_norm[len(s_norm)] == '-'):
-        return True
+        m_norm = _normalize_mirna_name(mirna_id)
+    short, long_ = sorted((s_norm, m_norm), key=len)
+    return long_ == short or long_.startswith(short + "-")
+
+
+def sequences_compatible(a: str, b: str,
+                         max_shift: int = SELF_MAX_END_SHIFT,
+                         min_overlap: int = SELF_MIN_OVERLAP) -> bool:
+    """Same mature miRNA under two annotations: identical over their overlap, with
+    each end differing by at most max_shift nt (e.g. miRBase 22.1 mmu-miR-138-5p
+    AGCTGG… vs the CAGCTGG… a 2014 paper designed against). A renamed entry whose
+    sequence changed entirely (ssc-miR-670) is not compatible.
+    """
+    a, b = a.upper(), b.upper()
+    for k in range(-max_shift, max_shift + 1):      # b[j] pairs with a[j + k]
+        a0, b0 = max(k, 0), max(-k, 0)
+        n = min(len(a) - a0, len(b) - b0)
+        if n < min_overlap:
+            continue
+        if (len(a) - a0 - n <= max_shift and len(b) - b0 - n <= max_shift
+                and a[a0:a0 + n] == b[b0:b0 + n]):
+            return True
     return False
 
 
