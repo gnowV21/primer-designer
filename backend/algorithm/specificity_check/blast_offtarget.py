@@ -187,7 +187,8 @@ def classify_hit_risk(
        (duplex Tm of the primer on the off-target and on its own target, same
        salt conditions). The reference is Tm_on, not Ta: the specific region binds
        at ~45 °C by design and the tail lifts the Tm only after cycle 1, a route an
-       off-target shares. Primer3 sets its *_TH limits 10 °C below the primer's Tm.
+       off-target shares. By Primer3's convention its *_TH limits (absolute Tm)
+       sit 10 °C below PRIMER_MIN_TM; offsetting from Tm_on is this tool's choice.
          Tm_off < Tm_on − safe_margin       → SAFE
          Tm_off ≥ Tm_on − critical_margin   → CRITICAL; HIGH if the 3'-terminal
                                               base is unpaired or BLOCKING [Kwok90]
@@ -207,31 +208,65 @@ def classify_hit_risk(
 
     tm_off = alignment.get("tm_offtarget")
     tm_on  = alignment.get("tm_ontarget")
-    if tm_off is None or tm_on is None:
-        return _mismatch_rules(primer, alignment, legacy_anchor=True)
-
-    gap = tm_on - tm_off
-    rel = f"{gap:.1f} °C below" if gap >= 0 else f"{-gap:.1f} °C above"
-    tm_text = f"duplex Tm {tm_off:.1f} °C vs {tm_on:.1f} °C on target ({rel})"
-    if gap > safe_margin:
-        return "SAFE", (
+    has_tm = tm_off is not None and tm_on is not None
+    if has_tm:
+        gap = tm_on - tm_off
+        rel = f"{gap:.1f} °C below" if gap >= 0 else f"{-gap:.1f} °C above"
+        tm_text = f"duplex Tm {tm_off:.1f} °C vs {tm_on:.1f} °C on target ({rel})"
+        tm_safe = gap > safe_margin
+        safe_reason = (
             f"{tm_text} — more than {safe_margin:g} °C weaker than the intended "
             f"target, so it barely anneals when the target does [Primer3 *_TH]"
         )
+
+    # Adjacent mismatches at the last two positions: extension is dramatically
+    # reduced, except that a mismatched 3'-terminal T still allows significant
+    # amplification even next to another mismatch [Kwok90 abstract].
+    p3_base = alignment["primer_3prime_base"]
+    if dangling3 == 0 and _terminal_double_mismatch(alignment):
+        if p3_base != "T":
+            return "SAFE", (
+                "last two primer 3′ bases both mismatched — extension dramatically "
+                "reduced [Kwok90]"
+            )
+        if has_tm and tm_safe:
+            return "SAFE", safe_reason
+        return "MEDIUM", (
+            "last two primer 3′ bases mismatched, but the terminal base is T — Kwok "
+            "1990 still saw significant amplification [Kwok90]"
+        )
+
+    if not has_tm:
+        return _mismatch_rules(primer, alignment, legacy_anchor=True)
+    if tm_safe:
+        return "SAFE", safe_reason
     if gap <= critical_margin:
         if dangling3 == 1:
             return "HIGH", (
                 f"{tm_text} — binds almost as well as the target, but the primer's "
-                f"3′-terminal base is unpaired, which reduces extension [Kwok90]"
+                f"3′-terminal base overhangs the off-target's end (unpaired), which "
+                f"reduces extension [Kwok90]"
             )
-        terminal = classify_3prime_mismatch(
-            alignment["primer_3prime_base"], alignment["template_3prime_base"]
-        )
-        if terminal == "BLOCKING":
+        pair = f"{p3_base}:{alignment['template_3prime_base']}"
+        terminal = classify_3prime_mismatch(p3_base, alignment["template_3prime_base"])
+        if terminal in ("BLOCKING", "REDUCING"):
+            yield_text = "~1%" if terminal == "BLOCKING" else "~5%"
             return "HIGH", (
                 f"{tm_text} — binds almost as well as the target; the 3′-terminal "
-                f"{alignment['primer_3prime_base']}:{alignment['template_3prime_base']} "
-                f"mismatch is BLOCKING (~1% yield) but the duplex is stable [Kwok90]"
+                f"{pair} mismatch is {terminal} ({yield_text} yield) but the duplex "
+                f"is stable [Kwok90]"
+            )
+        if terminal == "TOLERANT" and pair == "G:G":
+            return "HIGH", (
+                f"{tm_text} — binds almost as well as the target; the 3′-terminal "
+                f"G:G mismatch amplifies, but its yield depends on sequence context "
+                f"and dNTP concentration [Kwok90]"
+            )
+        if terminal == "TOLERANT":
+            return "CRITICAL", (
+                f"{tm_text} — within {critical_margin:g} °C of the intended target; "
+                f"the 3′-terminal {pair} mismatch is efficiently extended [Kwok90]: "
+                f"likely co-amplified"
             )
         return "CRITICAL", (
             f"{tm_text} — within {critical_margin:g} °C of the intended target and "
@@ -245,6 +280,15 @@ def classify_hit_risk(
             f"{critical_margin:g}–{safe_margin:g} °C weaker than the target"
         )
     return risk, reason
+
+
+def _terminal_double_mismatch(alignment: dict) -> bool:
+    """True when the last two alignment columns (primer 3' end) are both mismatches."""
+    n_cols = alignment.get("aln_cols")
+    if not n_cols or n_cols < 2:
+        return False
+    mm = set(alignment.get("mismatch_positions") or ())
+    return (n_cols - 1) in mm and (n_cols - 2) in mm
 
 
 def _mismatch_rules(primer: str, alignment: dict, legacy_anchor: bool) -> tuple[str, str]:
@@ -624,6 +668,28 @@ def _check_primer(
             # NW global realign of the matched fragment — more accurate than BLAST local
             subject_seq = h.get("subject_seq", "")
             query_seq   = h.get("query_seq", "")
+
+            # A local alignment never ends on a mismatch, so a mismatched 3'-terminal
+            # base is trimmed off and shows up as "dangling". On a plus-strand hit
+            # (primer = off-target sense, i.e. it anneals to the off-target's cDNA)
+            # the full subject gives the bases really opposite those primer positions:
+            # put them back so the Kwok rules see the true terminal pair [Ye12 Fig.5].
+            # Only bases past the end of the off-target stay dangling.
+            plus = (isinstance(h.get("s_start"), int) and isinstance(h.get("s_end"), int)
+                    and h["s_end"] >= h["s_start"])
+            tm_window = subject_full
+            if subject_full and plus:
+                ext = subject_full[h["s_end"]: h["s_end"] + dangling3]
+                # Duplex Tm only where the primer sits in this register (+1 base
+                # downstream for thal's dangling-end term — on the target that gives
+                # exactly the full-sequence Tm_on): a stronger duplex elsewhere on the
+                # off-target cannot extend from this 3' end.
+                lo = max(h["s_start"] - 1 - dangling5, 0)
+                tm_window = subject_full[lo: h["s_end"] + dangling3 + 1]
+                if ext and subject_seq and query_seq:
+                    subject_seq += ext
+                    query_seq += primer[q_end: q_end + len(ext)]
+                    dangling3 -= len(ext)
             if subject_seq and query_seq:
                 aln = nw_align(query_seq.replace("-", ""), subject_seq.replace("-", ""))
             else:
@@ -640,7 +706,7 @@ def _check_primer(
             aln["five_prime_dangling"]  = dangling5
             if tm_on is not None and subject_full:
                 aln["tm_ontarget"]  = tm_on
-                aln["tm_offtarget"] = duplex_tm(primer, subject_full, p3)
+                aln["tm_offtarget"] = duplex_tm(primer, tm_window, p3)
 
             risk, reason = classify_hit_risk(primer, aln, *margins)
             # SAFE hits are counted in summary but omitted from hit list [Ye12]

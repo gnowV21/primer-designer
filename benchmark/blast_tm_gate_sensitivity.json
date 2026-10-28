@@ -1,7 +1,7 @@
 {
  "generated_by": "backend/scripts/blast_tm_gate_sensitivity.py",
- "run_date": "2026-10-28",
- "classifier_version": "3",
+ "run_date": "2026-10-29",
+ "classifier_version": "4",
  "blast_db": {
   "mirbase_version": "22.1",
   "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
@@ -32,75 +32,72 @@
    "n_primers": 175,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 143,
-     "CRITICAL": 31,
-     "HIGH": 1
+     "SAFE": 142,
+     "CRITICAL": 33
     },
     "hits_by_tier": {
-     "CRITICAL": 50,
-     "HIGH": 5,
+     "CRITICAL": 57,
+     "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 7106,
+    "safe_hits": 7102,
     "identical_sequence_hits": 24
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 125,
-     "CRITICAL": 31,
-     "MEDIUM": 18,
-     "HIGH": 1
+     "SAFE": 123,
+     "CRITICAL": 33,
+     "MEDIUM": 19
     },
     "hits_by_tier": {
-     "CRITICAL": 50,
-     "HIGH": 5,
-     "MEDIUM": 54
+     "CRITICAL": 57,
+     "HIGH": 0,
+     "MEDIUM": 62
     },
-    "safe_hits": 7015,
+    "safe_hits": 7001,
     "identical_sequence_hits": 24
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 106,
-     "CRITICAL": 31,
-     "MEDIUM": 37,
-     "HIGH": 1
+     "SAFE": 95,
+     "CRITICAL": 33,
+     "MEDIUM": 47
     },
     "hits_by_tier": {
-     "CRITICAL": 50,
-     "HIGH": 5,
-     "MEDIUM": 103
+     "CRITICAL": 57,
+     "HIGH": 0,
+     "MEDIUM": 144
     },
-    "safe_hits": 6940,
+    "safe_hits": 6882,
     "identical_sequence_hits": 24
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 90,
-     "MEDIUM": 53,
-     "CRITICAL": 31,
-     "HIGH": 1
+     "SAFE": 68,
+     "MEDIUM": 74,
+     "CRITICAL": 33
     },
     "hits_by_tier": {
-     "CRITICAL": 50,
-     "HIGH": 5,
-     "MEDIUM": 175
+     "CRITICAL": 57,
+     "HIGH": 0,
+     "MEDIUM": 304
     },
-    "safe_hits": 6854,
+    "safe_hits": 6701,
     "identical_sequence_hits": 24
    },
    "no_tm_gate": {
     "primers_by_overall_risk": {
-     "CRITICAL": 109,
-     "MEDIUM": 31,
-     "SAFE": 35
+     "CRITICAL": 115,
+     "HIGH": 14,
+     "MEDIUM": 20,
+     "SAFE": 26
     },
     "hits_by_tier": {
-     "CRITICAL": 266,
-     "HIGH": 10,
-     "MEDIUM": 462
+     "CRITICAL": 353,
+     "HIGH": 184,
+     "MEDIUM": 756
     },
-    "safe_hits": 6340,
+    "safe_hits": 5746,
     "identical_sequence_hits": 24
    }
   },
@@ -112,67 +109,68 @@
      "CRITICAL": 13
     },
     "hits_by_tier": {
-     "CRITICAL": 29,
-     "HIGH": 2,
+     "CRITICAL": 32,
+     "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 4863,
+    "safe_hits": 4860,
     "identical_sequence_hits": 20
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 79,
+     "SAFE": 77,
      "CRITICAL": 13,
-     "MEDIUM": 8
+     "MEDIUM": 10
     },
     "hits_by_tier": {
-     "CRITICAL": 29,
-     "HIGH": 2,
-     "MEDIUM": 29
+     "CRITICAL": 32,
+     "HIGH": 0,
+     "MEDIUM": 33
     },
-    "safe_hits": 4797,
+    "safe_hits": 4788,
     "identical_sequence_hits": 20
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 68,
+     "SAFE": 61,
      "CRITICAL": 13,
-     "MEDIUM": 19
+     "MEDIUM": 26
     },
     "hits_by_tier": {
-     "CRITICAL": 29,
-     "HIGH": 2,
-     "MEDIUM": 56
+     "CRITICAL": 32,
+     "HIGH": 0,
+     "MEDIUM": 80
     },
-    "safe_hits": 4744,
+    "safe_hits": 4704,
     "identical_sequence_hits": 20
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 58,
-     "MEDIUM": 29,
+     "SAFE": 44,
+     "MEDIUM": 43,
      "CRITICAL": 13
     },
     "hits_by_tier": {
-     "CRITICAL": 29,
-     "HIGH": 2,
-     "MEDIUM": 104
+     "CRITICAL": 32,
+     "HIGH": 0,
+     "MEDIUM": 174
     },
-    "safe_hits": 4682,
+    "safe_hits": 4590,
     "identical_sequence_hits": 20
    },
    "no_tm_gate": {
     "primers_by_overall_risk": {
-     "CRITICAL": 59,
-     "MEDIUM": 17,
-     "SAFE": 24
+     "CRITICAL": 63,
+     "HIGH": 10,
+     "MEDIUM": 10,
+     "SAFE": 17
     },
     "hits_by_tier": {
-     "CRITICAL": 166,
-     "HIGH": 4,
-     "MEDIUM": 322
+     "CRITICAL": 234,
+     "HIGH": 110,
+     "MEDIUM": 505
     },
-    "safe_hits": 4319,
+    "safe_hits": 3925,
     "identical_sequence_hits": 20
    }
   },
@@ -180,75 +178,72 @@
    "n_primers": 75,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 56,
-     "CRITICAL": 18,
-     "HIGH": 1
+     "SAFE": 55,
+     "CRITICAL": 20
     },
     "hits_by_tier": {
-     "CRITICAL": 21,
-     "HIGH": 3,
+     "CRITICAL": 25,
+     "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 2243,
+    "safe_hits": 2242,
     "identical_sequence_hits": 4
    },
    "10": {
     "primers_by_overall_risk": {
      "SAFE": 46,
-     "CRITICAL": 18,
-     "HIGH": 1,
-     "MEDIUM": 10
+     "CRITICAL": 20,
+     "MEDIUM": 9
     },
     "hits_by_tier": {
-     "CRITICAL": 21,
-     "HIGH": 3,
-     "MEDIUM": 25
+     "CRITICAL": 25,
+     "HIGH": 0,
+     "MEDIUM": 29
     },
-    "safe_hits": 2218,
+    "safe_hits": 2213,
     "identical_sequence_hits": 4
    },
    "15": {
     "primers_by_overall_risk": {
-     "MEDIUM": 18,
-     "CRITICAL": 18,
-     "HIGH": 1,
-     "SAFE": 38
+     "MEDIUM": 21,
+     "CRITICAL": 20,
+     "SAFE": 34
     },
     "hits_by_tier": {
-     "CRITICAL": 21,
-     "HIGH": 3,
-     "MEDIUM": 47
+     "CRITICAL": 25,
+     "HIGH": 0,
+     "MEDIUM": 64
     },
-    "safe_hits": 2196,
+    "safe_hits": 2178,
     "identical_sequence_hits": 4
    },
    "20": {
     "primers_by_overall_risk": {
-     "MEDIUM": 24,
-     "CRITICAL": 18,
-     "HIGH": 1,
-     "SAFE": 32
+     "MEDIUM": 31,
+     "CRITICAL": 20,
+     "SAFE": 24
     },
     "hits_by_tier": {
-     "CRITICAL": 21,
-     "HIGH": 3,
-     "MEDIUM": 71
+     "CRITICAL": 25,
+     "HIGH": 0,
+     "MEDIUM": 130
     },
-    "safe_hits": 2172,
+    "safe_hits": 2111,
     "identical_sequence_hits": 4
    },
    "no_tm_gate": {
     "primers_by_overall_risk": {
-     "CRITICAL": 50,
-     "MEDIUM": 14,
-     "SAFE": 11
+     "CRITICAL": 52,
+     "HIGH": 4,
+     "MEDIUM": 10,
+     "SAFE": 9
     },
     "hits_by_tier": {
-     "CRITICAL": 100,
-     "HIGH": 6,
-     "MEDIUM": 140
+     "CRITICAL": 119,
+     "HIGH": 74,
+     "MEDIUM": 251
     },
-    "safe_hits": 2021,
+    "safe_hits": 1821,
     "identical_sequence_hits": 4
    }
   }
@@ -330,11 +325,11 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 4,
-     "safe": 47,
-     "same_family": 0,
+     "safe": 44,
+     "same_family": 1,
      "identical_sequence": 0
     }
    },
@@ -372,8 +367,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 135,
-     "same_family": 8,
+     "safe": 134,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
@@ -381,17 +376,17 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 1,
-     "safe": 134,
-     "same_family": 8,
+     "safe": 133,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 6,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 125,
-     "same_family": 8,
+     "CRITICAL": 8,
+     "HIGH": 3,
+     "MEDIUM": 14,
+     "safe": 108,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -429,26 +424,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 113,
-     "same_family": 8,
+     "safe": 112,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 113,
-     "same_family": 8,
+     "MEDIUM": 1,
+     "safe": 111,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 6,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 103,
-     "same_family": 8,
+     "CRITICAL": 8,
+     "HIGH": 3,
+     "MEDIUM": 14,
+     "safe": 86,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -486,26 +481,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 44,
-     "same_family": 1,
+     "safe": 43,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 44,
-     "same_family": 1,
-     "identical_sequence": 0
-    },
-    "no_tm_gate": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 43,
-     "same_family": 1,
+     "MEDIUM": 3,
+     "safe": 40,
+     "same_family": 2,
+     "identical_sequence": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 2,
+     "MEDIUM": 4,
+     "safe": 36,
+     "same_family": 2,
      "identical_sequence": 0
     }
    },
@@ -557,11 +552,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 24,
+     "HIGH": 1,
+     "MEDIUM": 1,
+     "safe": 22,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -599,8 +594,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 84,
+     "MEDIUM": 3,
+     "safe": 82,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -608,17 +603,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 84,
+     "MEDIUM": 5,
+     "safe": 80,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
+     "CRITICAL": 5,
      "HIGH": 0,
-     "MEDIUM": 7,
-     "safe": 76,
+     "MEDIUM": 14,
+     "safe": 67,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -669,20 +664,20 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 106,
+     "MEDIUM": 1,
+     "safe": 105,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 10,
-     "safe": 93,
+     "HIGH": 2,
+     "MEDIUM": 16,
+     "safe": 85,
      "same_family": 2,
      "identical_sequence": 0
     }
@@ -738,9 +733,9 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 25,
-     "same_family": 1,
+     "MEDIUM": 2,
+     "safe": 23,
+     "same_family": 2,
      "identical_sequence": 0
     }
    },
@@ -792,11 +787,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 12,
-     "safe": 40,
+     "HIGH": 5,
+     "MEDIUM": 8,
+     "safe": 39,
      "same_family": 2,
      "identical_sequence": 0
     }
@@ -835,26 +830,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 78,
-     "same_family": 0,
+     "safe": 77,
+     "same_family": 1,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 78,
-     "same_family": 0,
-     "identical_sequence": 0
-    },
-    "no_tm_gate": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 74,
-     "same_family": 0,
+     "MEDIUM": 1,
+     "safe": 75,
+     "same_family": 2,
+     "identical_sequence": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 7,
+     "safe": 67,
+     "same_family": 3,
      "identical_sequence": 0
     }
    },
@@ -900,18 +895,18 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 100,
-     "same_family": 1,
+     "MEDIUM": 5,
+     "safe": 96,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 5,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 95,
-     "same_family": 1,
+     "CRITICAL": 6,
+     "HIGH": 1,
+     "MEDIUM": 16,
+     "safe": 79,
+     "same_family": 2,
      "identical_sequence": 0
     }
    },
@@ -947,35 +942,35 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 90,
-     "same_family": 1,
+     "safe": 89,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "15": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 88,
-     "same_family": 1,
+     "MEDIUM": 1,
+     "safe": 87,
+     "same_family": 3,
      "identical_sequence": 0
     },
     "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 86,
-     "same_family": 1,
+     "MEDIUM": 5,
+     "safe": 82,
+     "same_family": 4,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 13,
-     "safe": 75,
-     "same_family": 1,
+     "HIGH": 2,
+     "MEDIUM": 10,
+     "safe": 73,
+     "same_family": 4,
      "identical_sequence": 0
     }
    },
@@ -1088,8 +1083,8 @@
      "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 2,
-     "safe": 54,
-     "same_family": 0,
+     "safe": 53,
+     "same_family": 1,
      "identical_sequence": 0
     }
    },
@@ -1144,8 +1139,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 4,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 43,
+     "MEDIUM": 4,
+     "safe": 44,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -1200,9 +1195,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 59,
+     "HIGH": 4,
+     "MEDIUM": 7,
+     "safe": 49,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -1237,15 +1232,6 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 69,
-     "same_family": 0,
-     "identical_sequence": 0
-    },
-    "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -1254,12 +1240,21 @@
      "same_family": 0,
      "identical_sequence": 0
     },
-    "no_tm_gate": {
+    "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 64,
+     "MEDIUM": 3,
+     "safe": 66,
+     "same_family": 0,
+     "identical_sequence": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 2,
+     "MEDIUM": 12,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -1313,10 +1308,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 131,
+     "CRITICAL": 21,
+     "HIGH": 5,
+     "MEDIUM": 7,
+     "safe": 105,
      "same_family": 2,
      "identical_sequence": 0
     }
@@ -1355,26 +1350,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 122,
-     "same_family": 8,
+     "safe": 121,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 122,
-     "same_family": 8,
+     "MEDIUM": 2,
+     "safe": 119,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 6,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 112,
-     "same_family": 8,
+     "CRITICAL": 7,
+     "HIGH": 2,
+     "MEDIUM": 13,
+     "safe": 98,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -1417,20 +1412,20 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 150,
+     "MEDIUM": 1,
+     "safe": 149,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 144,
+     "HIGH": 3,
+     "MEDIUM": 12,
+     "safe": 134,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -1477,17 +1472,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 55,
+     "MEDIUM": 5,
+     "safe": 53,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 54,
+     "CRITICAL": 3,
+     "HIGH": 2,
+     "MEDIUM": 4,
+     "safe": 49,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -1542,9 +1537,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 4,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 83,
+     "HIGH": 1,
+     "MEDIUM": 3,
+     "safe": 80,
      "same_family": 5,
      "identical_sequence": 0
     }
@@ -1583,8 +1578,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 93,
-     "same_family": 8,
+     "safe": 92,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "20": {
@@ -1592,17 +1587,17 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 93,
-     "same_family": 8,
+     "safe": 92,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 87,
-     "same_family": 8,
+     "MEDIUM": 8,
+     "safe": 82,
+     "same_family": 9,
      "identical_sequence": 0
     }
    },
@@ -1627,15 +1622,6 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 121,
-     "same_family": 4,
-     "identical_sequence": 0
-    },
-    "15": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -1644,22 +1630,31 @@
      "same_family": 4,
      "identical_sequence": 0
     },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 117,
+     "same_family": 5,
+     "identical_sequence": 0
+    },
     "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 111,
-     "same_family": 8,
+     "MEDIUM": 9,
+     "safe": 107,
+     "same_family": 9,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 14,
-     "safe": 99,
-     "same_family": 9,
+     "HIGH": 2,
+     "MEDIUM": 18,
+     "safe": 92,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -1682,8 +1677,8 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 2,
+     "CRITICAL": 3,
+     "HIGH": 0,
      "MEDIUM": 0,
      "safe": 25,
      "same_family": 0,
@@ -1691,8 +1686,8 @@
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 2,
+     "CRITICAL": 3,
+     "HIGH": 0,
      "MEDIUM": 4,
      "safe": 21,
      "same_family": 0,
@@ -1700,8 +1695,8 @@
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 2,
+     "CRITICAL": 3,
+     "HIGH": 0,
      "MEDIUM": 6,
      "safe": 19,
      "same_family": 0,
@@ -1709,8 +1704,8 @@
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 2,
+     "CRITICAL": 3,
+     "HIGH": 0,
      "MEDIUM": 6,
      "safe": 19,
      "same_family": 0,
@@ -1719,31 +1714,31 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 19,
+     "HIGH": 2,
+     "MEDIUM": 5,
+     "safe": 20,
      "same_family": 0,
      "identical_sequence": 5
     }
    },
    "critical_hits_at_10": [
     {
+     "subject_id": "ath-miR156j",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.4,
+     "reason": "duplex Tm 42.4 °C vs 43.2 °C on target (0.8 °C below) — within 5 °C of the intended target; the 3′-terminal T:T mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156i",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.4,
+     "reason": "duplex Tm 42.4 °C vs 43.2 °C on target (0.8 °C below) — within 5 °C of the intended target; the 3′-terminal T:T mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    },
+    {
      "subject_id": "ath-miR156g",
      "risk": "CRITICAL",
      "tm_offtarget": 41.3,
      "reason": "duplex Tm 41.3 °C vs 43.2 °C on target (1.9 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
-    },
-    {
-     "subject_id": "ath-miR156j",
-     "risk": "HIGH",
-     "tm_offtarget": 42.4,
-     "reason": "duplex Tm 42.4 °C vs 43.2 °C on target (0.8 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
-    },
-    {
-     "subject_id": "ath-miR156i",
-     "risk": "HIGH",
-     "tm_offtarget": 42.4,
-     "reason": "duplex Tm 42.4 °C vs 43.2 °C on target (0.8 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
     }
    ]
   },
@@ -1795,9 +1790,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 5,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 32,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 29,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -1835,46 +1830,46 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 4,
+     "safe": 3,
      "same_family": 0,
      "identical_sequence": 6
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 4,
+     "safe": 3,
      "same_family": 0,
      "identical_sequence": 6
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 4,
+     "safe": 3,
      "same_family": 0,
      "identical_sequence": 6
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 4,
+     "safe": 3,
      "same_family": 0,
      "identical_sequence": 6
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 2,
-     "safe": 2,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 6
     }
@@ -1891,6 +1886,12 @@
      "risk": "CRITICAL",
      "tm_offtarget": 48.2,
      "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR5639-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.4,
+     "reason": "duplex Tm 43.4 °C vs 48.2 °C on target (4.8 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
     }
    ]
   },
@@ -1945,8 +1946,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 24,
+     "MEDIUM": 2,
+     "safe": 22,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -2006,11 +2007,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2237,8 +2238,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 1,
+     "MEDIUM": 1,
+     "safe": 2,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2291,11 +2292,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2519,11 +2520,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2624,11 +2625,11 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 2,
+     "MEDIUM": 0,
+     "safe": 3,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2636,8 +2637,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 1,
+     "MEDIUM": 1,
+     "safe": 2,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2747,11 +2748,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -2975,11 +2976,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -3431,10 +3432,10 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 1,
+     "HIGH": 1,
+     "MEDIUM": 0,
      "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
@@ -3470,29 +3471,29 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 1,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -3644,8 +3645,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 100,
+     "MEDIUM": 13,
+     "safe": 90,
      "same_family": 1,
      "identical_sequence": 0
     },
@@ -3653,17 +3654,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 98,
+     "MEDIUM": 19,
+     "safe": 83,
      "same_family": 2,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 15,
-     "safe": 87,
+     "CRITICAL": 2,
+     "HIGH": 3,
+     "MEDIUM": 31,
+     "safe": 67,
      "same_family": 2,
      "identical_sequence": 0
     }
@@ -3724,11 +3725,11 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 1,
-     "MEDIUM": 11,
-     "safe": 118,
-     "same_family": 0,
+     "MEDIUM": 8,
+     "safe": 119,
+     "same_family": 1,
      "identical_sequence": 0
     }
    },
@@ -3766,8 +3767,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 67,
-     "same_family": 2,
+     "safe": 66,
+     "same_family": 3,
      "identical_sequence": 0
     },
     "20": {
@@ -3775,17 +3776,17 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 67,
-     "same_family": 2,
+     "safe": 66,
+     "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 61,
-     "same_family": 2,
+     "MEDIUM": 5,
+     "safe": 58,
+     "same_family": 3,
      "identical_sequence": 0
     }
    },
@@ -3828,11 +3829,11 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 74,
+     "MEDIUM": 1,
+     "safe": 73,
      "same_family": 1,
      "identical_sequence": 0
     },
@@ -3840,8 +3841,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 7,
-     "safe": 66,
+     "MEDIUM": 11,
+     "safe": 62,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -3879,27 +3880,27 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
+     "MEDIUM": 1,
      "safe": 86,
-     "same_family": 0,
+     "same_family": 1,
      "identical_sequence": 0
     },
     "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 80,
-     "same_family": 0,
+     "MEDIUM": 1,
+     "safe": 86,
+     "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 34,
-     "safe": 51,
-     "same_family": 0,
+     "MEDIUM": 20,
+     "safe": 64,
+     "same_family": 1,
      "identical_sequence": 0
     }
    },
@@ -3928,8 +3929,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 1,
-     "safe": 94,
-     "same_family": 4,
+     "safe": 93,
+     "same_family": 5,
      "identical_sequence": 0
     },
     "15": {
@@ -3937,26 +3938,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 1,
-     "safe": 91,
-     "same_family": 7,
+     "safe": 90,
+     "same_family": 8,
      "identical_sequence": 0
     },
     "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 91,
-     "same_family": 7,
+     "MEDIUM": 3,
+     "safe": 88,
+     "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 85,
-     "same_family": 8,
+     "CRITICAL": 4,
+     "HIGH": 5,
+     "MEDIUM": 11,
+     "safe": 69,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -3976,8 +3977,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 87,
-     "same_family": 1,
+     "safe": 86,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "10": {
@@ -3985,35 +3986,35 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 84,
-     "same_family": 4,
+     "safe": 83,
+     "same_family": 5,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 82,
-     "same_family": 6,
+     "MEDIUM": 1,
+     "safe": 80,
+     "same_family": 7,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 81,
-     "same_family": 7,
+     "MEDIUM": 2,
+     "safe": 78,
+     "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 78,
-     "same_family": 8,
+     "CRITICAL": 2,
+     "HIGH": 4,
+     "MEDIUM": 8,
+     "safe": 64,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -4033,8 +4034,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 109,
-     "same_family": 1,
+     "safe": 108,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "10": {
@@ -4042,8 +4043,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 106,
-     "same_family": 4,
+     "safe": 105,
+     "same_family": 5,
      "identical_sequence": 0
     },
     "15": {
@@ -4051,8 +4052,8 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 103,
-     "same_family": 7,
+     "safe": 102,
+     "same_family": 8,
      "identical_sequence": 0
     },
     "20": {
@@ -4060,17 +4061,17 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 103,
-     "same_family": 7,
+     "safe": 102,
+     "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 100,
-     "same_family": 8,
+     "CRITICAL": 2,
+     "HIGH": 4,
+     "MEDIUM": 10,
+     "safe": 84,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -4104,30 +4105,30 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 88,
+     "MEDIUM": 2,
+     "safe": 86,
      "same_family": 4,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 84,
+     "MEDIUM": 2,
+     "safe": 82,
      "same_family": 8,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 79,
-     "same_family": 8,
+     "HIGH": 3,
+     "MEDIUM": 9,
+     "safe": 68,
+     "same_family": 10,
      "identical_sequence": 0
     }
    },
@@ -4179,10 +4180,10 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 3,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 1,
      "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
@@ -4230,17 +4231,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 60,
+     "MEDIUM": 1,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 56,
+     "CRITICAL": 4,
+     "HIGH": 2,
+     "MEDIUM": 1,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4296,8 +4297,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 33,
+     "MEDIUM": 1,
+     "safe": 35,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -4328,8 +4329,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 7,
-     "safe": 210,
+     "MEDIUM": 8,
+     "safe": 209,
      "same_family": 2,
      "identical_sequence": 1
     },
@@ -4337,8 +4338,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 11,
-     "safe": 206,
+     "MEDIUM": 12,
+     "safe": 205,
      "same_family": 2,
      "identical_sequence": 1
     },
@@ -4346,17 +4347,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 20,
-     "safe": 197,
+     "MEDIUM": 29,
+     "safe": 188,
      "same_family": 2,
      "identical_sequence": 1
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 19,
-     "HIGH": 0,
-     "MEDIUM": 20,
-     "safe": 179,
+     "CRITICAL": 29,
+     "HIGH": 2,
+     "MEDIUM": 26,
+     "safe": 161,
      "same_family": 2,
      "identical_sequence": 1
     }
@@ -4407,20 +4408,20 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 43,
+     "MEDIUM": 1,
+     "safe": 42,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 39,
+     "CRITICAL": 5,
+     "HIGH": 2,
+     "MEDIUM": 2,
+     "safe": 34,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4448,15 +4449,6 @@
      "identical_sequence": 1
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 60,
-     "same_family": 0,
-     "identical_sequence": 1
-    },
-    "15": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -4465,7 +4457,7 @@
      "same_family": 0,
      "identical_sequence": 1
     },
-    "20": {
+    "15": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -4474,13 +4466,22 @@
      "same_family": 0,
      "identical_sequence": 1
     },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 53,
+     "same_family": 0,
+     "identical_sequence": 1
+    },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 6,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 49,
-     "same_family": 0,
+     "HIGH": 1,
+     "MEDIUM": 9,
+     "safe": 42,
+     "same_family": 2,
      "identical_sequence": 1
     }
    },
@@ -4533,10 +4534,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
+     "CRITICAL": 3,
      "HIGH": 0,
      "MEDIUM": 3,
-     "safe": 26,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4592,8 +4593,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 35,
+     "MEDIUM": 3,
+     "safe": 32,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4631,8 +4632,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 90,
+     "MEDIUM": 3,
+     "safe": 89,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -4640,17 +4641,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 90,
+     "MEDIUM": 4,
+     "safe": 88,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 1,
-     "MEDIUM": 0,
-     "safe": 89,
+     "CRITICAL": 3,
+     "HIGH": 2,
+     "MEDIUM": 5,
+     "safe": 82,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4685,29 +4686,29 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 116,
+     "MEDIUM": 1,
+     "safe": 115,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 115,
+     "MEDIUM": 4,
+     "safe": 111,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 110,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 6,
+     "safe": 107,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -4760,11 +4761,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 65,
+     "MEDIUM": 7,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -4804,8 +4805,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 76,
+     "MEDIUM": 1,
+     "safe": 77,
      "same_family": 0,
      "identical_sequence": 1
     },
@@ -4813,17 +4814,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 73,
+     "MEDIUM": 4,
+     "safe": 74,
      "same_family": 0,
      "identical_sequence": 1
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 7,
-     "HIGH": 1,
-     "MEDIUM": 8,
-     "safe": 62,
+     "CRITICAL": 9,
+     "HIGH": 3,
+     "MEDIUM": 5,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -4871,17 +4872,17 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 101,
-     "same_family": 0,
+     "safe": 100,
+     "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 92,
-     "same_family": 0,
+     "CRITICAL": 3,
+     "HIGH": 2,
+     "MEDIUM": 7,
+     "safe": 88,
+     "same_family": 1,
      "identical_sequence": 0
     }
    },
@@ -4935,10 +4936,10 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 5,
+     "HIGH": 1,
+     "MEDIUM": 3,
      "safe": 38,
-     "same_family": 1,
+     "same_family": 2,
      "identical_sequence": 0
     }
    },
@@ -4983,26 +4984,26 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 95,
-     "same_family": 1,
+     "safe": 94,
+     "same_family": 2,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 94,
-     "same_family": 2,
+     "MEDIUM": 4,
+     "safe": 89,
+     "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 92,
-     "same_family": 2,
+     "HIGH": 5,
+     "MEDIUM": 6,
+     "safe": 81,
+     "same_family": 3,
      "identical_sequence": 0
     }
    },
@@ -5057,8 +5058,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "MEDIUM": 3,
+     "safe": 11,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -5111,11 +5112,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 49,
+     "HIGH": 5,
+     "MEDIUM": 13,
+     "safe": 35,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -5171,8 +5172,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 26,
+     "MEDIUM": 4,
+     "safe": 24,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5210,8 +5211,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 67,
+     "MEDIUM": 2,
+     "safe": 66,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -5219,17 +5220,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 67,
+     "MEDIUM": 2,
+     "safe": 66,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 61,
+     "HIGH": 1,
+     "MEDIUM": 12,
+     "safe": 54,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5276,17 +5277,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 34,
+     "MEDIUM": 3,
+     "safe": 33,
      "same_family": 1,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 6,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 1,
-     "safe": 29,
+     "safe": 28,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -5321,20 +5322,20 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 63,
+     "MEDIUM": 1,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 63,
+     "MEDIUM": 1,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -5342,8 +5343,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 60,
+     "MEDIUM": 8,
+     "safe": 53,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5393,8 +5394,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 10,
+     "MEDIUM": 2,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 2
     },
@@ -5477,8 +5478,8 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 5,
-     "HIGH": 0,
-     "MEDIUM": 1,
+     "HIGH": 1,
+     "MEDIUM": 0,
      "safe": 24,
      "same_family": 0,
      "identical_sequence": 0
@@ -5564,10 +5565,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 5,
+     "CRITICAL": 6,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 15,
+     "safe": 14,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5653,8 +5654,8 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 5,
-     "HIGH": 0,
-     "MEDIUM": 1,
+     "HIGH": 1,
+     "MEDIUM": 0,
      "safe": 46,
      "same_family": 0,
      "identical_sequence": 0
@@ -5742,8 +5743,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 10,
+     "MEDIUM": 0,
+     "safe": 11,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5802,8 +5803,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 16,
+     "MEDIUM": 4,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 2
     }
@@ -5834,8 +5835,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 13,
+     "MEDIUM": 4,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 1
     },
@@ -5852,17 +5853,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 11,
+     "MEDIUM": 6,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 1
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 4,
+     "CRITICAL": 5,
      "HIGH": 0,
      "MEDIUM": 1,
-     "safe": 11,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -5909,8 +5910,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 18,
+     "MEDIUM": 2,
+     "safe": 17,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -5918,8 +5919,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 18,
+     "MEDIUM": 1,
+     "safe": 17,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5937,8 +5938,8 @@
    "results": {
     "5": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 1,
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 0,
      "safe": 37,
      "same_family": 0,
@@ -5946,8 +5947,8 @@
     },
     "10": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 1,
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 5,
      "safe": 32,
      "same_family": 0,
@@ -5955,8 +5956,8 @@
     },
     "15": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 1,
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 5,
      "safe": 32,
      "same_family": 0,
@@ -5964,8 +5965,8 @@
     },
     "20": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 1,
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 5,
      "safe": 32,
      "same_family": 0,
@@ -5973,10 +5974,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 8,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 30,
+     "CRITICAL": 10,
+     "HIGH": 3,
+     "MEDIUM": 0,
+     "safe": 26,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -5990,9 +5991,9 @@
     },
     {
      "subject_id": "ssc-let-7d-5p",
-     "risk": "HIGH",
+     "risk": "CRITICAL",
      "tm_offtarget": 47.4,
-     "reason": "duplex Tm 47.4 °C vs 49.3 °C on target (1.9 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+     "reason": "duplex Tm 47.4 °C vs 49.3 °C on target (1.9 °C below) — within 5 °C of the intended target; the 3′-terminal T:G mismatch is efficiently extended [Kwok90]: likely co-amplified"
     }
    ]
   },
@@ -6006,47 +6007,47 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
-     "HIGH": 2,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 0,
      "safe": 23,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
-     "HIGH": 2,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 0,
      "safe": 23,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
-     "HIGH": 2,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 5,
      "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "HIGH",
-     "CRITICAL": 0,
-     "HIGH": 2,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
      "MEDIUM": 5,
      "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 17,
+     "HIGH": 5,
+     "MEDIUM": 5,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6054,15 +6055,15 @@
    "critical_hits_at_10": [
     {
      "subject_id": "ssc-let-7a",
-     "risk": "HIGH",
+     "risk": "CRITICAL",
      "tm_offtarget": 48.5,
-     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
     },
     {
      "subject_id": "ssc-let-7c",
-     "risk": "HIGH",
+     "risk": "CRITICAL",
      "tm_offtarget": 48.5,
-     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+     "reason": "duplex Tm 48.5 °C vs 52.1 °C on target (3.6 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
     }
    ]
   },
@@ -6114,9 +6115,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 7,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 15,
+     "HIGH": 2,
+     "MEDIUM": 2,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6147,8 +6148,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "MEDIUM": 2,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 1
     },
@@ -6156,8 +6157,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "MEDIUM": 2,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 1
     },
@@ -6165,17 +6166,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "MEDIUM": 2,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 1
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 1,
+     "HIGH": 2,
      "MEDIUM": 0,
-     "safe": 11,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -6231,8 +6232,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 1,
-     "MEDIUM": 0,
-     "safe": 13,
+     "MEDIUM": 1,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6301,8 +6302,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 18,
+     "MEDIUM": 2,
+     "safe": 17,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6360,8 +6361,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 1,
-     "MEDIUM": 0,
-     "safe": 8,
+     "MEDIUM": 1,
+     "safe": 7,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -6430,8 +6431,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 11,
+     "MEDIUM": 3,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6487,8 +6488,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 14,
+     "MEDIUM": 3,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6551,8 +6552,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 22,
+     "MEDIUM": 4,
+     "safe": 19,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6588,8 +6589,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 91,
+     "MEDIUM": 1,
+     "safe": 90,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -6597,8 +6598,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 91,
+     "MEDIUM": 2,
+     "safe": 89,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -6606,17 +6607,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 90,
+     "MEDIUM": 5,
+     "safe": 86,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 87,
+     "CRITICAL": 5,
+     "HIGH": 2,
+     "MEDIUM": 8,
+     "safe": 77,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6718,8 +6719,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -6727,8 +6728,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -6736,8 +6737,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6791,17 +6792,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 108,
+     "MEDIUM": 1,
+     "safe": 107,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 104,
+     "CRITICAL": 4,
+     "HIGH": 2,
+     "MEDIUM": 8,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6864,8 +6865,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 8,
+     "MEDIUM": 3,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6927,9 +6928,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 4,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 14,
+     "HIGH": 1,
+     "MEDIUM": 5,
+     "safe": 11,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -6974,8 +6975,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 31,
+     "MEDIUM": 3,
+     "safe": 28,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -6983,17 +6984,17 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 31,
+     "MEDIUM": 3,
+     "safe": 28,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 28,
+     "CRITICAL": 4,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7047,17 +7048,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 49,
+     "MEDIUM": 4,
+     "safe": 46,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 47,
+     "CRITICAL": 3,
+     "HIGH": 4,
+     "MEDIUM": 4,
+     "safe": 39,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7104,17 +7105,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 124,
+     "MEDIUM": 10,
+     "safe": 115,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 123,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 20,
+     "MEDIUM": 20,
+     "safe": 84,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7149,29 +7150,29 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 33,
+     "MEDIUM": 1,
+     "safe": 32,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 33,
+     "MEDIUM": 2,
+     "safe": 31,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 24,
+     "HIGH": 1,
+     "MEDIUM": 10,
+     "safe": 21,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7227,8 +7228,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 17,
+     "MEDIUM": 0,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7291,8 +7292,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
      "HIGH": 1,
-     "MEDIUM": 0,
-     "safe": 15,
+     "MEDIUM": 1,
+     "safe": 14,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7355,8 +7356,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "MEDIUM": 0,
+     "safe": 14,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7417,10 +7418,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 13,
+     "CRITICAL": 2,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7464,21 +7465,21 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 90,
-     "same_family": 2,
+     "MEDIUM": 1,
+     "safe": 88,
+     "same_family": 3,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 83,
-     "same_family": 2,
+     "CRITICAL": 3,
+     "HIGH": 1,
+     "MEDIUM": 12,
+     "safe": 72,
+     "same_family": 4,
      "identical_sequence": 0
     }
    },
@@ -7640,8 +7641,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 11,
+     "MEDIUM": 1,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -7649,8 +7650,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 11,
+     "MEDIUM": 1,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7713,8 +7714,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 29,
+     "MEDIUM": 1,
+     "safe": 31,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7758,20 +7759,20 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 16,
+     "HIGH": 1,
+     "MEDIUM": 6,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7815,20 +7816,20 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 16,
+     "MEDIUM": 1,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 16,
+     "MEDIUM": 1,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7938,11 +7939,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 13,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -7998,8 +7999,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 4,
+     "MEDIUM": 3,
+     "safe": 6,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8037,8 +8038,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 41,
+     "MEDIUM": 2,
+     "safe": 40,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8046,8 +8047,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 41,
+     "MEDIUM": 2,
+     "safe": 40,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8055,8 +8056,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 17,
-     "safe": 25,
+     "MEDIUM": 15,
+     "safe": 27,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8110,10 +8111,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 68,
+     "CRITICAL": 4,
+     "HIGH": 1,
+     "MEDIUM": 7,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8296,9 +8297,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 53,
+     "HIGH": 1,
+     "MEDIUM": 5,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8358,17 +8359,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 32,
+     "MEDIUM": 3,
+     "safe": 31,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 30,
+     "HIGH": 1,
+     "MEDIUM": 4,
+     "safe": 27,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8412,11 +8413,11 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 13,
+     "MEDIUM": 1,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8480,9 +8481,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 24,
+     "HIGH": 1,
+     "MEDIUM": 4,
+     "safe": 19,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8594,9 +8595,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
+     "HIGH": 1,
      "MEDIUM": 1,
-     "safe": 7,
+     "safe": 6,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8625,21 +8626,12 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 77,
+     "MEDIUM": 2,
+     "safe": 76,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 77,
-     "same_family": 0,
-     "identical_sequence": 0
-    },
-    "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -8648,12 +8640,21 @@
      "same_family": 0,
      "identical_sequence": 0
     },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 75,
+     "same_family": 0,
+     "identical_sequence": 0
+    },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 1,
-     "MEDIUM": 4,
-     "safe": 72,
+     "HIGH": 3,
+     "MEDIUM": 3,
+     "safe": 71,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8757,8 +8758,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 29,
+     "MEDIUM": 2,
+     "safe": 28,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8766,8 +8767,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 4,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 23,
+     "MEDIUM": 5,
+     "safe": 21,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8796,8 +8797,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 21,
+     "MEDIUM": 2,
+     "safe": 20,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8805,8 +8806,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 19,
+     "MEDIUM": 4,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8814,17 +8815,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 19,
+     "MEDIUM": 7,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 16,
+     "CRITICAL": 4,
+     "HIGH": 3,
+     "MEDIUM": 3,
+     "safe": 12,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8882,8 +8883,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 20,
+     "MEDIUM": 1,
+     "safe": 19,
      "same_family": 0,
      "identical_sequence": 1
     }
@@ -8921,8 +8922,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 58,
+     "MEDIUM": 6,
+     "safe": 57,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -8930,17 +8931,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 8,
-     "safe": 55,
+     "MEDIUM": 12,
+     "safe": 51,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 1,
-     "MEDIUM": 5,
-     "safe": 55,
+     "HIGH": 4,
+     "MEDIUM": 15,
+     "safe": 42,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -8996,8 +8997,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 11,
+     "MEDIUM": 2,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9071,52 +9072,59 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 77,
+     "safe": 76,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 77,
+     "safe": 76,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 77,
+     "safe": 76,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 77,
+     "MEDIUM": 1,
+     "safe": 75,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 76,
+     "MEDIUM": 4,
+     "safe": 72,
      "same_family": 0,
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-468-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.0,
+     "reason": "duplex Tm 46.0 °C vs 50.9 °C on target (4.9 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "hsa-miR-223-3p (Busk 2014)",
@@ -9165,9 +9173,9 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 3,
+     "CRITICAL": 3,
+     "HIGH": 1,
+     "MEDIUM": 1,
      "safe": 66,
      "same_family": 0,
      "identical_sequence": 0
@@ -9260,20 +9268,20 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 19,
+     "MEDIUM": 1,
+     "safe": 18,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -9281,8 +9289,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 18,
+     "MEDIUM": 2,
+     "safe": 16,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9338,8 +9346,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 16,
+     "MEDIUM": 2,
+     "safe": 15,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9368,8 +9376,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 14,
+     "MEDIUM": 2,
+     "safe": 13,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -9377,8 +9385,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 14,
+     "MEDIUM": 2,
+     "safe": 13,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -9386,8 +9394,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 14,
+     "MEDIUM": 2,
+     "safe": 13,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -9395,8 +9403,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 14,
+     "MEDIUM": 2,
+     "safe": 13,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9452,8 +9460,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 42,
+     "MEDIUM": 1,
+     "safe": 43,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9506,11 +9514,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 10,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 8,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9548,8 +9556,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 2,
-     "safe": 61,
+     "MEDIUM": 3,
+     "safe": 60,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -9557,17 +9565,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 57,
+     "MEDIUM": 8,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 6,
-     "safe": 56,
+     "HIGH": 1,
+     "MEDIUM": 10,
+     "safe": 51,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9621,10 +9629,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
+     "CRITICAL": 2,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 24,
+     "MEDIUM": 4,
+     "safe": 20,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9677,11 +9685,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 9,
+     "HIGH": 1,
+     "MEDIUM": 1,
+     "safe": 7,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9716,29 +9724,29 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 65,
+     "MEDIUM": 1,
+     "safe": 64,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 65,
+     "MEDIUM": 1,
+     "safe": 64,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 63,
+     "CRITICAL": 2,
+     "HIGH": 1,
+     "MEDIUM": 4,
+     "safe": 58,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9794,8 +9802,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 16,
+     "MEDIUM": 3,
+     "safe": 14,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9848,11 +9856,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 9,
+     "MEDIUM": 0,
+     "safe": 10,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -9908,8 +9916,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 16,
+     "MEDIUM": 3,
+     "safe": 14,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10076,11 +10084,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 7,
+     "MEDIUM": 0,
+     "safe": 8,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10106,38 +10114,38 @@
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 41,
+     "MEDIUM": 0,
+     "safe": 42,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 41,
+     "MEDIUM": 0,
+     "safe": 42,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "SAFE",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 41,
+     "MEDIUM": 0,
+     "safe": 42,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 36,
+     "HIGH": 1,
+     "MEDIUM": 3,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10192,8 +10200,8 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 2,
+     "HIGH": 1,
+     "MEDIUM": 1,
      "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
@@ -10232,8 +10240,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 87,
+     "MEDIUM": 2,
+     "safe": 86,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -10241,17 +10249,17 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 85,
+     "MEDIUM": 14,
+     "safe": 74,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 3,
-     "HIGH": 0,
-     "MEDIUM": 4,
-     "safe": 81,
+     "HIGH": 2,
+     "MEDIUM": 18,
+     "safe": 65,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10286,29 +10294,29 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 10,
+     "MEDIUM": 1,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 10,
+     "MEDIUM": 1,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 10,
+     "MEDIUM": 1,
+     "safe": 9,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10352,21 +10360,21 @@
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 68,
-     "same_family": 2,
+     "MEDIUM": 3,
+     "safe": 63,
+     "same_family": 4,
      "identical_sequence": 0
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 5,
-     "safe": 61,
-     "same_family": 2,
+     "CRITICAL": 3,
+     "HIGH": 2,
+     "MEDIUM": 13,
+     "safe": 48,
+     "same_family": 4,
      "identical_sequence": 0
     }
    },
@@ -10418,11 +10426,11 @@
      "identical_sequence": 0
     },
     "no_tm_gate": {
-     "overall_risk": "MEDIUM",
+     "overall_risk": "HIGH",
      "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 47,
+     "HIGH": 2,
+     "MEDIUM": 2,
+     "safe": 44,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10478,8 +10486,8 @@
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 29,
+     "MEDIUM": 1,
+     "safe": 31,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -10533,10 +10541,10 @@
     },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
-     "CRITICAL": 2,
-     "HIGH": 0,
-     "MEDIUM": 3,
-     "safe": 68,
+     "CRITICAL": 3,
+     "HIGH": 1,
+     "MEDIUM": 7,
+     "safe": 62,
      "same_family": 1,
      "identical_sequence": 0
     }
@@ -10591,9 +10599,9 @@
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 48,
+     "HIGH": 4,
+     "MEDIUM": 9,
+     "safe": 35,
      "same_family": 0,
      "identical_sequence": 0
     }
@@ -10628,15 +10636,6 @@
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
-     "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 42,
-     "same_family": 1,
-     "identical_sequence": 0
-    },
-    "20": {
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
@@ -10645,12 +10644,21 @@
      "same_family": 1,
      "identical_sequence": 0
     },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 40,
+     "same_family": 1,
+     "identical_sequence": 0
+    },
     "no_tm_gate": {
      "overall_risk": "CRITICAL",
      "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 39,
+     "MEDIUM": 5,
+     "safe": 35,
      "same_family": 2,
      "identical_sequence": 0
     }
