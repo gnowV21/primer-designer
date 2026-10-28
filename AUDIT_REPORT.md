@@ -224,6 +224,19 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 
 **Kiểm chứng:** backend 533 test pass; e2e Playwright 62/62 (trước: 36/62 — 26 spec lỗi thời từ đợt tách Basic/Advanced, đã cập nhật); validation 184/184; `npm run build` OK.
 
+### 10.1 Bổ sung 2026-10-28 — BLAST off-target (bộ phân loại v2)
+
+| ID | Trạng thái | Nội dung |
+|---|---|---|
+| BLAST-01 | ✅ Đã sửa | **BLAST không chạy khi đường dẫn có dấu cách** (vd. `D:\Users\TIEN VUONG\…`): `-db`/`-in`/`-out` của BLAST+ nhận danh sách cách nhau bằng dấu cách; mẹo rút gọn 8.3 thất bại trên ổ không phải ổ hệ thống (8.3 tắt mặc định từ Windows 10) → `/api/blast-check` trả 500. Nay: DB tìm qua biến `BLASTDB`, truy vấn qua stdin; `build_blast_db.py` chạy trong thư mục đích với tên trần. |
+| BLAST-02 | ✅ Đã sửa | **Bảng Kwok 1990 tra sai mạch.** Kwok ghi cặp *mồi : mạch khuôn*, code so base mồi với base **sense** của off-target (cùng chiều với mồi) → nhãn BLOCKING/REDUCING lệch hẳn (vd. "A:G chặn" thực chất là A:C dung nạp; C:C không bao giờ nhận ra). Nay base khuôn = bổ sung của base sense. Lỗi có từ đợt sửa BLAST 2026-08. |
+| BLAST-03 | ✅ Đã làm | **Cổng Tm duplex** thay luật neo 3′ tối thiểu 10 nt (vốn xếp CRITICAL các đoạn neo 12 nt có Tm ~22 °C). Mốc so sánh là **Tm đúng đích** của chính mồi, không phải Ta — xem SPEC_phase3 §8.10. Tm_off < Tm_on − 10 → SAFE; vùng xám → luật Ye/Kwok tối đa MEDIUM; Tm_off ≥ Tm_on − 5 → CRITICAL (HIGH nếu base cuối 3′ hở hoặc mismatch chặn). |
+| BLAST-04 | ✅ Đã làm | Không BLAST mồi ngược universal (bám thân stem-loop, không bám miRNA). Khóa cache thêm phiên bản bộ phân loại + trình tự đích + điều kiện muối. |
+| BLAST-05 | ✅ Dọn dẹp | Xóa DB Ensembl cDNA không dùng (189 MB); `metadata.json` ghi rõ miRBase **22.1**. |
+| BLAST-06 | ⏸ Mở | miRBase đã lên **Release 23.1** (09/2026: 74.463 mature; 9.091 trình tự đổi đầu 5′/3′; 20.514 tên đổi; 10 tên trùng làm `makeblastdb -parse_seqids` lỗi). DB BLAST + chỉ mục family/overhang vẫn ở 22.1 để nhất quán; nâng cấp là mốc riêng. |
+
+**Phân tích độ nhạy** (`benchmark/blast_tm_gate_sensitivity.json`, 143 mồi xuôi #1 của bộ validation; 35 mồi Busk 2014 bị bỏ qua vì tên không có trong miRBase 22.1 hoặc là biến thể): số hit CRITICAL (62) và HIGH (9) **không đổi** ở biên SAFE 5/10/15/20 °C — theo thiết kế, vì hai bậc này chỉ phụ thuộc biên CRITICAL 5 °C; biên SAFE chỉ dời hit giữa SAFE và MEDIUM (MEDIUM: 0/31/81/167). Không có cổng Tm: 189 CRITICAL ở 78 mồi; có cổng: 62 CRITICAL ở 30 mồi. Đa số CRITICAL còn lại là paralog gần như trùng trình tự (ath-miR156/166, osa-miR164, miR-23a/b, miR-103/107, miR-17/106a/20b) ở các loài **ngoài** hsa/mmu/rno, nơi chỉ mục family không có nên không được gộp "same-family". Không có ground truth: đây là đầu ra của bộ phân loại, không phải dương tính thật/giả đã xác nhận.
+
 ---
 
 ## 11. Tài liệu tham khảo (đã kiểm chứng qua PubMed)

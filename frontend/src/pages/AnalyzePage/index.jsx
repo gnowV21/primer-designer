@@ -308,6 +308,7 @@ export default function AnalyzePage() {
                 forwardPrimer={forward}
                 reversePrimer={reverse}
                 mirnaId={blastMirnaId}
+                mirnaSequence={mature}
               />
             ) : (
               <div className="rounded-lg border border-slate-200 overflow-hidden">

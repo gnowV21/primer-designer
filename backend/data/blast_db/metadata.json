@@ -1,12 +1,9 @@
 {
-  "ensembl_version": "111",
-  "mirbase_version": "CURRENT",
+  "mirbase_version": "22.1",
+  "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
   "build_date": "2026-07-01",
-  "protein_coding_only": true,
   "sequences_count": {
-    "mirbase_multi": 48885,
-    "ensembl_human_cdna": 128603
+    "mirbase_multi": 48885
   },
-  "makeblastdb_version": "makeblastdb: 2.17.0+",
-  "ensembl_url": "https://ftp.ensembl.org/pub/release-111/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"
+  "makeblastdb_version": "makeblastdb: 2.17.0+"
 }

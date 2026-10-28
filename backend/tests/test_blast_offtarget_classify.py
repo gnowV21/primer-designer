@@ -31,8 +31,12 @@ from algorithm.constants import (
 _PRIMER = "GCCGCTGAGGTAGTAGGTTGTA"  # 22 nt (tail + specific region)
 
 
-def _aln(*, mm, dangling, cols, p3="A", t3="A", mm_pos=None):
-    """Build a minimal alignment dict shaped like nw_align's output."""
+def _aln(*, mm, dangling, cols, p3="A", t3="T", mm_pos=None):
+    """Build a minimal alignment dict shaped like nw_align's output.
+
+    t3 is the TEMPLATE-strand base facing the primer 3' end (Kwok notation), so
+    the default A/T is a Watson-Crick match.
+    """
     return {
         "mismatches": mm,
         "mismatch_positions": mm_pos if mm_pos is not None else [],
@@ -93,6 +97,142 @@ def test_blocking_terminal_is_safe():
     )
     assert risk == "SAFE"
     assert "BLOCKING" in reason
+
+
+# ── Kwok90 orientation: primer base vs TEMPLATE-strand base ──────────
+
+def test_kwok_categories_use_template_strand():
+    from algorithm.specificity_check.blast_offtarget import classify_3prime_mismatch as k
+    assert k("A", "T") == "MATCH"
+    assert k("A", "G") == "BLOCKING"
+    assert k("C", "C") == "BLOCKING"     # unreachable before: C==C was read as a match
+    assert k("A", "A") == "REDUCING"
+    assert k("A", "C") == "TOLERANT"
+
+
+def test_nw_align_reports_template_strand_base():
+    """Off-target sense ends in C opposite primer A → template G → Kwok A:G BLOCKING."""
+    from algorithm.specificity_check.blast_offtarget import nw_align, classify_3prime_mismatch
+    aln = nw_align("CTTATCAGACTA", "CTTATCAGACTC")
+    assert aln["primer_3prime_base"] == "A"
+    assert aln["template_3prime_base"] == "G"
+    assert classify_3prime_mismatch("A", aln["template_3prime_base"]) == "BLOCKING"
+    # A perfect sense match is a Watson-Crick pair on the template strand.
+    same = nw_align("CTTATCAGACTG", "CTTATCAGACTG")
+    assert classify_3prime_mismatch(same["primer_3prime_base"], same["template_3prime_base"]) == "MATCH"
+
+
+# ── B3: duplex-Tm gate (relative to the on-target duplex Tm) ─────────
+
+def _tm_aln(tm_off, tm_on=45.0, **kw):
+    a = _aln(**{"mm": 0, "dangling": 0, "cols": 15, **kw})
+    a["tm_offtarget"], a["tm_ontarget"] = tm_off, tm_on
+    return a
+
+
+def test_tm_far_below_target_is_safe_even_if_perfect_match():
+    """>10 °C weaker than the target → SAFE, overriding the mismatch rules."""
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(34.9))
+    assert risk == "SAFE"
+    assert "on target" in reason
+
+
+def test_tm_safe_boundary_is_exclusive():
+    """Exactly Tm_on − 10 is NOT safe (rule is Tm_off < Tm_on − 10) → grey zone."""
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(35.0))
+    assert risk == "MEDIUM"
+
+
+def test_grey_zone_caps_at_medium():
+    """Ye/Kwok would say CRITICAL (0 mm, 3' match) but the Tm gap caps it at MEDIUM."""
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(38.0))
+    assert risk == "MEDIUM"
+    assert "capped at MEDIUM" in reason
+
+
+def test_grey_zone_keeps_safe_from_mismatch_rules():
+    """The cap only lowers: a BLOCKING terminal stays SAFE in the grey zone."""
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(38.0, mm=1, p3="A", t3="G", mm_pos=[14]))
+    assert risk == "SAFE"
+
+
+def test_within_critical_margin_is_critical():
+    """Tm_off ≥ Tm_on − 5 with the 3' end annealed → CRITICAL."""
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(40.0))
+    assert risk == "CRITICAL"
+
+
+def test_offtarget_stronger_than_target_is_critical():
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(48.0))
+    assert risk == "CRITICAL"
+    assert "above" in reason
+
+
+def test_top_tier_blocking_terminal_is_high():
+    """Stable duplex but BLOCKING 3' mismatch (Kwok90 ~1% yield) → HIGH, not CRITICAL."""
+    risk, reason = classify_hit_risk(_PRIMER, _tm_aln(44.0, mm=1, p3="C", t3="C", mm_pos=[14]))
+    assert risk == "HIGH"
+    assert "BLOCKING" in reason
+
+
+def test_top_tier_unpaired_terminal_is_high():
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(44.0, dangling=1))
+    assert risk == "HIGH"
+
+
+def test_anchor_gate_runs_before_tm_gate():
+    """A non-annealed 3' end is SAFE however stable the duplex (Tm can't see the 3' end)."""
+    risk, _ = classify_hit_risk(_PRIMER, _tm_aln(50.0, dangling=BLAST_3PRIME_DANGLE_SAFE))
+    assert risk == "SAFE"
+
+
+def test_tm_gate_replaces_legacy_short_anchor_rule():
+    """With Tm data, a short anchor is judged by its Tm, not by the 10-nt rule."""
+    short = PRIMER_BLAST_MIN_3PRIME_ANCHOR - 2
+    assert classify_hit_risk(_PRIMER, _tm_aln(43.0, cols=short))[0] == "CRITICAL"
+    assert classify_hit_risk(_PRIMER, _aln(mm=0, dangling=0, cols=short))[0] == "SAFE"
+
+
+def test_custom_margins():
+    """Sensitivity analysis passes other margins; margin 5/5 has no grey zone."""
+    assert classify_hit_risk(_PRIMER, _tm_aln(38.0), 5.0, 5.0)[0] == "SAFE"
+    assert classify_hit_risk(_PRIMER, _tm_aln(38.0), 20.0, 5.0)[0] == "MEDIUM"
+
+
+# ── (a) DB paths with spaces ─────────────────────────────────────────
+
+def test_blast_db_located_via_blastdb_env_not_spaced_path():
+    """-db must get only the DB name; the spaced directory goes in BLASTDB."""
+    from algorithm.specificity_check.blast_offtarget import _blast_env_and_name
+    env, name = _blast_env_and_name(os.path.join("C:\\", "Users", "TIEN VUONG", "db", "mirbase_multi"))
+    assert name == "mirbase_multi"
+    assert " " not in name
+    assert env["BLASTDB"].endswith(os.path.join("TIEN VUONG", "db"))
+
+
+def test_live_blast_runs_from_spaced_path():
+    """Integration: the repo DB lives under 'TIEN VUONG' on the dev machine."""
+    import shutil
+    import pytest
+    from algorithm.specificity_check import blast_offtarget as bo
+    if not shutil.which("blastn") or not bo._db_exists(bo._MIRBASE_DB):
+        pytest.skip("blastn or BLAST DB not available")
+    hits = bo.run_blastn("CGCTGCTCTAGCTTATCAGACTG", bo._MIRBASE_DB)
+    assert any(h["subject_id"] == "hsa-miR-21-5p" for h in hits)
+    seqs = bo.fetch_sequences(["hsa-miR-21-5p", "not-a-real-id"], bo._MIRBASE_DB)
+    assert seqs == {"hsa-miR-21-5p": "TAGCTTATCAGACTGATGTTGA"}
+
+
+def test_universal_reverse_is_not_blasted():
+    import shutil
+    import pytest
+    from algorithm.specificity_check import blast_offtarget as bo
+    if not shutil.which("blastn") or not bo._db_exists(bo._MIRBASE_DB):
+        pytest.skip("blastn or BLAST DB not available")
+    r = bo.check_offtarget("CGCTGCTCTAGCTTATCAGACTG", "CCAGTGCAGGGTCCGAGGTA", "hsa-miR-21-5p")
+    assert r["reverse_primer_hits"] == []
+    assert r["reverse_primer_skipped"]
+    assert r["classification"]["tm_gate_applied"] is True
 
 
 # ── Fix B dependency: family lookup ──────────────────────────────────
