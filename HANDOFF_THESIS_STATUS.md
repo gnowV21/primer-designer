@@ -34,6 +34,7 @@
 | 2026-10-10 | Thêm 89 assay: Busk 2014 miRprimer (80/82 assay đã kiểm chứng wet-lab, nhóm `polyA_system`, chỉ chấm lõi forward) + bm_001–003 → **2439/2439**; 2 ca từ chối mới ghi là giới hạn đã biết |
 | 2026-10-22 | Chỉ mục isomiR 3' dựng lại trên **đủ 42.494 mẫu isomiRdb** (ma trận read-count, trước đó 20.635); algorithm **v3.1.1** (chỉ đổi mức cảnh báo 3', không đổi điểm) |
 | 2026-10-26 | **Determinism invariant, algorithm v3.1.2**: mỗi pool tail 7–12 nt tự tạo RNG riêng, seed = SHA-256(trình tự, tail_len, max_pool) — trước đó 6 pool dùng chung 1 RNG/lần thiết kế. Sửa kèm lỗi nhánh dự phòng tạo lại `Random(0)` mỗi vòng (pool chỉ còn 1 tail). Mồi xuôi đổi tail ở phần lớn target (1 ca đổi vùng đặc hiệu: miR-10a 14→16 nt); RT + reverse không đổi. So điểm V4 mồi #1 cũ/mới trên 181 miRNA: TB 93,82 → 93,84, tốt hơn 54 / kém 56 / bằng 71, lệch tối đa ±2,2 → tương đương. Validation vẫn **2439/2439**; results.json, VALIDATION_REPORT, benchmark export đã sinh lại |
+| 2026-10-28 | **BLAST bộ phân loại v2** (AUDIT §10.1, SPEC_phase3 §8.10): sửa BLAST không chạy khi đường dẫn có dấu cách (dùng `BLASTDB`); sửa bảng Kwok tra sai mạch (sense thay vì khuôn); **cổng Tm duplex so với Tm đúng đích** (SAFE nếu kém > 10 °C, CRITICAL nếu trong 5 °C) thay luật neo 10 nt; bỏ BLAST mồi universal; khóa cache có phiên bản bộ phân loại. Độ nhạy 143 mồi: CRITICAL 189 hit/78 mồi → 62/30. Xóa DB Ensembl; DB giữ miRBase **22.1**. Không đổi thiết kế mồi (`ALGORITHM_VERSION` giữ 3.1.2) |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -74,11 +75,15 @@
    - Thiết kế mồi bằng tool cho ≥ vài miRNA → chạy standard curve (hiệu suất 90–110 %), NTC, no-RT, melt curve theo MIQE.
    - Muốn calibrate trọng số (`calibrate_weights.py`): cần **N ≥ 20 assay**, mồi đúng y trình tự tool xuất ra, **gồm cả mồi hạng #2/#3 điểm thấp** (cần ca thất bại). Không dùng hiệu suất lấy từ bài báo.
    - Đo hiệu suất RT theo overhang 5/6/7 nt; kiểm tra sai số Tm amplicon (≥5 bộ).
-4. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 15 tiêu chí V4, nhiệt động học, BLAST 3'-anchoring, LNA) → Kết quả (validation 783/783, so sánh mồi công bố, benchmark LNA, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 2 miRNA GC-rich bị từ chối, miR-155 route miRBase trả biến thể 24 nt).
+   - **Cross-reactivity cho cổng Tm BLAST:** mồi xuôi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C vs 44,3 °C đúng đích; trước v2 bị xếp CRITICAL). < 5 % → bằng chứng trực tiếp cho biên 10 °C.
+4. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 15 tiêu chí V4, nhiệt động học, BLAST 3'-anchoring + cổng Tm duplex, LNA) → Kết quả (validation 2439/2439, so sánh mồi công bố, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155 route miRBase trả biến thể 24 nt, BLAST không mô hình bước RT, dữ liệu miRBase 22.1).
+5. **Nâng miRBase lên Release 23.1** (mốc riêng, đổi số liệu): build lại DB BLAST (xử lý 10 tên trùng cho `-parse_seqids`), chỉ mục family + overhang; kiểm tra route `/api/mirbase` (API trực tuyến có thể đã trả 23.1 — có thể là nguyên nhân lỗi miR-155 24 nt); chạy lại validation + benchmark + độ nhạy BLAST.
 
 **Ưu tiên thấp / tùy chọn:**
+- BLAST: chỉ mục family chỉ có hsa/mmu/rno → paralog ở loài khác (ath, osa, ssc, gga) không được gộp "same-family" và hiện CRITICAL.
+- BLAST: phân tích độ nhạy biên CRITICAL (3/5/7 °C) — biên này mới quyết định số CRITICAL.
 - Bug dữ liệu: `/api/mirbase/hsa-miR-155-5p` trả `UUAAUGCUAAUCGUGAUAGGGGUU` (24 nt, biến thể) thay vì canonical MIMAT0000646 (23 nt) — chưa điều tra.
-- BLAST: thay ngưỡng neo 10 nt bằng cổng Tm (Tm duplex so với Ta).
+- ~~BLAST: thay ngưỡng neo 10 nt bằng cổng Tm~~ — xong 2026-10-28 (so với Tm đúng đích, không phải Ta: SPEC_phase3 §8.10).
 - Self-host font IBM Plex (đang dùng Google Fonts CDN).
 - Family lookup dựa vào tên → dán trình tự trần không tìm được family.
 

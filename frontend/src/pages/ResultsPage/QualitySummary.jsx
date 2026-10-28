@@ -130,6 +130,10 @@ export default function QualitySummary({ results, onBlastResult }) {
       const resp = await axios.post('/api/blast-check', {
         mirna_id: mirnaId,
         forward_primer: fwd,
+        // On-target sequence + the design's salt conditions for the duplex-Tm gate,
+        // so off-target and on-target Tm are computed exactly like the design's own.
+        mirna_sequence: metadata?.mirna_sequence || undefined,
+        conditions: metadata?.design_settings?.effective_p3 || undefined,
       }, { timeout: 65000 });   // backend allows the search itself up to 60 s
       setBlastResult(resp.data);
       setBlastState('done');

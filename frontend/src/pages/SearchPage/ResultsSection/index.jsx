@@ -152,7 +152,15 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       )}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
-          <PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} mirnaId={mirnaId} />
+          <PrimerSetCard
+            key={i}
+            set={set}
+            stemloop={stemloop_rt}
+            reverse={universal_reverse}
+            mirnaId={mirnaId}
+            mirnaSequence={metadata?.mirna_sequence}
+            conditions={metadata?.design_settings?.effective_p3}
+          />
         ))}
       </div>
 

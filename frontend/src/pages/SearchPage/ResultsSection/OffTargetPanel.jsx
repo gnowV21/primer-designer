@@ -10,11 +10,11 @@ const BLAST_RISK_STYLE = {
   SAFE:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }) {
+export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions }) {
   const { status, result, error, run, reset, dbAvailable, dbMessage } = useBlastCheck();
 
   function handleRun() {
-    run(forwardPrimer, reversePrimer, mirnaId);
+    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions });
   }
 
   // DB unavailable (Phase 7 PART A) — show disabled state with explanation
@@ -178,6 +178,7 @@ function ResultDisplay({ result }) {
   const dbInfo  = result.database_info ?? {};
   const fwdHits = result.forward_primer_hits ?? [];
   const revHits = result.reverse_primer_hits ?? [];
+  const clf     = result.classification ?? {};
 
   return (
     <div className="space-y-3">
@@ -200,11 +201,21 @@ function ResultDisplay({ result }) {
       )}
 
       {/* Footnote */}
-      <div className="text-xs text-slate-500 border-t border-slate-100 pt-2">
+      <div className="text-xs text-slate-500 border-t border-slate-100 pt-2 space-y-0.5">
+        <p>
+          {clf.tm_gate_applied
+            ? `Forward primer on its target: duplex Tm ${clf.tm_ontarget?.toFixed(1)} °C. `
+              + `Hits more than ${clf.safe_margin_c} °C weaker are SAFE; within `
+              + `${clf.critical_margin_c} °C are CRITICAL.`
+            : 'Target sequence unknown — classified by mismatch rules only (no duplex-Tm gate).'}
+        </p>
+        {result.reverse_primer_skipped && <p>{result.reverse_primer_skipped}</p>}
+        <p>
         {result.cache?.hit ? 'Cached result · ' : ''}
         DB: miRBase {dbInfo.mirbase_version} (all species)
         {dbInfo.outdated_warning && ' · DB may be outdated'}
         {' · built '}{dbInfo.build_date}
+        </p>
       </div>
     </div>
   );
@@ -262,7 +273,12 @@ function HitsAccordion({ label, hits }) {
           <thead className="bg-slate-100 border-b border-slate-200">
             <tr>
               <th className="text-left px-2 py-1.5 font-semibold text-slate-600">Target</th>
-              <th className="text-center px-2 py-1.5 font-semibold text-slate-600">DB</th>
+              <th
+                className="text-center px-2 py-1.5 font-semibold text-slate-600"
+                title="Duplex Tm of the primer on this off-target's cDNA, compared with the primer on its own target (same salt conditions as the design)"
+              >
+                Tm °C
+              </th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Mismatch</th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ mm</th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ type</th>
@@ -274,13 +290,18 @@ function HitsAccordion({ label, hits }) {
               const aln   = h.alignment ?? {};
               const style = BLAST_RISK_STYLE[h.risk] ?? BLAST_RISK_STYLE.SAFE;
               const termCat = aln.terminal_category ?? '—';
-              const termMm  = aln.primer_3prime_base && aln.template_3prime_base && aln.primer_3prime_base !== aln.template_3prime_base
+              // primer:template (Kwok 1990) — template is the strand the primer anneals to,
+              // so a match is a Watson-Crick pair (A:T), not two equal letters.
+              const termMm  = termCat !== 'MATCH' && aln.primer_3prime_base && aln.template_3prime_base
                 ? `${aln.primer_3prime_base}:${aln.template_3prime_base}`
+                : '—';
+              const tm = aln.tm_offtarget != null
+                ? `${aln.tm_offtarget.toFixed(1)} / ${aln.tm_ontarget.toFixed(1)}`
                 : '—';
               return (
                 <tr key={i} title={h.risk_reason}>
                   <td className="px-2 py-1.5 font-mono text-slate-700 truncate max-w-[160px]">{h.subject_id}</td>
-                  <td className="px-2 py-1.5 text-center text-slate-500">{h.database?.replace('_', ' ')}</td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-slate-500">{tm}</td>
                   <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">{aln.mismatches ?? '—'}</td>
                   <td className="px-2 py-1.5 text-center font-mono text-slate-600">{termMm}</td>
                   <td className="px-2 py-1.5 text-center text-slate-500">{termCat}</td>

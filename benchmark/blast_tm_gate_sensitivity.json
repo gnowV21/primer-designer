@@ -1,0 +1,7993 @@
+{
+ "generated_by": "backend/scripts/blast_tm_gate_sensitivity.py",
+ "run_date": "2026-10-28",
+ "classifier_version": "2",
+ "blast_db": {
+  "mirbase_version": "22.1",
+  "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
+  "build_date": "2026-07-01",
+  "sequences_count": {
+   "mirbase_multi": 48885
+  },
+  "makeblastdb_version": "makeblastdb: 2.17.0+"
+ },
+ "critical_margin_c": 5.0,
+ "safe_margins_c": [
+  5.0,
+  10.0,
+  15.0,
+  20.0
+ ],
+ "conditions": {
+  "mv_conc": 50.0,
+  "dv_conc": 1.5,
+  "dntp_conc": 0.8,
+  "dna_conc": 200.0
+ },
+ "note": "Counts are classifier outputs with no ground truth — not confirmed false/true positives. 'no_tm_gate' = Ye12/Kwok90 rules + 10-nt anchor (with the Kwok orientation fix), i.e. the rules without the Tm gate.",
+ "n_primers": 143,
+ "n_skipped": 35,
+ "summary": {
+  "5": {
+   "primers_by_overall_risk": {
+    "SAFE": 111,
+    "CRITICAL": 30,
+    "HIGH": 2
+   },
+   "hits_by_tier": {
+    "CRITICAL": 62,
+    "HIGH": 9,
+    "MEDIUM": 0
+   },
+   "safe_hits": 5522
+  },
+  "10": {
+   "primers_by_overall_risk": {
+    "SAFE": 100,
+    "MEDIUM": 11,
+    "CRITICAL": 30,
+    "HIGH": 2
+   },
+   "hits_by_tier": {
+    "CRITICAL": 62,
+    "HIGH": 9,
+    "MEDIUM": 31
+   },
+   "safe_hits": 5472
+  },
+  "15": {
+   "primers_by_overall_risk": {
+    "SAFE": 87,
+    "MEDIUM": 24,
+    "CRITICAL": 30,
+    "HIGH": 2
+   },
+   "hits_by_tier": {
+    "CRITICAL": 62,
+    "HIGH": 9,
+    "MEDIUM": 81
+   },
+   "safe_hits": 5393
+  },
+  "20": {
+   "primers_by_overall_risk": {
+    "SAFE": 67,
+    "MEDIUM": 44,
+    "CRITICAL": 30,
+    "HIGH": 2
+   },
+   "hits_by_tier": {
+    "CRITICAL": 62,
+    "HIGH": 9,
+    "MEDIUM": 167
+   },
+   "safe_hits": 5288
+  },
+  "no_tm_gate": {
+   "primers_by_overall_risk": {
+    "CRITICAL": 78,
+    "MEDIUM": 31,
+    "SAFE": 33,
+    "HIGH": 1
+   },
+   "hits_by_tier": {
+    "CRITICAL": 189,
+    "HIGH": 8,
+    "MEDIUM": 452
+   },
+   "safe_hits": 4871
+  }
+ },
+ "skipped": [
+  {
+   "target": "ssc-let-7d (Busk 2014)",
+   "mirna_id": "ssc-let-7d",
+   "primer": "AAGGAGGTAGAGGTAGTAGGTTGC",
+   "specific": "AGAGGTAGTAGGTTGC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-let-7f (Busk 2014)",
+   "mirna_id": "ssc-let-7f",
+   "primer": "CGGCACGATGAGGTAGTAGATTG",
+   "specific": "TGAGGTAGTAGATTG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR15a (Busk 2014)",
+   "mirna_id": "ssc-miR15a",
+   "primer": "CGCGCATAGCAGCACATAATG",
+   "specific": "TAGCAGCACATAATG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-20 (Busk 2014)",
+   "mirna_id": "ssc-miR-20",
+   "primer": "AGCCGGTGTAAAGTGCTTATAGTG",
+   "specific": "TAAAGTGCTTATAGTG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-21 (Busk 2014)",
+   "mirna_id": "ssc-miR-21",
+   "primer": "CGCTGCTCTAGCTTATCAGACTG",
+   "specific": "TAGCTTATCAGACTG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "hsa-miR-25 (Busk 2014)",
+   "mirna_id": "hsa-miR-25",
+   "primer": "ACTCGTCTCATTGCACTTGTCTC",
+   "specific": "CATTGCACTTGTCTC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-27b (Busk 2014)",
+   "mirna_id": "mmu-miR-27b",
+   "primer": "GTCTCCTGTTTTCACAGTGGCT",
+   "specific": "TTCACAGTGGCT",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-30d (Busk 2014)",
+   "mirna_id": "mmu-miR-30d",
+   "primer": "TCTCAGACTGTAAACATCCCCGA",
+   "specific": "TGTAAACATCCCCGA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "hsa-miR-93 (Busk 2014)",
+   "mirna_id": "hsa-miR-93",
+   "primer": "CTAAGCGCAAAGTGCTGTTCG",
+   "specific": "AAAGTGCTGTTCG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-122 (Busk 2014)",
+   "mirna_id": "ssc-miR-122",
+   "primer": "AGCGATGGAGTGTGACAATGG",
+   "specific": "TGGAGTGTGACAATGG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-129-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-129-3p",
+   "primer": "GACCTAGAAGCCCTTACCCCA",
+   "specific": "AAGCCCTTACCCCA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-135b (Busk 2014)",
+   "mirna_id": "mmu-miR-135b",
+   "primer": "CACGCGTATGGCTTTTCATTCC",
+   "specific": "TATGGCTTTTCATTCC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "hsa-miR-146a (Busk 2014)",
+   "mirna_id": "hsa-miR-146a",
+   "primer": "GACCTCGACTGAGAACTGAATTCC",
+   "specific": "TGAGAACTGAATTCC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-146b-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-146b-5p",
+   "primer": "TCGTCACGTGAGAACTGAATTCC",
+   "specific": "TGAGAACTGAATTCC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-182 (Busk 2014)",
+   "mirna_id": "mmu-miR-182",
+   "primer": "TGGCATCCTTTGGCAATGGT",
+   "specific": "TTTGGCAATGGT",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-200b (Busk 2014)",
+   "mirna_id": "mmu-miR-200b",
+   "primer": "AGGACCGTAATACTGCCTGGT",
+   "specific": "TAATACTGCCTGGT",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-200c (Busk 2014)",
+   "mirna_id": "ssc-miR-200c",
+   "primer": "AGGTCTGTAATACTGCCGGGT",
+   "specific": "TAATACTGCCGGGT",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-210 (Busk 2014)",
+   "mirna_id": "mmu-miR-210",
+   "primer": "GACTAGGACTGTGCGTGTGAC",
+   "specific": "CTGTGCGTGTGAC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-667 (Busk 2014)",
+   "mirna_id": "mmu-miR-667",
+   "primer": "GTCCAACATGACACCTGCCA",
+   "specific": "TGACACCTGCCA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-670 (Busk 2014)",
+   "mirna_id": "ssc-miR-670",
+   "primer": "CGCGCTATCCCTGAGTGTATG",
+   "specific": "ATCCCTGAGTGTATG",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  },
+  {
+   "target": "ssc-miR-673 (Busk 2014)",
+   "mirna_id": "ssc-miR-673",
+   "primer": "CTACGATGCTCACAGCTCCG",
+   "specific": "CTCACAGCTCCG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-881 (Busk 2014)",
+   "mirna_id": "mmu-miR-881",
+   "primer": "TGGATCTGGAACTGTGTCTTTTCTG",
+   "specific": "AACTGTGTCTTTTCTG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-882 (Busk 2014)",
+   "mirna_id": "ssc-miR-882",
+   "primer": "GAGCAAGTTCAGGAGAGAGTTAGC",
+   "specific": "AGGAGAGAGTTAGC",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-1246 (Busk 2014)",
+   "mirna_id": "ssc-miR-1246",
+   "primer": "GCGGTAATCGAGAATGGATTTTTGG",
+   "specific": "AATGGATTTTTGG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-1290 (Busk 2014)",
+   "mirna_id": "ssc-miR-1290",
+   "primer": "ACGTTGAGCCTGGATTTTTGGA",
+   "specific": "TGGATTTTTGGA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-1937a (Busk 2014)",
+   "mirna_id": "ssc-miR-1937a",
+   "primer": "CCATGCAAATCCCGGACGA",
+   "specific": "AATCCCGGACGA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-2134 (Busk 2014)",
+   "mirna_id": "ssc-miR-2134",
+   "primer": "TGTCGTCGTCTTGGGAAACG",
+   "specific": "GTCTTGGGAAACG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-7134-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-7134-3p",
+   "primer": "CTCGACTATGCGGAACCTGC",
+   "specific": "TGCGGAACCTGC",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  },
+  {
+   "target": "putative miRNA1 (Busk 2014)",
+   "mirna_id": "putative miRNA1",
+   "primer": "ACGGTACTCCGTATCCGCA",
+   "specific": "TCCGTATCCGCA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "putative miRNA2 (Busk 2014)",
+   "mirna_id": "putative miRNA2",
+   "primer": "ACGGTAGTCCGTATCCGCA",
+   "specific": "TCCGTATCCGCA",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "mmu-miR-31-3p (Busk 2014)",
+   "mirna_id": "mmu-miR-31-3p",
+   "primer": "TGCGCTGCTATGCCAACA",
+   "specific": "CTGCTATGCCAACA",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  },
+  {
+   "target": "mmu-miR-194-5p (var) (Busk 2014)",
+   "mirna_id": "mmu-miR-194-5p",
+   "primer": "TCGTAGTGCTGTAACAGCAACTC",
+   "specific": "CTGTAACAGCAACTC",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  },
+  {
+   "target": "mmu-miR-138-5p (Busk 2014)",
+   "mirna_id": "mmu-miR-138-5p",
+   "primer": "ACACCCAGCTGGTGTTGTG",
+   "specific": "CAGCTGGTGTTGTG",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  },
+  {
+   "target": "putative miRNA3 (Busk 2014)",
+   "mirna_id": "putative miRNA3",
+   "primer": "ACGAGCGTTGGTGTACACTG",
+   "specific": "GTTGGTGTACACTG",
+   "given_seq": null,
+   "reason": "target sequence not found"
+  },
+  {
+   "target": "ssc-miR-1468 (var) (Busk 2014)",
+   "mirna_id": "ssc-miR-1468",
+   "primer": "AGCGATCTCCGTTTGCCTG",
+   "specific": "TCTCCGTTTGCCTG",
+   "given_seq": null,
+   "reason": "specific region is not a prefix of the target sequence"
+  }
+ ],
+ "primers": [
+  {
+   "target": "hsa-miR-21-5p",
+   "mirna_id": "hsa-miR-21-5p",
+   "primer": "CGCTGCTCTAGCTTATCAGACTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 8,
+     "safe": 68,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7a-5p",
+   "mirna_id": "hsa-let-7a-5p",
+   "primer": "TGGTAGAGGCTTTGAGGTAGTAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 92,
+     "same_family": 6
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 91,
+     "same_family": 7
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 90,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 89,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 86,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7c-5p",
+   "mirna_id": "hsa-let-7c-5p",
+   "primer": "CAACCGTGATTGTGAGGTAGTAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 74,
+     "same_family": 6
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 73,
+     "same_family": 7
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 72,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 71,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 68,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-16-5p",
+   "mirna_id": "hsa-miR-16-5p",
+   "primer": "CGCATCCATAGCAGCACGTA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 57,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 57,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 56,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 56,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 55,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-155-5p",
+   "mirna_id": "hsa-miR-155-5p",
+   "primer": "CGAAGCGCTTAATGCTAATCGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-150-5p",
+   "mirna_id": "hsa-miR-150-5p",
+   "primer": "GTCGTCTAGTCTCCCAACCCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 96,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 94,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 93,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 93,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 87,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-1-3p",
+   "mirna_id": "hsa-miR-1-3p",
+   "primer": "GGCCACCTGGAATGTAAAGAAGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 91,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 91,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 90,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 90,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 10,
+     "safe": 77,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-181a-5p",
+   "mirna_id": "hsa-miR-181a-5p",
+   "primer": "GACGCTCAACATTCAACGCTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 29,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 29,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 29,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 28,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 27,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-181b-5p",
+   "mirna_id": "hsa-miR-181b-5p",
+   "primer": "GCCGCTAACATTCATTGCTGTC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 62,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 62,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 2
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 59,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 12,
+     "safe": 48,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-181c-5p",
+   "mirna_id": "hsa-miR-181c-5p",
+   "primer": "AACCTCCTGTAACATTCAACCTGTC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 106,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 106,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 106,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 106,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 102,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-125b-5p",
+   "mirna_id": "hsa-miR-125b-5p",
+   "primer": "AGACTTGGTCCCTGAGACCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.1,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 96,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 95,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 94,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 93,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 6,
+     "HIGH": 1,
+     "MEDIUM": 7,
+     "safe": 83,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-4324",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.7,
+     "reason": "duplex Tm 44.7 °C vs 46.1 °C on target (1.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "hsa-miR-195-5p",
+   "mirna_id": "hsa-miR-195-5p",
+   "primer": "ACCTGATCCTAGCAGCACAGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 94,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 93,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 92,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 89,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 17,
+     "safe": 75,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-9-3p",
+   "mirna_id": "hsa-miR-9-3p",
+   "primer": "TCCGCATTCGATAAAGCTAGATAACC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 3,
+     "safe": 29,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-222-3p",
+   "mirna_id": "hsa-miR-222-3p",
+   "primer": "TGGTACCAGCTACATCTGGCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 66,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 66,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 66,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 65,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 63,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-221-3p",
+   "mirna_id": "hsa-miR-221-3p",
+   "primer": "CTCGGTTAAGCTACATTGTCTGCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 50.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 63,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 63,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 63,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 63,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 56,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-10a-5p",
+   "mirna_id": "hsa-miR-10a-5p",
+   "primer": "CCGCTACCCTGTAGATCCGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 50.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 55,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 55,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 55,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 53,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-22-3p",
+   "mirna_id": "hsa-miR-22-3p",
+   "primer": "CTCGATGAAGCTGCCAGTTGA",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 51.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 74,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 74,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 74,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 73,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 69,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-26b-5p",
+   "mirna_id": "hsa-miR-26b-5p",
+   "primer": "CGCCTCATGCATTCAAGTAATTCAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 106,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 105,
+     "same_family": 2
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 105,
+     "same_family": 2
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 105,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 99,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7b-5p",
+   "mirna_id": "hsa-let-7b-5p",
+   "primer": "ACGCGTAGACTGAGGTAGTAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 81,
+     "same_family": 6
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 80,
+     "same_family": 7
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 79,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 77,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 73,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-7-5p",
+   "mirna_id": "hsa-miR-7-5p",
+   "primer": "CGTGCCTGTGGAAGACTAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 121,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 121,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 121,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 121,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 118,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-10b-5p",
+   "mirna_id": "hsa-miR-10b-5p",
+   "primer": "AGGTCCGTACCCTGTAGAACC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 62,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 60,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 58,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 57,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-20a-5p",
+   "mirna_id": "hsa-miR-20a-5p",
+   "primer": "AGCCGGTGTAAAGTGCTTATAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 3
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 3
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 77,
+     "same_family": 4
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 76,
+     "same_family": 5
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 74,
+     "same_family": 5
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7d-5p",
+   "mirna_id": "hsa-let-7d-5p",
+   "primer": "AAGGAGGTAGAGGTAGTAGGTTGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 52.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 124,
+     "same_family": 3
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 124,
+     "same_family": 3
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 119,
+     "same_family": 8
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 119,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 113,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7e-5p",
+   "mirna_id": "hsa-let-7e-5p",
+   "primer": "AGCCATTAGGTGAGGTAGGAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 42.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 83,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 82,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 77,
+     "same_family": 4
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 72,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 67,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ath-miR156a-5p",
+   "mirna_id": "ath-miR156a-5p",
+   "primer": "GGCACTGCTGACAGAAGAGAG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 42.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 23,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 20,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 17,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 17,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 13,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 17,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ath-miR156j",
+     "risk": "CRITICAL",
+     "tm_offtarget": 41.6,
+     "reason": "duplex Tm 41.6 °C vs 42.6 °C on target (1.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156i",
+     "risk": "CRITICAL",
+     "tm_offtarget": 41.6,
+     "reason": "duplex Tm 41.6 °C vs 42.6 °C on target (1.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156f-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.6,
+     "reason": "duplex Tm 42.6 °C vs 42.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156e",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.6,
+     "reason": "duplex Tm 42.6 °C vs 42.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.6,
+     "reason": "duplex Tm 42.6 °C vs 42.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156c-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.6,
+     "reason": "duplex Tm 42.6 °C vs 42.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 42.6,
+     "reason": "duplex Tm 42.6 °C vs 42.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR156g",
+     "risk": "CRITICAL",
+     "tm_offtarget": 40.7,
+     "reason": "duplex Tm 40.7 °C vs 42.6 °C on target (1.9 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ath-miR159a",
+   "mirna_id": "ath-miR159a",
+   "primer": "AACACGCTTTGGATTGAAGGGA",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 45.9,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 18,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 18,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 18,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ath-miR159c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.9,
+     "reason": "duplex Tm 45.9 °C vs 45.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR159b-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.9,
+     "reason": "duplex Tm 45.9 °C vs 45.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ath-miR166a-3p",
+   "mirna_id": "ath-miR166a-3p",
+   "primer": "CTATAGCCTCGGACCAGGCT",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.2,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 8,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ath-miR166g",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR166f",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR166e-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR166d",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR166c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR166b-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR165b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR165a-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 48.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ath-miR167a-5p",
+   "mirna_id": "ath-miR167a-5p",
+   "primer": "GGTACCTATGTGAAGCTGCCAG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 46.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ath-miR167d",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.6,
+     "reason": "duplex Tm 46.6 °C vs 46.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ath-miR167b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.6,
+     "reason": "duplex Tm 46.6 °C vs 46.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ebv-miR-BHRF1-1",
+   "mirna_id": "ebv-miR-BHRF1-1",
+   "primer": "CTCACAGCTAACCTGATCAGCC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 46.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BHRF1-2-5p",
+   "mirna_id": "ebv-miR-BHRF1-2-5p",
+   "primer": "CACAGCAAATTCTGTTGCAGCA",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 49.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART2-5p",
+   "mirna_id": "ebv-miR-BART2-5p",
+   "primer": "GCCACGGTATTTTCTGCATTCG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 45.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART2-3p",
+   "mirna_id": "ebv-miR-BART2-3p",
+   "primer": "ACGACTCAAGGAGCGATTTGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART3-3p",
+   "mirna_id": "ebv-miR-BART3-3p",
+   "primer": "GTTCCAGTCGCACCACTAGTC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 49.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART4-5p",
+   "mirna_id": "ebv-miR-BART4-5p",
+   "primer": "GCATGGACCTGATGCTGCT",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 51.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART5-5p",
+   "mirna_id": "ebv-miR-BART5-5p",
+   "primer": "GGTCCAGTCAAGGTGAATATAGCTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 50.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART6-5p",
+   "mirna_id": "ebv-miR-BART6-5p",
+   "primer": "CGGTTCGAGTAAGGTTGGTCC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 40.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART7-3p",
+   "mirna_id": "ebv-miR-BART7-3p",
+   "primer": "CCACAGCCATCATAGTCCAGTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 3,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART7-5p",
+   "mirna_id": "ebv-miR-BART7-5p",
+   "primer": "TAGCTCCTCCTGGACCTTGAC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART8-5p",
+   "mirna_id": "ebv-miR-BART8-5p",
+   "primer": "CAACGCTGTTACGGTTTCCTAGA",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 44.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART9-5p",
+   "mirna_id": "ebv-miR-BART9-5p",
+   "primer": "AGCAGTCTCTACTGGACCCTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 42.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART10-5p",
+   "mirna_id": "ebv-miR-BART10-5p",
+   "primer": "CGACACTAGCCACCTCTTTGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 51.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART11-5p",
+   "mirna_id": "ebv-miR-BART11-5p",
+   "primer": "TTCCAGCTCAGACAGTTTGGTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 49.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART11-3p",
+   "mirna_id": "ebv-miR-BART11-3p",
+   "primer": "CGCTATAGACGCACACCAGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 52.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 5,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 4,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART13-3p",
+   "mirna_id": "ebv-miR-BART13-3p",
+   "primer": "TTGGTGAGTGTAACTTGCCAGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 47.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART13-5p",
+   "mirna_id": "ebv-miR-BART13-5p",
+   "primer": "CTATGCCTAACCGGCTCGTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 51.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART14-3p",
+   "mirna_id": "ebv-miR-BART14-3p",
+   "primer": "AGGATGGCTCTAAATGCTGCAG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 40.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART15",
+   "mirna_id": "ebv-miR-BART15",
+   "primer": "ACCGACGTCAGTGGTTTTGTT",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 46.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART16",
+   "mirna_id": "ebv-miR-BART16",
+   "primer": "CACGTGGTTTAGATAGAGTGGGTG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART17-5p",
+   "mirna_id": "ebv-miR-BART17-5p",
+   "primer": "GGCTAAGTTAAGAGGACGCAGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 50.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART17-3p",
+   "mirna_id": "ebv-miR-BART17-3p",
+   "primer": "GGATCACTGTATGCCTGGTGTC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 51.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 4,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART18-5p",
+   "mirna_id": "ebv-miR-BART18-5p",
+   "primer": "TCCGTCAAGTTCGCACTTCC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 53.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART18-3p",
+   "mirna_id": "ebv-miR-BART18-3p",
+   "primer": "ACGCCTGTATCGGAAGTTTGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 44.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART19-5p",
+   "mirna_id": "ebv-miR-BART19-5p",
+   "primer": "CGATTGGACATTCCCCGCA",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART19-3p",
+   "mirna_id": "ebv-miR-BART19-3p",
+   "primer": "ATGCGATCCTTTTGTTTGCTTGG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 44.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 1,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART20-5p",
+   "mirna_id": "ebv-miR-BART20-5p",
+   "primer": "ATGGCCATAGCAGGCATGTC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 48.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART20-3p",
+   "mirna_id": "ebv-miR-BART20-3p",
+   "primer": "GCTAGACTCCATGAAGGCACAG",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 47.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 3,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ebv-miR-BART22",
+   "mirna_id": "ebv-miR-BART22",
+   "primer": "TCGACCGTTACAAAGTCATGGTC",
+   "target_sequence_source": "reference_mirnas.json",
+   "tm_ontarget": 47.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 0,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-200b-3p",
+   "mirna_id": "hsa-miR-200b-3p",
+   "primer": "AGGACCGTAATACTGCCTGGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.3,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 81,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 79,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 77,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 72,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 15,
+     "safe": 64,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-383-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.6,
+     "reason": "duplex Tm 43.6 °C vs 45.3 °C on target (1.7 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "hsa-miR-145-5p",
+   "mirna_id": "hsa-miR-145-5p",
+   "primer": "TCCTCTGAGTCCAGTTTTCCCA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 131,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 130,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 130,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 130,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 11,
+     "safe": 118,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-15b-5p",
+   "mirna_id": "hsa-miR-15b-5p",
+   "primer": "GACTACCTAGCAGCACATCATGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 53.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 90,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 89,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 89,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 88,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 82,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-103a-2-5p",
+   "mirna_id": "hsa-miR-103a-2-5p",
+   "primer": "CGCGCAAGCTTCTTTACAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 52,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-143-3p",
+   "mirna_id": "hsa-miR-143-3p",
+   "primer": "GGTAGGCTGAGATGAAGCACTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 113,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 113,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 113,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 107,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 34,
+     "safe": 76,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7f-5p (Wang 2018)",
+   "mirna_id": "hsa-let-7f-5p",
+   "primer": "CGGCACGATGAGGTAGTAGATTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 64,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 57,
+     "same_family": 6
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 56,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 55,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 48,
+     "same_family": 9
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7g-5p",
+   "mirna_id": "hsa-let-7g-5p",
+   "primer": "CCGGCCATGAGGTAGTAGTTTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 59,
+     "same_family": 2
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 3
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 54,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 53,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 47,
+     "same_family": 9
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-let-7i-5p",
+   "mirna_id": "hsa-let-7i-5p",
+   "primer": "CATGTCCGGTGAGGTAGTAGTTTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 78,
+     "same_family": 2
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 77,
+     "same_family": 3
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 73,
+     "same_family": 7
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 71,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 4,
+     "safe": 65,
+     "same_family": 9
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-98-5p",
+   "mirna_id": "hsa-miR-98-5p",
+   "primer": "TAGTCGTGGTGAGGTAGTAAGTTGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 84,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 82,
+     "same_family": 2
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 79,
+     "same_family": 4
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 75,
+     "same_family": 8
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 71,
+     "same_family": 8
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-223-5p",
+   "mirna_id": "mmu-miR-223-5p",
+   "primer": "CACCGCGTGTATTTGACAAGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 51.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 35,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 35,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 35,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 35,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 32,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-223-3p",
+   "mirna_id": "mmu-miR-223-3p",
+   "primer": "TCCGCGAGTGTCAGTTTGTC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 38.8,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 30,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 30,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 8,
+     "safe": 24,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-599",
+     "risk": "CRITICAL",
+     "tm_offtarget": 37.0,
+     "reason": "duplex Tm 37.0 °C vs 38.8 °C on target (1.8 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "mmu-miR-501-3p",
+   "mirna_id": "mmu-miR-501-3p",
+   "primer": "GGATAATGCACCCGGGCAA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 58.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 38,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 38,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 37,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 37,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 33,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-669a-5p",
+   "mirna_id": "mmu-miR-669a-5p",
+   "primer": "CAAGTTGTCGAGTTGTGTGTGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.7,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 173,
+     "same_family": 3
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 170,
+     "same_family": 3
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 17,
+     "safe": 156,
+     "same_family": 3
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 36,
+     "safe": 137,
+     "same_family": 3
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 10,
+     "HIGH": 0,
+     "MEDIUM": 64,
+     "safe": 100,
+     "same_family": 3
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-669o-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.4,
+     "reason": "duplex Tm 45.4 °C vs 45.7 °C on target (0.3 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "mmu-miR-129b-5p",
+   "mirna_id": "mmu-miR-129b-5p",
+   "primer": "ACCGGCTTTTTGGGGTAAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 52.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 4,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 34,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-467a-5p",
+   "mirna_id": "mmu-miR-467a-5p",
+   "primer": "CGGCAGATAAGTGCCTGCA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.8,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 54,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 1,
+     "safe": 53,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 2,
+     "safe": 52,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 1,
+     "MEDIUM": 7,
+     "safe": 47,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 9,
+     "HIGH": 0,
+     "MEDIUM": 8,
+     "safe": 39,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-467b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.1,
+     "reason": "duplex Tm 46.1 °C vs 45.8 °C on target (0.3 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "mmu-miR-346-5p",
+     "risk": "HIGH",
+     "tm_offtarget": 40.8,
+     "reason": "duplex Tm 40.8 °C vs 45.8 °C on target (5.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    }
+   ]
+  },
+  {
+   "target": "mmu-miR-335-3p",
+   "mirna_id": "mmu-miR-335-3p",
+   "primer": "CCGACCGGTTTTTCATTATTGCTC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 31,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 31,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 31,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 31,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 26,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-335-5p",
+   "mirna_id": "mmu-miR-335-5p",
+   "primer": "CGGAAGCTTTCAAGAGCAATAACG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-147-3p",
+   "mirna_id": "mmu-miR-147-3p",
+   "primer": "CAGCAGTGTGCGGAAATGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 53.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 60,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 58,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 5,
+     "safe": 54,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-7a-5p",
+   "mirna_id": "mmu-miR-7a-5p",
+   "primer": "CGGCACTGTGGAAGACTAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 82,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 82,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 82,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 80,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 80,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-342-3p",
+   "mirna_id": "mmu-miR-342-3p",
+   "primer": "TCTGCAGTCTCACACAGAAATCG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 50.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 112,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-467b-5p",
+   "mirna_id": "mmu-miR-467b-5p",
+   "primer": "CTCCTCTGTGTAAGTGCCTGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 105,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 103,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 102,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 98,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 96,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-1983",
+   "mirna_id": "mmu-miR-1983",
+   "primer": "GTGACAACCTCACCTGGAGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 86,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 86,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 86,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 83,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 14,
+     "safe": 71,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-21a-5p",
+   "mirna_id": "mmu-miR-21a-5p",
+   "primer": "CGCTGCTCTAGCTTATCAGACTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.3,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 75,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 75,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 74,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 72,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 72,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "mmu-miR-3965",
+     "risk": "CRITICAL",
+     "tm_offtarget": 39.9,
+     "reason": "duplex Tm 39.9 °C vs 44.3 °C on target (4.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "mmu-miR-34c-5p",
+   "mirna_id": "mmu-miR-34c-5p",
+   "primer": "GAGTGAAGAGGCAGTGTAGTTAGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 53.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 119,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 118,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 114,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-181c-3p",
+   "mirna_id": "mmu-miR-181c-3p",
+   "primer": "GCAATGGACCATCGACCGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 26,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 25,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 25,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 24,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 24,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-19a-3p",
+   "mirna_id": "mmu-miR-19a-3p",
+   "primer": "GGACGCTTGTGCAAATCTATGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-144-3p",
+   "mirna_id": "mmu-miR-144-3p",
+   "primer": "GCCTGCACGGATACAGTATAGATG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 35.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 38,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-511-5p",
+   "mirna_id": "mmu-miR-511-5p",
+   "primer": "CTTGTCACATGCCTTTTGCTCTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 51.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 94,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 94,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 93,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 93,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 87,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-467c-5p",
+   "mirna_id": "mmu-miR-467c-5p",
+   "primer": "ACCGCATAAGTGCGTGCA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 24,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 22,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 21,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 20,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 7,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 15,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-21a-3p",
+   "mirna_id": "mmu-miR-21a-3p",
+   "primer": "ACGAGTGACAACAGCAGTCG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 64,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 64,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 63,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 62,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 6,
+     "safe": 58,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "osa-miR164a",
+   "mirna_id": "osa-miR164a",
+   "primer": "GCACTAGTGATGGAGAAGCAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 15,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 15,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR164f",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164e",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164d",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "osa-miR164c",
+   "mirna_id": "osa-miR164c",
+   "primer": "CTCCTAGTGGAGAAGCAGGGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 52.0,
+   "results": {
+    "5": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 5,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 5,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 5,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 5,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 10,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR164f",
+     "risk": "HIGH",
+     "tm_offtarget": 50.0,
+     "reason": "duplex Tm 50.0 °C vs 52.0 °C on target (2.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    },
+    {
+     "subject_id": "osa-miR164e",
+     "risk": "HIGH",
+     "tm_offtarget": 50.0,
+     "reason": "duplex Tm 50.0 °C vs 52.0 °C on target (2.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    },
+    {
+     "subject_id": "osa-miR164d",
+     "risk": "HIGH",
+     "tm_offtarget": 50.0,
+     "reason": "duplex Tm 50.0 °C vs 52.0 °C on target (2.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    },
+    {
+     "subject_id": "osa-miR164b",
+     "risk": "HIGH",
+     "tm_offtarget": 50.0,
+     "reason": "duplex Tm 50.0 °C vs 52.0 °C on target (2.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    },
+    {
+     "subject_id": "osa-miR164a",
+     "risk": "HIGH",
+     "tm_offtarget": 50.0,
+     "reason": "duplex Tm 50.0 °C vs 52.0 °C on target (2.0 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    }
+   ]
+  },
+  {
+   "target": "osa-miR164d",
+   "mirna_id": "osa-miR164d",
+   "primer": "CTGTTACCGTGGAGAAGCAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.0,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR164f",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164e",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164a",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "osa-miR164e",
+   "mirna_id": "osa-miR164e",
+   "primer": "GTATGTCTGCTGGAGAAGCAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.9,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 8,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 8,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 8,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 7,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 7,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR164f",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164d",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR164a",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.9,
+     "reason": "duplex Tm 43.9 °C vs 43.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "osa-miR530-5p",
+   "mirna_id": "osa-miR530-5p",
+   "primer": "GGTTCCATGCATTTGCACCTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 52.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "osa-miR1846a-5p",
+   "mirna_id": "osa-miR1846a-5p",
+   "primer": "GATGATGCAGTGAGGAGGCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.2,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 32,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 32,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 29,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR1846c-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.2,
+     "reason": "duplex Tm 46.2 °C vs 46.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "osa-miR1846b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.2,
+     "reason": "duplex Tm 46.2 °C vs 46.2 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "osa-miR1858a",
+   "mirna_id": "osa-miR1858a",
+   "primer": "GAAGAGAGGAGAGAGGAGGACG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.9,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 57,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 57,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 5,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 56,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "osa-miR1858b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.9,
+     "reason": "duplex Tm 45.9 °C vs 45.9 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-1 (Busk 2014)",
+   "mirna_id": "ssc-miR-1",
+   "primer": "TGCGCGTACTGGAATGTAAAGAA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 38.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 6,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 6,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-let-7a (Busk 2014)",
+   "mirna_id": "ssc-let-7a",
+   "primer": "TGGTAGAGGCTTTGAGGTAGTAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.1,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 2,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 2,
+     "MEDIUM": 1,
+     "safe": 15,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 2,
+     "MEDIUM": 1,
+     "safe": 15,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 2,
+     "MEDIUM": 2,
+     "safe": 14,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 14,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-let-7c",
+     "risk": "CRITICAL",
+     "tm_offtarget": 39.1,
+     "reason": "duplex Tm 39.1 °C vs 39.1 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ssc-let-7d-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 39.0,
+     "reason": "duplex Tm 39.0 °C vs 39.1 °C on target (0.1 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ssc-let-7g",
+     "risk": "HIGH",
+     "tm_offtarget": 35.0,
+     "reason": "duplex Tm 35.0 °C vs 39.1 °C on target (4.1 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    },
+    {
+     "subject_id": "ssc-let-7i-5p",
+     "risk": "HIGH",
+     "tm_offtarget": 35.0,
+     "reason": "duplex Tm 35.0 °C vs 39.1 °C on target (4.1 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-17-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-17-5p",
+   "primer": "GCTTCTGCAAAGTGCTTACAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 51.3,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 17,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 17,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-106a",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.2,
+     "reason": "duplex Tm 48.2 °C vs 51.3 °C on target (3.1 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "ssc-miR-20b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.9,
+     "reason": "duplex Tm 46.9 °C vs 51.3 °C on target (4.4 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-17-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-17-3p",
+   "primer": "CCGTCTACACTGCAGTGAAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 20,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-23a (Busk 2014)",
+   "mirna_id": "ssc-miR-23a",
+   "primer": "CCAGGAGATATCACATTGCCAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.7,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 21,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-23b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.7,
+     "reason": "duplex Tm 49.7 °C vs 49.7 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-23b (Busk 2014)",
+   "mirna_id": "ssc-miR-23b",
+   "primer": "AGCCGATCACATTGCCAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 50.1,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 13,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-23a",
+     "risk": "CRITICAL",
+     "tm_offtarget": 50.1,
+     "reason": "duplex Tm 50.1 °C vs 50.1 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-26a (Busk 2014)",
+   "mirna_id": "ssc-miR-26a",
+   "primer": "CGATGCACTTCAAGTAATCCAGGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 23,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 23,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 22,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 22,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 19,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-27a (Busk 2014)",
+   "mirna_id": "ssc-miR-27a",
+   "primer": "GTACGCTGATTCACAGTGGCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.7,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 17,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 17,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 15,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-27b-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.7,
+     "reason": "duplex Tm 45.7 °C vs 45.7 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-29c (Busk 2014)",
+   "mirna_id": "ssc-miR-29c",
+   "primer": "ACGGCGATAGCACCATTTGAA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.0,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 9,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 4,
+     "safe": 5,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-29b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.0,
+     "reason": "duplex Tm 44.0 °C vs 44.0 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-30a-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-30a-3p",
+   "primer": "GTGACGTGCTTTCAGTCGGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.5,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 12,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-30e-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 43.5,
+     "reason": "duplex Tm 43.5 °C vs 43.5 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-30c-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-30c-5p",
+   "primer": "GGACGGAGTGTAAACATCCTACAC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 30,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 27,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-30b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 46.6,
+     "reason": "duplex Tm 46.6 °C vs 46.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-101 (Busk 2014)",
+   "mirna_id": "ssc-miR-101",
+   "primer": "CGCAGGTGGTACAGTACTGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 36.3,
+   "results": {
+    "5": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "HIGH",
+     "CRITICAL": 0,
+     "HIGH": 1,
+     "MEDIUM": 1,
+     "safe": 8,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 8,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-503",
+     "risk": "HIGH",
+     "tm_offtarget": 33.0,
+     "reason": "duplex Tm 33.0 °C vs 36.3 °C on target (3.3 °C below) — binds almost as well as the target, but the primer's 3′-terminal base is unpaired, which reduces extension [Kwok90]"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-103 (Busk 2014)",
+   "mirna_id": "ssc-miR-103",
+   "primer": "CAACGCAGCAGCATTGTACAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 10,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-107",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.6,
+     "reason": "duplex Tm 49.6 °C vs 49.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-106a (Busk 2014)",
+   "mirna_id": "ssc-miR-106a",
+   "primer": "GCTAACACCAAAAGTGCTTACAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.8,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 23,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 22,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 21,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 21,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 1,
+     "MEDIUM": 0,
+     "safe": 20,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-17-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.8,
+     "reason": "duplex Tm 48.8 °C vs 48.8 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-107 (Busk 2014)",
+   "mirna_id": "ssc-miR-107",
+   "primer": "CAACGCAGCAGCATTGTACAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 10,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-103",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.6,
+     "reason": "duplex Tm 49.6 °C vs 49.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "mmu-miR-125b-5p (Busk 2014)",
+   "mirna_id": "mmu-miR-125b-5p",
+   "primer": "AGACTTGGTCCCTGAGACCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 80,
+     "same_family": 2
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 80,
+     "same_family": 2
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 80,
+     "same_family": 2
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 77,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 1,
+     "MEDIUM": 5,
+     "safe": 72,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-126-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-126-3p",
+   "primer": "TAGGTCAGGATCGTACCGTGAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 13,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-133a-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-133a-3p",
+   "primer": "GTTGTCCATTGGTCCCCTTCAA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.2,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 9,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-133b",
+     "risk": "CRITICAL",
+     "tm_offtarget": 49.7,
+     "reason": "duplex Tm 49.7 °C vs 49.2 °C on target (0.5 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-mir-139-5p (Busk 2014)",
+   "mirna_id": "ssc-mir-139-5p",
+   "primer": "CGCGATCTACAGTGCACGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 18,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-140-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-140-3p",
+   "primer": "GAGTGGCTACCACAGGGTAGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 14,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-142-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-142-5p",
+   "primer": "TTCTCCGGCCATAAAGTAGAAAGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 42.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 5,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-142-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-142-3p",
+   "primer": "GGACCAGACGTATGTAGTGTTTCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 39.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 14,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-143-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-143-3p",
+   "primer": "GGTAGGCTGAGATGAAGCACTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.7,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 16,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 10,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-144-5p (Busk 2014)",
+   "mirna_id": "mmu-miR-144-5p",
+   "primer": "AGCGCGCGGATATCATCATATAC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 43,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 42,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 42,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 42,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 41,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-146a-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-146a-3p",
+   "primer": "GATGTCCACCCTGTGAAGTTTAGTT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "gga-miR-146c-5p (Busk 2014)",
+   "mirna_id": "gga-miR-146c-5p",
+   "primer": "GGTCGAGACTGAGAACTGAATTCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.6,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 52,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 52,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 52,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 51,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 3,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 48,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "gga-miR-146b-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    },
+    {
+     "subject_id": "gga-miR-146a-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 45.6,
+     "reason": "duplex Tm 45.6 °C vs 45.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-148a-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-148a-3p",
+   "primer": "CGGACCTTCAGTGCACTACAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 25,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 25,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 25,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 23,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 21,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-150 (Busk 2014)",
+   "mirna_id": "ssc-miR-150",
+   "primer": "GTCGTCTAGTCTCCCAACCCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 14,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-152 (Busk 2014)",
+   "mirna_id": "ssc-miR-152",
+   "primer": "ACGTCCATCAGTGCATGACAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 49.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 20,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 20,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 19,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 19,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-155-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-155-5p",
+   "primer": "GAGCGGCTTCTTAATGCTAATTGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 6,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-181a (Busk 2014)",
+   "mirna_id": "ssc-miR-181a",
+   "primer": "GAGCGACAACATTCAACGCTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 15,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 14,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 13,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-191 (Busk 2014)",
+   "mirna_id": "ssc-miR-191",
+   "primer": "ATCACGCCAACGGAATCCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 44.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 4,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 3,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 3,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "bta-miR-193b (Busk 2014)",
+   "mirna_id": "bta-miR-193b",
+   "primer": "CCAGCTAAAACTGGCCCACA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 42,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 41,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 40,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 39,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-195 (Busk 2014)",
+   "mirna_id": "ssc-miR-195",
+   "primer": "ACCTGATCCTAGCAGCACAGA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 41.5,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 21,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 21,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 22,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-199b-3p (Busk 2014)",
+   "mirna_id": "ssc-miR-199b-3p",
+   "primer": "TCTCAGGCTTACAGTAGTCTGCA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 43.4,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 19,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 19,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 19,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 18,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 18,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "ssc-miR-199a-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 44.5,
+     "reason": "duplex Tm 44.5 °C vs 43.4 °C on target (1.1 °C above) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-206 (Busk 2014)",
+   "mirna_id": "ssc-miR-206",
+   "primer": "CGGCTACCACTGGAATGTAAGG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 37.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-223-3p (Busk 2014)",
+   "mirna_id": "hsa-miR-223-3p",
+   "primer": "TCCGCGAGTGTCAGTTTGTC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 38.8,
+   "results": {
+    "5": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 47,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 40,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-599",
+     "risk": "CRITICAL",
+     "tm_offtarget": 37.0,
+     "reason": "duplex Tm 37.0 °C vs 38.8 °C on target (1.8 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
+  },
+  {
+   "target": "ssc-miR-335 (Busk 2014)",
+   "mirna_id": "ssc-miR-335",
+   "primer": "GCCTAATGCTTCAAGAGCAATAACG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.0,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 7,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-423-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-423-5p",
+   "primer": "CTTATGCGTGAGGGGCAGAG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 11,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 10,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-451 (Busk 2014)",
+   "mirna_id": "ssc-miR-451",
+   "primer": "CGTGGACGAAACCGTTACCA",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 42.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 2,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-486 (Busk 2014)",
+   "mirna_id": "ssc-miR-486",
+   "primer": "ACACCGTCCTGTACTGAGCT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.4,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 12,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 11,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 11,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-491-3p (Busk 2014)",
+   "mirna_id": "hsa-miR-491-3p",
+   "primer": "AGGACCGCTTATGCAAGATTCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.2,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 39,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 38,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 38,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 36,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "ssc-miR-664-5p (Busk 2014)",
+   "mirna_id": "ssc-miR-664-5p",
+   "primer": "ACCTCCAGGCTAGGAGAAGTG",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 53.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 21,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-125a-5p",
+   "mirna_id": "mmu-miR-125a-5p",
+   "primer": "AGATAGCGTCCCTGAGACCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.1,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 2
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 2
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 2
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 2,
+     "safe": 56,
+     "same_family": 2
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 2,
+     "HIGH": 0,
+     "MEDIUM": 5,
+     "safe": 51,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-205-5p",
+   "mirna_id": "mmu-miR-205-5p",
+   "primer": "CGATCAGGTCCTTCATTCCACC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 61,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 60,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "mmu-miR-135b-5p",
+   "mirna_id": "mmu-miR-135b-5p",
+   "primer": "CACGCGTATGGCTTTTCATTCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 47.8,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 34,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 33,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 29,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-146a-5p",
+   "mirna_id": "hsa-miR-146a-5p",
+   "primer": "GACCTCGACTGAGAACTGAATTCC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 45.6,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 95,
+     "same_family": 1
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 95,
+     "same_family": 1
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 95,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 95,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 7,
+     "safe": 87,
+     "same_family": 1
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-9-5p",
+   "mirna_id": "hsa-miR-9-5p",
+   "primer": "TTCGCCTGTCTTTGGTTATCTAGC",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 46.3,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 79,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 79,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 79,
+     "same_family": 0
+    },
+    "20": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 79,
+     "same_family": 0
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 3,
+     "safe": 75,
+     "same_family": 0
+    }
+   },
+   "critical_hits_at_10": []
+  },
+  {
+   "target": "hsa-miR-200c-3p",
+   "mirna_id": "hsa-miR-200c-3p",
+   "primer": "AGGTCTGTAATACTGCCGGGT",
+   "target_sequence_source": "blast_db",
+   "tm_ontarget": 48.9,
+   "results": {
+    "5": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 59,
+     "same_family": 0
+    },
+    "10": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 59,
+     "same_family": 0
+    },
+    "15": {
+     "overall_risk": "SAFE",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 0,
+     "safe": 58,
+     "same_family": 1
+    },
+    "20": {
+     "overall_risk": "MEDIUM",
+     "CRITICAL": 0,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 57,
+     "same_family": 1
+    },
+    "no_tm_gate": {
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
+     "HIGH": 0,
+     "MEDIUM": 1,
+     "safe": 55,
+     "same_family": 2
+    }
+   },
+   "critical_hits_at_10": []
+  }
+ ]
+}

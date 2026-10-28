@@ -499,6 +499,23 @@ BLAST_3PRIME_DANGLE_SAFE = 2   # ≥2 primer 3' nt unaligned → 3' end cannot p
 # so it never anneals during cycling. Guards against a short 3'-terminal k-mer
 # match to an unrelated miRNA being scored as a critical off-target.
 PRIMER_BLAST_MIN_3PRIME_ANCHOR = 10   # nt — shorter 3'-anchored match → SAFE
+# (Legacy: used only when the on-target duplex Tm cannot be computed — the Tm gate
+# below supersedes it whenever the target sequence is known.)
+
+# Duplex-Tm gate (B3). Off-target duplex Tm is compared with the ON-TARGET duplex
+# Tm of the same primer (primer3 calc_heterodimer, design salt conditions), NOT
+# with Ta: the forward primer's specific region is designed to bind at ~45 °C
+# (TM_BINDING_TARGET) and the 5' tail only raises the Tm after cycle 1, so an
+# off-target follows the same priming route as the target. Mirrors Primer3's
+# *_TH defaults, set 10 °C below the primer's own Tm (PRIMER_MIN_TM 57 → 47).
+#   Tm_off <  Tm_on − SAFE_MARGIN               → SAFE
+#   Tm_on − SAFE_MARGIN ≤ Tm_off < Tm_on − CRIT → Ye12/Kwok90 rules, capped at MEDIUM
+#   Tm_off ≥ Tm_on − CRITICAL_MARGIN            → CRITICAL (HIGH if 3' blocked/unpaired)
+BLAST_TM_SAFE_MARGIN     = 10.0   # °C
+BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
+# Bump whenever classify_hit_risk's rules change — part of the BLAST cache key, so
+# cached results computed under older rules are never served.
+BLAST_CLASSIFIER_VERSION = "2"    # 2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
 

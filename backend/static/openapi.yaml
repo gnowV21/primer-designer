@@ -239,15 +239,39 @@ paths:
               required: [forward_primer]
               properties:
                 forward_primer: { type: string, maxLength: 60, description: A/C/G/T/N only }
-                reverse_primer: { type: string, description: Optional }
+                reverse_primer:
+                  type: string
+                  description: >
+                    Optional. The fixed universal reverse primer is not searched (it
+                    anneals to the stem-loop body, not a miRNA); see reverse_primer_skipped.
                 mirna_id:
                   type: string
                   description: >
                     Optional; must include arm designation (-5p/-3p) to exclude the
                     on-target self-hit. Rejected with 400 if the arm is missing.
+                mirna_sequence:
+                  type: string
+                  maxLength: 60
+                  description: >
+                    Optional mature sequence of the target (RNA or DNA) for the forward
+                    primer's on-target duplex Tm. Falls back to the BLAST DB entry for
+                    mirna_id; without either, the duplex-Tm gate is skipped.
+                conditions:
+                  type: object
+                  description: >
+                    Optional primer3 conditions for the duplex-Tm gate — pass the design's
+                    metadata.design_settings.effective_p3. Missing keys use design defaults.
+                  properties:
+                    mv_conc: { type: number, description: effective monovalent mM }
+                    dv_conc: { type: number, description: Mg2+ mM }
+                    dntp_conc: { type: number, description: total dNTP mM }
+                    dna_conc: { type: number, description: primer nM }
       responses:
         "200":
-          description: Off-target hits classified by risk (see cross_species_excluded, hits_truncated)
+          description: >
+            Off-target hits classified by risk (see cross_species_excluded, hits_truncated).
+            `classification` reports the duplex-Tm gate (tm_ontarget, margins, conditions,
+            classifier_version); each hit's alignment carries tm_offtarget / tm_ontarget.
           content:
             application/json:
               schema: { type: object }

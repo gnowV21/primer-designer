@@ -917,6 +917,43 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Performance (v2.0):** `m_norm` được tính 1 lần trong `check_offtarget` rồi truyền xuống `_check_primer` → `_is_self_hit`. Trước v2.0, mỗi BLAST hit gọi `_normalize_mirna_name(mirna_id)` lại từ đầu (N lần tính cùng 1 giá trị).
 
+### 8.10 Cổng Tm duplex — bộ phân loại v2 (2026-10-28)
+
+**Thứ tự cổng trong `classify_hit_risk`:**
+1. **Neo 3′** — ≥2 nt đầu 3′ của mồi nằm ngoài vùng căn → SAFE. Đứng trước vì Tm của cả duplex không thấy được đầu 3′ có bắt cặp hay không.
+2. **Cổng Tm duplex** (khi có Tm đúng đích):
+   - `Tm_off < Tm_on − 10 °C` → SAFE
+   - `Tm_on − 10 ≤ Tm_off < Tm_on − 5` → luật Ye 2012 / Kwok 1990, **tối đa MEDIUM**
+   - `Tm_off ≥ Tm_on − 5 °C` → CRITICAL; **HIGH** nếu base cuối 3′ hở (1 nt) hoặc là mismatch chặn Kwok (A:G, G:A, C:C)
+3. **Luật Ye/Kwok** — khi không có Tm đúng đích (không biết trình tự đích): áp dụng như cũ, kèm luật neo tối thiểu 10 nt.
+
+**Tính Tm.** `primer3.calc_heterodimer(mồi, revcomp(miRNA))` — mồi xuôi mang trình tự sense của miRNA và bám cDNA (bổ sung đảo). Cùng điều kiện với thiết kế (`effective_p3`: mv hiệu dụng Na⁺+K⁺+Tris⁺, Mg²⁺ theo von Ahsen 2001, dNTP, nồng độ mồi); frontend gửi `metadata.design_settings.effective_p3` và `metadata.mirna_sequence`. Trình tự đầy đủ của off-target lấy bằng `blastdbcmd` (DB có `-parse_seqids`).
+
+**Vì sao so với Tm đúng đích chứ không phải Ta.** Vùng đặc hiệu được thiết kế để bám ở ~45 °C (`TM_BINDING_TARGET`); đuôi 5′ chỉ nâng Tm lên ~60 °C từ chu kỳ 2. Đo trên 189 mồi xuôi của bộ validation: Tm duplex đúng đích trung vị **45,5 °C** (33,1–58,6); **161/189 (85 %) < 50 °C** — nếu dùng `Tm_off < Ta − 10` thì chính miRNA đích cũng bị xếp SAFE. Off-target đi đúng con đường bám chu kỳ 1 như đích, nên câu hỏi là "bám kém đích bao nhiêu".
+
+**Cơ sở của biên 10 °C.** Primer3 đặt các ngưỡng nhiệt động thấp hơn **Tm của chính mồi** 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`) — đã đối chiếu manual primer3.org. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
+
+**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`): 143 mồi; biên SAFE 5/10/15/20 °C (biên CRITICAL cố định 5 °C).
+
+| Biên SAFE | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
+|---|---|---|
+| 5 °C | 111 / 0 / 2 / 30 | 62 / 9 / 0 |
+| **10 °C** | **100 / 11 / 2 / 30** | **62 / 9 / 31** |
+| 15 °C | 87 / 24 / 2 / 30 | 62 / 9 / 81 |
+| 20 °C | 67 / 44 / 2 / 30 | 62 / 9 / 167 |
+| Không có cổng Tm | 33 / 31 / 1 / 78 | 189 / 8 / 452 |
+
+CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ thuộc biên 5 °C), không phải bằng chứng thực nghiệm; biên SAFE chỉ dời hit giữa SAFE và MEDIUM, và số MEDIUM tăng đều chứ không có "bình nguyên" quanh 10 °C. Lựa chọn 10 °C vì thế dựa trên quy ước Primer3 + ước tính van 't Hoff, không dựa trên độ nhạy.
+
+**Giới hạn (đưa vào Thảo luận).**
+- Tm toàn duplex không phân biệt được đầu 3′ khớp hoàn toàn với mismatch giữa duplex; cổng neo 3′ đứng trước để bù một phần.
+- Không mô hình bước RT: off-target thật phải qua cả mồi RT (overhang 6 nt, 16 °C → 42 °C, Chen 2005) — rủi ro báo cáo cao hơn thực tế. Không áp cổng cho mồi RT (cần nhiệt độ RT và mô hình DNA:RNA, Sugimoto 1995).
+- Không mô hình LNA (primer3 không có tham số LNA).
+- Chỉ mục family chỉ có hsa/mmu/rno → paralog ở loài khác không được gộp "same-family" và hiện là CRITICAL.
+- Ngưỡng chưa hiệu chỉnh bằng wet-lab. Đề xuất: thử cross-reactivity mồi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C so với 44,3 °C đúng đích; trước v2 bị xếp CRITICAL) — kết quả < 5 % là bằng chứng trực tiếp cho cổng Tm.
+
+**Sửa kèm.** Bảng Kwok tra theo base **mạch khuôn** (= bổ sung của base sense off-target); mồi ngược universal không còn BLAST; khóa cache gồm `BLAST_CLASSIFIER_VERSION` + trình tự đích + điều kiện muối; DB tìm qua `BLASTDB` (đường dẫn có dấu cách).
+
 ---
 
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
