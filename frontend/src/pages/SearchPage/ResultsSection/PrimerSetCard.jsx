@@ -7,6 +7,23 @@ import ExportButtons from './ExportButtons.jsx';
 import OffTargetPanel from './OffTargetPanel.jsx';
 import { useState } from 'react';
 
+// How a set relates to the higher-ranked sets (backend select_diverse_top, v3.2.0).
+const SELECTION_LABEL = {
+  adjacent_3prime: {
+    text: "3′ end 1 nt from a higher set",
+    title: 'Binding region differs by one nucleotide at its 3′ end from a higher-ranked set. Offered because fewer sets with 3′ ends ≥2 nt apart were available.',
+  },
+  tail_variant: {
+    text: 'Same binding region, other tail',
+    title: 'Same miRNA-binding region as the set named here — only the non-binding 5′ tail differs, so specificity is the same. Offered because no other 3′ end passed the filters.',
+  },
+};
+
+const PREFILTER_WARNING_TEXT = {
+  t_at_3prime_warning: "3′ end is T — may reduce polymerase efficiency slightly",
+  gc_clamp_weak_warning: "Only 1 G/C in the last 3 nt (weak GC clamp). The 3′ end is set by the miRNA sequence; scored 75/100 on the GC-clamp criterion",
+};
+
 const RISK_STYLE = {
   HIGH:     'text-red-700 bg-red-50 border-red-300',
   MODERATE: 'text-orange-700 bg-orange-50 border-orange-300',
@@ -20,6 +37,7 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
   const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-slate-700 bg-slate-50 border-slate-300', 'text-slate-600 bg-slate-50 border-slate-300'];
   const rankColor  = rankColors[(set.rank || 1) - 1] ?? rankColors[2];
   const isomirRisk = set.isomir_flag?.isomir_discrimination_risk;
+  const selection  = SELECTION_LABEL[set.selection];
 
   return (
     <div className={`rounded-2xl border shadow-sm ${set.rank === 1 ? 'border-teal-300 shadow-teal-100' : 'border-slate-200'}`}>
@@ -39,6 +57,15 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
               title={set.isomir_flag.note}
             >
               isoMiR
+            </span>
+          )}
+          {selection && (
+            <span
+              className="text-xs px-2 py-0.5 rounded-full border text-slate-600 bg-slate-50 border-slate-300"
+              title={selection.title}
+            >
+              {selection.text}
+              {set.same_binding_as_rank && ` as #${set.same_binding_as_rank}`}
             </span>
           )}
           <div>
@@ -99,7 +126,7 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
               <p className="text-xs font-semibold text-amber-700 mb-1">Warnings</p>
               {set.warnings_from_prefilter.map((w) => (
                 <p key={w} className="text-xs text-amber-700">
-                  • {w === 't_at_3prime_warning' ? "3' end is T — may reduce polymerase efficiency slightly" : w}
+                  • {PREFILTER_WARNING_TEXT[w] ?? w}
                 </p>
               ))}
             </div>

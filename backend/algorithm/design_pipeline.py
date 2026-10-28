@@ -9,7 +9,7 @@ Output: full result dict matching the /api/design JSON schema
 import time
 
 from algorithm.stemloop_rt import design_stemloop_rt
-from algorithm.forward_primer import generate_forward_candidates
+from algorithm.forward_primer import generate_forward_candidates, select_diverse_top
 from algorithm.universal_reverse import get_universal_reverse
 from algorithm.structure_check import run_all_structure_checks
 from algorithm.structure_check.heterodimer import (
@@ -36,7 +36,7 @@ from algorithm.constants import (
     STEMLOOP_BODY, UNIVERSAL_REVERSE, AMPLICON_DIMER_TM_GAP_WARN,
     FORWARD_SPECIFIC_LENGTHS,
     ALGORITHM_VERSION, SCORING_WEIGHTS_V4, UNSCORED_CRITERIA_V4,
-    AMPLICON_TM_MG_SPAN_MM,
+    AMPLICON_TM_MG_SPAN_MM, TM_ANNEALING_TEMP_DEFAULT,
 )
 
 
@@ -230,8 +230,12 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         )
         scored = _score_all(overhang_collision)
 
-    # Rank → Top N
-    top_n = sorted(scored, key=lambda x: x["total_score"], reverse=True)[:CANDIDATES_TOP_N]
+    # Rank by score (ties: closer Tm, then sequence — never generation order), then pick
+    # the top N with relaxing diversity (v3.2.0; see select_diverse_top).
+    _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
+    ranked = sorted(scored, key=lambda x: (-x["total_score"],
+                                           abs(x.get("tm_full", 0) - _ta), x["sequence"]))
+    top_n = select_diverse_top(ranked, CANDIDATES_TOP_N)
 
     # Amplicon melting Tm + SYBR dimer proximity warning (SPEC_phase5 PART D).
     # The amplicon top strand = tail + miRNA + rc(stem-loop body), cut at the 5' end of

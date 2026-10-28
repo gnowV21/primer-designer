@@ -935,15 +935,17 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v3): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
 
+Số liệu dưới đây dùng mồi #1 của **algorithm v3.2.0** (chạy lại 2026-10-28; bản v3.1.2 trước đó: stem-loop 127 → 26 hit CRITICAL).
+
 | Biên SAFE (stem-loop, 100 mồi) | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
 |---|---|---|
-| 5 °C | 86 / 0 / 2 / 12 | 26 / 6 / 0 |
-| **10 °C** | **77 / 9 / 2 / 12** | **26 / 6 / 25** |
-| 15 °C | 67 / 19 / 2 / 12 | 26 / 6 / 67 |
-| 20 °C | 52 / 34 / 2 / 12 | 26 / 6 / 139 |
-| Không có cổng Tm | 23 / 25 / 1 / 51 | 127 / 5 / 397 |
+| 5 °C | 87 / 0 / 0 / 13 | 29 / 2 / 0 |
+| **10 °C** | **79 / 8 / 0 / 13** | **29 / 2 / 29** |
+| 15 °C | 68 / 19 / 0 / 13 | 29 / 2 / 56 |
+| 20 °C | 58 / 29 / 0 / 13 | 29 / 2 / 104 |
+| Không có cổng Tm | 24 / 17 / 0 / 59 | 166 / 4 / 322 |
 
-Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 87 → 25 (mồi có CRITICAL 46 → 21). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
+Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 100 → 21 (mồi có CRITICAL 50 → 18). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
 
 CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ thuộc biên 5 °C), không phải bằng chứng thực nghiệm; biên SAFE chỉ dời hit giữa SAFE và MEDIUM, và số MEDIUM tăng đều chứ không có "bình nguyên" quanh 10 °C. Lựa chọn 10 °C vì thế dựa trên quy ước Primer3 + ước tính van 't Hoff, không dựa trên độ nhạy.
 
