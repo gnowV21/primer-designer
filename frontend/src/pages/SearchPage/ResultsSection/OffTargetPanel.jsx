@@ -182,7 +182,7 @@ function ResultDisplay({ result }) {
 
   return (
     <div className="space-y-3">
-      <OverallRiskRow summary={summary} />
+      <OverallRiskRow summary={summary} identical={result.identical_sequence_hits ?? []} />
 
       {summary.hits_truncated && (
         <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
@@ -221,7 +221,7 @@ function ResultDisplay({ result }) {
   );
 }
 
-function OverallRiskRow({ summary }) {
+function OverallRiskRow({ summary, identical }) {
   const risk  = summary.overall_risk ?? 'SAFE';
   const style = BLAST_RISK_STYLE[risk] ?? BLAST_RISK_STYLE.SAFE;
 
@@ -249,6 +249,14 @@ function OverallRiskRow({ summary }) {
         {summary.same_family_count > 0 && (
           <span className="text-purple-600" title="Same seed-family members that share the primer's binding region. This cross-reactivity is expected for this miRNA family and is analysed separately in the Family Cross-reactivity panel — it is not counted as an out-of-family off-target here.">
             {summary.same_family_count.toLocaleString()} same-family
+          </span>
+        )}
+        {summary.identical_sequence_count > 0 && (
+          <span
+            className="text-slate-600"
+            title={`Same mature sequence as the target under another name — copies from other loci, or the same sequence annotated with ends shifted by ≤2 nt: ${identical.join(', ')}. The forward primer cannot tell them apart, so the assay measures their sum — not counted as off-target risk.`}
+          >
+            {summary.identical_sequence_count.toLocaleString()} identical sequence
           </span>
         )}
         {summary.cross_species_excluded > 0 && (

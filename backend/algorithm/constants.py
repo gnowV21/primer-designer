@@ -515,7 +515,16 @@ BLAST_TM_SAFE_MARGIN     = 10.0   # °C
 BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 # Bump whenever classify_hit_risk's rules change — part of the BLAST cache key, so
 # cached results computed under older rules are never served.
-BLAST_CLASSIFIER_VERSION = "2"    # 2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
+#   3 = self-hit by name + compatible sequence; hits under other names with an
+#       identical/compatible sequence folded into identical_sequence
+#   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
+BLAST_CLASSIFIER_VERSION = "3"
+# Self-hit identification. A hit named like the target is the target only if its
+# sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
+# the spread seen between miRBase 22.1 and sequences published against older
+# releases (Busk 2014: mmu-miR-138-5p, -31-3p, -194-5p, ssc-miR-7134-3p, -1468).
+SELF_MAX_END_SHIFT = 2    # nt
+SELF_MIN_OVERLAP   = 15   # nt
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
 

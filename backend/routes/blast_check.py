@@ -74,8 +74,9 @@ def blast_check():
     if invalid_chars:
         return jsonify({"error": f"Invalid characters in forward_primer: {invalid_chars}"}), 400
 
-    # mirna_id must carry arm designation (-5p/-3p) to prevent _is_self_hit false-positives.
-    # e.g. 'hsa-miR-1' (no arm) → m = 'hsa-mir-1' is a substring of 'hsa-mir-10-5p' [spec §8.12]
+    # mirna_id must carry arm designation (-5p/-3p): an arm-less id ('hsa-miR-21') names
+    # both arms, so when the sequence check cannot run the other arm would be skipped
+    # as a self-hit. [spec §8.12; boundary-safe name matching since classifier v3]
     if mirna_id and not (mirna_id.endswith("-5p") or mirna_id.endswith("-3p")):
         return jsonify({
             "error": "mirna_id must include arm designation (-5p or -3p), e.g. 'hsa-miR-21-5p'."

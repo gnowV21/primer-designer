@@ -933,15 +933,17 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Cơ sở của biên 10 °C.** Primer3 đặt các ngưỡng nhiệt động thấp hơn **Tm của chính mồi** 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`) — đã đối chiếu manual primer3.org. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
 
-**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`): 143 mồi; biên SAFE 5/10/15/20 °C (biên CRITICAL cố định 5 °C).
+**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v3): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
 
-| Biên SAFE | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
+| Biên SAFE (stem-loop, 100 mồi) | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
 |---|---|---|
-| 5 °C | 111 / 0 / 2 / 30 | 62 / 9 / 0 |
-| **10 °C** | **100 / 11 / 2 / 30** | **62 / 9 / 31** |
-| 15 °C | 87 / 24 / 2 / 30 | 62 / 9 / 81 |
-| 20 °C | 67 / 44 / 2 / 30 | 62 / 9 / 167 |
-| Không có cổng Tm | 33 / 31 / 1 / 78 | 189 / 8 / 452 |
+| 5 °C | 86 / 0 / 2 / 12 | 26 / 6 / 0 |
+| **10 °C** | **77 / 9 / 2 / 12** | **26 / 6 / 25** |
+| 15 °C | 67 / 19 / 2 / 12 | 26 / 6 / 67 |
+| 20 °C | 52 / 34 / 2 / 12 | 26 / 6 / 139 |
+| Không có cổng Tm | 23 / 25 / 1 / 51 | 127 / 5 / 397 |
+
+Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 87 → 25 (mồi có CRITICAL 46 → 21). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
 
 CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ thuộc biên 5 °C), không phải bằng chứng thực nghiệm; biên SAFE chỉ dời hit giữa SAFE và MEDIUM, và số MEDIUM tăng đều chứ không có "bình nguyên" quanh 10 °C. Lựa chọn 10 °C vì thế dựa trên quy ước Primer3 + ước tính van 't Hoff, không dựa trên độ nhạy.
 
@@ -950,9 +952,25 @@ CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ 
 - Không mô hình bước RT: off-target thật phải qua cả mồi RT (overhang 6 nt, 16 °C → 42 °C, Chen 2005) — rủi ro báo cáo cao hơn thực tế. Không áp cổng cho mồi RT (cần nhiệt độ RT và mô hình DNA:RNA, Sugimoto 1995).
 - Không mô hình LNA (primer3 không có tham số LNA).
 - Chỉ mục family chỉ có hsa/mmu/rno → paralog ở loài khác không được gộp "same-family" và hiện là CRITICAL.
+- Paralog khác nhau ở giữa trình tự (miR-23a/b, miR-103/107, miR-17/106a/20b) vẫn là CRITICAL vì mồi xuôi bám như nhau; thực tế chúng chỉ được phân biệt (một phần) nhờ mồi RT ở đầu 3′.
+- Nhóm "trùng trình tự" coi lệch đầu ≤ 2 nt là cùng một phân tử; khác biệt đầu 3′ (isomiR, chú giải lệch) chỉ được phân biệt ở bước RT, không mô hình ở đây.
 - Ngưỡng chưa hiệu chỉnh bằng wet-lab. Đề xuất: thử cross-reactivity mồi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C so với 44,3 °C đúng đích; trước v2 bị xếp CRITICAL) — kết quả < 5 % là bằng chứng trực tiếp cho cổng Tm.
 
 **Sửa kèm.** Bảng Kwok tra theo base **mạch khuôn** (= bổ sung của base sense off-target); mồi ngược universal không còn BLAST; khóa cache gồm `BLAST_CLASSIFIER_VERSION` + trình tự đích + điều kiện muối; DB tìm qua `BLASTDB` (đường dẫn có dấu cách).
+
+### 8.11 Chính đích và hit trùng trình tự — bộ phân loại v3 (2026-10-28)
+
+Mỗi hit BLAST cùng loài được xét theo thứ tự (trình tự đầy đủ lấy bằng `blastdbcmd`):
+
+1. **Chính đích** — tên khớp với `mirna_id` **có ranh giới**: bằng nhau, hoặc tên này nối dài tên kia bằng `-` sau khi chuẩn hóa số bản sao tiền chất (`hsa-miR-16-1-5p` ↔ `hsa-miR-16-5p`; `ssc-miR-21` ↔ `ssc-miR-21-5p`). Khi biết cả hai trình tự, phải **tương thích**: giống hệt trên phần giao nhau ≥ 15 nt, mỗi đầu lệch ≤ 2 nt (`SELF_MAX_END_SHIFT`). → bỏ qua.
+2. **Trùng trình tự** — tên khác nhưng trình tự giống hệt hoặc tương thích: bản sao ở locus khác (ath-miR156a = 156b–f) hoặc mục đã đổi tên/chú giải (Busk `ssc-miR-20` = 22.1 `ssc-miR-20a-5p`, lệch 1 nt đầu 3′). → `identical_sequence_hits`, không phân loại rủi ro, không tính vào `overall_risk`.
+3. Khác loài → `cross_species_excluded`. 4. Còn lại → các cổng của §8.10.
+
+**Vì sao không còn so chuỗi con.** Luật cũ `mirna_id in subject_id` làm `ssc-miR-21` khớp `ssc-miR-210` (che off-target thật); tên sai định dạng (`ssc-miR15a`) thì không khớp và chính đích bị báo CRITICAL.
+
+**Vì sao cần trình tự khi tên khớp.** miRBase đổi chú giải theo phiên bản: `mmu-miR-138-5p` 22.1 là `AGCTGG…`, bản Busk 2014 là `CAGCTGG…` (lệch 1 nt) → vẫn là chính đích; còn `ssc-miR-670` 22.1 là trình tự **khác hẳn** bản Busk → là off-target, không phải chính đích. Ngưỡng 2 nt bao trọn độ lệch quan sát được giữa 22.1 và các trình tự Busk 2014 (138-5p, 31-3p, 194-5p, 7134-3p, 1468: 1–2 nt).
+
+Khi không biết trình tự đích (mirna_id không có trong DB, không gửi `mirna_sequence`), chỉ dùng luật tên — vì vậy route vẫn bắt buộc `-5p/-3p`: ID thiếu nhánh khớp tên với cả hai nhánh. `check_offtarget(species=…)` cho phép chỉ định loài khi tên không có tiền tố.
 
 ---
 

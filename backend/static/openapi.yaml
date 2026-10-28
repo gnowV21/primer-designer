@@ -271,7 +271,9 @@ paths:
           description: >
             Off-target hits classified by risk (see cross_species_excluded, hits_truncated).
             `classification` reports the duplex-Tm gate (tm_ontarget, margins, conditions,
-            classifier_version); each hit's alignment carries tm_offtarget / tm_ontarget.
+            classifier_version, species); each hit's alignment carries tm_offtarget /
+            tm_ontarget. `identical_sequence_hits` lists other miRNA names carrying the
+            target's mature sequence (identical, or ends shifted ≤2 nt) — not risk-classified.
           content:
             application/json:
               schema: { type: object }
