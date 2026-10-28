@@ -62,3 +62,6 @@ backend/data/blast_db/*.nto
 # Ephemeral SQLite caches (regenerated at runtime, not committed)
 backend/data/blast_cache.sqlite
 backend/data/visualize_cache.sqlite
+
+# Claude Code local settings (per machine)
+.claude/

@@ -2,7 +2,7 @@
 # tests/test_lna_benchmark.py — A2 LNA benchmark
 #
 # Validates algorithm/lna_tm.py against EXPERIMENTALLY-MEASURED melting
-# temperatures, per PLAN_GapA_ScientificCompleteness.md §A2 "Benchmark bắt buộc".
+# temperatures, per docs/archive/PLAN_GapA_ScientificCompleteness.md §A2 "Benchmark bắt buộc".
 #
 # Ground truth: McTigue, Peterson & Kahn 2004, Biochemistry 43(18):5388-5405,
 # Table 1 — singly LNA-substituted DNA oligonucleotides hybridised to their

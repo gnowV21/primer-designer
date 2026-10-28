@@ -93,7 +93,8 @@
 - `CLAUDE.md` — lệnh chạy, kiến trúc, quy tắc.
 - `AUDIT_REPORT.md` — audit khoa học + trạng thái xử lý (§10) + mục cần wet-lab (§4).
 - `validation/VALIDATION_PLAN.md`, `validation/VALIDATION_REPORT.md` — phương pháp và kết quả kiểm chứng.
-- `SPEC_week1.md` (bảng trạng thái các phase), `SPEC_algorithm.md`, `SPEC_visualization.md`.
+- `SPEC_algorithm.md`, `SPEC_phase3.md` (BLAST, §8.10–8.11), `SPEC_visualization.md`.
+- `docs/archive/` — spec/kế hoạch của các phase đã xong (vd. `SPEC_week1.md`: bảng trạng thái các phase; `SPEC_phase2.md`, `SPEC_phase4…8.md`, `RESEARCH_INSIGHTS*.md`). Tài liệu nhắc tới các file này chỉ bằng tên.
 - `benchmark/primer_benchmark_export.csv` — so sánh mồi tool vs mồi công bố.
 
 ## 7. Quy tắc kỹ thuật cần nhớ khi sửa code
