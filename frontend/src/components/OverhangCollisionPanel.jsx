@@ -193,8 +193,9 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
   const {
     species, overhang_len, forward_specific_len, forward_axis_estimated,
     collisions = [], isomirs = [], summary = {}, worst_assay_label, recommendation,
-    data_provenance = {}, n_screened,
+    data_provenance = {}, n_screened, screened_species = [], annotation_note,
   } = overhangCollision;
+  const screenedLabel = screened_species.length ? screened_species.join(' + ') : species;
 
   const hasCollisions = collisions.length > 0;
 
@@ -210,8 +211,8 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
           </span>
           {n_screened != null && (
             <span className="text-xs font-medium px-1.5 py-0.5 rounded border bg-teal-50 border-teal-200 text-teal-700"
-                  title={`Screened ${n_screened} ${species} mature miRNAs. Built ${data_provenance.build_date || 'n/a'}.`}>
-              {n_screened} {species} screened
+                  title={`Screened ${n_screened} mature miRNAs (${screenedLabel}), miRBase ${data_provenance.mirbase_release || '?'}. Built ${data_provenance.build_date || 'n/a'}.`}>
+              {n_screened} {screenedLabel} screened
             </span>
           )}
         </div>
@@ -227,10 +228,16 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
         )}
       </div>
 
+      {annotation_note && (
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+          {annotation_note}
+        </p>
+      )}
+
       {/* body */}
       {!hasCollisions ? (
         <p className="text-xs text-teal-700">
-          Every other {species} miRNA screened ({n_screened}) is predicted to be discriminated
+          Every other miRNA screened ({n_screened}, {screenedLabel}) is predicted to be discriminated
           (ΔCq_assay ≥ 4.3, &lt; 5 % cross-signal).
         </p>
       ) : view === 'chart' ? (

@@ -35,7 +35,12 @@
 #   tm_accuracy targets the user's annealing temperature (same as the pool and the
 #   tie-break); the overhang fixpoint ranks with the final key. 3' isomiR warning text
 #   follows Schamberger14 (±1 nt captured alike). Weights unchanged.
-ALGORITHM_VERSION = "3.3.0"
+#   3.4.0 (2026-10-29) — the overhang index covers every miRBase 22.1 species (271,
+#   48,885 mature; same mature.fa as the BLAST DB, count checked at build time), so
+#   the assay-level screen and family_discrimination now run for non-hsa/mmu/rno
+#   targets (were neutral no_index_data); a viral target is screened with its
+#   host's miRNAs; species prefixes of 3–5 chars (kshv, mdv1) are recognised.
+ALGORITHM_VERSION = "3.4.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -545,6 +550,11 @@ BLAST_TM_SAFE_MARGIN     = 10.0   # °C
 BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 # Bump whenever classify_hit_risk's rules change — part of the BLAST cache key, so
 # cached results computed under older rules are never served.
+#   6 = species prefixes of 3–5 chars (kshv, hcmv, mdv1 were read as human); a
+#       viral target also screens its host's miRNAs (VIRUS_HOST_SPECIES) (2026-10-29)
+#   5 = seed-family hits flagged, no longer folded out of overall_risk; identical
+#       hits split into identical / 5' isomiR / 3' isomiR; Tm gate skipped when the
+#       primer does not match the target (2026-10-29)
 #   4 = trimmed 3'-terminal bases restored from the full subject (true Kwok pair);
 #       Tm_off on the primer's register window; Kwok tiers in the top Tm zone
 #       (TOLERANT → CRITICAL, G:G/BLOCKING/REDUCING → HIGH); adjacent double
@@ -552,7 +562,7 @@ BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 #   3 = self-hit by name + compatible sequence; hits under other names with an
 #       identical/compatible sequence folded into identical_sequence
 #   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
-BLAST_CLASSIFIER_VERSION = "5"
+BLAST_CLASSIFIER_VERSION = "6"
 # Self-hit identification. A hit named like the target is the target only if its
 # sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
 # the spread seen between miRBase 22.1 and sequences published against older
@@ -561,6 +571,30 @@ SELF_MAX_END_SHIFT = 2    # nt
 SELF_MIN_OVERLAP   = 15   # nt
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
+# miRBase species prefixes are 3–5 characters and may contain digits (hsa, kshv,
+# hcmv, mdv1, hsv2). A 3-letter-only pattern read 'kshv-miR-K12-1' as human.
+MIRBASE_PREFIX_PATTERN = r"[a-z][a-z0-9]{2,4}"
+
+# Off-target screen for a viral miRNA = virus + its natural host present in miRBase
+# 22.1: the assay runs on RNA from infected host cells, where host miRNAs dominate.
+# Viruses whose host has no miRBase entry (hvsa: squirrel monkey; sfv: African green
+# monkey; bpcv1/2: bandicoot; racpv: raccoon) are screened on their own.
+VIRUS_HOST_SPECIES = {
+    # human
+    "ebv": "hsa", "kshv": "hsa", "hcmv": "hsa", "hsv1": "hsa", "hsv2": "hsa",
+    "hiv1": "hsa", "hhv6b": "hsa", "bkv": "hsa", "jcv": "hsa",
+    # rhesus macaque
+    "rlcv": "mml", "rrv": "mml", "sv40": "mml", "hbv": "mml",   # hbv = herpes B virus (macacine HV 1)
+    # mouse
+    "mcmv": "mmu", "mghv": "mmu",
+    # chicken / duck
+    "mdv1": "gga", "mdv2": "gga", "hvt": "gga", "iltv": "gga", "dev": "apl",
+    # cattle / pig
+    "bhv1": "bta", "bhv5": "bta", "blv": "bta", "prv": "ssc",
+}
+# Species whose miRBase annotation is deep enough that "no annotated off-target" is
+# close to "no off-target". Every other species gets an annotation-coverage note.
+REFERENCE_ANNOTATED_SPECIES = ("hsa", "mmu")
 
 # Hard-filter gate (PROMPT 3 — A/B toggle)
 # Set False to disable hard-filter layer and fall back to soft-scoring only (for comparison).

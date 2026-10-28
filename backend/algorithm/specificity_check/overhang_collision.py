@@ -27,6 +27,8 @@ from ..constants import (
     COLLISION_MAX_REPORT,
     OVERHANG_LENGTH_MAX,
     FORWARD_SPECIFIC_LENGTH_MAX,
+    VIRUS_HOST_SPECIES,
+    REFERENCE_ANNOTATED_SPECIES,
 )
 from ..thermodynamics import _get_p3_params
 from .assay_model import evaluate
@@ -65,6 +67,11 @@ def _load_index() -> dict:
     with open(_INDEX_PATH, encoding="utf-8") as f:
         _INDEX_CACHE = json.load(f)
     return _INDEX_CACHE
+
+
+def known_species() -> frozenset[str]:
+    """miRBase species codes present in the index (same release as the BLAST DB)."""
+    return frozenset((_load_index().get("mature") or {}).keys())
 
 
 def _duplex_tm(region: str, sense_window: str, p3: dict) -> float:
@@ -109,6 +116,26 @@ def _evaluate_pair(target_dna, other_dna, overhang_len, fwd_len, tm_gap) -> dict
         ev["fwd_mismatch"] = len(fwd["mismatch_from_3p"])
         ev["fwd_mismatch_positions_1based"] = sorted(fwd_len - q + 1 for q in fwd["mismatch_from_3p"])
     return ev
+
+
+def _annotation_note(sp: str, host: str | None, by_species: dict) -> str | None:
+    """How complete the screened miRBase set is — DISCRIMINATED only means 'no
+    ANNOTATED off-target'."""
+    if sp not in by_species:
+        return None
+    parts = []
+    if host and host in by_species:
+        parts.append(f"Viral miRNA: screened {len(by_species[sp])} {sp} plus "
+                     f"{len(by_species[host])} host ({host}) miRNAs, since the assay runs on "
+                     "infected host cells.")
+    elif host:
+        parts.append(f"Viral miRNA: host species '{host}' has no miRBase entries — "
+                     "host miRNAs are not screened.")
+    if sp not in REFERENCE_ANNOTATED_SPECIES and not host:
+        parts.append(f"miRBase 22.1 annotates {len(by_species[sp])} mature miRNAs for {sp}. "
+                     "DISCRIMINATED means no ANNOTATED off-target; miRNAs of this species "
+                     "that miRBase does not list are not screened.")
+    return " ".join(parts) or None
 
 
 # ── recommendation (§1.4) ─────────────────────────────────────────
@@ -187,12 +214,19 @@ def check_overhang_collision(
     sp = prefix.rstrip("-")
 
     index = _load_index()
-    mature_map = (index.get("mature") or {}).get(sp, {})
+    by_species = index.get("mature") or {}
+    # A viral miRNA is measured in infected host cells: screen the host's miRNAs too.
+    host = VIRUS_HOST_SPECIES.get(sp)
+    screened_species = [s for s in (sp, host) if s and s in by_species]
+    mature_map = {}
+    for s in screened_species:
+        mature_map.update(by_species[s])
     meta = index.get("_metadata", {})
     provenance = {
         "source": meta.get("source"),
         "build_date": meta.get("build_date"),
         "mirbase_release": meta.get("mirbase_release"),
+        "mature_fa_sha256": meta.get("mature_fa_sha256"),
     }
 
     base = {
@@ -209,6 +243,9 @@ def check_overhang_collision(
             "fwd_window_dna": target_dna[:fwd_len],
         },
         "data_provenance": provenance,
+        "screened_species": screened_species,
+        "host_species": host,
+        "annotation_note": _annotation_note(sp, host, by_species),
         "interpretation": (
             "An off-target gives signal only if the RT overhang captures it AND the forward "
             "primer primes its cDNA; the delays add (ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD, cross-"

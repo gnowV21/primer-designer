@@ -368,6 +368,8 @@ FORWARD_TAILS_PER_LENGTH = 20       # v3.2.0: số đuôi/đầu 3' được ch�
 
 **v3.3.0 — đặc hiệu cấp assay (2026-10-29).** Tiêu chí `family_discrimination` chuyển từ ma trận RT × FWD (cửa sổ cố định vị trí) sang mô hình ΔCq_assay = ΔCq_RT + ΔCq_FWD có xét lệch đầu ±2 nt (chi tiết, bảng giá trị và nguồn: SPEC_phase3 §8.16). `tm_accuracy` chấm theo Ta người dùng nhập (mặc định 60 °C, nên kết quả mặc định không đổi) — cùng mục tiêu với bước lọc pool và tie-break. Vòng lặp overhang-collision chọn mồi dẫn đầu bằng đúng khóa xếp hạng cuối (điểm, |Tm − Ta|, trình tự) thay vì `max()` theo thứ tự sinh. Trọng số V4 không đổi. Trên 165 miRNA: #1 giữ vùng bám 164/165, điểm #1 trung bình +0,67.
 
+**v3.4.0 — chỉ mục mọi loài (2026-10-29).** Chỉ mục overhang phủ toàn bộ miRBase 22.1 (271 loài, cùng file với BLAST DB); miRNA virus được sàng lọc cùng miRNA loài chủ; tiền tố loài 3–5 ký tự. 90 target trước đây trung tính (`no_index_data`) nay được chấm `family_discrimination`: #1 không đổi ở cả 90, điểm trung bình −0,47. SPEC_phase3 §8.17.
+
 ### Section D: Thermodynamics — Tm Targets
 
 ```python

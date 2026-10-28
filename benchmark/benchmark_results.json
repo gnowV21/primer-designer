@@ -1935,8 +1935,8 @@
         "rt_overhang_actual": "TGATAG",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 48.0,
-        "amplicon_bp": 70
+        "forward_gc_pct": 50.0,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-122 (Busk 2014)",
@@ -4155,7 +4155,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTAAGGTCCTAGCAGCATTGTACAG",
+        "forward_tool": "CGCGTTAAGCAGCATTGTACAG",
         "forward_published": "GCAGAGCAGCATTGTACAG",
         "forward_tool_specific": "AGCAGCATTGTACAG",
         "forward_pub_specific": "AGCAGCATTGTACAG",

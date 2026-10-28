@@ -1,7 +1,7 @@
 {
  "generated_by": "backend/scripts/blast_tm_gate_sensitivity.py",
  "run_date": "2026-10-29",
- "classifier_version": "5",
+ "classifier_version": "6",
  "blast_db": {
   "mirbase_version": "22.1",
   "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
@@ -32,57 +32,57 @@
    "n_primers": 175,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 127,
-     "CRITICAL": 48
+     "SAFE": 125,
+     "CRITICAL": 50
     },
     "hits_by_tier": {
-     "CRITICAL": 90,
+     "CRITICAL": 92,
      "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 7104,
+    "safe_hits": 9057,
     "identical_sequence_hits": 24
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 106,
-     "CRITICAL": 48,
-     "MEDIUM": 21
+     "SAFE": 100,
+     "CRITICAL": 50,
+     "MEDIUM": 25
     },
     "hits_by_tier": {
-     "CRITICAL": 90,
+     "CRITICAL": 92,
      "HIGH": 0,
-     "MEDIUM": 101
+     "MEDIUM": 107
     },
-    "safe_hits": 7003,
+    "safe_hits": 8950,
     "identical_sequence_hits": 24
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 75,
-     "CRITICAL": 48,
-     "MEDIUM": 52
+     "SAFE": 60,
+     "CRITICAL": 50,
+     "MEDIUM": 65
     },
     "hits_by_tier": {
-     "CRITICAL": 90,
+     "CRITICAL": 92,
      "HIGH": 0,
-     "MEDIUM": 221
+     "MEDIUM": 248
     },
-    "safe_hits": 6883,
+    "safe_hits": 8809,
     "identical_sequence_hits": 24
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 58,
-     "CRITICAL": 48,
-     "MEDIUM": 69
+     "SAFE": 39,
+     "CRITICAL": 50,
+     "MEDIUM": 86
     },
     "hits_by_tier": {
-     "CRITICAL": 90,
+     "CRITICAL": 92,
      "HIGH": 0,
-     "MEDIUM": 402
+     "MEDIUM": 476
     },
-    "safe_hits": 6702,
+    "safe_hits": 8581,
     "identical_sequence_hits": 24
    },
    "no_tm_gate": {
@@ -105,57 +105,57 @@
    "n_primers": 100,
    "5": {
     "primers_by_overall_risk": {
-     "SAFE": 73,
-     "CRITICAL": 27
+     "SAFE": 71,
+     "CRITICAL": 29
     },
     "hits_by_tier": {
-     "CRITICAL": 63,
+     "CRITICAL": 65,
      "HIGH": 0,
      "MEDIUM": 0
     },
-    "safe_hits": 4862,
+    "safe_hits": 6815,
     "identical_sequence_hits": 20
    },
    "10": {
     "primers_by_overall_risk": {
-     "SAFE": 61,
-     "CRITICAL": 27,
-     "MEDIUM": 12
+     "SAFE": 55,
+     "CRITICAL": 29,
+     "MEDIUM": 16
     },
     "hits_by_tier": {
-     "CRITICAL": 63,
+     "CRITICAL": 65,
      "HIGH": 0,
-     "MEDIUM": 72
+     "MEDIUM": 78
     },
-    "safe_hits": 4790,
+    "safe_hits": 6737,
     "identical_sequence_hits": 20
    },
    "15": {
     "primers_by_overall_risk": {
-     "SAFE": 42,
-     "CRITICAL": 27,
-     "MEDIUM": 31
+     "SAFE": 27,
+     "CRITICAL": 29,
+     "MEDIUM": 44
     },
     "hits_by_tier": {
-     "CRITICAL": 63,
+     "CRITICAL": 65,
      "HIGH": 0,
-     "MEDIUM": 157
+     "MEDIUM": 184
     },
-    "safe_hits": 4705,
+    "safe_hits": 6631,
     "identical_sequence_hits": 20
    },
    "20": {
     "primers_by_overall_risk": {
-     "SAFE": 34,
-     "CRITICAL": 27,
-     "MEDIUM": 39
+     "SAFE": 15,
+     "CRITICAL": 29,
+     "MEDIUM": 56
     },
     "hits_by_tier": {
-     "CRITICAL": 63,
+     "CRITICAL": 65,
      "HIGH": 0,
-     "MEDIUM": 271
+     "MEDIUM": 345
     },
-    "safe_hits": 4591,
+    "safe_hits": 6470,
     "identical_sequence_hits": 20
    },
    "no_tm_gate": {
@@ -2083,7 +2083,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 75,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2092,7 +2092,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 75,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2101,16 +2101,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 75,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 73,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2140,7 +2140,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 52,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2149,25 +2149,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 52,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 2,
+     "safe": 50,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 3,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2197,7 +2197,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 57,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2206,7 +2206,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 57,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2215,16 +2215,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 57,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2254,7 +2254,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2263,7 +2263,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2272,7 +2272,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2281,7 +2281,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2311,7 +2311,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 58,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2320,7 +2320,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 58,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2329,16 +2329,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 58,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 3,
+     "MEDIUM": 1,
+     "safe": 57,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2364,38 +2364,38 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 96,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 96,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 96,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 5,
+     "safe": 91,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2409,7 +2409,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-10397-5p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 48.5,
+     "reason": "duplex Tm 48.5 °C vs 50.4 °C on target (1.9 °C below) — within 5 °C of the intended target; the 3′-terminal C:A mismatch is efficiently extended [Kwok90]: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "ebv-miR-BART5-5p",
@@ -2425,7 +2432,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2434,7 +2441,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2443,16 +2450,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 1,
+     "safe": 48,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2482,34 +2489,34 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 63,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 62,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2539,7 +2546,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2548,7 +2555,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2557,7 +2564,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2566,7 +2573,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2596,7 +2603,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 54,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2605,25 +2612,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 54,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 53,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 52,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2653,7 +2660,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2662,7 +2669,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2671,7 +2678,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2680,7 +2687,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2710,7 +2717,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 134,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2719,25 +2726,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 3,
+     "safe": 134,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 3,
+     "MEDIUM": 1,
+     "safe": 133,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 3,
+     "MEDIUM": 2,
+     "safe": 132,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2767,7 +2774,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 87,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2776,25 +2783,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 87,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 85,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 3,
+     "safe": 84,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2824,7 +2831,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2833,7 +2840,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2842,7 +2849,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2851,7 +2858,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 1,
-     "safe": 1,
+     "safe": 94,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2881,7 +2888,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 6,
+     "safe": 45,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2890,7 +2897,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 6,
+     "safe": 45,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2899,7 +2906,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 6,
+     "safe": 45,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2907,8 +2914,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 5,
+     "MEDIUM": 2,
+     "safe": 43,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2938,7 +2945,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 60,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2947,25 +2954,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 60,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 59,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 59,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -2991,38 +2998,38 @@
    "identical_sequence_hits": [],
    "results": {
     "5": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 36,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 35,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
-     "CRITICAL": 0,
+     "overall_risk": "CRITICAL",
+     "CRITICAL": 1,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 7,
+     "safe": 30,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3036,7 +3043,14 @@
      "identical_sequence": 0
     }
    },
-   "critical_hits_at_10": []
+   "critical_hits_at_10": [
+    {
+     "subject_id": "hsa-miR-1180-3p",
+     "risk": "CRITICAL",
+     "tm_offtarget": 47.0,
+     "reason": "duplex Tm 47.0 °C vs 51.3 °C on target (4.3 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+    }
+   ]
   },
   {
    "target": "ebv-miR-BART14-3p",
@@ -3052,7 +3066,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 114,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3061,25 +3075,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 114,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 1,
+     "safe": 113,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 3,
+     "safe": 111,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3109,34 +3123,34 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 79,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 1,
+     "safe": 78,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 3,
+     "safe": 76,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 5,
+     "safe": 74,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3166,7 +3180,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 97,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3175,25 +3189,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 97,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 2,
+     "safe": 95,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 1,
+     "MEDIUM": 5,
+     "safe": 92,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3223,7 +3237,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3232,7 +3246,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3241,7 +3255,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3250,7 +3264,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 55,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3280,7 +3294,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 9,
+     "safe": 109,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3289,16 +3303,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 9,
+     "safe": 109,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 9,
+     "MEDIUM": 1,
+     "safe": 108,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3306,8 +3320,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 8,
+     "MEDIUM": 4,
+     "safe": 105,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3337,7 +3351,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3346,7 +3360,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3355,16 +3369,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 37,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 36,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3394,7 +3408,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3403,7 +3417,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3412,7 +3426,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3421,7 +3435,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 1,
+     "safe": 25,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3451,7 +3465,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3460,25 +3474,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 59,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 3,
+     "safe": 58,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3508,16 +3522,16 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 71,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 2,
+     "MEDIUM": 2,
+     "safe": 69,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3525,8 +3539,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 1,
+     "MEDIUM": 3,
+     "safe": 68,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3534,8 +3548,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 1,
+     "MEDIUM": 3,
+     "safe": 68,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3565,7 +3579,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 64,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3574,7 +3588,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 2,
+     "safe": 64,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3582,8 +3596,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 1,
+     "MEDIUM": 5,
+     "safe": 59,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3591,8 +3605,8 @@
      "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 1,
-     "safe": 1,
+     "MEDIUM": 15,
+     "safe": 49,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3622,34 +3636,34 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 4,
+     "safe": 80,
      "same_family": 0,
      "identical_sequence": 0
     },
     "10": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 4,
+     "MEDIUM": 1,
+     "safe": 79,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 4,
+     "MEDIUM": 1,
+     "safe": 79,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 4,
+     "MEDIUM": 6,
+     "safe": 74,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3679,7 +3693,7 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -3688,25 +3702,25 @@
      "CRITICAL": 0,
      "HIGH": 0,
      "MEDIUM": 0,
-     "safe": 0,
+     "safe": 61,
      "same_family": 0,
      "identical_sequence": 0
     },
     "15": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 60,
      "same_family": 0,
      "identical_sequence": 0
     },
     "20": {
-     "overall_risk": "SAFE",
+     "overall_risk": "MEDIUM",
      "CRITICAL": 0,
      "HIGH": 0,
-     "MEDIUM": 0,
-     "safe": 0,
+     "MEDIUM": 1,
+     "safe": 60,
      "same_family": 0,
      "identical_sequence": 0
     },
@@ -7490,10 +7504,10 @@
   {
    "target": "ssc-miR-107 (Busk 2014)",
    "mirna_id": "ssc-miR-107",
-   "primer": "CTAAGGTCCTAGCAGCATTGTACAG",
+   "primer": "CGCGTTAAGCAGCATTGTACAG",
    "group": "busk2014_polyA",
    "target_sequence_source": "reference_mirnas.json",
-   "tm_ontarget": 50.8,
+   "tm_ontarget": 49.6,
    "identical_sequence_hits": [],
    "results": {
     "5": {
@@ -7546,8 +7560,8 @@
     {
      "subject_id": "ssc-miR-103",
      "risk": "CRITICAL",
-     "tm_offtarget": 50.8,
-     "reason": "duplex Tm 50.8 °C vs 50.8 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
+     "tm_offtarget": 49.6,
+     "reason": "duplex Tm 49.6 °C vs 49.6 °C on target (0.0 °C below) — within 5 °C of the intended target and 3′ end annealed: likely co-amplified"
     }
    ]
   },

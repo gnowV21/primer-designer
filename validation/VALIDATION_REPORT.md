@@ -140,7 +140,7 @@ Every value below is recomputed independently from the exact sequence the tool u
 | ssc-miR-101 (Busk 2014) | 12/12 PASS | `TTCAGT` = `TTCAGT` | 60.0 | 47.8 | 67 | — |
 | ssc-miR-103 (Busk 2014) | 12/12 PASS | `TCATAG` = `TCATAG` | 60.0 | 50.0 | 67 | — |
 | ssc-miR-106a (Busk 2014) | 12/12 PASS | `GCTACC` = `GCTACC` | 60.0 | 47.8 | 68 | — |
-| ssc-miR-107 (Busk 2014) | 12/12 PASS | `TGATAG` = `TGATAG` | 60.0 | 48.0 | 70 | — |
+| ssc-miR-107 (Busk 2014) | 12/12 PASS | `TGATAG` = `TGATAG` | 60.0 | 50.0 | 67 | — |
 | ssc-miR-122 (Busk 2014) | 12/12 PASS | `ACAAAC` = `ACAAAC` | 60.0 | 47.8 | 68 | — |
 | mmu-miR-125b-5p (Busk 2014) | 12/12 PASS | `TCACAA` = `TCACAA` | 60.0 | 57.1 | 67 | — |
 | ssc-miR-126-3p (Busk 2014) | 12/12 PASS | `CGCATT` = `CGCATT` | 60.0 | 52.4 | 66 | — |
