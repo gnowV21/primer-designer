@@ -40,7 +40,15 @@
 #   the assay-level screen and family_discrimination now run for non-hsa/mmu/rno
 #   targets (were neutral no_index_data); a viral target is screened with its
 #   host's miRNAs; species prefixes of 3–5 chars (kshv, mdv1) are recognised.
-ALGORITHM_VERSION = "3.4.0"
+#   3.5.0 (2026-10-30) — isomiR handling reviewed. (a) 3'-end-shift ΔCq values now
+#   travel with the measured range and n (0–4 Ct at ±1 nt, n = 2 miRNAs): one study,
+#   two sequences differing by up to 4 Ct, so the point value is a lower bound, not a
+#   correction factor. (b) Terminology: miRBase entries with the same or an end-shifted
+#   sequence are synonyms/renamed entries/paralogues, NOT isomiRs (which have no
+#   miRBase entries) — categories renamed same_sequence / shifted_5p / shifted_3p.
+#   (c) New qualitative fold-change-bias warning when a large 3'-isoform pool also
+#   varies widely between samples [Nejad18]. No scoring change.
+ALGORITHM_VERSION = "3.5.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -353,6 +361,16 @@ PROBE_DNA_CONC = 200.0
 # 3' isomiR tiers on isomiRdb's median 3'-isoform read fraction (audit SCI-10).
 # Project convention, not a published cut-off: HIGH = the canonical 3' form is a
 # minority of the miRNA's molecules, so a stem-loop assay measures a minority.
+# Fold-change bias warning: a miRNA with a sizeable 3'-isoform pool whose size also
+# varies a lot between samples. If a stimulus shifts the isoform mix, stem-loop
+# RT-qPCR reads the shift as a change in miRNA level, because capture is
+# length-selective [Nejad18]: 3'-variants >23 nt of miR-222-3p fall specifically on
+# IFN-β stimulation (confirmed for >40 miRNA families after Salmonella infection),
+# "and that this can lead to misinterpretation of results". Qualitative flag only —
+# no bias factor is computed, since the capture values themselves rest on n = 2 miRNAs.
+ISOMIR_3P_BIAS_MIN_FRACTION = 0.20   # median 3'-isoform share
+ISOMIR_3P_BIAS_MIN_IQR      = 0.15   # IQR width of that share across samples
+
 ISOMIR_3P_FRACTION_HIGH     = 0.50
 ISOMIR_3P_FRACTION_MODERATE = 0.20
 
@@ -719,9 +737,35 @@ ASSAY_MAX_END_SHIFT = 2          # nt — registers tried at each end (isomiR ra
 
 # RT axis (stem-loop overhang, RNA:DNA). Positions counted from the RT primer's 3'
 # terminus, which pairs with the 5'-most nt of the miRNA's 3'-terminal window.
-ASSAY_DCQ_RT_3P_LONGER   = 0.0   # off-target 3' end 1–2 nt longer: "detected all three isoforms similarly" [Schamberger14]
-ASSAY_DCQ_RT_3P_SHORT1   = 0.0   # 1 nt shorter: GACA/GAC assays "detected both … similarly" [Schamberger14]
-ASSAY_DCQ_RT_3P_SHORT2   = 3.0   # 2 nt shorter: "detected with ~3 Ct delay" [Schamberger14]
+# End-shift values rest on ONE study with TWO miRNAs, whose results differ by up to
+# 4 Ct — the between-sequence spread is as large as the effect. Report the measured
+# RANGE (ASSAY_DCQ_RT_SHIFT_RANGE) wherever a shift value is shown; the point value
+# is the lower bound, in line with the rest of this table.
+#   miR-877-5p [Schamberger14 Results]: "Assays specific for the 'GACA' and 'GAC' 3'
+#     ends detected both 'GACA' and 'GAC' ended RNAs similarly" (±1 nt ≈ 0 Ct),
+#     "'GA' ending was detected with ~3 Ct delay" (−2 nt), and the "'GA' specific
+#     assay detected all three isoforms similarly" (longer ends ≈ 0 Ct).
+#   miR-33b-5p [same section, Fig. 6B]: each assay "detected the corresponding
+#     template better than the other isomiR, but the cross-detections were still
+#     considerable (2–4 Ct delayed)" — a 1-nt 3' difference, so ±1 nt spans 0–4 Ct.
+# The Ct values 36/37/39.6 in the Fig. 6 legend belong to the NON-TARGET CONTROLS
+# used as reference samples ("Non-target controls were chosen as reference samples"),
+# not to the isomiR reactions — they are not evidence about the assay's LLOQ.
+ASSAY_DCQ_RT_3P_LONGER   = 0.0   # off-target 3' end 1–2 nt longer [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT1   = 0.0   # 1 nt shorter [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT2   = 3.0   # 2 nt shorter [Schamberger14]
+# Measured range per shift → (low, high, n_mirnas). None = no measurement at all.
+ASSAY_DCQ_RT_SHIFT_RANGE = {
+    "longer":  (0.0, 4.0, 2),
+    "short1":  (0.0, 4.0, 2),
+    "short2":  (3.0, 4.0, 1),    # only miR-877-5p; miR-33b was not tested at −2 nt
+}
+ASSAY_SHIFT_EVIDENCE_NOTE = (
+    "3'-end shift values come from one study, two miRNAs (Schamberger & Orbán 2014): "
+    "miR-877-5p showed ~0 Ct at ±1 nt and ~3 Ct at −2 nt, miR-33b-5p 2–4 Ct at 1 nt. "
+    "The between-sequence spread is as large as the effect, so treat a shift ΔCq as an "
+    "order-of-magnitude estimate, not a correction factor."
+)
 ASSAY_DCQ_RT_WOBBLE      = 4.75  # single rG·dT pair: 3.7 % cross-signal (let-7a assay on let-7c) [Chen05]
 ASSAY_DCQ_RT_MM_NEAR     = 7.0   # single other mismatch, positions 1–3: 0.1 % ≈ 10 Cq; range 7–10 → 7 [Chen05]
 ASSAY_DCQ_RT_MM_FAR      = 3.5   # single other mismatch, positions 4–6: 6.8–9.0 % cross-signal [Czimmerer13]

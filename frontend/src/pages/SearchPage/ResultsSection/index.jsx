@@ -127,6 +127,14 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
                   <span className="text-amber-700">Source: {stemloop_rt.three_prime_isomir.source}.</span>
                 </p>
               )}
+              {/* Distinct risk: a shift in isoform composition read as a change in level
+                  [Nejad 2018] — fires even when the canonical form is still the majority. */}
+              {stemloop_rt.three_prime_isomir?.fold_change_bias_risk && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  <span className="font-semibold">Fold-change caution:</span>{' '}
+                  {stemloop_rt.three_prime_isomir.fold_change_bias_warning}
+                </p>
+              )}
             </div>
           )}
 
@@ -172,12 +180,12 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         const oc = specificity_warnings.overhang_collision;
         const label = oc.worst_assay_label || 'DISCRIMINATED';
         const s = oc.summary || {};
-        const nIso = (s.isomir_5p || 0) + (s.isomir_3p || 0) + (s.identical || 0);
+        const nSame = (s.shifted_5p || 0) + (s.shifted_3p || 0) + (s.same_sequence || 0);
         const tone = label === 'CO-AMPLIFIED' ? 'danger' : label === 'PARTIAL' ? 'warn' : 'ok';
         const parts = [label];
         if (s['CO-AMPLIFIED']) parts.push(`${s['CO-AMPLIFIED']} co-amplified`);
         if (s.PARTIAL) parts.push(`${s.PARTIAL} partial`);
-        if (nIso) parts.push(`${nIso} isomiR/identical`);
+        if (nSame) parts.push(`${nSame} same-molecule`);
         return (
           <CollapsibleCard
             title="Assay Specificity"

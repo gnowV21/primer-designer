@@ -360,6 +360,11 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
               3′ isomiRs: {stemloopRt.three_prime_isomir.summary} Source: {stemloopRt.three_prime_isomir.source}.
             </p>
           )}
+          {stemloopRt.three_prime_isomir?.fold_change_bias_risk && (
+            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+              {stemloopRt.three_prime_isomir.fold_change_bias_warning}
+            </p>
+          )}
         </div>
       )}
 

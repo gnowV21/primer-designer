@@ -550,8 +550,8 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
             notes.append(
                 f"<b>Assay specificity (ΔCq model):</b> worst other miRNA {esc(str(worst))}; "
                 f"{summ.get('CO-AMPLIFIED', 0)} co-amplified, {summ.get('PARTIAL', 0)} partial; "
-                f"{summ.get('isomir_5p', 0) + summ.get('isomir_3p', 0) + summ.get('identical', 0)} "
-                f"isomiR/identical entr(ies) not scored. {esc(oc_interp)}"
+                f"{summ.get('shifted_5p', 0) + summ.get('shifted_3p', 0) + summ.get('same_sequence', 0)} "
+                f"same-molecule entr(ies) not scored. {esc(oc_interp)}"
             )
         prov = _family_provenance_note(results)
         if prov:
@@ -947,8 +947,8 @@ def _overhang_axis_summary(results: dict):
         ("n_co_amplified",         str(summ.get("CO-AMPLIFIED", 0))),
         ("n_partial",              str(summ.get("PARTIAL", 0))),
         ("top_off_target",         top_txt),
-        ("n_isomir_or_identical",  str(summ.get("isomir_5p", 0) + summ.get("isomir_3p", 0)
-                                       + summ.get("identical", 0))),
+        ("n_same_molecule_entries", str(summ.get("shifted_5p", 0) + summ.get("shifted_3p", 0)
+                                        + summ.get("same_sequence", 0))),
     ]
     return rows, oc.get("interpretation", "")
 

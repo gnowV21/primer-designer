@@ -107,23 +107,23 @@ def test_mir21_all_discriminated():
     assert r["summary"]["CO-AMPLIFIED"] == 0
 
 
-# ── isomiRs are reported, not scored ─────────────────────────────
+# ── same-molecule miRBase entries are reported, not scored ───────
 
-def test_isomir_entries_go_to_isomirs_not_worst(monkeypatch):
+def test_same_molecule_entries_are_listed_apart_and_not_scored(monkeypatch):
     import algorithm.specificity_check.overhang_collision as oc
     target = "UAGCUUAUCAGACUGAUGUUGA"
     fake = {"_metadata": {}, "mature": {"hsa": {
         "hsa-miR-21-5p": target,
-        "hsa-miR-x-3p": target[:-1],          # 3' isomiR (co-amplified, RT shift −1)
-        "hsa-miR-y-5p": target[1:],           # 5' isomiR
+        "hsa-miR-x-3p": target[:-1],          # 3' end 1 nt shorter (RT shift −1)
+        "hsa-miR-y-5p": target[1:],           # 5' end shifted
         "hsa-miR-z": "UAGCUUAUCAGACUGAUGUUGA"[::-1],
     }}}
     monkeypatch.setattr(oc, "_INDEX_CACHE", fake)
     r = check_overhang_collision(target, "hsa-miR-21-5p", {}, forward_specific_len=15)
-    cats = {e["mirna"]: e["category"] for e in r["isomirs"]}
-    assert cats == {"hsa-miR-x-3p": "isomir_3p", "hsa-miR-y-5p": "isomir_5p"}
-    assert r["summary"]["isomir_3p"] == 1 and r["summary"]["isomir_5p"] == 1
-    assert r["worst_assay_label"] == "DISCRIMINATED"          # isomiRs do not drive the score
+    cats = {e["mirna"]: e["category"] for e in r["same_molecule_entries"]}
+    assert cats == {"hsa-miR-x-3p": "shifted_3p", "hsa-miR-y-5p": "shifted_5p"}
+    assert r["summary"]["shifted_3p"] == 1 and r["summary"]["shifted_5p"] == 1
+    assert r["worst_assay_label"] == "DISCRIMINATED"   # same-molecule entries do not score
 
 
 # ── performance ──────────────────────────────────────────────────

@@ -22,7 +22,10 @@
 import json
 import os
 
-from ..constants import ISOMIR_3P_FRACTION_HIGH, ISOMIR_3P_FRACTION_MODERATE
+from ..constants import (
+    ISOMIR_3P_FRACTION_HIGH, ISOMIR_3P_FRACTION_MODERATE,
+    ISOMIR_3P_BIAS_MIN_FRACTION, ISOMIR_3P_BIAS_MIN_IQR,
+)
 
 _DB_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "data", "known_5prime_isomir_mirnas.json"
@@ -148,6 +151,7 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
     lo, hi = entry.get("iqr_3prime_fraction", [None, None])
     level = ("high" if f >= ISOMIR_3P_FRACTION_HIGH
              else "moderate" if f >= ISOMIR_3P_FRACTION_MODERATE else "low")
+    bias = _fold_change_bias_warning(mirna_name, f, lo, hi)
     summary = (
         f"In isomiRdb, a median {f:.0%} of {mirna_name} reads are 3'-end isoforms "
         f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples)."
@@ -162,6 +166,8 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
         "n_samples_expressed": entry.get("n_samples_expressed"),
         "dominant_3prime_variants": top,
         "rt_capture_impact": level,
+        "fold_change_bias_risk": bias is not None,
+        "fold_change_bias_warning": bias,
         "summary": summary,
         "warning": (
             summary + f" The stem-loop RT primer pairs with the canonical 3'-terminal "
@@ -176,6 +182,31 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
 
 
 # ── Internal helpers ──────────────────────────────────────────────
+
+def _fold_change_bias_warning(mirna_name: str, f: float, lo, hi) -> str | None:
+    """Warn when a shift in 3'-isoform composition could masquerade as a fold change.
+
+    Fires on a sizeable isoform pool (median share) that also varies widely between
+    samples (IQR width) — the condition under which length-selective capture turns a
+    composition change into an apparent expression change [Nejad18]. Deliberately
+    qualitative: no bias factor, because the per-variant capture values rest on two
+    miRNAs (see ASSAY_SHIFT_EVIDENCE_NOTE).
+    """
+    if f < ISOMIR_3P_BIAS_MIN_FRACTION or lo is None or hi is None:
+        return None
+    if (hi - lo) < ISOMIR_3P_BIAS_MIN_IQR:
+        return None
+    return (
+        f"Fold-change caution: {f:.0%} of {mirna_name} reads are 3'-end isoforms and that "
+        f"share itself swings between samples (IQR {lo:.0%}–{hi:.0%}). Stem-loop RT-qPCR "
+        "captures 3' isoforms selectively by length, so if a treatment, infection or disease "
+        "state shifts the isoform mix, the measured fold change mixes that shift with the "
+        "real change in miRNA level — Nejad et al. 2018 showed exactly this for miR-222-3p "
+        "under IFN-β and for >40 miRNA families after Salmonella infection, and warned it "
+        "'can lead to misinterpretation of results'. Keep the comparison qualitative, or "
+        "confirm a surprising fold change by small RNA sequencing."
+    )
+
 
 def _biofluid_note(meta: dict, sample_type: str | None) -> str | None:
     """For serum/plasma/urine designs: the isomiRdb median pools every sample type."""

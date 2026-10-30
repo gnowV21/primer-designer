@@ -155,3 +155,31 @@ def test_3prime_abundance_only_entry_is_no_data(monkeypatch):
                                                                "abundance_percentile": 50.0}})
     res = _iso3.check_3prime_isomir_flag("hsa-miR-A-5p")
     assert res["level"] == "no_data" and res["three_prime_isomir_risk"] is False
+
+
+# ── fold-change bias warning (Nejad 2018) ────────────────────────
+
+def test_fold_change_bias_fires_on_large_variable_isoform_pool():
+    """miR-222-3p is Nejad 2018's own example: a big 3'-isoform pool whose share
+    also swings between samples."""
+    from algorithm.specificity_check.isomir_flag import check_3prime_isomir_flag
+    r = check_3prime_isomir_flag("hsa-miR-222-3p", 6)
+    assert r["fold_change_bias_risk"] is True
+    w = r["fold_change_bias_warning"]
+    assert "Nejad" in w and "fold change" in w
+    # Qualitative only — never a numeric bias factor.
+    assert "×" not in w and "fold-change of" not in w
+
+
+def test_fold_change_bias_needs_both_size_and_spread():
+    from algorithm.specificity_check.isomir_flag import _fold_change_bias_warning
+    assert _fold_change_bias_warning("x", 0.05, 0.0, 0.9) is None    # pool too small
+    assert _fold_change_bias_warning("x", 0.80, 0.78, 0.82) is None  # stable share
+    assert _fold_change_bias_warning("x", 0.40, 0.25, 0.60) is not None
+
+
+def test_fold_change_bias_absent_without_data():
+    from algorithm.specificity_check.isomir_flag import check_3prime_isomir_flag
+    r = check_3prime_isomir_flag("mmu-miR-99999-5p", 6)
+    assert r["level"] == "no_data"
+    assert r.get("fold_change_bias_risk") in (None, False)

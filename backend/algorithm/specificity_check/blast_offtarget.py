@@ -570,12 +570,12 @@ def check_offtarget(
 
     summary = _summarise(fwd_hits + rev_hits, fwd_safe + rev_safe, fwd_cs + rev_cs,
                          fwd_fam + rev_fam, len(fwd_ident))
-    # identical / 5' isomiR / 3' isomiR — a 5' shift changes the seed and co-amplifies
-    # through both primers; a 3' shift is resolved only partly by the RT overhang.
+    # same_sequence / shifted_5p / shifted_3p — how each same-molecule miRBase entry
+    # (synonym, renamed entry, paralogue) relates to the target. Not biological isomiRs.
     ident_seqs = fetch_sequences(fwd_ident, _MIRBASE_DB, timeout) if fwd_ident else {}
     identical_variants = {
         sid: (variant_category(target_sequence, ident_seqs[sid])
-              if target_sequence and sid in ident_seqs else "identical")
+              if target_sequence and sid in ident_seqs else "same_sequence")
         for sid in fwd_ident
     }
     summary["hits_truncated"] = (

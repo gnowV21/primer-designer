@@ -9,9 +9,12 @@ Week 2 RT x FWD risk matrix and its fixed-position windows).
 Off-targets fall into two groups:
   * other miRNAs — labelled CO-AMPLIFIED / PARTIAL / DISCRIMINATED; the worst label
     drives scoring and the headline;
-  * isomiRs (5'/3' end shifted ≤ 2 nt) and identical-sequence copies — reported
-    with their predicted ΔCq but not scored: no primer design can avoid them, the
-    assay measures the sum of isoforms [Magee17].
+  * miRBase entries carrying the same sequence or one shifted ≤ 2 nt at an end
+    (synonyms/renamed entries, paralogues from another locus) — reported with their
+    predicted ΔCq but not scored, because no primer design separates them [Magee17].
+    These are NOT biological isomiRs: processing variants and tailed forms have no
+    miRBase entries of their own; they are covered by the isomiRdb-based flags on
+    the RT primer (isomir_flag.py).
 
 Seed-family membership (positions 2-8) is the mRNA-targeting axis and is reported
 for context only (`same_seed_family`), never used to classify risk.
@@ -47,7 +50,7 @@ _OFF_LABEL_WARNING = (
 )
 
 _LABEL_ORDER = {"CO-AMPLIFIED": 0, "PARTIAL": 1, "DISCRIMINATED": 2}
-_ISOMIR_CATEGORIES = ("identical", "isomir_5p", "isomir_3p")
+_VARIANT_CATEGORIES = ("same_sequence", "shifted_5p", "shifted_3p")
 
 
 # ── helpers ───────────────────────────────────────────────────────
@@ -251,9 +254,11 @@ def check_overhang_collision(
             "primer primes its cDNA; the delays add (ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD, cross-"
             "reactivity ≈ 2^−ΔCq). Values are lower bounds of published data (Chen 2005, "
             "Czimmerer 2013, Schamberger 2014, Stadhouders 2010) measured with TaqMan probes; "
-            "for SYBR the prediction is optimistic. isomiRs and identical copies cannot be "
-            "designed away: the assay measures the sum of isoforms (Magee 2017). Seed-family "
-            "membership is reported for context only."
+            "for SYBR the prediction is optimistic. miRBase entries carrying the same "
+            "sequence, or one shifted ≤ 2 nt at an end (synonyms, paralogues), cannot be "
+            "separated by any primer design and are listed apart (Magee 2017). Biological "
+            "isomiRs have no miRBase entries and are covered by the RT-primer isomiR flags. "
+            "Seed-family membership is reported for context only."
         ),
         "thresholds": {"co_amplified_below": 3.3, "discriminated_at": 4.3},
     }
@@ -262,9 +267,9 @@ def check_overhang_collision(
         base.update({
             "n_screened": 0,
             "collisions": [],
-            "isomirs": [],
+            "same_molecule_entries": [],
             "summary": {"CO-AMPLIFIED": 0, "PARTIAL": 0, "rt_identical": 0,
-                        "isomir_5p": 0, "isomir_3p": 0, "identical": 0,
+                        "shifted_5p": 0, "shifted_3p": 0, "same_sequence": 0,
                         "n_reported": 0, "truncated": False, "n_total_flagged": 0},
             "worst_assay_label": "no_index_data",
             "recommendation": {"action": "none", "reason": "No overhang index for this species."},
@@ -296,7 +301,7 @@ def check_overhang_collision(
         ev["mirna"] = name
         ev["same_seed_family"] = (target_family is not None and target_family == get_family_id(name))
         ev["rt_identical"] = o_dna.endswith(target_rt) and len(o_dna) >= overhang_len
-        (variants if ev["category"] in _ISOMIR_CATEGORIES else others).append(ev)
+        (variants if ev["category"] in _VARIANT_CATEGORIES else others).append(ev)
 
     # Report every non-discriminated other miRNA, plus every RT-identical one (needed
     # for multiplex / RT-primer pooling even when the forward primer resolves it).
@@ -315,22 +320,26 @@ def check_overhang_collision(
                          f"(RT: {e['rt']['basis']}; forward: {e['fwd']['basis']}).")
     for e in variants:
         e["note"] = {
-            "identical": "Identical mature sequence under another name — indistinguishable.",
-            "isomir_5p": "5′-end variant: both primers bind it; co-amplified, cannot be designed away.",
-            "isomir_3p": "3′-end variant: the RT overhang resolves it only partly.",
+            "same_sequence": ("Another miRBase entry with the identical mature sequence "
+                              "(synonym, renamed entry, or a paralogue from another locus) "
+                              "— no primer can separate it from the target."),
+            "shifted_5p": ("Another miRBase entry whose 5′ end is shifted ≤ 2 nt: both "
+                           "primers bind it, so it is co-amplified."),
+            "shifted_3p": ("Another miRBase entry whose 3′ end is shifted ≤ 2 nt: the RT "
+                           "overhang resolves it only partly."),
         }[e["category"]]
 
     base.update({
         "n_screened": n_screened,
         "collisions": reported,
-        "isomirs": variants,
+        "same_molecule_entries": variants,
         "summary": {
             "CO-AMPLIFIED": sum(1 for e in others if e["assay_label"] == "CO-AMPLIFIED"),
             "PARTIAL": sum(1 for e in others if e["assay_label"] == "PARTIAL"),
             "rt_identical": sum(1 for e in others if e["rt_identical"]),
-            "isomir_5p": sum(1 for e in variants if e["category"] == "isomir_5p"),
-            "isomir_3p": sum(1 for e in variants if e["category"] == "isomir_3p"),
-            "identical": sum(1 for e in variants if e["category"] == "identical"),
+            "shifted_5p": sum(1 for e in variants if e["category"] == "shifted_5p"),
+            "shifted_3p": sum(1 for e in variants if e["category"] == "shifted_3p"),
+            "same_sequence": sum(1 for e in variants if e["category"] == "same_sequence"),
             "n_reported": len(reported),
             "truncated": truncated,
             "n_total_flagged": len(flagged),

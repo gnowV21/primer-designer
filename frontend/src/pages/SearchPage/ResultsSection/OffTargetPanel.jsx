@@ -226,7 +226,7 @@ function ResultDisplay({ result }) {
   );
 }
 
-const VARIANT_TEXT = { identical: 'identical', isomir_5p: "5′ isomiR", isomir_3p: "3′ isomiR" };
+const VARIANT_TEXT = { same_sequence: 'same sequence', shifted_5p: "5′ shifted", shifted_3p: "3′ shifted" };
 
 function OverallRiskRow({ summary, identical, variants }) {
   const risk  = summary.overall_risk ?? 'SAFE';
@@ -261,9 +261,9 @@ function OverallRiskRow({ summary, identical, variants }) {
         {summary.identical_sequence_count > 0 && (
           <span
             className="text-slate-600"
-            title={`Same mature molecule under another name — ${identical.map((id) => `${id} (${VARIANT_TEXT[variants[id]] || 'identical'})`).join(', ')}. A 5′ isomiR co-amplifies through both primers; a 3′ isomiR is resolved only partly by the RT overhang. No primer design separates them: report the sum of isoforms — not counted as off-target risk.`}
+            title={`Other miRBase entries carrying this molecule — ${identical.map((id) => `${id} (${VARIANT_TEXT[variants[id]] || 'same sequence'})`).join(', ')}. Synonyms, renamed entries or paralogues from another locus; a 5′-shifted one is bound by both primers, a 3′-shifted one only partly resolved by the RT overhang. No primer design separates them, so the signal is their sum — not counted as off-target risk.`}
           >
-            {summary.identical_sequence_count.toLocaleString()} identical / isomiR
+            {summary.identical_sequence_count.toLocaleString()} same molecule
           </span>
         )}
         {summary.cross_species_excluded > 0 && (

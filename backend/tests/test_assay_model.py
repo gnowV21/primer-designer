@@ -15,15 +15,15 @@ from algorithm.specificity_check.assay_model import (
 _T = "TAGCTTATCAGACTGATGTTGA"     # miR-21-5p (DNA)
 
 
-# ── variant categories ───────────────────────────────────────────
+# ── how another miRBase entry relates to the target ──────────────
 
 @pytest.mark.parametrize("other,cat", [
-    (_T, "identical"),
-    (_T[:-1], "isomir_3p"),            # 3' end 1 nt shorter
-    (_T + "A", "isomir_3p"),           # 3' end 1 nt longer
-    (_T[1:], "isomir_5p"),             # 5' end trimmed (seed shifts)
-    ("A" + _T, "isomir_5p"),
-    (_T[1:-1], "isomir_5p"),           # both ends: the 5' shift dominates
+    (_T, "same_sequence"),
+    (_T[:-1], "shifted_3p"),            # 3' end 1 nt shorter
+    (_T + "A", "shifted_3p"),           # 3' end 1 nt longer
+    (_T[1:], "shifted_5p"),             # 5' end trimmed (seed shifts)
+    ("A" + _T, "shifted_5p"),
+    (_T[1:-1], "shifted_5p"),           # both ends: the 5' shift dominates
     (_T[:-3], "other"),                # 3 nt shorter: beyond the ±2 range
     ("TAGCTTATCAGTCTGATGTTGA", "other"),
 ])
@@ -142,7 +142,7 @@ def test_fwd_stability_term_is_max_and_capped():
 def test_axes_add_and_labels():
     e = evaluate(_T, _T[:-2], 6, 15)          # RT 3.0 + FWD 0.0
     assert e["delta_cq"] == 3.0 and e["assay_label"] == "CO-AMPLIFIED"
-    assert e["category"] == "isomir_3p"
+    assert e["category"] == "shifted_3p"
     assert assay_label(3.3) == "PARTIAL" and assay_label(4.3) == "DISCRIMINATED"
     assert cross_reactivity_pct(1.0) == 50.0
 
@@ -158,3 +158,32 @@ def test_rt_discriminated_other_skips_forward():
     e = evaluate(_T, _T[:-6] + "CCCCCC", 6, 15)
     assert e["fwd"] is None and e["delta_cq_is_lower_bound"]
     assert e["assay_label"] == "DISCRIMINATED"
+
+
+# ── end-shift evidence: a point value with a published range ─────
+
+def test_shift_values_carry_their_measured_range():
+    """The shift term rests on one study, two miRNAs that differ by up to 4 Ct
+    (Schamberger & Orbán 2014). Every shifted register reports that range so the
+    point value is never mistaken for a measurement."""
+    for other, key, rng in [(_T[:-1], "short1", [0.0, 4.0, 2]),
+                            (_T[:-2], "short2", [3.0, 4.0, 1]),
+                            (_T + "A", "longer", [0.0, 4.0, 2])]:
+        rt = rt_axis(_T, other, 6)
+        assert rt["shift_range"] == rng, (key, rt["shift_range"])
+        assert rt["delta_cq"] == rng[0]              # the point value is the lower bound
+        assert f"n = {rng[2]} miRNA" in rt["basis"]
+        assert "Schamberger" in rt["shift_evidence_note"]
+
+
+def test_unshifted_register_has_no_shift_range():
+    rt = rt_axis(_T, _T, 6)
+    assert rt["shift_range"] is None and rt["shift_evidence_note"] is None
+
+
+def test_assay_delta_cq_reports_the_upper_end_of_the_shift_range():
+    e = evaluate(_T, _T[:-1], 6, 15)         # RT shift −1: 0 Ct low, 4 Ct high
+    assert e["delta_cq"] == 0.0 and e["delta_cq_high"] == 4.0
+    assert e["assay_label"] == "CO-AMPLIFIED"      # the label follows the lower bound
+    e = evaluate(_T, _T, 6, 15)
+    assert e["delta_cq_high"] is None              # nothing shifted, nothing to widen
