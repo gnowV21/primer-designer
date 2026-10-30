@@ -12,9 +12,9 @@ const LABEL_COLOR = {
 };
 
 const CATEGORY_TEXT = {
-  identical: 'Identical sequence',
-  isomir_5p: "5′ isomiR",
-  isomir_3p: "3′ isomiR",
+  same_sequence: 'Same sequence',
+  shifted_5p: "5′ end shifted ≤2 nt",
+  shifted_3p: "3′ end shifted ≤2 nt",
 };
 
 // ── ΔCq bar chart layout ──────────────────────────────────────────
@@ -109,7 +109,9 @@ function BarView({ data }) {
           <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-slate-600">
             <span>RT window</span>
             <span className="font-mono">{_diffMarkup(activeC.rt_window_dna, target.rt_window_dna)}
-              <span className="text-slate-500 font-sans"> ΔCq {activeC.rt?.delta_cq} — {activeC.rt?.basis}</span></span>
+              <span className="text-slate-500 font-sans"> ΔCq {activeC.rt?.delta_cq}
+                {activeC.rt?.shift_range && ` (shift measured ${activeC.rt.shift_range[0]}–${activeC.rt.shift_range[1]} Ct, n = ${activeC.rt.shift_range[2]})`}
+                {' — '}{activeC.rt?.basis}</span></span>
             <span>Forward</span>
             <span className="font-mono">{activeC.fwd ? _diffMarkup(activeC.fwd_window_dna, target.fwd_window_dna) : '—'}
               <span className="text-slate-500 font-sans">
@@ -117,6 +119,13 @@ function BarView({ data }) {
               </span></span>
             <span>Cross-signal</span>
             <span>≈{activeC.cross_reactivity_pct}%{activeC.delta_cq_is_lower_bound ? ' or less' : ''}</span>
+            {activeC.delta_cq_high != null && (
+              <>
+                <span>ΔCq range</span>
+                <span>{activeC.delta_cq}–{activeC.delta_cq_high} — the end-shift term rests on
+                  two miRNAs that differ by up to 4 Ct; the label uses the lower bound.</span>
+              </>
+            )}
             <span>Same seed?</span>
             <span>{activeC.same_seed_family ? 'yes (context only)' : 'no'}</span>
           </div>
@@ -162,25 +171,27 @@ function TableView({ data }) {
   );
 }
 
-function IsomirList({ isomirs }) {
-  if (!isomirs || !isomirs.length) return null;
+function SameMoleculeList({ entries }) {
+  if (!entries || !entries.length) return null;
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 space-y-1">
       <p className="text-xs font-semibold text-slate-600">
-        isomiRs and identical copies — reported, not scored
+        Other miRBase entries for the same molecule — reported, not scored
       </p>
       <ul className="text-xs text-slate-600 space-y-0.5">
-        {isomirs.map((e) => (
+        {entries.map((e) => (
           <li key={e.mirna}>
             <span className="font-mono text-slate-700">{e.mirna}</span>
             {' · '}{CATEGORY_TEXT[e.category] || e.category}
-            {' · '}ΔCq {e.delta_cq} (≈{e.cross_reactivity_pct}%)
+            {' · '}ΔCq {e.delta_cq}{e.delta_cq_high != null && e.delta_cq_high !== e.delta_cq ? `–${e.delta_cq_high}` : ''} (≈{e.cross_reactivity_pct}%)
             <span className="text-slate-500"> — {e.note}</span>
           </li>
         ))}
       </ul>
       <p className="text-xs text-slate-500">
-        No primer design separates these from the target: report the result as the sum of isoforms (Magee et al. 2017).
+        Synonyms, renamed entries or paralogues from another locus — no primer design separates them,
+        so the signal is their sum (Magee et al. 2017). Biological isomiRs have no miRBase entries of
+        their own; see the RT primer's isomiR flags.
       </p>
     </div>
   );
@@ -192,7 +203,7 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
 
   const {
     species, overhang_len, forward_specific_len, forward_axis_estimated,
-    collisions = [], isomirs = [], summary = {}, worst_assay_label, recommendation,
+    collisions = [], same_molecule_entries = [], summary = {}, worst_assay_label, recommendation,
     data_provenance = {}, n_screened, screened_species = [], annotation_note,
   } = overhangCollision;
   const screenedLabel = screened_species.length ? screened_species.join(' + ') : species;
@@ -255,7 +266,7 @@ export default function OverhangCollisionPanel({ overhangCollision }) {
         </p>
       )}
 
-      <IsomirList isomirs={isomirs} />
+      <SameMoleculeList entries={same_molecule_entries} />
 
       {recommendation && recommendation.action && recommendation.action !== 'none' && (
         <div className="rounded-lg bg-white border border-slate-200 px-3 py-2 space-y-1">

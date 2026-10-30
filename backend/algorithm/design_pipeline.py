@@ -327,15 +327,16 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 "primer) but are resolved by the forward primer. Relevant for multiplex / RT-primer pooling."
             ),
         })
-    _n_iso = sum(_oc_sum.get(k, 0) for k in ("isomir_5p", "isomir_3p", "identical"))
-    if _n_iso:
+    _n_same = sum(_oc_sum.get(k, 0) for k in ("shifted_5p", "shifted_3p", "same_sequence"))
+    if _n_same:
         global_warnings.append({
             "field": "overhang_collision",
             "severity": "info",
             "message": (
-                f"{_n_iso} miRBase entr{'y is' if _n_iso == 1 else 'ies are'} an isomiR or identical copy "
-                "of the target (5'/3' end shifted ≤ 2 nt). No primer design can separate them: "
-                "report the result as the sum of isoforms (Magee et al. 2017)."
+                f"{_n_same} other miRBase entr{'y carries' if _n_same == 1 else 'ies carry'} the target's "
+                "mature sequence, or one shifted ≤ 2 nt at an end (synonyms, renamed entries, or "
+                "paralogues from another locus). No primer design separates them, so the signal is "
+                "their sum (Magee et al. 2017)."
             ),
         })
 

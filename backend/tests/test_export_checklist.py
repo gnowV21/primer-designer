@@ -149,8 +149,8 @@ def results_with_overhang(sample_results):
         "overhang_collision": {
             "axis_model": "delta_cq",
             "worst_assay_label": "CO-AMPLIFIED",
-            "summary": {"CO-AMPLIFIED": 1, "PARTIAL": 1, "rt_identical": 0, "isomir_5p": 0,
-                        "isomir_3p": 1, "identical": 0, "n_reported": 2, "truncated": False},
+            "summary": {"CO-AMPLIFIED": 1, "PARTIAL": 1, "rt_identical": 0, "shifted_5p": 0,
+                        "shifted_3p": 1, "same_sequence": 0, "n_reported": 2, "truncated": False},
             "collisions": [
                 {"mirna": "hsa-let-7d-5p", "assay_label": "CO-AMPLIFIED", "delta_cq": 0.09,
                  "cross_reactivity_pct": 93.95},
@@ -166,7 +166,7 @@ def results_with_overhang(sample_results):
 class TestDualAxisExport:
     _COLS = [
         "assay_worst_label", "n_co_amplified", "n_partial",
-        "top_off_target", "n_isomir_or_identical",
+        "top_off_target", "n_same_molecule_entries",
     ]
 
     def test_csv_has_dual_axis_columns(self, client, results_with_overhang):

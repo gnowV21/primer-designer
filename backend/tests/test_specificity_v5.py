@@ -100,7 +100,7 @@ def test_check_offtarget_skips_tm_gate_when_primer_is_not_the_targets(monkeypatc
     assert "does not end with" in r["classification"]["tm_gate_note"]
 
 
-def test_identical_hits_are_split_by_variant(monkeypatch):
+def test_same_molecule_hits_are_split_by_relation(monkeypatch):
     seqs = {"hsa-miR-copy": _TARGET, "hsa-miR-short3": _TARGET[:-1], "hsa-miR-shift5": _TARGET[1:]}
     monkeypatch.setattr(bo, "_db_exists", lambda p: True)
     monkeypatch.setattr(bo, "run_blastn", lambda *a, **k: [_hit(s) for s in seqs])
@@ -108,7 +108,8 @@ def test_identical_hits_are_split_by_variant(monkeypatch):
                         lambda ids, *a, **k: {i: seqs[i] for i in ids if i in seqs})
     r = bo.check_offtarget(_PRIMER, None, "hsa-miR-21-5p", target_sequence=_TARGET)
     assert r["identical_sequence_variants"] == {
-        "hsa-miR-copy": "identical", "hsa-miR-short3": "isomir_3p", "hsa-miR-shift5": "isomir_5p"}
+        "hsa-miR-copy": "same_sequence", "hsa-miR-short3": "shifted_3p",
+        "hsa-miR-shift5": "shifted_5p"}
 
 
 # ── item 6: tm_accuracy targets the user's Ta ────────────────────

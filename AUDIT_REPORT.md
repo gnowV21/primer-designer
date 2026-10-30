@@ -251,7 +251,7 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 |---|---|---|
 | REV-01 | ✅ Đã sửa (BLAST v4) | **Phân loại Kwok ở base cuối gần như không chạy.** Căn chỉnh cục bộ không kết thúc bằng mismatch → base cuối lệch bị cắt, thành "dangling" → nhãn chung MEDIUM/HIGH; thiếu 2 nt → SAFE dù base cuối có thể khớp (63 hit trên 175 mồi). Nay base bị cắt được lấy lại từ trình tự đầy đủ (hit sợi plus) rồi căn lại. Vùng Tm sát đích: TOLERANT → CRITICAL, G:G/BLOCKING/REDUCING → HIGH; hai base cuối lệch → SAFE trừ base cuối T → MEDIUM (Kwok 1990 abstract). SPEC_phase3 §8.15. |
 | REV-02 | ✅ Đã sửa (BLAST v4) | **Tm_off lấy duplex bền nhất ở bất kỳ đâu** trên off-target. Nay tính trên khung đọc của mồi + 1 base (trên đích cho đúng Tm_on, 111/111). 27 hit vùng xám → SAFE, 4 CRITICAL → vùng xám. |
-| REV-03 | ✅ Đã sửa (v3.3.0) | **Nhóm "trình tự tương thích" gộp chung là "assay đo tổng"** và `_evaluate_pair` so cửa sổ cố định vị trí (biến thể lệch 1 nt → SAFE giả). Nay mô hình offset-aware: isomiR đầu 3′ dài hơn 1–2 nt hoặc ngắn hơn 1 nt → ΔCq_RT 0, ngắn hơn 2 nt → 3 (Schamberger 2014, đã đối chiếu bản PDF); isomiR đầu 5′ → khuếch đại chung. BLAST tách `identical` / `isomir_5p` / `isomir_3p`. *Đính chính review:* review ban đầu viết overhang "phân biệt được" biến thể đầu 3′ — sai với dữ liệu Schamberger; chỉ −2 nt bị trễ ~3 Ct. |
+| REV-03 | ✅ Đã sửa (v3.3.0) | **Nhóm "trình tự tương thích" gộp chung là "assay đo tổng"** và `_evaluate_pair` so cửa sổ cố định vị trí (biến thể lệch 1 nt → SAFE giả). Nay mô hình offset-aware: isomiR đầu 3′ dài hơn 1–2 nt hoặc ngắn hơn 1 nt → ΔCq_RT 0, ngắn hơn 2 nt → 3 (Schamberger 2014, đã đối chiếu bản PDF); isomiR đầu 5′ → khuếch đại chung. BLAST tách `identical` / `isomir_5p` / `isomir_3p` (đổi tên ở ISO-02, 2026-10-30). *Đính chính review:* review ban đầu viết overhang "phân biệt được" biến thể đầu 3′ — sai với dữ liệu Schamberger; chỉ −2 nt bị trễ ~3 Ct. |
 | REV-04 | ✅ Đã sửa (v3.3.0) | **Rủi ro chưa ở cấp assay; họ seed được miễn trừ.** Nay ΔCq_assay = ΔCq_RT + ΔCq_FWD trên toàn bộ miRNA cùng loài (chỉ mục overhang), là kết luận chính và tiêu chí `family_discrimination`. BLAST (v5) đánh dấu hit cùng họ (`same_seed_family`) và tính vào `overall_risk`. SPEC_phase3 §8.16. |
 | REV-05 | ✅ Đã sửa | Vòng lặp overhang-collision chọn mồi dẫn đầu bằng `max()` (hòa → thứ tự sinh), khác khóa xếp hạng cuối → nay dùng chung `_rank_key`. |
 | REV-06 | ✅ Đã sửa | Pool lọc theo Ta người dùng, `tm_accuracy` chấm theo 60 °C cố định → nay đều theo Ta (mặc định 60 °C nên kết quả mặc định không đổi). |
@@ -262,6 +262,17 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 | REV-11 | ✅ Đã sửa (v3.4.0) | Chỉ mục overhang chỉ có hsa/mmu/rno → 90/165 target không có đánh giá cấp assay. Nay mọi loài miRBase 22.1 (cùng file với BLAST DB, kiểm tra số trình tự lúc dựng); miRNA virus sàng lọc cùng loài chủ; ghi chú độ phủ chú giải ngoài hsa/mmu. SPEC_phase3 §8.17. |
 | REV-12 | ✅ Đã sửa (BLAST v6) | Regex tiền tố loài chỉ nhận 3 chữ cái → `kshv-`, `hcmv-`, `mdv1-`… bị đọc là người, BLAST loại toàn bộ miRNA virus là "khác loài". Nay 3–5 ký tự và mã loài phải có trong chỉ mục. Không ảnh hưởng số liệu validation (chỉ có `ebv`). |
 
+
+### 10.3 Bổ sung 2026-10-30 — rà soát xử lý isomiR (algorithm v3.5.0)
+
+| ID | Trạng thái | Nội dung |
+|---|---|---|
+| ISO-01 | ✅ Đã sửa | **Giá trị lệch đầu 3′ trình bày như số đo chắc chắn.** Cả bảng dựa trên 1 bài báo, 2 miRNA lệch nhau tới 4 Ct. Nay kèm `shift_range` (0–4 Ct ở ±1 nt, n = 2) và `delta_cq_high`; giá trị điểm ghi rõ là cận dưới. SPEC_phase3 §8.18(a). |
+| ISO-02 | ✅ Đã sửa | **Gọi sai "isomiR".** `variant_category` so các mục miRBase, bắt được tên đồng nghĩa và paralog chứ không phải isomiR sinh học (loại này không có mục trong miRBase). Đổi tên nhóm thành `same_sequence` / `shifted_5p` / `shifted_3p`, trường `isomirs` → `same_molecule_entries`. |
+| ISO-03 | ✅ Đã làm | **Thiếu cảnh báo sai lệch fold-change.** Thêm cảnh báo định tính khi tỷ lệ isoform 3′ ≥ 20 % và IQR ≥ 0,15 (32 % miRNA có dữ liệu), dẫn Nejad 2018 (PMID 29263133). Không quy ra hệ số. |
+| ISO-04 | ✅ Đính chính | Ct 36/37/39,6 trong chú thích Figure 6 của Schamberger là của **đối chứng tham chiếu**, không phải phản ứng đo isomiR — nên không kết luận được "thí nghiệm dưới LLOQ". |
+| ISO-05 | ⏳ Mở | Chưa ghép isomiRdb với mô hình ΔCq ("assay bắt ≈ X % tổng lượng") — hoãn tới khi có thí nghiệm hiệu chỉnh, vì n = 2 miRNA. |
+| ISO-06 | ⏳ Mở | Chỉ mục 5′ vẫn là danh sách 8 miRNA tự tuyển; dựng từ nhãn `lv5p` của isomiRdb cần tải lại 1,2 GB. |
 
 ## 11. Tài liệu tham khảo (đã kiểm chứng qua PubMed)
 

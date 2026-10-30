@@ -1054,6 +1054,31 @@ Tm_off tính trên khung đọc của mồi + 1 base phía sau, cùng quy ước
 
 **Kết quả trên 90 target trước đây `no_index_data`.** 77 DISCRIMINATED, 7 PARTIAL, 6 CO-AMPLIFIED; mồi #1 **không đổi ở cả 90**; điểm #1 trung bình −0,47 (trước là điểm trung tính 100). Ca cảnh báo đều là paralog đã biết: ath-miR156a ↔ 156g (ΔCq 1,3), osa-miR164a/b/c (0,0), ssc-miR-17 ↔ 106a/20b, ssc-miR-30c ↔ 30b (0,0), ssc-miR-103 ↔ 107, ssc-miR-27a ↔ 27b, ssc-miR-133a ↔ 133b (3,5). Còn 3 target "putative" (Busk 2014) không có tiền tố miRBase → vẫn không đánh giá được.
 
+### 8.18 Rà soát xử lý isomiR (2026-10-30, algorithm v3.5.0)
+
+**(a) Giá trị lệch đầu 3′ đi kèm khoảng đo được.** Toàn bộ bảng lệch đầu dựa trên **một bài báo, hai miRNA** (Schamberger & Orbán 2014):
+
+| Lệch | Giá trị tool dùng | Khoảng đo được | n |
+|---|---|---|---|
+| ±1 nt | 0 | **0–4 Ct** | 2 |
+| −2 nt | 3,0 | 3–4 Ct | 1 |
+| ≥3 nt | — | không có dữ liệu | 0 |
+
+Nguyên văn: miR-877-5p — *"Assays specific for the 'GACA' and 'GAC' 3′ ends detected both … similarly"* (±1 nt ≈ 0 Ct), *"'GA' ending was detected with ~3 Ct delay"* (−2 nt); miR-33b-5p — *"the cross-detections were still considerable (2–4 Ct delayed)"* với khác biệt 1 nt. **Phương sai giữa hai trình tự (tới 4 Ct) lớn bằng chính hiệu ứng**, nên giá trị điểm là cận dưới, không phải hệ số hiệu chỉnh. `rt_axis` trả thêm `shift_range` = (thấp, cao, n) và `shift_evidence_note`; `evaluate` trả `delta_cq_high`. Giao diện hiển thị "ΔCq 0–4 (n = 2 miRNA)".
+
+*Đính chính một cách đọc sai.* Các giá trị Ct 36/37/39,6 trong chú thích Figure 6 là của **mẫu đối chứng dùng làm tham chiếu** (*"Non-target controls were chosen as reference samples"*), không phải của phản ứng đo isomiR; tương tự "không phát hiện đến 40 chu kỳ" ở miR-33b là nói về đối chứng. Vì vậy không thể kết luận thí nghiệm nằm dưới LLOQ.
+
+**(b) Thuật ngữ: mục miRBase lệch đầu không phải isomiR.** `variant_category` so các **mục có tên trong miRBase**, nên những gì nó bắt được là tên đồng nghĩa (hsa-miR-25 ↔ hsa-miR-25-3p), mục đổi tên, hoặc paralog từ locus khác (mmu-miR-467a ↔ 467b). isomiR sinh học (Drosha/Dicer cắt lệch, gắn thêm nucleotide) **hầu như không có mục riêng trong miRBase** — chúng được xử lý bằng dữ liệu isomiRdb trong `isomir_flag.py`. Đổi tên: `identical` → `same_sequence`, `isomir_5p` → `shifted_5p`, `isomir_3p` → `shifted_3p`; trường `isomirs` → `same_molecule_entries`. Kết luận "không mồi nào tách được, tín hiệu là tổng" (Magee 2017) giữ nguyên.
+
+**(c) Cảnh báo sai lệch fold-change (mới).** Kích hoạt khi tỷ lệ isoform 3′ ≥ 20 % **và** IQR rộng ≥ 0,15 — tức pool isoform vừa lớn vừa dao động giữa các mẫu (658/2032 miRNA = 32 %; trung vị toàn bộ chỉ 0,3 %, nên đây đúng là nhóm có nguy cơ). Cơ sở: Nejad 2018 (PMID 29263133) chứng minh biến thể 3′ > 23 nt của miR-222-3p **giảm chọn lọc** khi kích thích IFN-β, xác nhận ở hơn 40 họ miRNA sau nhiễm *Salmonella*, và stem-loop TaqMan RT-qPCR *"exhibits selectivity between 3′-isoforms, according to their length, and that this can lead to misinterpretation of results"*. Nếu điều kiện thí nghiệm làm đổi thành phần isoform, fold-change đo được lẫn cả thay đổi thành phần. **Cố ý viết định tính** — không quy ra "sai lệch tới ×Y", vì hệ số quy đổi lại dựa chính vào bảng ΔCq n = 2 ở mục (a).
+
+**Chưa làm (ghi là hướng phát triển).**
+- Ghép isomiRdb với mô hình ΔCq để báo "assay bắt ≈ X % tổng lượng": hoãn, vì con số sẽ trông chính xác hơn bằng chứng (n = 2 miRNA) rất nhiều. Chỉ nên làm sau thí nghiệm hiệu chỉnh.
+- Chỉ mục 5′ từ nhãn `lv5p` của isomiRdb: cần tải lại ma trận 1,2 GB; danh sách 5′ hiện vẫn là 8 miRNA tự tuyển.
+- Phân tầng theo loại mẫu.
+
+**Thí nghiệm hiệu chỉnh đề xuất.** Oligo RNA tổng hợp miR-21-5p gồm dạng chuẩn, +1, −1, −2 và +U, cùng số bản sao, đo bằng một assay stem-loop của dạng chuẩn; 5 oligo, 1 đường chuẩn, 3 lặp. Điểm mấu chốt: **chạy ở lượng mẫu cho Ct 20–30**, trong vùng định lượng tin cậy. Kết quả sẽ thay bảng lệch đầu hiện tại bằng số đo trên một trình tự xác định.
+
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 
 ### 9.1 Cache SQLite — Refactor `LocalDB` Week 1 thành base class `SQLiteKVCache` (QUYẾT ĐỊNH v1.5)

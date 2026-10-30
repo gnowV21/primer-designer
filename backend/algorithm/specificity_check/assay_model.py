@@ -25,6 +25,7 @@ from typing import Callable, Optional
 from ..constants import (
     ASSAY_MAX_END_SHIFT,
     ASSAY_DCQ_RT_3P_LONGER, ASSAY_DCQ_RT_3P_SHORT1, ASSAY_DCQ_RT_3P_SHORT2,
+    ASSAY_DCQ_RT_SHIFT_RANGE, ASSAY_SHIFT_EVIDENCE_NOTE,
     ASSAY_DCQ_RT_WOBBLE, ASSAY_DCQ_RT_MM_NEAR, ASSAY_DCQ_RT_MM_FAR, ASSAY_DCQ_RT_MULTI,
     ASSAY_RT_NEAR_POSITIONS,
     ASSAY_DCQ_FWD_TERMINAL, ASSAY_FWD_TERMINAL_GROUP, ASSAY_DCQ_FWD_POS2,
@@ -48,16 +49,20 @@ def _shifts():
 # ── variant category ─────────────────────────────────────────────
 
 def variant_category(target: str, other: str) -> str:
-    """'identical' | 'isomir_5p' | 'isomir_3p' | 'other' (DNA alphabet).
+    """How another miRBase ENTRY relates to the target, by sequence alone:
+    'same_sequence' | 'shifted_5p' | 'shifted_3p' | 'other' (DNA alphabet).
 
-    isomiR = same molecule with ends shifted by ≤ ASSAY_MAX_END_SHIFT nt and an
-    identical overlap of ≥ SELF_MIN_OVERLAP nt. A 5' shift changes the seed and
-    co-amplifies through both primers; a 3' shift is resolved only partly by the
-    RT overhang. Neither can be designed away [Magee17] — they are reported, not
-    scored.
+    These are miRBase entries whose ends differ by ≤ ASSAY_MAX_END_SHIFT nt over an
+    identical overlap of ≥ SELF_MIN_OVERLAP nt — in practice a synonym/renamed entry
+    (hsa-miR-25 vs hsa-miR-25-3p) or a paralogue from another locus (mmu-miR-467a vs
+    467b), NOT a biological isomiR: processing variants and tailed forms have no
+    miRBase entries of their own, and are covered by the isomiRdb-based flags in
+    isomir_flag.py. Whatever their origin, no primer design separates them from the
+    target, so they are reported and not scored [Magee17]: a 5'-shifted sequence is
+    bound by both primers, a 3'-shifted one is only partly resolved by the RT overhang.
     """
     if other == target:
-        return "identical"
+        return "same_sequence"
     for r in _shifts():                       # other[i + r] faces target[i]
         lo, hi = max(0, -r), min(len(target), len(other) - r)
         if hi - lo < SELF_MIN_OVERLAP:
@@ -68,8 +73,8 @@ def variant_category(target: str, other: str) -> str:
         if abs(d3) > ASSAY_MAX_END_SHIFT:
             continue
         if r == 0 and d3 == 0:
-            return "identical"
-        return "isomir_3p" if r == 0 else "isomir_5p"
+            return "same_sequence"
+        return "shifted_3p" if r == 0 else "shifted_5p"
     return "other"
 
 
@@ -96,14 +101,23 @@ def rt_axis(target: str, other: str, overhang_len: int) -> dict:
                 mismatches.append(i + 1)           # 1 = RT primer 3' terminus
                 # rG·dT: target A (primer T) faced by an off-target G [Chen05].
                 wobble.append(t == "A" and o == "G")
+        # A shift value is a lower bound with a wide measured range (n = 1–2 miRNAs);
+        # shift_range travels with it so every caller can show the uncertainty.
         if k > 0:
-            shift_cq, shift_basis = ASSAY_DCQ_RT_3P_LONGER, f"3′ end {k} nt longer"
+            shift_cq, shift_key = ASSAY_DCQ_RT_3P_LONGER, "longer"
+            shift_basis = f"3′ end {k} nt longer"
         elif k == 0:
-            shift_cq, shift_basis = 0.0, ""
+            shift_cq, shift_key, shift_basis = 0.0, None, ""
         elif k == -1:
-            shift_cq, shift_basis = ASSAY_DCQ_RT_3P_SHORT1, "3′ end 1 nt shorter"
+            shift_cq, shift_key = ASSAY_DCQ_RT_3P_SHORT1, "short1"
+            shift_basis = "3′ end 1 nt shorter"
         else:
-            shift_cq, shift_basis = ASSAY_DCQ_RT_3P_SHORT2, f"3′ end {-k} nt shorter"
+            shift_cq, shift_key = ASSAY_DCQ_RT_3P_SHORT2, "short2"
+            shift_basis = f"3′ end {-k} nt shorter"
+        shift_range = ASSAY_DCQ_RT_SHIFT_RANGE.get(shift_key) if shift_key else None
+        if shift_range:
+            lo, hi, n = shift_range
+            shift_basis += f" (measured {lo:g}–{hi:g} Ct, n = {n} miRNA)"
         if not mismatches:
             mm_cq, mm_basis = 0.0, "overhang pairs fully"
         elif len(mismatches) >= 2:
@@ -119,6 +133,11 @@ def rt_axis(target: str, other: str, overhang_len: int) -> dict:
             best = {
                 "delta_cq": cq,
                 "shift_3p": k,
+                "shift_delta_cq": shift_cq,
+                # (low, high, n_mirnas) of the published measurements, or None when the
+                # register is unshifted. delta_cq uses the low end.
+                "shift_range": list(shift_range) if shift_range else None,
+                "shift_evidence_note": ASSAY_SHIFT_EVIDENCE_NOTE if shift_range else None,
                 "mismatch_positions": mismatches,
                 "wobble": any(wobble),
                 "basis": "; ".join(b for b in (shift_basis, mm_basis) if b),
@@ -247,8 +266,13 @@ def evaluate(
     fwd = fwd_axis(target[:fwd_len], other,
                    (lambda r: tm_gap_for(other, r)) if tm_gap_for is not None else None)
     total = round(rt["delta_cq"] + fwd["delta_cq"], 2)
+    # Upper end of what the shift literature allows, so a label is never read as exact.
+    hi = rt["shift_range"][1] if rt.get("shift_range") else None
+    total_high = (round(total - rt.get("shift_delta_cq", 0.0) + hi, 2)
+                  if hi is not None else None)
     return {
         "category": category,
+        "delta_cq_high": total_high,
         "rt": rt,
         "fwd": fwd,
         "delta_cq": total,

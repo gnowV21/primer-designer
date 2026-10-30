@@ -145,6 +145,16 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
             "message": three_prime_isomir["warning"],
             "source": three_prime_isomir.get("source"),
         })
+    # Separate from the capture warning above: the risk here is a shift in isoform
+    # composition reading as a change in miRNA level [Nejad18], which can fire even
+    # when the canonical form is still the majority.
+    if three_prime_isomir.get("fold_change_bias_risk"):
+        warnings.append({
+            "field": "three_prime_isomir_fold_change",
+            "severity": "warning",
+            "message": three_prime_isomir["fold_change_bias_warning"],
+            "source": "Nejad C et al. RNA 2018;24:332-341 [PMID:29263133]",
+        })
     elif three_prime_isomir.get("summary"):
         warnings.append({
             "field": "three_prime_isomir",
