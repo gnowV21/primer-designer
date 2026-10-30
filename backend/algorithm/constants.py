@@ -10,28 +10,73 @@
 # [Chen05] Chen et al. 2005 | [K11] Kramer 2011 | [V07] Varkonyi-Gasic 2007
 # ----------------------------------------------------------------
 
+# Bump on ANY change that alters design output (primers, scores, warnings),
+# so two different results never carry the same version label (audit ENG-01).
+#   3.1.0 (2026-09-18) — audit fixes: overhang 5–7 nt, DNA-parameter stem-loop
+#   MFE, cycle-1 occupancy at Ta (unscored), renormalised total.
+#   3.1.1 (2026-10-22) — isomiRdb 3' isomiR index rebuilt on all 42,494 samples
+#   (was 20,635); informational 3' flag levels change, no scoring change.
+#   3.1.2 (2026-10-26) — each forward tail pool (len 7–12) seeds its own RNG from
+#   (sequence, tail_len, max_pool) instead of sharing one per-design RNG across
+#   pools; some sampled tails, hence some forward primers, change. No scoring change.
+#   3.2.0 (2026-10-28) — forward selection: score first, diversify after. The old
+#   pre-score diversity filter kept ONE candidate per 3' end chosen by |Tm−60| (ties
+#   broken by generation order) and dropped 3' ends 1 nt apart, so the 15-criterion
+#   score often never saw the best primer and 45 % of miRNAs got a single set. Now the
+#   best FORWARD_TAILS_PER_LENGTH tails per 3' end are all scored, and the top
+#   CANDIDATES_TOP_N are picked by score with relaxing diversity (3' ends ≥2 nt apart →
+#   1 nt apart → same binding region, other tail; each pick labelled). GC clamp: only
+#   0 G/C in the last 3 nt is rejected; 1 G/C passes with a warning and the existing
+#   gc_clamp criterion (75 vs 100) scores it. Weights unchanged.
+#   3.3.0 (2026-10-29) — assay-level specificity: family_discrimination now scores the
+#   worst OTHER miRNA on a ΔCq model (ΔCq_RT + ΔCq_FWD, offset-aware, lower bounds of
+#   Chen05/Czimmerer13/Schamberger14/Stadhouders10) instead of the RT x FWD risk matrix
+#   with fixed-position windows; isomiRs / identical copies reported, not scored.
+#   tm_accuracy targets the user's annealing temperature (same as the pool and the
+#   tie-break); the overhang fixpoint ranks with the final key. 3' isomiR warning text
+#   follows Schamberger14 (±1 nt captured alike). Weights unchanged.
+#   3.4.0 (2026-10-29) — the overhang index covers every miRBase 22.1 species (271,
+#   48,885 mature; same mature.fa as the BLAST DB, count checked at build time), so
+#   the assay-level screen and family_discrimination now run for non-hsa/mmu/rno
+#   targets (were neutral no_index_data); a viral target is screened with its
+#   host's miRNAs; species prefixes of 3–5 chars (kshv, mdv1) are recognised.
+#   3.5.0 (2026-10-30) — isomiR handling reviewed. (a) 3'-end-shift ΔCq values now
+#   travel with the measured range and n (0–4 Ct at ±1 nt, n = 2 miRNAs): one study,
+#   two sequences differing by up to 4 Ct, so the point value is a lower bound, not a
+#   correction factor. (b) Terminology: miRBase entries with the same or an end-shifted
+#   sequence are synonyms/renamed entries/paralogues, NOT isomiRs (which have no
+#   miRBase entries) — categories renamed same_sequence / shifted_5p / shifted_3p.
+#   (c) New qualitative fold-change-bias warning when a large 3'-isoform pool also
+#   varies widely between samples [Nejad18]. No scoring change.
+ALGORITHM_VERSION = "3.5.0"
+
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
 
-OVERHANG_LENGTH_DEFAULT = 6   # nt — optimal for steric hindrance vs pre-miRNA [Chen05]
-OVERHANG_LENGTH_MIN = 4
-OVERHANG_LENGTH_MAX = 8
+OVERHANG_LENGTH_DEFAULT = 6   # nt — standard, the only length validated in [Chen05]
+# Supported range (project decision 2026-09-18): 5–7 nt. 5 and 7 nt are used in
+# published assays but not validated in [Chen05], so they always carry a warning.
+OVERHANG_LENGTH_MIN = 5
+OVERHANG_LENGTH_MAX = 7
 
 MFE_STEMLOOP_MIN = -13.0      # kcal/mol — primer3-py DNA proxy calibrated [R2]
 MFE_STEMLOOP_MAX = -10.0      # kcal/mol — primer3-py DNA proxy calibrated [R2]
 MFE_STEMLOOP_OPTIMAL = -11.5  # kcal/mol — primer3-py DNA proxy calibrated [R2]
 
-# ViennaRNA/RNAfold RNA-folding calibrated values.
-# STEMLOOP_BODY alone folds to ≈ −25.7 kcal/mol (RNA.fold).
-# Full RT primer (+ 6 nt overhang) ≈ −27.5 kcal/mol.
-# Range −35 to −20 captures reasonable overhang length variation (4–8 nt).
-MFE_STEMLOOP_MIN_RNA     = -35.0   # kcal/mol [RNA MFE calibrated]
-MFE_STEMLOOP_MAX_RNA     = -20.0   # kcal/mol [RNA MFE calibrated]
-MFE_STEMLOOP_OPTIMAL_RNA = -26.0   # kcal/mol [RNA MFE calibrated]
+# ViennaRNA DNA-parameter window (audit SCI-04, 2026-09-18). The RT primer is a
+# DNA oligo, so it is folded with the DNA energy set (Mathews 2004, 37 °C) —
+# the previous RNA (Turner 2004) values (−35/−20/−26) were for the wrong nucleic acid.
+# Derived the same way as the old RNA window: the old window was the typical
+# full-primer value (RNA −27.5) × 1.273 / 0.727 / 0.945. DNA typical value =
+# median over 2000 random 5–7-nt overhangs on STEMLOOP_BODY = −15.3 kcal/mol
+# (range −15.6 … −14.9; body alone −14.5) → −19.5 / −11.1 / −14.5.
+# Not calibrated on wet-lab data; the body is fixed, so this criterion barely
+# varies between candidates of one miRNA (audit SCI-14).
+MFE_STEMLOOP_MIN_DNA     = -19.5   # kcal/mol [ViennaRNA DNA Mathews2004, derived as above]
+MFE_STEMLOOP_MAX_DNA     = -11.1   # kcal/mol
+MFE_STEMLOOP_OPTIMAL_DNA = -14.5   # kcal/mol
 
 # RT primer concentration [K11]: 1 nM optimal (not 50 nM from Chen 2005)
-RT_PRIMER_CONC_OPTIMAL = 1.0     # nM final [K11]
-RT_PRIMER_CONC_CHEN_2005 = 50.0  # nM original [C05] — deprecated
 
 # Refolding protocol [K11] p.10 — mineral oil overlay critical
 REFOLDING_PROTOCOL = {
@@ -70,7 +115,6 @@ MULTIPLEX_PANEL_MAX = 20   # >20 assays per tube: cross-dimer risk increases sig
 
 # v2.7 UPDATE: 12–17 nt per Kramer 2011 (not 10–12)
 # [K11] p.3: "Take the first 12 to 17 nt of the 5′ end of the mature miRNA"
-FORWARD_SPECIFIC_LENGTH_MIN = 12
 FORWARD_SPECIFIC_LENGTH_MAX = 17
 FORWARD_SPECIFIC_LENGTHS = [12, 13, 14, 15, 16, 17]
 
@@ -82,8 +126,6 @@ FORWARD_EXCLUDES_LAST_NT = 6
 # 5' tail — GC-rich per [V07]: "relatively GC-rich"
 FORWARD_TAIL_MIN = 3
 FORWARD_TAIL_MAX = 12
-FORWARD_TAIL_OPTIMAL_MAX = 7  # nt — Kramer recommends 3-7 [K11]
-FORWARD_TAIL_GC_ENRICHED = True  # tails should be GC-rich [V07]
 
 # Max consecutive identical bases allowed in the generated tail pool.
 # Busk 2014 (DOI 10.1186/1471-2105-15-29) uses G,A,C,G,C tail order —
@@ -96,6 +138,14 @@ FORWARD_MAX_LENGTH = 27    # nt [P3P General Settings Max:27]
 FORWARD_OPTIMAL_LENGTH = 22  # nt — scoring target
 
 MIN_CANDIDATE_3PRIME_DISTANCE = 2  # nt [P3P PRIMER_MIN_LEFT_THREE_PRIME_DISTANCE adjusted]
+# — preferred spacing between the 3' ends of the returned sets; relaxed to 1 nt, then
+#   to tail variants (same 3' end), only when fewer than CANDIDATES_TOP_N would remain.
+# Tails kept per specific length (= per 3' end) for scoring, chosen by |Tm_full − Ta|.
+# Measured on 165 designable validation miRNAs against scoring EVERY prefiltered
+# candidate: K=3 picked a different #1 binding region in 19/165; K=20 matches it to
+# within 0.05 score points on average (#1 gain +0.37 vs +0.42) at ~0.45 s per design
+# instead of ~3.3 s. (2026-10-28)
+FORWARD_TAILS_PER_LENGTH = 20
 
 
 # ----------------------------------------------------------------
@@ -106,7 +156,6 @@ TM_FORWARD_TARGET = 60.0    # °C [R2][PAST24]
 TM_FORWARD_TOLERANCE = 2.0  # °C → acceptable 58–62°C
 TM_PAIR_DIFF_MAX = 2.0      # °C [PAST24]
 TM_ANNEALING_TEMP_DEFAULT = TM_FORWARD_TARGET  # alias — same optimum; update TM_FORWARD_TARGET only
-TM_BOUND_FRACTION_TARGET = 97.0    # % [SL04] SantaLucia & Hicks 2004 — Phase 3
 
 # Binding-region Tm target (scoring criterion 2) — v2.8 FIX
 # Old value 35°C was calibrated for probe oligos ≤10 nt, NOT for 12–17 nt regions.
@@ -130,10 +179,11 @@ GC_OPTIMAL = 50.0
 GC_STEMLOOP_MIN = 40.0
 GC_STEMLOOP_MAX = 60.0
 
-GC_CLAMP_3PRIME_WINDOW = 5
-GC_CLAMP_MIN_COUNT = 1
-GC_CLAMP_MAX_CONSECUTIVE = 3
-GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2
+GC_CLAMP_MIN_IN_LAST3 = 2     # [IDT PrimerQuest] 3' GC clamp = 2 — preferred (else warning)
+# Hard floor for the forward primer. Its 3' end is fixed by the miRNA sequence, not
+# chosen by the tool, so a 1-G/C end is allowed (Busk 2014 accepts it) and left to the
+# gc_clamp score criterion (75 vs 100); an all-A/T end is still rejected. (v3.2.0)
+GC_CLAMP_HARD_MIN_IN_LAST3 = 1
 
 # miRNA-specific GC clamp scoring (Busk 2014 DOI 10.1186/1471-2105-15-29)
 # Two-tier logic: multi-source locked (a) vs single-source pending calibration (b).
@@ -152,7 +202,6 @@ MAX_HOMOPOLYMER_RUN = 5       # [P3P Advanced Settings] Max Poly-X = 5
 GC_MAX_IN_3PRIME_WINDOW = 5   # [P3P Advanced Settings] Max End GC = 5
 
 # GC-skew [PAST24]
-GC_SKEW_OPTIMAL_MAX = 0.0
 GC_SKEW_WARNING_THRESHOLD = 0.2
 
 
@@ -186,6 +235,13 @@ AMPLICON_MIN_QPCR = 60    # bp
 AMPLICON_MAX_QPCR = 150   # bp [IDT: 70–150 bp]
 AMPLICON_IDEAL = 80       # bp
 
+# primer3 thermodynamic-alignment hard limit: at least one strand must be <= 60 bp,
+# so amplicon NN ΔH via calc_heterodimer is only available up to this length.
+P3_HETERODIMER_MAX_BP = 60           # bp [primer3-py thermoanalysis limit]
+# SYBR: product and primer-dimer melt peaks closer than this may be mistaken for
+# one another on a single melt curve (P3 discrimination rule). [Lagatie17]
+AMPLICON_DIMER_TM_GAP_WARN = 10.0    # °C [Lagatie17] DOI 10.1371/journal.pone.0163435
+
 
 # ----------------------------------------------------------------
 # SECTION H: SCORING WEIGHTS (deprecated — use V3)
@@ -208,26 +264,8 @@ SCORING_WEIGHTS = {
 # SECTION I: CANDIDATE GENERATION
 # ----------------------------------------------------------------
 
-CANDIDATES_TARGET = 50
 CANDIDATES_TOP_N = 3
 
-REJECTION_REASONS = [
-    "tm_out_of_range",
-    "tm_binding_too_low",
-    "gc_out_of_range",
-    "gc_clamp_fail",
-    "gc_end_window_fail",
-    "too_short",
-    "too_long",
-    "homopolymer_run",
-    "amplicon_out_of_range",
-    "candidate_too_similar",
-    "hairpin_fail",
-    "self_dimer_fail",
-    "hetero_dimer_fail",
-    "end_stability_fail",
-    "t_at_3prime_warning",   # WARNING ONLY — does not block candidate
-]
 
 
 # ----------------------------------------------------------------
@@ -239,6 +277,20 @@ P3_DEFAULT_DV_CONC = 1.5      # mM Mg2+ [P3P]
 P3_DEFAULT_DNTP_CONC = 0.8    # mM total dNTP (4 × 0.2 mM) [P3P][IDT] — BUG FIX v2.1
 P3_DEFAULT_DNA_CONC = 200.0   # nM — IDT PrimerQuest default
 P3_DEFAULT_TEMP_C = 37.0      # °C for ΔG calculation
+
+# Monovalent-cation model for the Tm salt correction. Na+ and K+ are both
+# monovalent and stabilize the duplex equivalently, so the effective monovalent
+# concentration = [Na+] + [K+] + protonated Tris (Tris+). primer3 then applies
+# the SantaLucia 1998 monovalent correction + von Ahsen 2001 divalent (Mg2+).
+# NOTE: K+ has NO backend default — effective_monovalent_mM() uses params.get(
+# "kPlusConc", 0.0), i.e. absent K+ contributes 0 ("do not invent ions"). The
+# design form always sends kPlusConc; validator/API callers that omit it stay on
+# the Na+-only baseline by design. (Deliberately no P3_DEFAULT_KPLUS_CONC.)
+TRIS_PKA_25C          = 8.06  # Tris pKa at 25 °C (Good buffers); Tris+ = protonated fraction
+# Assumption (audit ENG-06): the 25 °C pKa is used at every temperature although
+# Tris pKa falls as temperature rises (coefficient not verified here). Effect is
+# bounded: 10 mM Tris adds at most 10 mM to the ~50–100 mM monovalent total.
+TRIS_CONC_DEFAULT_MM  = 10.0  # mM total Tris — standard 1× PCR buffer (10 mM Tris-HCl)
 
 P3_TM_FORMULA = 1                          # SantaLucia 1998 [P3P Advanced Settings]
 P3_SALT_CORRECTIONS = 1                    # SantaLucia 1998 [P3P Advanced Settings]
@@ -255,14 +307,11 @@ PROBE_TM_IDEAL_ABOVE_PRIMER = 8.0
 PROBE_TM_MIN = 66.0
 PROBE_TM_OPT = 70.0
 PROBE_TM_MAX = 74.0
-PROBE_TM_TARGET = PROBE_TM_OPT   # alias for test compatibility
 
 PROBE_MIN_LENGTH_SINGLE_Q = 18
-PROBE_OPT_LENGTH_SINGLE_Q = 20
 PROBE_MAX_LENGTH_SINGLE_Q = 27
 
 PROBE_MIN_LENGTH_MGB = 13
-PROBE_OPT_LENGTH_MGB = 16
 PROBE_MAX_LENGTH_MGB = 20
 PROBE_MGB_TM_BOOST = 15.0
 # [RESEARCH_INSIGHTS_probe §2.2] +15°C is too imprecise to filter/reject candidates;
@@ -273,7 +322,6 @@ PROBE_MIN_LENGTH_LNA = 13        # [Liu25] LNA probe: shorter + higher Tm per nt
 PROBE_MAX_LENGTH_LNA = 18
 
 PROBE_GC_MIN = 40.0
-PROBE_GC_OPT = 50.0
 PROBE_GC_MAX = 60.0
 
 PROBE_NO_G_AT_5PRIME = True         # [IDT-TQ] golden rule
@@ -281,7 +329,6 @@ PROBE_G_NOT_EXCEED_C = True         # [patent 10036062]
 PROBE_MAX_CONSECUTIVE_G = 3
 PROBE_MIN_DIST_FROM_PRIMER = 1      # nt
 
-PROBE_POSITION = "junction"
 PROBE_JUNCTION_OVERLAP_MIRNA_SIDE = 7
 PROBE_JUNCTION_OVERLAP_STEMLOOP_SIDE = 4
 
@@ -292,54 +339,61 @@ PROBE_MODE_DEFAULT = PROBE_MODE_CUSTOM
 PROBE_HAIRPIN_DG_MAX = -3.0
 PROBE_SELF_DIMER_DG_MAX = -6.0
 PROBE_HETERO_DIMER_DG_MAX = -6.0
-PROBE_MAX_POLY_X = 5
 PROBE_DV_CONC_DEFAULT = 1.5
 PROBE_DNA_CONC = 200.0
-PROBE_MIN_END_DISTANCE = -1
-PROBE_MAX_FAMILY_MISHYB_SCORE = 12.0
 
 
 # ----------------------------------------------------------------
 # SECTION L: BOUND FRACTION (Phase 3)
 # ----------------------------------------------------------------
 
-# Round 1 uses RT extension temperature; Round 2 uses qPCR annealing temperature.
-# RT extension: 42°C from RT_REACTION_CONDITIONS (SuperScript III, [K11] protocol).
-# qPCR Ta: 55°C (= Tm_target − 5°C). Evaluating at exactly Tm=60°C would always
+# Round 1 (specific region vs first-strand cDNA, PCR cycle 1) is evaluated at the
+# user's Ta and is informational only — see UNSCORED_CRITERIA_V4 (audit SCI-02).
+# Round 2 (scored) uses qPCR Ta: 55°C (= Tm_target − 5°C). Evaluating at exactly Tm=60°C would always
 # give ~50% bound fraction by thermodynamic definition of Tm (meaningless score).
 # Evaluating at Tm−5°C represents actual primer binding during the annealing step
 # and gives ~80–90% fraction for well-designed primers — scientifically actionable.
 #
 # Thresholds recalibrated for short oligonucleotides (12–24 nt):
-#   Round 1 specific region (12–17 nt at 42°C): OPT 80%, floor 60%
 #   Round 2 full primer   (~22–24 nt at 55°C):  OPT 80%, floor 60%
 # These reflect achievable fractions. Original 97%/90% were set for long (~27 nt)
 # symmetric-duplex hybridization assays, not short PCR primer conditions.
-BOUND_FRACTION_RT_TEMP        = 42.0  # °C — Round 1: specific region binds cDNA during RT
+# 3' isomiR tiers on isomiRdb's median 3'-isoform read fraction (audit SCI-10).
+# Project convention, not a published cut-off: HIGH = the canonical 3' form is a
+# minority of the miRNA's molecules, so a stem-loop assay measures a minority.
+# Fold-change bias warning: a miRNA with a sizeable 3'-isoform pool whose size also
+# varies a lot between samples. If a stimulus shifts the isoform mix, stem-loop
+# RT-qPCR reads the shift as a change in miRNA level, because capture is
+# length-selective [Nejad18]: 3'-variants >23 nt of miR-222-3p fall specifically on
+# IFN-β stimulation (confirmed for >40 miRNA families after Salmonella infection),
+# "and that this can lead to misinterpretation of results". Qualitative flag only —
+# no bias factor is computed, since the capture values themselves rest on n = 2 miRNAs.
+ISOMIR_3P_BIAS_MIN_FRACTION = 0.20   # median 3'-isoform share
+ISOMIR_3P_BIAS_MIN_IQR      = 0.15   # IQR width of that share across samples
+
+ISOMIR_3P_FRACTION_HIGH     = 0.50
+ISOMIR_3P_FRACTION_MODERATE = 0.20
+
+# Controls & contamination (audit SCI-11) — lab policy, not literature values.
+NTC_DELTA_CQ_MIN          = 10   # cycles: NTC must be ≥10 Cq later than the latest sample (HG Lab, 2026-09-19)
+ABUNDANCE_PERCENTILE_HIGH = 95   # miRNA in the top 5 % by median isomiRdb RPM → elevated contamination risk
+
+# Amplicon Tm is reported with its Mg2+ sensitivity (audit SCI-07): the same
+# product melts ~3 °C apart across this Mg2+ span, and the user's master-mix Mg2+
+# is often unknown. Display span only — not a claim about any specific mix.
+AMPLICON_TM_MG_SPAN_MM = (1.5, 3.0)
+
+# (Removed BOUND_FRACTION_RT_TEMP = 42 °C — audit SCI-02, 2026-09-18. The forward
+#  primer is absent from the RT step; round 1 is PCR cycle 1 at the user's Ta.)
 BOUND_FRACTION_ANNEALING_TEMP = 55.0  # °C — Round 2: full primer binds amplicon at Ta=Tm−5°C
 BOUND_FRACTION_MIN = 60.0
 BOUND_FRACTION_OPT = 80.0
-BOUND_FRACTION_MAX = 100.0
 
 
 # ----------------------------------------------------------------
 # SECTION M: PENALTY WEIGHTS (Primer3Plus Penalties tab)
 # ----------------------------------------------------------------
 
-PENALTY_WT_SIZE_LT = 1.0
-PENALTY_WT_SIZE_GT = 1.0
-PENALTY_WT_TM_LT = 1.0
-PENALTY_WT_TM_GT = 1.0
-PENALTY_WT_GC_LT = 0.5    # HG Lab departure from P3P default 0.0
-PENALTY_WT_GC_GT = 0.5
-PENALTY_WT_BOUND_LT = 1.0  # Phase 3 [SL04] SantaLucia & Hicks 2004
-PENALTY_WT_BOUND_GT = 1.0
-PENALTY_WT_END_STABILITY = 0.5
-PENALTY_WT_SELF_COMP = 0.0
-PENALTY_WT_END_SELF_COMP = 0.0
-PENALTY_WT_HAIRPIN = 0.0
-PENALTY_PRIMER_PAIR_WEIGHT = 1.0
-PENALTY_HYB_OLIGO_WEIGHT = 0.0   # Phase 2; Phase 4: 1.0
 
 # v2.5: 10-criterion weights
 SCORING_WEIGHTS_V2 = {
@@ -362,7 +416,6 @@ SCORING_WEIGHTS_V2 = {
 
 OUTPUT_BASE_INDEX = 1          # 1-based output [P3P PRIMER_FIRST_BASE_INDEX=1]
 PRIMER_AVOID_T_AT_3PRIME = True
-PRIMER_T_AT_3PRIME_SEVERITY = "warning"   # warn, not fail
 
 
 # ----------------------------------------------------------------
@@ -394,52 +447,12 @@ HETERODIMER_3PRIME_MIN_BP  = 3     # bp — min consecutive 3' end bp → extens
 # ----------------------------------------------------------------
 
 # B: Discrimination [Chen05]
-DISCRIMINATION_CROSS_REACTION_MAX = 3.7    # % [C05] Figure 7
-DISCRIMINATION_SINGLE_NT_THRESHOLD = 3.7   # %
-DISCRIMINATION_MISMATCH_CUTOFF = 3         # mismatches → 100% specific [C05]
-PRECURSOR_CT_OFFSET_MIN = 11.0             # cycles [C05] Table 2
-PRECURSOR_SIGNAL_CONTRIBUTION = 0.05       # % maximum [C05]
-STEMLOOP_VS_LINEAR_SENSITIVITY_FOLD = 100  # × [C05] Figure 9
-STEMLOOP_VS_LINEAR_SPECIFICITY_FOLD = 100  # × [C05]
-MISMATCH_GT_WOBBLE_PENALTY_WEIGHT = 0.7   # G-T wobble — main cross-reaction source [C05]
-MISMATCH_TRUE_PENALTY_WEIGHT = 1.0
 
 # D: qPCR reaction conditions [K11]
-RT_REACTION_CONDITIONS = {
-    "temperature_profile": [
-        {"temp_c": 16, "duration_min": 30, "note": "Low temp annealing"},
-        {"temp_c": 42, "duration_min": 30, "note": "Reverse transcription"},
-        {"temp_c": 85, "duration_min": 5,  "note": "RT inactivation"},
-    ],
-    "rt_primer_final_conc_nM": 1.0,
-    "source": "Kramer 2011 Table 2",
-}
 
-QPCR_CYCLING_CONDITIONS = {
-    "initial_denaturation": {"temp_c": 95, "duration_min": 10, "cycles": 1},
-    "amplification": {
-        "cycles": 40,
-        "denaturation": {"temp_c": 95, "duration_sec": 15},
-        "annealing_extension": {"temp_c": 60, "duration_min": 1},
-    },
-    "note": "Standard TaqMan conditions.",
-    "source": "Kramer 2011 Step 12",
-}
 
-PCR_PRIMER_CONCENTRATIONS = {
-    "forward_primer_uM": 1.5,
-    "reverse_primer_uM": 0.7,
-    "probe_uM": 0.8,
-    "source": "Kramer 2011 — optimized from Chen et al. 2005",
-}
 
 # E: IDT [IDT-G]
-IDT_TYPICAL_MG_CONC = 3.0
-IDT_TYPICAL_DNTP_TOTAL = 0.8
-IDT_TM_PRIMER_OPTIMAL = 62.0
-IDT_TM_PRIMER_RANGE = (60, 64)
-IDT_PROBE_TM_ABOVE_PRIMER_MIN = 5.0
-IDT_PROBE_TM_ABOVE_PRIMER_MAX = 10.0
 
 # H: SYBR Green risk [V07]
 SYBR_GREEN_NON_SPECIFIC_RISK = "HIGH"
@@ -449,7 +462,6 @@ SYBR_GREEN_WARNING_MESSAGE = (
     "run. Consider switching to TaqMan (hydrolysis probe) for definitive "
     "quantification. Source: Varkonyi-Gasic et al. 2007, Plant Methods."
 )
-UPL_PROBE_OPTION = True  # Phase 4
 
 # v2.8.3: 12-criterion scoring weights [PAST24][IDT]
 SCORING_WEIGHTS_V3 = {
@@ -503,14 +515,18 @@ SCORING_WEIGHTS_V4 = {
 # Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.04+0.02+0.02+0.02 = 1.00
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
-# Family discrimination risk → score mapping [Chen05]
-FAMILY_DISCRIMINATION_RISK_SCORE = {
-    "SAFE":           100,
-    "LOW":             70,
-    "HIGH":            30,
-    "IDENTICAL":        0,
-    "no_family_data": 100,  # score 100 but explanation notes data absence
-}
+# Criteria kept in SCORING_WEIGHTS_V4 (weights are locked) but NOT scored.
+# The total is renormalised over the criteria actually scored, so the other
+# weights keep their relative proportions.
+#   bound_fraction_binding — audit SCI-02 (project decision 2026-09-18): the
+#   specific region alone binds cDNA only in PCR cycle 1, at Ta (≈2–10 % for
+#   12–17 nt at 60 °C). No published threshold exists for that number, so it
+#   is reported as information, not scored.
+UNSCORED_CRITERIA_V4 = frozenset({"bound_fraction_binding"})
+
+# (Removed FAMILY_DISCRIMINATION_RISK_SCORE — legacy seed-axis mapping. Family
+# discrimination is scored on the assay-level ΔCq model via ASSAY_LABEL_SCORE
+# (2026-10-29); the seed axis is biological context only, never scored.)
 
 # BLAST off-target parameters [Ye12] Ye et al. 2012 BMC Bioinformatics 13:134
 BLAST_WORD_SIZE        = 7       # [Ye12] — vs standard 11
@@ -525,8 +541,78 @@ PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specifi
 PRIMER_BLAST_3PRIME_WINDOW           = 5   # last 5 bases at 3' end
 PRIMER_BLAST_3PRIME_MIN_MISMATCHES   = 2   # ≥2 mm in 3' window
 PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6   # ≥6 mm → treat target as SAFE
+# Off-target priming requires the primer's 3' terminus to anneal so the polymerase
+# can extend. BLAST reports the local alignment only, so the number of primer 3' nt
+# left OUTSIDE that alignment (dangling) tells us whether the 3' end is annealed.
+BLAST_3PRIME_DANGLE_SAFE = 2   # ≥2 primer 3' nt unaligned → 3' end cannot prime → SAFE
+# Even a perfectly-matched 3' anchor cannot seed extension if it is too short: a
+# <10 bp duplex has a Tm far below a typical qPCR annealing temperature (≈60°C),
+# so it never anneals during cycling. Guards against a short 3'-terminal k-mer
+# match to an unrelated miRNA being scored as a critical off-target.
+PRIMER_BLAST_MIN_3PRIME_ANCHOR = 10   # nt — shorter 3'-anchored match → SAFE
+# (Legacy: used only when the on-target duplex Tm cannot be computed — the Tm gate
+# below supersedes it whenever the target sequence is known.)
+
+# Duplex-Tm gate (B3). Off-target duplex Tm is compared with the ON-TARGET duplex
+# Tm of the same primer (primer3 calc_heterodimer, design salt conditions), NOT
+# with Ta: the forward primer's specific region is designed to bind at ~45 °C
+# (TM_BINDING_TARGET) and the 5' tail only raises the Tm after cycle 1, so an
+# off-target follows the same priming route as the target. The 10 °C gap follows
+# Primer3's convention: its thermodynamic limits (*_TH, absolute Tm values) sit
+# 10 °C below PRIMER_MIN_TM (57 → 47). Measuring the gap from Tm_on is this tool's
+# choice and is not calibrated against wet-lab data.
+#   Tm_off <  Tm_on − SAFE_MARGIN               → SAFE
+#   Tm_on − SAFE_MARGIN ≤ Tm_off < Tm_on − CRIT → Ye12/Kwok90 rules, capped at MEDIUM
+#   Tm_off ≥ Tm_on − CRITICAL_MARGIN            → CRITICAL (HIGH if 3' blocked/unpaired)
+BLAST_TM_SAFE_MARGIN     = 10.0   # °C
+BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
+# Bump whenever classify_hit_risk's rules change — part of the BLAST cache key, so
+# cached results computed under older rules are never served.
+#   6 = species prefixes of 3–5 chars (kshv, hcmv, mdv1 were read as human); a
+#       viral target also screens its host's miRNAs (VIRUS_HOST_SPECIES) (2026-10-29)
+#   5 = seed-family hits flagged, no longer folded out of overall_risk; identical
+#       hits split into identical / 5' isomiR / 3' isomiR; Tm gate skipped when the
+#       primer does not match the target (2026-10-29)
+#   4 = trimmed 3'-terminal bases restored from the full subject (true Kwok pair);
+#       Tm_off on the primer's register window; Kwok tiers in the top Tm zone
+#       (TOLERANT → CRITICAL, G:G/BLOCKING/REDUCING → HIGH); adjacent double
+#       terminal mismatch → SAFE unless terminal T (→ MEDIUM) (2026-10-29)
+#   3 = self-hit by name + compatible sequence; hits under other names with an
+#       identical/compatible sequence folded into identical_sequence
+#   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
+BLAST_CLASSIFIER_VERSION = "6"
+# Self-hit identification. A hit named like the target is the target only if its
+# sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
+# the spread seen between miRBase 22.1 and sequences published against older
+# releases (Busk 2014: mmu-miR-138-5p, -31-3p, -194-5p, ssc-miR-7134-3p, -1468).
+SELF_MAX_END_SHIFT = 2    # nt
+SELF_MIN_OVERLAP   = 15   # nt
 BLAST_MAX_HITS_RETURNED = 200               # cap non-SAFE hits per primer in API response
 MIRBASE_HUMAN_PREFIX = "hsa-"              # Homo sapiens species prefix in miRBase FASTA IDs
+# miRBase species prefixes are 3–5 characters and may contain digits (hsa, kshv,
+# hcmv, mdv1, hsv2). A 3-letter-only pattern read 'kshv-miR-K12-1' as human.
+MIRBASE_PREFIX_PATTERN = r"[a-z][a-z0-9]{2,4}"
+
+# Off-target screen for a viral miRNA = virus + its natural host present in miRBase
+# 22.1: the assay runs on RNA from infected host cells, where host miRNAs dominate.
+# Viruses whose host has no miRBase entry (hvsa: squirrel monkey; sfv: African green
+# monkey; bpcv1/2: bandicoot; racpv: raccoon) are screened on their own.
+VIRUS_HOST_SPECIES = {
+    # human
+    "ebv": "hsa", "kshv": "hsa", "hcmv": "hsa", "hsv1": "hsa", "hsv2": "hsa",
+    "hiv1": "hsa", "hhv6b": "hsa", "bkv": "hsa", "jcv": "hsa",
+    # rhesus macaque
+    "rlcv": "mml", "rrv": "mml", "sv40": "mml", "hbv": "mml",   # hbv = herpes B virus (macacine HV 1)
+    # mouse
+    "mcmv": "mmu", "mghv": "mmu",
+    # chicken / duck
+    "mdv1": "gga", "mdv2": "gga", "hvt": "gga", "iltv": "gga", "dev": "apl",
+    # cattle / pig
+    "bhv1": "bta", "bhv5": "bta", "blv": "bta", "prv": "ssc",
+}
+# Species whose miRBase annotation is deep enough that "no annotated off-target" is
+# close to "no off-target". Every other species gets an annotation-coverage note.
+REFERENCE_ANNOTATED_SPECIES = ("hsa", "mmu")
 
 # Hard-filter gate (PROMPT 3 — A/B toggle)
 # Set False to disable hard-filter layer and fall back to soft-scoring only (for comparison).
@@ -561,12 +647,14 @@ KWOK_BLOCKING_PAIRS  = {("A","G"), ("G","A"), ("C","C")}   # ~1% yield
 KWOK_REDUCING_PAIRS  = {("A","A")}                          # ~5% yield
 # All other pairs → TOLERANT (~100% yield or context-dependent)
 
-# [Kwok90] Position-weighted distance for family cross-reactivity discrimination.
-# Weight[i] = contribution of a mismatch at position i from the 3' end (0 = 3'-terminal).
-# 3'-proximal mismatches block extension far more than 5'-proximal ones [Kwok90 Fig.3].
-# Used in check_family_crossreactivity() to reclassify 1-mismatch siblings whose mismatch
-# sits at the 3' end — such siblings are much less likely to be co-amplified.
-KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]  # positions 0–5 from 3' end
+# [Kwok90] Position-weighted mismatch distance, indexed from the PRIMER 3' TERMINUS.
+# Weight[i] = contribution of a mismatch i positions away from the primer 3' end
+# (0 = the 3'-terminal base pair). A 3'-terminal mismatch blocks extension [Kwok90 Fig.3].
+# WARNING: for the stem-loop RT primer the primer 3' terminus pairs with the 5'-MOST
+# nucleotide of the miRNA 3' overhang window (the RT primer is the reverse complement).
+# Always go through specificity_check.kwok.kwok_weighted_distance() — never index this
+# list directly.
+KWOK_POSITION_WEIGHTS    = [4.0, 2.0, 1.5, 1.0, 1.0, 1.0]
 KWOK_DIST_DISCRIMINATING = 3.0   # weighted dist ≥ this → 3'-proximal mismatch; classify as LOW
 
 # BLAST cache / infra
@@ -612,13 +700,117 @@ LNA_MAX_SUBSTITUTIONS     = 4       # max LNA positions to suggest per primer
 LNA_TARGET_TM_DEFAULT     = 60.0    # °C — default Tm target (mode="tm")
 LNA_AVOID_3PRIME_TERMINAL = True    # True → warning (NOT hard-skip) when LNA at 3' terminal
 LNA_EXHAUSTIVE_LIMIT      = 5000    # max combinations for exhaustive search; > → greedy
-LNA_HAIRPIN_RECHECK       = True    # check primer3 hairpin after LNA → warning if worse
-USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8)
+USE_LNA_SUGGESTIONS       = True    # A/B toggle (Phase 8). ON: NN tables are the VERIFIED
+                                    # Owczarzy 2011 Table 2 values (McTigue 2004 32NN), and
+                                    # tests/test_lna_benchmark.py passes the empirical
+                                    # McTigue Table 1 benchmark (ΔTm RMSD 0.78 °C, absolute
+                                    # Tm RMSD 1.54 °C, ≤ 2 °C). [A2]
 
 # ----------------------------------------------------------------
-# SECTION V: Batch design (Phase 8) — A1
+# SECTION V: Batch design (Phase 8) — REMOVED
+# Batch design was deliberately dropped when the project refocused on
+# single primer design (branch feat/design-focus). The A1 batch constants
+# (BATCH_ASYNC_THRESHOLD / BATCH_MAX_SIZE / BATCH_JOB_TTL_SEC) were removed
+# with it. Restore from commit 269a4c9 if batch is ever reinstated.
 # ----------------------------------------------------------------
 
-BATCH_ASYNC_THRESHOLD = 10    # ≤10 miRNAs → sync NDJSON; >10 → async job
-BATCH_MAX_SIZE        = 50    # maximum miRNAs per batch request (warn if exceeded)
-BATCH_JOB_TTL_SEC     = 3600  # 1h in-memory job TTL
+
+# ================================================================
+# Assay-level cross-reactivity (ΔCq model, 2026-10-29; replaces the Week 2
+# RT x FWD risk matrix). An off-target gives signal only if the RT overhang
+# captures it AND the forward primer primes its cDNA; the delays add:
+#     ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD,   cross-reactivity ≈ 2^−ΔCq × 100 %.
+# Every value is the LOWER bound of the published range (project decision
+# 2026-10-29): the model predicts the most cross-reactivity the data allow.
+# Literature values were measured with TaqMan probes (Chen05, Schamberger14,
+# Stadhouders10); a SYBR assay lacks the probe's extra discrimination, so the
+# prediction is an optimistic bound there. See specificity_check/assay_model.py.
+# [Chen05] NAR 33:e179 | [Czimmerer13] PLoS One 8:e55168 | [Schamberger14] PLoS One
+# 9:e106315 (Fig. 6) | [Stadhouders10] J Mol Diagn 12:109 (PMC2797725) | [Kwok90] NAR
+# 18:999 | [Ye12] BMC Bioinformatics 13:134 | [Magee17] Non-Coding RNA 3:18
+# ================================================================
+FWD_PREFIX_LEN_FALLBACK = 12     # used when forward specific_length is unavailable (lower bound of [12..17])
+COLLISION_MAX_REPORT    = 25     # cap rows returned to the client
+# The recommender's RT-overhang ceiling reuses OVERHANG_LENGTH_MAX (=7) from Section A.
+
+ASSAY_MAX_END_SHIFT = 2          # nt — registers tried at each end (isomiR range, Schamberger14)
+
+# RT axis (stem-loop overhang, RNA:DNA). Positions counted from the RT primer's 3'
+# terminus, which pairs with the 5'-most nt of the miRNA's 3'-terminal window.
+# End-shift values rest on ONE study with TWO miRNAs, whose results differ by up to
+# 4 Ct — the between-sequence spread is as large as the effect. Report the measured
+# RANGE (ASSAY_DCQ_RT_SHIFT_RANGE) wherever a shift value is shown; the point value
+# is the lower bound, in line with the rest of this table.
+#   miR-877-5p [Schamberger14 Results]: "Assays specific for the 'GACA' and 'GAC' 3'
+#     ends detected both 'GACA' and 'GAC' ended RNAs similarly" (±1 nt ≈ 0 Ct),
+#     "'GA' ending was detected with ~3 Ct delay" (−2 nt), and the "'GA' specific
+#     assay detected all three isoforms similarly" (longer ends ≈ 0 Ct).
+#   miR-33b-5p [same section, Fig. 6B]: each assay "detected the corresponding
+#     template better than the other isomiR, but the cross-detections were still
+#     considerable (2–4 Ct delayed)" — a 1-nt 3' difference, so ±1 nt spans 0–4 Ct.
+# The Ct values 36/37/39.6 in the Fig. 6 legend belong to the NON-TARGET CONTROLS
+# used as reference samples ("Non-target controls were chosen as reference samples"),
+# not to the isomiR reactions — they are not evidence about the assay's LLOQ.
+ASSAY_DCQ_RT_3P_LONGER   = 0.0   # off-target 3' end 1–2 nt longer [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT1   = 0.0   # 1 nt shorter [Schamberger14]
+ASSAY_DCQ_RT_3P_SHORT2   = 3.0   # 2 nt shorter [Schamberger14]
+# Measured range per shift → (low, high, n_mirnas). None = no measurement at all.
+ASSAY_DCQ_RT_SHIFT_RANGE = {
+    "longer":  (0.0, 4.0, 2),
+    "short1":  (0.0, 4.0, 2),
+    "short2":  (3.0, 4.0, 1),    # only miR-877-5p; miR-33b was not tested at −2 nt
+}
+ASSAY_SHIFT_EVIDENCE_NOTE = (
+    "3'-end shift values come from one study, two miRNAs (Schamberger & Orbán 2014): "
+    "miR-877-5p showed ~0 Ct at ±1 nt and ~3 Ct at −2 nt, miR-33b-5p 2–4 Ct at 1 nt. "
+    "The between-sequence spread is as large as the effect, so treat a shift ΔCq as an "
+    "order-of-magnitude estimate, not a correction factor."
+)
+ASSAY_DCQ_RT_WOBBLE      = 4.75  # single rG·dT pair: 3.7 % cross-signal (let-7a assay on let-7c) [Chen05]
+ASSAY_DCQ_RT_MM_NEAR     = 7.0   # single other mismatch, positions 1–3: 0.1 % ≈ 10 Cq; range 7–10 → 7 [Chen05]
+ASSAY_DCQ_RT_MM_FAR      = 3.5   # single other mismatch, positions 4–6: 6.8–9.0 % cross-signal [Czimmerer13]
+ASSAY_DCQ_RT_MULTI       = 8.0   # ≥2 mismatches: ≤0.3 % [Chen05]
+ASSAY_RT_NEAR_POSITIONS  = 3
+
+# FWD axis (forward primer on the off-target's cDNA, DNA:DNA). The mismatch only
+# costs the first cycles — later products carry the primer sequence — which is the
+# setting Stadhouders10 measured (standard Taq qPCR). Pairs are primer–template.
+# Lower bounds of the per-group ranges (Stadhouders10, Taq qPCR, 3'-terminal):
+ASSAY_DCQ_FWD_TERMINAL = {
+    "severe":       8.3,         # A–A, A–G, G–A, G–G, C–C: 8.29–9.09 Ct
+    "intermediate": 3.8,         # T–C, C–T, T–T: 3.77–4.75 Ct
+    "minor":        1.0,         # A–C, C–A, T–G, G–T: 0.99–1.91 Ct
+}
+ASSAY_FWD_TERMINAL_GROUP = {
+    ("A", "A"): "severe", ("A", "G"): "severe", ("G", "A"): "severe",
+    ("G", "G"): "severe", ("C", "C"): "severe",
+    ("T", "C"): "intermediate", ("C", "T"): "intermediate", ("T", "T"): "intermediate",
+    ("A", "C"): "minor", ("C", "A"): "minor", ("T", "G"): "minor", ("G", "T"): "minor",
+}
+ASSAY_DCQ_FWD_POS2       = 1.9   # penultimate: mean 1.87 Ct (no range reported) [Stadhouders10]
+ASSAY_DCQ_FWD_POS3_5     = 0.5   # positions 3 and 5: means 0.53 / 0.71 Ct; position 4 not tested [Stadhouders10]
+ASSAY_FWD_3P_WINDOW      = 5     # nt — beyond this a single mismatch costs ~0 [Kwok90; Ye12]
+ASSAY_DCQ_FWD_MULTI_3P   = 8.3   # ≥2 mismatches in the last 5 nt: no amplification with Taq [Stadhouders10];
+                                 # except a mismatched terminal T, which still amplifies [Kwok90 abstract]
+                                 # → use the terminal pair's value instead.
+ASSAY_DCQ_FWD_NO_TEMPLATE = 8.3  # primer 3' end runs past the off-target's end: nothing to extend
+# Duplex stability: ΔCq_FWD = max(table, slope × (Tm_on − Tm_off)). Self-derived two-state
+# (van 't Hoff, ΔH ≈ −90 kcal/mol) estimate already used for the BLAST Tm gate: 5 °C
+# weaker ≈ 10 % bound (3.3 Cq), 10 °C ≈ 1 % (6.6 Cq) → 0.66 Cq/°C. Not from literature.
+ASSAY_DCQ_PER_TM_DEGREE  = 0.66
+
+# Labels on ΔCq_assay — thresholds from the thesis proposal's cross-reactivity criteria.
+ASSAY_DCQ_COAMPLIFIED_BELOW = 3.3    # > 10 % cross-signal
+ASSAY_DCQ_DISCRIMINATED_AT  = 4.3    # < 5 % cross-signal; between the two → PARTIAL
+
+# Score contribution of the worst label among OTHER miRNAs (scoring.py criterion 15).
+# isomiRs and identical-sequence copies are reported but not scored: no primer design
+# can avoid them (project decision 2026-10-29). no_index_data → 100 (stated in the
+# explanation).
+ASSAY_LABEL_SCORE = {"DISCRIMINATED": 100, "PARTIAL": 70, "CO-AMPLIFIED": 0, "no_index_data": 100}
+
+# ---- Short-duplex reporting (Week 2 P4) --------------------------
+# NN parameters are calibrated on longer duplexes; below this length the initiation
+# term and terminal fraying dominate, so a point Tm is not a defensible display value.
+SHORT_DUPLEX_NT_THRESHOLD     = 8     # nt — report dG37 + a Tm band below this, not a point Tm
+TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; NOT a statistical CI)

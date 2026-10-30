@@ -4,6 +4,8 @@
 
 import { useState } from 'react';
 import Tooltip from '../../components/ui/Tooltip.jsx';
+import LnaPanel from '../../components/LnaPanel/index.jsx';
+import useLnaEnabled from '../../hooks/useLnaEnabled.js';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -90,8 +92,8 @@ const ROWS = [
   },
   {
     label: 'Self-dimer ΔG',
-    extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg'),
-    format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg')),
+    extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg_overall'),
+    format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg_overall')),
     best: 'min_abs',
   },
   {
@@ -116,11 +118,13 @@ const ROWS = [
     best: 'min_abs',
   },
   {
-    label: 'Bound fraction (binding)',
-    extract: (s) => get(s, 'scores', 'bound_fraction_binding'),
+    // Informational (not scored, audit SCI-02): % of the specific region bound
+    // to first-strand cDNA in PCR cycle 1 at Ta.
+    label: 'Cycle-1 occupancy (at Ta)',
+    extract: (s) => get(s, 'scores', 'bound_fraction_binding_pct'),
     format: (s) => {
-      const v = get(s, 'scores', 'bound_fraction_binding');
-      return v !== undefined ? fmt(v) : '—';
+      const v = get(s, 'scores', 'bound_fraction_binding_pct');
+      return v !== undefined ? `${fmt(v)}%` : '—';
     },
     best: 'max',
   },
@@ -237,11 +241,18 @@ function PropRow({ label, value }) {
   );
 }
 
-function TabB({ top3, stemloopRt, universalReverse }) {
+function TabB({ top3, stemloopRt, universalReverse, params }) {
   const [selRank, setSelRank] = useState(1);
+  const [showLna, setShowLna] = useState(false);
+  const lnaEnabled = useLnaEnabled();
   const set = top3?.find((s) => s.rank === selRank) ?? top3?.[0];
 
   if (!set) return null;
+
+  // LNA suggester operates on the forward primer (DNA). Ion conditions and the
+  // target Tm come from the form params the design was run with.
+  const ionParams = params?.thermodynamic ?? {};
+  const targetTm  = params?.thermodynamic?.tmMax ?? 60;
 
   return (
     <div className="space-y-4">
@@ -273,7 +284,7 @@ function TabB({ top3, stemloopRt, universalReverse }) {
           <PropRow label="GC%" value={set.gc_percent !== undefined ? fmt(set.gc_percent) + '%' : undefined} />
           <PropRow label="Amplicon" value={set.amplicon_size !== undefined ? fmt(set.amplicon_size, 0) + ' bp' : undefined} />
           <PropRow label="Hairpin ΔG" value={fmtDg(get(set, 'structure_checks', 'hairpin', 'dg'))} />
-          <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg'))} />
+          <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg_overall'))} />
           <PropRow label="3′ stability ΔG" value={fmtDg(get(set, 'structure_checks', 'end_stability', 'stability_kcal_mol'))} />
           <PropRow label="Binding region" value={set.specific_length !== undefined ? `${set.specific_length} nt` : undefined} />
           <PropRow label="Binding pos (1-based)" value={
@@ -281,9 +292,9 @@ function TabB({ top3, stemloopRt, universalReverse }) {
               ? `${set.binding_start_1based}–${set.binding_end_1based}`
               : undefined
           } />
-          {/* [RESEARCH_QUESTIONS_UX A1] Show raw bound fraction % alongside quality score */}
+          {/* Cycle-1 occupancy: informational, evaluated at the user's Ta (audit SCI-02) */}
           <PropRow
-            label="Bound frac. (binding, 42°C)"
+            label="Cycle-1 occupancy (Ta, not scored)"
             value={set.scores?.bound_fraction_binding_pct !== undefined
               ? `${fmt(set.scores.bound_fraction_binding_pct)}%`
               : undefined}
@@ -296,6 +307,32 @@ function TabB({ top3, stemloopRt, universalReverse }) {
           />
           <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
         </div>
+
+        {/* LNA Tm suggester (informational only) — on-demand for the forward primer.
+            Gated: hidden while the backend LNA NN tables are unverified. */}
+        {lnaEnabled && (
+          <div className="pt-1">
+            {!showLna ? (
+              <button
+                type="button"
+                onClick={() => setShowLna(true)}
+                className="text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
+              >
+                Suggest LNA (Tm) ↓
+              </button>
+            ) : (
+              <LnaPanel
+                key={selRank}
+                sequence={set.sequence}
+                role="forward"
+                params={ionParams}
+                mode="tm"
+                targetTm={targetTm}
+                onClose={() => setShowLna(false)}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* RT stem-loop primer */}
@@ -311,6 +348,23 @@ function TabB({ top3, stemloopRt, universalReverse }) {
             <PropRow label="MFE" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) + ' kcal/mol' : undefined} />
             <PropRow label="MFE method" value={stemloopRt.mfe_method} />
           </div>
+          {/* 3′ isomiR share from isomiRdb (audit SCI-10) — warning when the canonical
+              3′ form is a minority, plain note otherwise. */}
+          {stemloopRt.three_prime_isomir?.three_prime_isomir_risk ? (
+            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+              3′ isomiRs: {stemloopRt.three_prime_isomir.warning}{' '}
+              <span className="text-slate-500">Source: {stemloopRt.three_prime_isomir.source}.</span>
+            </p>
+          ) : stemloopRt.three_prime_isomir?.summary && (
+            <p className="text-xs text-slate-500 px-1 leading-relaxed">
+              3′ isomiRs: {stemloopRt.three_prime_isomir.summary} Source: {stemloopRt.three_prime_isomir.source}.
+            </p>
+          )}
+          {stemloopRt.three_prime_isomir?.fold_change_bias_risk && (
+            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+              {stemloopRt.three_prime_isomir.fold_change_bias_warning}
+            </p>
+          )}
         </div>
       )}
 
@@ -360,7 +414,7 @@ function RtTmRow({ stemloopRt }) {
         </span>
         <span className="text-slate-700 tabular-nums font-medium">
           {stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : '—'}
-          <span className="text-amber-600 ml-1 text-[10px] font-normal">indicative</span>
+          <span className="text-slate-500 ml-1 text-xs font-normal">indicative</span>
         </span>
       </div>
       {hasHybrid && (
@@ -371,14 +425,31 @@ function RtTmRow({ stemloopRt }) {
           </span>
           <span className="text-slate-700 tabular-nums font-medium">
             {stemloopRt.tm_hybrid_c}°C
-            <span className="text-blue-600 ml-1 text-[10px] font-normal">modeled</span>
+            <span className="text-slate-600 ml-1 text-xs font-normal">modeled</span>
           </span>
         </div>
       )}
-      {!hasHybrid && (
+      {/* Week2 P4: <8 bp duplex → report ΔG37 + a band, never a point Tm. */}
+      {!hasHybrid && stemloopRt?.dg37_kcal_mol != null && (
+        <div className="flex justify-between text-xs py-0.5">
+          <span className="text-slate-500 flex items-center gap-1">
+            Overhang ΔG₃₇ (DNA:RNA)
+            <Tooltip text={hybridTooltip || (stemloopRt?.tm_note ?? '')} />
+          </span>
+          <span className="tabular-nums text-right">
+            <span className="text-slate-700 font-medium">{stemloopRt.dg37_kcal_mol} kcal/mol</span>
+            {Array.isArray(stemloopRt.tm_hybrid_band_c) && (
+              <span className="text-slate-500 ml-1 text-xs font-normal">
+                Tm ≈ {stemloopRt.tm_hybrid_band_c[0]}–{stemloopRt.tm_hybrid_band_c[1]}°C (not reportable)
+              </span>
+            )}
+          </span>
+        </div>
+      )}
+      {!hasHybrid && stemloopRt?.dg37_kcal_mol == null && (
         <div className="flex justify-between text-xs py-0.5">
           <span className="text-slate-500">Overhang Tm (DNA:RNA)</span>
-          <span className="text-amber-600 tabular-nums text-[10px]">approx. — see note</span>
+          <span className="text-slate-500 tabular-nums text-xs">approx. — see note</span>
         </div>
       )}
     </>
@@ -387,7 +458,7 @@ function RtTmRow({ stemloopRt }) {
 
 // ── Main export ────────────────────────────────────────────────────
 
-export default function ThermoTable({ results }) {
+export default function ThermoTable({ results, params }) {
   const [tab, setTab] = useState('A');
   const { top3, stemloop_rt, universal_reverse } = results ?? {};
 
@@ -416,7 +487,7 @@ export default function ThermoTable({ results }) {
       <div className="p-4">
         {tab === 'A' && <TabA top3={top3} />}
         {tab === 'B' && (
-          <TabB top3={top3} stemloopRt={stemloop_rt} universalReverse={universal_reverse} />
+          <TabB top3={top3} stemloopRt={stemloop_rt} universalReverse={universal_reverse} params={params} />
         )}
       </div>
     </div>

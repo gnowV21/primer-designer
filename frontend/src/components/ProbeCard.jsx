@@ -46,6 +46,7 @@ function SeqDisplay({ sequence, mode }) {
 
 export default function ProbeCard({ probe, probeNote }) {
   const [showChecks, setShowChecks] = useState(false);
+  const [showSpecNote, setShowSpecNote] = useState(false);
 
   // No TaqMan (SYBR or not designed)
   if (!probe && probeNote) {
@@ -67,6 +68,22 @@ export default function ProbeCard({ probe, probeNote }) {
     disclaimer,
   } = probe;
 
+  // A probe was requested but none could be designed (no candidate met Tm/GC in
+  // the length range). Show a clean advisory instead of an empty metrics card
+  // full of "—" and a red "Fails QC" badge, which reads like a bug.
+  if (!sequence) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+        <p className="text-sm font-medium text-slate-700">No TaqMan probe designed</p>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          {warnings[0] || disclaimer || 'No probe candidate met the Tm/GC criteria within the length range.'}
+          {' '}Specificity still comes from the stem-loop RT and forward primers — you can run the
+          assay with SYBR Green (melting-curve), or relax the probe length/Tm constraints and re-run.
+        </p>
+      </div>
+    );
+  }
+
   const { tm_gap, checks = {} } = quality;
 
   const allCheckEntries = Object.entries(checks);
@@ -76,12 +93,23 @@ export default function ProbeCard({ probe, probeNote }) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 space-y-3">
-      {/* [§3.4] Specificity advisory — always shown for any TaqMan probe */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 leading-relaxed">
-        <span className="font-semibold">Specificity note:</span> The probe does not confer
-        miRNA sequence specificity. Discrimination between miRNAs is delivered by the
-        stem-loop RT primer (3′ overhang) and the forward primer. A universal probe generates
-        signal for any amplicon sharing the stem-loop body, including non-specific products.
+      {/* [§3.4] Specificity advisory — collapsible */}
+      <div className="text-xs text-slate-700">
+        <button
+          onClick={() => setShowSpecNote(v => !v)}
+          className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+        >
+          <span>ℹ Specificity note</span>
+          <span className="text-slate-500">{showSpecNote ? '▲' : '▼'}</span>
+        </button>
+        {showSpecNote && (
+          <p className="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 leading-relaxed text-slate-800">
+            The probe does not confer miRNA sequence specificity. Discrimination between miRNAs
+            is delivered by the stem-loop RT primer (3′ overhang) and the forward primer. A
+            universal probe generates signal for any amplicon sharing the stem-loop body,
+            including non-specific products.
+          </p>
+        )}
       </div>
 
       {/* Header */}
@@ -110,7 +138,7 @@ export default function ProbeCard({ probe, probeNote }) {
           <SeqDisplay sequence={sequence} mode={mode} />
         </div>
         {mode === 'custom' && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             <span className="text-teal-600 font-medium">■ miRNA-side (7 nt)</span>
             {'  '}
             <span className="text-violet-600 font-medium">■ Stemloop-side (4 nt)</span>
@@ -119,7 +147,7 @@ export default function ProbeCard({ probe, probeNote }) {
           </p>
         )}
         {mode === 'universal' && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Universal mode — binds stemloop body. Position: {position_1based ?? '—'}
           </p>
         )}
@@ -128,15 +156,15 @@ export default function ProbeCard({ probe, probeNote }) {
       {/* Metrics row */}
       <div className="grid grid-cols-3 gap-2 text-xs text-center">
         <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
-          <p className="text-slate-400 mb-0.5">Tm</p>
+          <p className="text-slate-500 mb-0.5">Tm</p>
           <p className="font-semibold text-slate-700">{tm != null ? `${tm.toFixed(1)} °C` : '—'}</p>
         </div>
         <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
-          <p className="text-slate-400 mb-0.5">GC%</p>
+          <p className="text-slate-500 mb-0.5">GC%</p>
           <p className="font-semibold text-slate-700">{gc_percent != null ? `${gc_percent.toFixed(1)}%` : '—'}</p>
         </div>
         <div className="rounded-lg bg-slate-50 border border-slate-100 px-2 py-1.5">
-          <p className="text-slate-400 mb-0.5">Tm gap</p>
+          <p className="text-slate-500 mb-0.5">Tm gap</p>
           <p className={`font-semibold ${tm_gap != null && tm_gap >= 6 ? 'text-teal-700' : 'text-red-600'}`}>
             {tm_gap != null ? `+${tm_gap.toFixed(1)} °C` : '—'}
           </p>
@@ -190,10 +218,6 @@ export default function ProbeCard({ probe, probeNote }) {
         </div>
       )}
 
-      {/* Disclaimer */}
-      {disclaimer && (
-        <p className="text-xs text-slate-400 border-t border-slate-100 pt-2">{disclaimer}</p>
-      )}
     </div>
   );
 }

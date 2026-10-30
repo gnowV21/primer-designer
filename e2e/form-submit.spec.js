@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Form submit button', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/design/advanced');
   });
 
   test('submit button disabled with no sequence', async ({ page }) => {
@@ -40,6 +40,6 @@ test.describe('Form submit button', () => {
   });
 
   test('page title is HG Lab | Primer Designer', async ({ page }) => {
-    await expect(page).toHaveTitle('HG Lab | Primer Designer');
+    await expect(page).toHaveTitle('HG Lab | Primer Designer (Advanced)');
   });
 });

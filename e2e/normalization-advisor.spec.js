@@ -102,6 +102,7 @@ test.describe('NormalizationAdvisor', () => {
       })
     );
 
+    await page.goto('/design/advanced');
     // Validate the mock API payload directly
     const resp = await page.evaluate(async () => {
       const r = await fetch('/api/design', {
@@ -128,6 +129,7 @@ test.describe('NormalizationAdvisor', () => {
       })
     );
 
+    await page.goto('/design/advanced');
     const resp = await page.evaluate(async () => {
       const r = await fetch('/api/design', {
         method: 'POST',
@@ -154,6 +156,7 @@ test.describe('NormalizationAdvisor', () => {
       })
     );
 
+    await page.goto('/design/advanced');
     const resp = await page.evaluate(async () => {
       const r = await fetch('/api/design', {
         method: 'POST',

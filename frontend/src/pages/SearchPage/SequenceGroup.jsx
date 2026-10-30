@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toRna, DNA_CONVERTED_NOTE } from '../../utils/sequence.js';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import Tooltip from '../../components/ui/Tooltip.jsx';
@@ -42,10 +43,19 @@ function SeqWithSeed({ seq }) {
   );
 }
 
-export default function SequenceGroup({ data, errors, onChange, onError, seqAnalysis, openRequested }) {
+/** Plain container used instead of CollapsibleSection when `bare` is set. */
+function BareBox({ children }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white px-5 py-4 space-y-4">{children}</div>
+  );
+}
+
+export default function SequenceGroup({ data, errors, onChange, onError, seqAnalysis,
+                                        openRequested, bare = false }) {
   const { status, result, errorMessage, fetchMiRNA, reset } = useMiRBase();
   const prevQuery = useRef('');
   const [isSeqLookup, setIsSeqLookup] = useState(false);
+  const [seqNote, setSeqNote] = useState('');
 
   // Autocomplete state
   const [suggestions, setSuggestions] = useState([]);
@@ -140,9 +150,10 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   }, [status, result, isSeqLookup]);
 
   function validateSequence(seq) {
-    const clean = seq.trim().toUpperCase();
-    if (/T/i.test(clean)) {
-      onError('matureSequence', "Character 'T' detected. This must be an RNA sequence — use 'U' instead of 'T'.");
+    const { seq: clean, converted, error } = toRna(seq);
+    setSeqNote(converted ? DNA_CONVERTED_NOTE : '');
+    if (error) {
+      onError('matureSequence', error);
       return false;
     }
     if (/[^AUGC]/i.test(clean)) {
@@ -163,7 +174,8 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
     onChange('mirbaseId', '');
     onChange('accession', '');
     onChange('family', '');
-    return true;
+    if (converted) onChange('searchQuery', clean);
+    return clean;
   }
 
   function handleSearch() {
@@ -171,14 +183,26 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
     if (!query || query === prevQuery.current) return;
     prevQuery.current = query;
 
+    // Cancel any debounced suggestion fetch still in flight. Without this the
+    // timer fires ~200 ms after the search and re-opens the dropdown on top of
+    // the freshly rendered result card.
+    clearTimeout(suggestTimer.current);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setIsFetchingSugg(false);
+
     const type = detectInputType(query);
     if (type === 'sequence') {
       reset();
       setIsSeqLookup(true);
-      const valid = validateSequence(query);
-      if (valid) fetchMiRNA(query); // reverse-lookup name/ID silently
+      const clean = validateSequence(query);
+      if (clean) {
+        prevQuery.current = clean;   // the box now shows the converted RNA
+        fetchMiRNA(clean);           // reverse-lookup name/ID silently
+      }
     } else {
       setIsSeqLookup(false);
+      setSeqNote('');
       onChange('matureSequence', '');
       onChange('mirnaName', '');
       onChange('mirbaseId', '');
@@ -190,8 +214,10 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   function selectSuggestion(item) {
     onChange('searchQuery', item.name);
     prevQuery.current = '';
+    clearTimeout(suggestTimer.current);   // same race as handleSearch
     setShowSuggestions(false);
     setSuggestions([]);
+    setIsFetchingSugg(false);
     // Trigger search immediately
     fetchMiRNA(item.name);
     setIsSeqLookup(false);
@@ -213,6 +239,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
       onChange('family', '');
       onError('matureSequence', '');
       setIsSeqLookup(false);
+      setSeqNote('');
       setSuggestions([]);
       setShowSuggestions(false);
       setIsFetchingSugg(false);
@@ -254,19 +281,24 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   const displayName = (status === 'found' && result) ? (result.id ?? '')        : '';
   const displayId   = (status === 'found' && result) ? (result.accession ?? '') : '';
 
+  // Basic page passes bare: its numbered step heading already titles this block,
+  // so the collapsible header would just repeat it.
+  const Wrapper = bare ? BareBox : CollapsibleSection;
+  const wrapperProps = bare ? {} : {
+    title: 'Sequence Information',
+    tooltip: 'Search by miRNA name, miRBase accession (MIMAT…), or paste the RNA sequence — the tool auto-detects the input type.',
+    defaultOpen: true,
+    hasError: !!errors.matureSequence,
+    openRequested,
+  };
+
   return (
-    <CollapsibleSection
-      title="Sequence Information"
-      tooltip="Search by miRNA name, miRBase accession (MIMAT…), or paste the RNA sequence — the tool auto-detects the input type."
-      defaultOpen
-      hasError={!!errors.matureSequence}
-      openRequested={openRequested}
-    >
+    <Wrapper {...wrapperProps}>
       {/* ── Unified search ─────────────────────────────────── */}
       <div className="space-y-2">
         <div>
-          <label className="text-sm font-medium text-gray-700">Search miRNA</label>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <label className="text-sm font-medium text-slate-700">Search miRNA</label>
+          <p className="text-xs text-slate-500 mt-0.5">
             Enter a miRNA name, miRBase ID, or paste the mature sequence (A/U/G/C)
           </p>
         </div>
@@ -287,13 +319,13 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
               }}
               placeholder="hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA"
               disabled={status === 'loading'}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-gray-50 disabled:text-gray-400"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
             />
 
             {/* ── Suggestions dropdown — rendered via portal to escape overflow:hidden parents ── */}
             {showSuggestions && dropdownRect && createPortal(
               <div
-                className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+                className="bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden"
                 style={{
                   position: 'fixed',
                   top: dropdownRect.top,
@@ -304,11 +336,11 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
               >
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                     {isFetchingSugg ? 'Searching…' : `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
                   </span>
-                  <span className="text-[10px] text-gray-400">↑↓ navigate · Enter select · Esc close</span>
+                  <span className="text-xs text-slate-500">↑↓ navigate · Enter select · Esc close</span>
                 </div>
 
                 {/* Loading skeleton */}
@@ -316,9 +348,9 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                   <div className="px-3 py-2 space-y-2">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="flex items-center gap-3 animate-pulse">
-                        <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
-                        <div className="h-3.5 bg-gray-100 rounded w-40" />
-                        <div className="h-3 bg-gray-100 rounded w-24 ml-auto" />
+                        <div className="w-4 h-4 rounded bg-slate-100 shrink-0" />
+                        <div className="h-3.5 bg-slate-100 rounded w-40" />
+                        <div className="h-3 bg-slate-100 rounded w-24 ml-auto" />
                       </div>
                     ))}
                   </div>
@@ -338,34 +370,34 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                           key={item.name}
                           onMouseDown={(e) => { e.preventDefault(); selectSuggestion(item); }}
                           onMouseEnter={() => setActiveSuggIdx(idx)}
-                          className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-gray-50 last:border-0 ${
-                            idx === activeSuggIdx ? 'bg-teal-50' : 'hover:bg-gray-50'
+                          className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-0 ${
+                            idx === activeSuggIdx ? 'bg-teal-50' : 'hover:bg-slate-50'
                           }`}
                         >
                           {/* Icon */}
-                          <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-gray-300'}`}
+                          <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-slate-500'}`}
                                viewBox="0 0 16 16" fill="none">
                             <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.6"/>
                             <line x1="9.8" y1="9.8" x2="13" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                           </svg>
 
                           {/* Name with highlight */}
-                          <span className="font-mono text-sm text-gray-800 font-medium flex-1 min-w-0 truncate">
+                          <span className="font-mono text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
                             <Highlight text={item.name} query={data.searchQuery} />
                           </span>
 
                           {/* Accession badge */}
                           {item.accession && (
-                            <span className="text-[11px] font-mono text-gray-400 shrink-0">
+                            <span className="text-xs font-mono text-slate-500 shrink-0">
                               {item.accession}
                             </span>
                           )}
 
                           {/* Species badge */}
-                          <span className={`text-[11px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${
                             isHuman
                               ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                              : 'bg-gray-100 text-gray-500'
+                              : 'bg-slate-100 text-slate-500'
                           }`}>
                             {speciesShort}
                           </span>
@@ -378,8 +410,8 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                 {/* Empty state */}
                 {!isFetchingSugg && suggestions.length === 0 && (
                   <div className="px-4 py-5 text-center">
-                    <p className="text-sm text-gray-500">No miRNA found matching <span className="font-mono font-medium">"{data.searchQuery}"</span></p>
-                    <p className="text-xs text-gray-400 mt-1">Try a different name, or paste the sequence directly</p>
+                    <p className="text-sm text-slate-500">No miRNA found matching <span className="font-mono font-medium">"{data.searchQuery}"</span></p>
+                    <p className="text-xs text-slate-500 mt-1">Try a different name, or paste the sequence directly</p>
                   </div>
                 )}
               </div>,
@@ -402,9 +434,12 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
         </div>
 
         {!isSeqLookup && (status === 'not_found' || status === 'error') && (
-          <p className="text-xs text-red-600 bg-red-50 border border-red-400 rounded px-2 py-1">
-            ✗ {errorMessage}
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+            {errorMessage}
           </p>
+        )}
+        {seqNote && !errors.matureSequence && (
+          <p className="text-xs text-slate-500">{seqNote}</p>
         )}
         {errors.matureSequence && (
           <p className="text-xs text-red-600">{errors.matureSequence}</p>
@@ -421,80 +456,80 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
           <div className="grid grid-cols-[5.5rem_1fr_auto] gap-x-3 gap-y-2.5 text-sm items-center">
 
             {/* Row 1 — miRNA Name + length */}
-            <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">Name</span>
-            <span className="font-mono text-gray-900 font-semibold break-all">
-              {displayName || <span className="text-gray-400 font-normal italic font-sans">—</span>}
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Name</span>
+            <span className="font-mono text-slate-900 font-semibold break-all">
+              {displayName || <span className="text-slate-500 font-normal italic font-sans">—</span>}
             </span>
-            <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 font-semibold whitespace-nowrap">
+            <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 font-semibold whitespace-nowrap tabular-nums">
               {seqAnalysis.length} nt
             </span>
 
             {/* Row 2 — miRBase ID + overall GC */}
-            <span className="text-gray-400 text-xs font-medium uppercase tracking-wide">ID</span>
-            <span className="font-mono text-gray-700 break-all">
-              {displayId || <span className="text-gray-400 font-normal italic font-sans">—</span>}
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">ID</span>
+            <span className="font-mono text-slate-700 break-all">
+              {displayId || <span className="text-slate-500 font-normal italic font-sans">—</span>}
             </span>
-            <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 whitespace-nowrap">
+            <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 whitespace-nowrap tabular-nums">
               GC {seqAnalysis.gcContent}%
             </span>
 
             {/* Row 3 — Sequence with seed highlighted + seed badge */}
-            <span className="text-gray-400 text-xs font-medium uppercase tracking-wide leading-tight">
+            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide leading-tight">
               Seq 5′→3′
             </span>
             <SeqWithSeed seq={data.matureSequence} />
             <span className="inline-flex items-center gap-1 text-xs bg-teal-50 border border-teal-300 text-teal-700 rounded-md px-2 py-0.5 whitespace-nowrap">
               <Tooltip text="Seed region: nt 2–8 from the 5′ end. Determines target mRNA recognition and discrimination between members of the same miRNA family." />
               Seed <span className="font-mono font-semibold">{seqAnalysis.seed7mer}</span>
-              <span className="text-teal-500">· {seqAnalysis.gcSeed}%</span>
+              <span className="text-teal-500 tabular-nums">· {seqAnalysis.gcSeed}%</span>
             </span>
           </div>
 
           {/* Warnings */}
           <div className="space-y-1.5 pt-1 border-t border-teal-100">
             {seqAnalysis.lengthCategory === 'short' && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Short sequence ({seqAnalysis.length} nt):</strong> Mature miRNAs are typically 18–25 nt. This may be a fragment or an incompletely processed miRNA — verify before designing primers.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Short sequence ({seqAnalysis.length} nt):</strong> Mature miRNAs are typically 18–25 nt. This may be a fragment or an incompletely processed miRNA — verify before designing primers.
               </p>
             )}
             {seqAnalysis.lengthCategory === 'long' && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Long sequence ({seqAnalysis.length} nt):</strong> This may be a pre-miRNA fragment or an extended isomiR. The algorithm can still proceed, but results should be carefully reviewed.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Long sequence ({seqAnalysis.length} nt):</strong> This may be a pre-miRNA fragment or an extended isomiR. The algorithm can still proceed, but results should be carefully reviewed.
               </p>
             )}
             {seqAnalysis.gcContent < 30 && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Low GC ({seqAnalysis.gcContent}%):</strong> The sequence is AU-rich — both the RT primer overhang and the forward primer will have low Tm. Consider increasing the RT temperature and Mg²⁺ concentration to compensate.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Low GC ({seqAnalysis.gcContent}%):</strong> The sequence is AU-rich — both the RT primer overhang and the forward primer will have low Tm. Consider increasing the RT temperature and Mg²⁺ concentration to compensate.
               </p>
             )}
             {seqAnalysis.gcContent > 70 && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>High GC ({seqAnalysis.gcContent}%):</strong> The sequence is GC-rich — risk of secondary structure within the primer. Ensure a thorough denaturation step before RT and check for self-complementarity.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>High GC ({seqAnalysis.gcContent}%):</strong> The sequence is GC-rich — risk of secondary structure within the primer. Ensure a thorough denaturation step before RT and check for self-complementarity.
               </p>
             )}
             {seqAnalysis.bindingRegionGC < 33 && (
-              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
-                ✗ <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≤ 2 G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≤ 2 G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
               </p>
             )}
             {seqAnalysis.bindingRegionGC > 83 && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≥ 5 G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≥ 5 G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
               </p>
             )}
             {seqAnalysis.bindingRegionHasRepeat && (
-              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
-                ✗ <strong>Repeat in binding region ({seqAnalysis.bindingRegion}):</strong> The RT primer annealing site contains ≥ 3 identical consecutive nt — this directly affects cDNA fidelity and makes designing a specific overhang very difficult.
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Repeat in binding region ({seqAnalysis.bindingRegion}):</strong> The RT primer annealing site contains ≥ 3 identical consecutive nt — this directly affects cDNA fidelity and makes designing a specific overhang very difficult.
               </p>
             )}
 {seqAnalysis.hasContinuousRepeat && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                ⚠ <strong>Homopolymer run detected:</strong> ≥ 4 identical consecutive nucleotides found. The algorithm will avoid using this region in primers if possible; if the run falls within the binding region it cannot be avoided.
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <strong>Homopolymer run detected:</strong> ≥ 4 identical consecutive nucleotides found. The algorithm will avoid using this region in primers if possible; if the run falls within the binding region it cannot be avoided.
               </p>
             )}
           </div>
         </div>
       )}
-    </CollapsibleSection>
+    </Wrapper>
   );
 }

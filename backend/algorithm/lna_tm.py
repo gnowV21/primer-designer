@@ -61,77 +61,78 @@ _SL98_INIT_GC = (0.1,  -2.8)   # (ΔH kcal/mol, ΔS cal/mol·K) — terminal G o
 _SL98_INIT_AT = (2.3,   4.1)   # (ΔH kcal/mol, ΔS cal/mol·K) — terminal A or T [SL98]
 
 # ----------------------------------------------------------------
-# SECTION 2: McTigue 2004 single-LNA doublet parameters
-# Source: McTigue et al. 2004, Biochemistry 43(18):5388-5405
-# Convention: lowercase = DNA base; UPPERCASE = LNA base
-#   'xY' = DNA x followed by LNA Y (5'→3' on primer strand)
-#   'Xy' = LNA X followed by DNA y
-# ALL VALUES MARKED # VERIFY — placeholder approximations in the typical
-# McTigue04 range (+1 to +3 kcal/mol ΔΔH vs SantaLucia).
-# MUST be verified against McTigue 2004 Table 2 before production use.
+# SECTION 2: Single-LNA doublet parameters (FULL NN, in 1 M Na+)
+# Source: Owczarzy et al. 2011, Biochemistry 50(43):9352-9367, Table 2,
+#         "Isolated LNA Modifications" block — the full ΔH°/ΔS° values that
+#         Owczarzy computed from McTigue et al. 2004's 32NN differential set
+#         (McTigue 2004, Biochemistry 43(18):5388-5405). Using the published
+#         full parameters directly avoids any SL98-baseline mismatch.
+# Convention: lowercase = DNA base; UPPERCASE = LNA base; key is 5'→3'.
+#   'xY' = DNA x then LNA Y  ↔ Owczarzy "X+Y/..." (2nd base LNA)
+#   'Xy' = LNA X then DNA y  ↔ Owczarzy "+XY/..." (1st base LNA)
+# ΔH in kcal/mol, ΔS in cal/(mol·K).
 # ----------------------------------------------------------------
 _MCTIGUE04: dict[str, tuple[float, float]] = {
-    # --- xY doublets: DNA-then-LNA (16 entries) ---
-    'aA': (-9.5,  -25.5),   # VERIFY McTigue04 Table 2
-    'aT': (-8.9,  -24.5),   # VERIFY McTigue04 Table 2
-    'aG': (-10.1, -27.0),   # VERIFY McTigue04 Table 2
-    'aC': (-9.0,  -24.0),   # VERIFY McTigue04 Table 2
-    'tA': (-9.0,  -24.0),   # VERIFY McTigue04 Table 2
-    'tT': (-8.5,  -23.5),   # VERIFY McTigue04 Table 2
-    'tG': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'tC': (-8.8,  -23.8),   # VERIFY McTigue04 Table 2
-    'gA': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'gT': (-9.8,  -26.0),   # VERIFY McTigue04 Table 2
-    'gG': (-10.5, -27.5),   # VERIFY McTigue04 Table 2
-    'gC': (-11.5, -29.5),   # VERIFY McTigue04 Table 2
-    'cA': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'cT': (-9.5,  -25.5),   # VERIFY McTigue04 Table 2
-    'cG': (-12.0, -30.5),   # VERIFY McTigue04 Table 2
-    'cC': (-10.0, -26.0),   # VERIFY McTigue04 Table 2
-    # --- Xy doublets: LNA-then-DNA (16 entries) ---
-    'Aa': (-9.5,  -25.5),   # VERIFY McTigue04 Table 2
-    'At': (-9.0,  -24.5),   # VERIFY McTigue04 Table 2
-    'Ag': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'Ac': (-9.0,  -24.5),   # VERIFY McTigue04 Table 2
-    'Ta': (-9.0,  -24.0),   # VERIFY McTigue04 Table 2
-    'Tt': (-8.8,  -23.8),   # VERIFY McTigue04 Table 2
-    'Tg': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'Tc': (-8.9,  -24.0),   # VERIFY McTigue04 Table 2
-    'Ga': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'Gt': (-9.8,  -26.0),   # VERIFY McTigue04 Table 2
-    'Gg': (-10.5, -27.5),   # VERIFY McTigue04 Table 2
-    'Gc': (-11.5, -29.5),   # VERIFY McTigue04 Table 2
-    'Ca': (-10.0, -26.5),   # VERIFY McTigue04 Table 2
-    'Ct': (-9.5,  -25.5),   # VERIFY McTigue04 Table 2
-    'Cg': (-12.0, -30.5),   # VERIFY McTigue04 Table 2
-    'Cc': (-10.0, -26.0),   # VERIFY McTigue04 Table 2
+    # --- xY doublets: DNA-then-LNA (Owczarzy Table 2, "A+A/TT" … "T+T/AA") ---
+    'aA': (-6.908,  -18.135),   # A+A/TT
+    'aC': (-5.510,  -11.824),   # A+C/TG
+    'aG': (-9.000,  -22.826),   # A+G/TC
+    'aT': (-5.384,  -13.537),   # A+T/TA
+    'cA': (-7.142,  -18.333),   # C+A/GT
+    'cC': (-5.937,  -12.335),   # C+C/GG
+    'cG': (-10.876, -27.918),   # C+G/GC
+    'cT': (-9.471,  -25.070),   # C+T/GA
+    'gA': (-7.756,  -19.302),   # G+A/CT
+    'gC': (-10.725, -25.511),   # G+C/CG
+    'gG': (-8.943,  -20.833),   # G+G/CC
+    'gT': (-9.035,  -22.742),   # G+T/CA
+    'tA': (-5.609,  -16.019),   # T+A/AT
+    'tC': (-7.591,  -19.031),   # T+C/AG
+    'tG': (-6.335,  -15.537),   # T+G/AC
+    'tT': (-5.574,  -14.149),   # T+T/AA
+    # --- Xy doublets: LNA-then-DNA (Owczarzy Table 2, "+AA/TT" … "+TT/AA") ---
+    'Aa': (-7.193,  -19.723),   # +AA/TT
+    'Ac': (-7.269,  -18.336),   # +AC/TG
+    'Ag': (-7.536,  -18.387),   # +AG/TC
+    'At': (-4.918,  -12.943),   # +AT/TA
+    'Ca': (-7.451,  -18.380),   # +CA/GT
+    'Cc': (-5.904,  -11.904),   # +CC/GG
+    'Cg': (-9.815,  -23.491),   # +CG/GC
+    'Ct': (-7.092,  -16.825),   # +CT/GA
+    'Ga': (-5.038,  -11.656),   # +GA/CT
+    'Gc': (-10.160, -24.651),   # +GC/CG
+    'Gg': (-10.844, -26.580),   # +GG/CC
+    'Gt': (-8.612,  -22.327),   # +GT/CA
+    'Ta': (-7.246,  -19.738),   # +TA/AT
+    'Tc': (-6.307,  -15.515),   # +TC/AG
+    'Tg': (-10.040, -25.744),   # +TG/AC
+    'Tt': (-6.372,  -16.902),   # +TT/AA
 }
 
 # ----------------------------------------------------------------
-# SECTION 3: Owczarzy 2011 LNA:LNA doublet parameters
-# Source: Owczarzy et al. 2011, Biochemistry 50(43):9352-9367
-# Convention: both bases UPPERCASE (both are LNA substitutions)
-# ALL VALUES MARKED # VERIFY — placeholder approximations slightly more
-# stabilizing than McTigue04 single-LNA values.
-# MUST be verified against Owczarzy 2011 Table 3 before production use.
+# SECTION 3: Consecutive LNA:LNA doublet parameters (FULL NN, in 1 M Na+)
+# Source: Owczarzy et al. 2011, Biochemistry 50(43):9352-9367, Table 2,
+#         "Consecutive LNA Modifications" block.
+# Convention: both bases UPPERCASE (both LNA); key is 5'→3'.
+#   'XY' ↔ Owczarzy "+X+Y/..."   ΔH kcal/mol, ΔS cal/(mol·K).
 # ----------------------------------------------------------------
 _OWCZARZY11: dict[str, tuple[float, float]] = {
-    'AA': (-11.0, -28.5),   # VERIFY Owczarzy11 Table 3
-    'AT': (-10.5, -27.5),   # VERIFY Owczarzy11 Table 3
-    'AG': (-12.0, -31.0),   # VERIFY Owczarzy11 Table 3
-    'AC': (-10.8, -28.0),   # VERIFY Owczarzy11 Table 3
-    'TA': (-10.5, -27.0),   # VERIFY Owczarzy11 Table 3
-    'TT': (-10.0, -26.5),   # VERIFY Owczarzy11 Table 3
-    'TG': (-11.5, -30.0),   # VERIFY Owczarzy11 Table 3
-    'TC': (-10.3, -27.0),   # VERIFY Owczarzy11 Table 3
-    'GA': (-11.8, -30.5),   # VERIFY Owczarzy11 Table 3
-    'GT': (-11.5, -30.0),   # VERIFY Owczarzy11 Table 3
-    'GG': (-12.5, -32.0),   # VERIFY Owczarzy11 Table 3
-    'GC': (-13.5, -34.0),   # VERIFY Owczarzy11 Table 3
-    'CA': (-11.8, -30.5),   # VERIFY Owczarzy11 Table 3
-    'CT': (-11.3, -29.5),   # VERIFY Owczarzy11 Table 3
-    'CG': (-14.0, -35.5),   # VERIFY Owczarzy11 Table 3
-    'CC': (-12.0, -31.0),   # VERIFY Owczarzy11 Table 3
+    'AA': (-9.991,  -27.175),   # +A+A/TT
+    'AC': (-11.389, -28.963),   # +A+C/TG
+    'AG': (-12.793, -31.607),   # +A+G/TC
+    'AT': (-14.703, -40.750),   # +A+T/TA
+    'CA': (-14.177, -35.498),   # +C+A/GT
+    'CC': (-15.399, -36.375),   # +C+C/GG
+    'CG': (-14.558, -35.239),   # +C+G/GC
+    'CT': (-15.737, -41.218),   # +C+T/GA
+    'GA': (-13.959, -35.097),   # +G+A/CT
+    'GC': (-16.109, -40.738),   # +G+C/CG
+    'GG': (-13.022, -29.673),   # +G+G/CC
+    'GT': (-17.361, -45.858),   # +G+T/CA
+    'TA': (-10.318, -26.108),   # +T+A/AT
+    'TC': (-9.166,  -21.535),   # +T+C/AG
+    'TG': (-10.046, -22.591),   # +T+G/AC
+    'TT': (-10.419, -27.683),   # +T+T/AA
 }
 
 # ----------------------------------------------------------------
@@ -143,9 +144,18 @@ _CAVEAT_LNA_GENERAL = (
     "from ~100 mM Na⁺. Informational — verify with synthesis provider. "
     "RT overhang is out of scope (DNA:RNA context)."
 )
-_CAVEAT_VERIFY_TABLES = (
-    "McTigue 2004 and Owczarzy 2011 NN values are PLACEHOLDER APPROXIMATIONS "
-    "not yet verified against published tables. Results require validation."
+_CAVEAT_BENCHMARKED_SINGLE_LNA = (
+    "LNA NN parameters: Owczarzy 2011 Table 2 (single-LNA set derived from "
+    "McTigue 2004 32NN). Benchmarked against McTigue 2004 Table 1 measured Tm "
+    "(ΔTm RMSD 0.78 °C, absolute Tm RMSD 1.54 °C; 1 M Na⁺). Predictions away "
+    "from ~1 M Na⁺ rely on the SantaLucia 1998 salt model — verify with your "
+    "synthesis provider for final designs."
+)
+_CAVEAT_CONSECUTIVE_LNA_UNBENCHMARKED = (
+    "This design contains CONSECUTIVE LNA positions. The adjacent-LNA (LNA:LNA) "
+    "nearest-neighbour parameters come from Owczarzy 2011 and are NOT covered by "
+    "our benchmark, which contains single-LNA oligos only. Treat the predicted Tm "
+    "for these designs as an unvalidated estimate."
 )
 
 
@@ -289,12 +299,18 @@ def _nn_tm(sequence: str, lna_positions: list, params: dict) -> dict:
             "source":  src,
         })
 
-    # 2. Initiation: 5'-terminal base identity (LNA → use same letter) [SL98]
-    terminal_5prime = seq[0]
-    if terminal_5prime in ("G", "C"):
-        init_h, init_s = _SL98_INIT_GC
-    else:
-        init_h, init_s = _SL98_INIT_AT
+    # 2. Initiation: SantaLucia 1998 applies a terminal-initiation correction to
+    #    BOTH duplex ends (one per terminal base pair), not just the 5' end.
+    #    Terminal LNAs are assumed to use DNA initiation parameters [Owczarzy11].
+    init_h = 0.0
+    init_s = 0.0
+    for terminal_base in (seq[0], seq[-1]):
+        if terminal_base in ("G", "C"):
+            init_h += _SL98_INIT_GC[0]
+            init_s += _SL98_INIT_GC[1]
+        else:
+            init_h += _SL98_INIT_AT[0]
+            init_s += _SL98_INIT_AT[1]
     if "santalucia98" not in param_sources:
         param_sources.insert(0, "santalucia98")  # initiation always uses SL98
 
@@ -409,10 +425,21 @@ def calc_lna_tm(sequence: str, lna_positions: list, params: dict) -> dict:
         dna_result["param_sources"] + lna_result["param_sources"]
     ))
 
-    # Always add standard caveats
+    # Caveats — only claim benchmark coverage for the parameter set actually used.
+    # mctigue04 = isolated single-LNA (benchmarked); owczarzy11 = consecutive LNA:LNA
+    # (NOT covered by the single-LNA benchmark). [Week2 C10]
+    has_single = "mctigue04" in method
+    has_consecutive = "owczarzy11" in method
+    benchmark_coverage = (
+        "mixed" if (has_single and has_consecutive)
+        else "consecutive_lna_unbenchmarked" if has_consecutive
+        else "single_lna"
+    )
     warnings.append(_CAVEAT_LNA_GENERAL)
-    if any(s in method for s in ("mctigue04", "owczarzy11")):
-        warnings.append(_CAVEAT_VERIFY_TABLES)
+    if has_single:
+        warnings.append(_CAVEAT_BENCHMARKED_SINGLE_LNA)
+    if has_consecutive:
+        warnings.append(_CAVEAT_CONSECUTIVE_LNA_UNBENCHMARKED)
 
     tm_dna   = dna_result["tm"]
     tm_lna   = lna_result["tm"]
@@ -425,6 +452,7 @@ def calc_lna_tm(sequence: str, lna_positions: list, params: dict) -> dict:
         "lna_positions": lna_positions,
         "method":        method,
         "per_doublet":   lna_result["per_doublet"],
+        "benchmark_coverage": benchmark_coverage,
         "warnings":      warnings,
     }
 
@@ -693,7 +721,13 @@ def suggest_lna_positions(
         )
 
     warnings.append(_CAVEAT_LNA_GENERAL)
-    warnings.append(_CAVEAT_VERIFY_TABLES)
+    _has_consecutive = any(
+        b - a == 1 for a, b in zip(sorted(best_positions), sorted(best_positions)[1:])
+    )
+    warnings.append(
+        _CAVEAT_CONSECUTIVE_LNA_UNBENCHMARKED if _has_consecutive
+        else _CAVEAT_BENCHMARKED_SINGLE_LNA
+    )
 
     return {
         "suggested_positions": best_positions,

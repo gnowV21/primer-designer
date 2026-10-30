@@ -69,13 +69,13 @@ export default function RangeSlider({
     <div className="space-y-1.5">
       {label && (
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium text-gray-700">{label}</span>
+          <span className="text-sm font-medium text-slate-700">{label}</span>
           {tooltip && <Tooltip text={tooltip} />}
         </div>
       )}
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400 w-8 shrink-0">{min}{unit}</span>
+        <span className="text-xs text-slate-500 w-8 shrink-0">{min}{unit}</span>
 
         {/* Track area — extra top padding to make room for drag callout */}
         <div className="relative flex-1" style={{ paddingTop: '1.25rem' }}>
@@ -89,7 +89,7 @@ export default function RangeSlider({
                 transform: 'translateX(-50%)',
               }}
             >
-              <span className="inline-block bg-teal-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded leading-none shadow-md tabular-nums whitespace-nowrap">
+              <span className="inline-block bg-teal-700 text-white text-xs font-bold px-1.5 py-0.5 rounded leading-none shadow-md tabular-nums whitespace-nowrap">
                 {dragging === 'min' ? valueMin : valueMax}{unit}
               </span>
               {/* small arrow pointing down */}
@@ -134,7 +134,7 @@ export default function RangeSlider({
 
         </div>
 
-        <span className="text-xs text-gray-400 w-8 shrink-0 text-right">{max}{unit}</span>
+        <span className="text-xs text-slate-500 w-8 shrink-0 text-right">{max}{unit}</span>
       </div>
 
       <div className="flex justify-between px-10">

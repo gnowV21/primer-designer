@@ -77,13 +77,43 @@ def _download(url: str, dest: Path, force: bool = False) -> Path:
 # ── Parser ────────────────────────────────────────────────────────
 
 
+def _parse_species_arg(species: str) -> list[str] | None:
+    """
+    Normalise the --species argument into a list of 3-letter prefixes, or None
+    for 'all' (no filter).
+
+    Accepts: 'hsa' | 'all' | 'hsa,mmu,rno' (comma-separated, whitespace-tolerant).
+    """
+    s = (species or "hsa").strip().lower()
+    if s == "all":
+        return None
+    return [p.strip() for p in s.split(",") if p.strip()]
+
+
+_SPECIES_HUMAN_LABEL = {"hsa": "human", "mmu": "mouse", "rno": "rat"}
+
+
+def _species_note(species: str) -> str:
+    """Human-readable species description, handling a multi-token --species arg.
+    'hsa,mmu,rno' -> 'human (hsa), mouse (mmu), rat (rno)'; unknown prefixes kept as-is."""
+    if (species or "").strip().lower() == "all":
+        return "all species"
+    prefixes = _parse_species_arg(species) or []
+    return ", ".join(
+        f"{_SPECIES_HUMAN_LABEL[p]} ({p})" if p in _SPECIES_HUMAN_LABEL else p
+        for p in prefixes
+    )
+
+
 def parse_mature_fa(path: Path, species: str) -> dict[str, str]:
     """
     Parse mature.fa (plain text or .gz) -> {miRNA_name: RNA_sequence}.
 
-    Filters by species prefix (e.g. "hsa" for human, "all" for no filter).
+    Filters by species prefix. `species` may be a single prefix ("hsa"),
+    a comma-separated list ("hsa,mmu,rno"), or "all" for no filter.
     Header format: >hsa-miR-21-5p MIMAT0000076 Homo sapiens miR-21-5p
     """
+    prefixes = _parse_species_arg(species)   # None = keep all
     seqs: dict[str, str] = {}
     current_name: str | None = None
 
@@ -95,7 +125,7 @@ def parse_mature_fa(path: Path, species: str) -> dict[str, str]:
                 continue
             if line.startswith(">"):
                 name = line[1:].split()[0]
-                keep = (species == "all") or name.startswith(f"{species}-")
+                keep = (prefixes is None) or any(name.startswith(f"{p}-") for p in prefixes)
                 current_name = name if keep else None
             elif current_name:
                 seqs[current_name] = line.upper()
@@ -216,12 +246,7 @@ def build_family_db(mature_seqs: dict[str, str], species: str) -> dict:
     print(f"  Singletons (excluded): {singleton_count}")
     print(f"  Families (>=2 members): {n_families}  covering {n_indexed} miRNAs")
 
-    species_note = (
-        f"human ({species})" if species in ("hsa",)
-        else f"mouse ({species})" if species == "mmu"
-        else species if species != "all"
-        else "all species"
-    )
+    species_note = _species_note(species)
 
     return {
         "_metadata": {

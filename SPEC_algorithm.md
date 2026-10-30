@@ -102,8 +102,12 @@ Stem-loop RT-qPCR (Chen et al. 2005): thiết kế 3 primer cho định lượng
         ↓
 [§1.5. prefilter_candidates()]    [Phase 2]
         Loại: Tm ngoài range, GC ngoài range, homopolymer >5, amplicon out-of-range,
-               GC clamp fail, GC end window fail, diversity distance
+               GC clamp fail (0 G/C trong 3 nt cuối; 1 G/C chỉ cảnh báo — v3.2.0),
+               GC end window fail
         Log rejection reasons
+        Giữ FORWARD_TAILS_PER_LENGTH = 20 đuôi tốt nhất (|Tm − Ta|) cho MỖI độ dài
+        vùng đặc hiệu → mọi đầu 3' dùng được đều được chấm điểm (v3.2.0; trước đây
+        bộ lọc đa dạng chạy ở đây, trước khi chấm điểm)
         ↓
 [§1.6. check_structures()]        [Phase 2 + Phase 3]
         Hairpin ΔG, self-dimer ΔG (overall + 3'), hetero-dimer ΔG (fwd×stemloop RT buffer,
@@ -113,7 +117,12 @@ Stem-loop RT-qPCR (Chen et al. 2005): thiết kế 3 primer cho định lượng
         + bound_fraction_binding (0.05)  [Phase 3]
         + bound_fraction_full    (0.03)  [Phase 3]
         + family_discrimination  (0.05)  [Phase 3]
-        Rank → chọn Top 3
+        Rank theo điểm (hòa: |Tm − Ta| rồi trình tự) → select_diverse_top(3) [v3.2.0]:
+          1. đầu 3' cách mọi bộ đã chọn ≥ 2 nt (MIN_CANDIDATE_3PRIME_DISTANCE)
+          2. nếu chưa đủ 3: đầu 3' cách ≥ 1 nt  → nhãn adjacent_3prime
+          3. nếu vẫn chưa đủ: cùng vùng bám, khác đuôi → nhãn tail_variant
+             (+ same_binding_as_rank)
+          #1 luôn là bộ điểm cao nhất
         ↓
 [§1.8. format_output()]           [Phase 2 + Phase 3]
         JSON đầy đủ: Top 3 + stemloop + reverse + rejection_log + metadata
@@ -348,8 +357,18 @@ FORWARD_MAX_LENGTH = 27   # [P3P General Settings] — v2.1 fix từ 30→27
 FORWARD_OPTIMAL_LENGTH = 22
 
 # [P3P] — adjusted để accommodate template 22 nt
-MIN_CANDIDATE_3PRIME_DISTANCE = 2
+MIN_CANDIDATE_3PRIME_DISTANCE = 2   # v3.2.0: khoảng cách ƯU TIÊN giữa các bộ trả về,
+                                    # nới 2 → 1 → 0 (biến thể đuôi) khi thiếu bộ
+FORWARD_TAILS_PER_LENGTH = 20       # v3.2.0: số đuôi/đầu 3' được chấm điểm
 ```
+
+**v3.2.0 — chấm điểm trước, chọn đa dạng sau (2026-10-28).** Đến v3.1.2, bộ lọc đa dạng chạy *trước* khi chấm điểm: mỗi đầu 3' giữ đúng 1 mồi chọn theo |Tm_full − 60| (hòa thì theo thứ tự sinh, nên bản 12 nt luôn thắng bản 13 nt), và loại các đầu 3' cách bản đã giữ 1 nt. Hệ quả trên 169 miRNA của bộ validation: 76 (45 %) chỉ nhận 1 bộ mồi, 66 nhận 2, 23 nhận 3; ví dụ hsa-miR-21-3p mất vùng 13 nt `CAACACCAGTCGA` (vùng sRNAPrimerDB chọn) trước khi 15 tiêu chí được áp dụng. Nay mọi đầu 3' được chấm (20 đuôi mỗi đầu), rồi `select_diverse_top` chọn 3 bộ theo điểm với ràng buộc đa dạng nới dần. Chọn K = 20 vì so với chấm toàn bộ ứng viên, K = 3 chọn khác vùng bám #1 ở 19/165 miRNA, còn K = 20 chỉ kém trung bình ~0,05 điểm với thời gian ~0,45 s thay vì ~3,3 s.
+
+**Kẹp GC của mồi xuôi (v3.2.0).** Đầu 3' của mồi xuôi do trình tự miRNA quyết định (vùng đặc hiệu là tiền tố 5' của miRNA), tool không chọn được. Vì vậy chỉ loại cứng khi 3 nt cuối **không có G/C**; 1 G/C được qua kèm cảnh báo `gc_clamp_weak_warning` và chấm 75/100 ở tiêu chí `gc_clamp` sẵn có (Busk 2014 chấp nhận 1 G/C); 2 G/C vẫn là tối ưu (100). Bảng trọng số V4 không đổi. Nhánh "nới về 1 G/C khi không còn ứng viên" cũ đã bỏ vì nay là mặc định.
+
+**v3.3.0 — đặc hiệu cấp assay (2026-10-29).** Tiêu chí `family_discrimination` chuyển từ ma trận RT × FWD (cửa sổ cố định vị trí) sang mô hình ΔCq_assay = ΔCq_RT + ΔCq_FWD có xét lệch đầu ±2 nt (chi tiết, bảng giá trị và nguồn: SPEC_phase3 §8.16). `tm_accuracy` chấm theo Ta người dùng nhập (mặc định 60 °C, nên kết quả mặc định không đổi) — cùng mục tiêu với bước lọc pool và tie-break. Vòng lặp overhang-collision chọn mồi dẫn đầu bằng đúng khóa xếp hạng cuối (điểm, |Tm − Ta|, trình tự) thay vì `max()` theo thứ tự sinh. Trọng số V4 không đổi. Trên 165 miRNA: #1 giữ vùng bám 164/165, điểm #1 trung bình +0,67.
+
+**v3.4.0 — chỉ mục mọi loài (2026-10-29).** Chỉ mục overhang phủ toàn bộ miRBase 22.1 (271 loài, cùng file với BLAST DB); miRNA virus được sàng lọc cùng miRNA loài chủ; tiền tố loài 3–5 ký tự. 90 target trước đây trung tính (`no_index_data`) nay được chấm `family_discrimination`: #1 không đổi ở cả 90, điểm trung bình −0,47. SPEC_phase3 §8.17.
 
 ### Section D: Thermodynamics — Tm Targets
 
@@ -379,7 +398,8 @@ GC_STEMLOOP_MIN = 40.0
 GC_STEMLOOP_MAX = 60.0
 
 # [IDT-PQ] "3' GC clamp(nt) = 2" — v2.1
-GC_CLAMP_MIN_IN_LAST3 = 2      # tối thiểu 2 G/C trong 3 base cuối
+GC_CLAMP_MIN_IN_LAST3 = 2      # 2 G/C trong 3 base cuối: ưu tiên (thiếu → cảnh báo, v3.2.0)
+GC_CLAMP_HARD_MIN_IN_LAST3 = 1 # mồi xuôi: chỉ loại khi 0 G/C (v3.2.0)
 GC_CLAMP_3PRIME_WINDOW = 5
 GC_CLAMP_MIN_COUNT = 1
 GC_CLAMP_MAX_CONSECUTIVE = 3
@@ -749,11 +769,13 @@ available_region = miRNA[0 : len(miRNA) - FORWARD_EXCLUDES_LAST_NT]  # = miRNA[0
 ### Tail generation (v2.8)
 
 ```python
-def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
+def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") -> list:
     """
     tail_len ≤ 6: Exhaustive enumerate 4^n, filter GC≥50% + no homopolymer≥4
                   SORT BY GC% DESCENDING trước khi cap (v2.8.1 fix #8a — không alphabetical)
-    tail_len > 6: Weighted-random, GC biased 2× (A:C:G:T = 1:2:2:1), seed=42
+    tail_len > 6: Weighted-random, GC biased 2× (A:C:G:T = 1:2:2:1). Mỗi lần gọi tự tạo
+                  random.Random riêng, seed = SHA-256(sequence|tail_len|max_pool) — không
+                  có RNG dùng chung giữa các pool hay giữa các lần thiết kế (v3.1.2).
     """
 ```
 
@@ -918,7 +940,7 @@ condition: complement(seq1[-i]) == seq2[-i] cho i = 1..k
 | 6 | end_stability | 0.08 | [P3P] | ≤ 9.0 kcal/mol |
 | 7 | bound_fraction_binding | **0.05** | [SL04] | **[Phase 3]** cDNA tại 42°C |
 | 8 | gc_content | 0.08 | [PAST24][IDT] | 40–60% |
-| 9 | family_discrimination | **0.05** | [Chen05] | **[Phase 3]** risk từ seed-based grouping |
+| 9 | family_discrimination | **0.05** | [Chen05][Schamberger14][Stadhouders10] | **v3.3.0:** nhãn tệ nhất của miRNA khác theo mô hình ΔCq assay (DISCRIMINATED 100 / PARTIAL 70 / CO-AMPLIFIED 0); isomiR và bản trùng trình tự không chấm — SPEC_phase3 §8.16 |
 | 10 | bound_fraction_full | **0.03** | [SL04] | **[Phase 3]** amplicon tại 55°C |
 | 11 | tm_pair_match | 0.01 | [PAST24] | −0.02 từ V3; reverse cố định → redundant |
 | 12 | gc_clamp | 0.04 | [IDT-PQ] | +0.02 từ V3; 3' GC critical cho extension |

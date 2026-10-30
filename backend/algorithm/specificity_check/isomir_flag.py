@@ -22,10 +22,20 @@
 import json
 import os
 
+from ..constants import (
+    ISOMIR_3P_FRACTION_HIGH, ISOMIR_3P_FRACTION_MODERATE,
+    ISOMIR_3P_BIAS_MIN_FRACTION, ISOMIR_3P_BIAS_MIN_IQR,
+)
+
 _DB_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "data", "known_5prime_isomir_mirnas.json"
 )
 _DB_CACHE: dict | None = None
+
+_DB3_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", "known_3prime_isomir_mirnas.json"
+)
+_DB3_CACHE: dict | None = None
 
 
 def check_isomir_flag(
@@ -96,7 +106,134 @@ def check_isomir_flag(
     }
 
 
+_BIOFLUIDS = ("serum", "plasma", "urine")
+
+
+def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
+                             sample_type: str | None = None) -> dict:
+    """
+    How much of this miRNA exists as 3'-end isoforms (isomiRdb, audit SCI-10).
+    The stem-loop RT primer pairs with the canonical 3'-terminal `overhang_len` nt.
+    Variants 1 nt shorter or 1–2 nt longer are captured about as well as the
+    canonical form, 2 nt shorter ~3 Ct later [Schamberger14], so the signal is a
+    capture-weighted sum of 3' isoforms, not the canonical form alone [Magee17].
+    Informational — not scored.
+
+    sample_type: the design's sampleType. For biofluids a note says the fraction is
+    a median over all isomiRdb samples, of which serum + plasma are a small share.
+    """
+    db = _load_db3()
+    meta = db.get("_metadata", {})
+    entry = _find_entry(db, mirna_name) if mirna_name else None
+    source = meta.get("source", {})
+    base = {
+        "mirna_name": mirna_name,
+        "overhang_len": overhang_len,
+        "data_warning": meta.get("coverage_warning", ""),
+        "source": f"{source.get('name', '?')} (PMID {source.get('pmid', '?')})" if source else None,
+        "sample_type_note": _biofluid_note(meta, sample_type),
+    }
+
+    # Entries may carry abundance only (no 3' isoform data) — same as no data here.
+    if entry is None or "median_3prime_fraction" not in entry:
+        return {
+            **base,
+            "three_prime_isomir_risk": False,
+            "level": "no_data",
+            "note": (
+                "No 3' isomiR data for this miRNA (isomiRdb covers human miRNAs only). "
+                "Absence of data is not evidence that 3' isomiRs are absent."
+            ),
+            "coverage_note": "not in the 3' isomiR reference set",
+        }
+
+    f = entry["median_3prime_fraction"]
+    lo, hi = entry.get("iqr_3prime_fraction", [None, None])
+    level = ("high" if f >= ISOMIR_3P_FRACTION_HIGH
+             else "moderate" if f >= ISOMIR_3P_FRACTION_MODERATE else "low")
+    bias = _fold_change_bias_warning(mirna_name, f, lo, hi)
+    summary = (
+        f"In isomiRdb, a median {f:.0%} of {mirna_name} reads are 3'-end isoforms "
+        f"(IQR {lo:.0%}–{hi:.0%}, {entry.get('n_samples_expressed', '?')} human samples)."
+    )
+    top = entry.get("top_3prime_variants", [])
+    return {
+        **base,
+        "three_prime_isomir_risk": level == "high",
+        "level": level,
+        "median_3prime_fraction": f,
+        "iqr_3prime_fraction": [lo, hi],
+        "n_samples_expressed": entry.get("n_samples_expressed"),
+        "dominant_3prime_variants": top,
+        "rt_capture_impact": level,
+        "fold_change_bias_risk": bias is not None,
+        "fold_change_bias_warning": bias,
+        "summary": summary,
+        "warning": (
+            summary + f" The stem-loop RT primer pairs with the canonical 3'-terminal "
+            f"{overhang_len} nt, yet variants 1 nt shorter or 1–2 nt longer are detected about "
+            "as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. "
+            "The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical "
+            "form alone — here the canonical form is a minority. Report the result as the sum "
+            "of isoforms [Magee17]; isoform-resolved quantification needs sequencing."
+            + (" " + base["sample_type_note"] if base["sample_type_note"] else "")
+        ) if level == "high" else None,
+    }
+
+
 # ── Internal helpers ──────────────────────────────────────────────
+
+def _fold_change_bias_warning(mirna_name: str, f: float, lo, hi) -> str | None:
+    """Warn when a shift in 3'-isoform composition could masquerade as a fold change.
+
+    Fires on a sizeable isoform pool (median share) that also varies widely between
+    samples (IQR width) — the condition under which length-selective capture turns a
+    composition change into an apparent expression change [Nejad18]. Deliberately
+    qualitative: no bias factor, because the per-variant capture values rest on two
+    miRNAs (see ASSAY_SHIFT_EVIDENCE_NOTE).
+    """
+    if f < ISOMIR_3P_BIAS_MIN_FRACTION or lo is None or hi is None:
+        return None
+    if (hi - lo) < ISOMIR_3P_BIAS_MIN_IQR:
+        return None
+    return (
+        f"Fold-change caution: {f:.0%} of {mirna_name} reads are 3'-end isoforms and that "
+        f"share itself swings between samples (IQR {lo:.0%}–{hi:.0%}). Stem-loop RT-qPCR "
+        "captures 3' isoforms selectively by length, so if a treatment, infection or disease "
+        "state shifts the isoform mix, the measured fold change mixes that shift with the "
+        "real change in miRNA level — Nejad et al. 2018 showed exactly this for miR-222-3p "
+        "under IFN-β and for >40 miRNA families after Salmonella infection, and warned it "
+        "'can lead to misinterpretation of results'. Keep the comparison qualitative, or "
+        "confirm a surprising fold change by small RNA sequencing."
+    )
+
+
+def _biofluid_note(meta: dict, sample_type: str | None) -> str | None:
+    """For serum/plasma/urine designs: the isomiRdb median pools every sample type."""
+    if (sample_type or "").lower() not in _BIOFLUIDS:
+        return None
+    method = meta.get("method") or {}
+    comp = method.get("sample_composition") or {}      # largest groups only
+    total = method.get("three_prime_samples_used") or sum(v.get("used", 0) for v in comp.values())
+    fluid = sum(comp.get(k, {}).get("used", 0) for k in ("serum", "plasma"))
+    share = (f"serum + plasma are {fluid:,} of {total:,} samples ({fluid / total:.0%}); "
+             if total else "")
+    return (f"This fraction is a median over all isomiRdb samples — {share}circulating "
+            "miRNAs can carry different 3' trimming and tailing, so the share in a "
+            f"{sample_type.lower()} sample may differ.")
+
+
+def _load_db3() -> dict:
+    global _DB3_CACHE
+    if _DB3_CACHE is not None:
+        return _DB3_CACHE
+    try:
+        with open(_DB3_PATH, encoding="utf-8") as f:
+            _DB3_CACHE = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        _DB3_CACHE = {}
+    return _DB3_CACHE
+
 
 def _load_db() -> dict:
     global _DB_CACHE

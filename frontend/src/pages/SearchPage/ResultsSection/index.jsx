@@ -6,6 +6,13 @@ import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
 import Tooltip from '../../../components/ui/Tooltip.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
+import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
+import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
+import { rankReason } from '../../../utils/rankReason.js';
+
+// Warnings shown in-context elsewhere (design-page slider / results-page note) —
+// not repeated in the generic list. Still recorded in the exported report.
+const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime']);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -27,8 +34,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       {/* ── Header ── */}
       {!hideHeader && <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Design Results</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-lg font-semibold text-slate-800">Design Results</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
           </p>
@@ -39,9 +46,11 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       </div>}
 
       {/* ── Global warnings — suppressed when hideHeader=true (shown by QualitySummary in ResultsPage) ── */}
-      {!hideHeader && global_warnings.length > 0 && (
+      {/* Off-label overhang + SYBR choice are shown in-context (design page / results note),
+          so they are not repeated here. They remain in the exported report. */}
+      {!hideHeader && global_warnings.filter((w) => !DEDICATED_WARNING_FIELDS.has(w.field)).length > 0 && (
         <div className="space-y-2">
-          {global_warnings.map((w, i) => (
+          {global_warnings.filter((w) => !DEDICATED_WARNING_FIELDS.has(w.field)).map((w, i) => (
             <div
               key={i}
               className={`rounded-xl border px-4 py-3 text-sm ${
@@ -50,73 +59,158 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
                   : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}
             >
-              <span className="font-semibold mr-2">{w.severity === 'critical' ? '⚠ Critical:' : 'ℹ Note:'}</span>
+              <span className="font-semibold mr-2">{w.severity === 'critical' ? 'Critical:' : 'Note:'}</span>
               {w.message}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── Stem-loop RT primer info ── */}
-      {stemloop_rt && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stem-loop RT Primer (shared)</p>
-          <div className="font-mono text-xs text-slate-700 break-all leading-relaxed">
-            {stemloop_rt.sequence}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
-            <span className="flex items-center gap-1">
-              Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
-              <RtTmBadge stemloopRt={stemloop_rt} />
-            </span>
-            {stemloop_rt.tm_hybrid_c != null && (
-              <span>
-                Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
-              </span>
-            )}
-            <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
-            <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
-            <span className="text-slate-400">({stemloop_rt.mfe_method})</span>
-            <span>{stemloop_rt.length} nt</span>
-          </div>
-          {stemloop_rt.tm_note && (
-            <p className="text-[11px] text-slate-400 italic">{stemloop_rt.tm_note}</p>
-          )}
-          {stemloop_rt.rt_primer_conc_note && (
-            <p className="text-xs text-slate-500 border-t border-slate-200 pt-2 mt-1">
-              {stemloop_rt.rt_primer_conc_note}
-            </p>
-          )}
-        </div>
-      )}
+      {/* ── Shared components ──────────────────────────────────────────────
+           The RT primer and the universal reverse are identical across all
+           three candidates, so they are grouped once here rather than competing
+           with the ranked results for attention. The universal reverse is the
+           same string in every assay ever run, so it gets a single line; the RT
+           primer is miRNA-specific and keeps its metrics. */}
+      {(stemloop_rt || universal_reverse) && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            Shared by all candidates
+          </p>
 
-      {/* ── Universal reverse primer info ── */}
-      {universal_reverse && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Universal Reverse Primer (fixed)</p>
-          <div className="font-mono text-xs text-slate-700">
-            5'–{universal_reverse.sequence}–3'
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-            <span>Tm <strong>{universal_reverse.tm?.toFixed(1)}°C</strong></span>
-            <span>GC <strong>{universal_reverse.gc_percent}%</strong></span>
-            <span>{universal_reverse.length} nt</span>
-          </div>
+          {stemloop_rt && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-slate-600">
+                Stem-loop RT primer <span className="text-slate-500 font-normal">· miRNA-specific</span>
+              </p>
+              <div className="font-mono text-xs text-slate-700 break-all leading-relaxed">
+                {stemloop_rt.sequence}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
+                <span className="flex items-center gap-1">
+                  Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
+                  <RtTmBadge stemloopRt={stemloop_rt} />
+                </span>
+                {stemloop_rt.tm_hybrid_c != null && (
+                  <span>
+                    Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
+                  </span>
+                )}
+                <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
+                <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
+                <span className="text-slate-500">({stemloop_rt.mfe_method})</span>
+                <span>{stemloop_rt.length} nt</span>
+              </div>
+              {/* The caveat is signposted by the badge above and stays one click
+                  away — it is long methodology, not a finding, so it should not
+                  outweigh the sequence it annotates. */}
+              {stemloop_rt.tm_note && (
+                <details className="group">
+                  <summary className="text-xs text-slate-500 cursor-pointer hover:text-teal-700 list-none marker:hidden">
+                    <span className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
+                    Why this Tm is approximate
+                  </summary>
+                  <p className="text-xs text-slate-500 italic mt-1 leading-relaxed">
+                    {stemloop_rt.tm_note}
+                  </p>
+                </details>
+              )}
+              {stemloop_rt.rt_primer_conc_note && (
+                <p className="text-xs text-slate-500">{stemloop_rt.rt_primer_conc_note}</p>
+              )}
+              {/* A finding, not methodology: when most of this miRNA is 3′ isoforms the
+                  assay measures a minority of it — must be visible without expanding. */}
+              {stemloop_rt.three_prime_isomir?.three_prime_isomir_risk && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  <span className="font-semibold">3′ isomiRs:</span> {stemloop_rt.three_prime_isomir.warning}{' '}
+                  <span className="text-amber-700">Source: {stemloop_rt.three_prime_isomir.source}.</span>
+                </p>
+              )}
+              {/* Distinct risk: a shift in isoform composition read as a change in level
+                  [Nejad 2018] — fires even when the canonical form is still the majority. */}
+              {stemloop_rt.three_prime_isomir?.fold_change_bias_risk && (
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  <span className="font-semibold">Fold-change caution:</span>{' '}
+                  {stemloop_rt.three_prime_isomir.fold_change_bias_warning}
+                </p>
+              )}
+            </div>
+          )}
+
+          {universal_reverse && (
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-200 pt-2.5">
+              <p className="text-xs font-medium text-slate-600 shrink-0">
+                Universal reverse <span className="text-slate-500 font-normal">· fixed</span>
+              </p>
+              <code className="font-mono text-xs text-slate-700">
+                5'–{universal_reverse.sequence}–3'
+              </code>
+              <span className="text-xs text-slate-500 tabular-nums">
+                Tm {universal_reverse.tm?.toFixed(1)}°C · GC {universal_reverse.gc_percent}% · {universal_reverse.length} nt
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* ── Top-3 primer sets ── */}
+      {top3?.length > 1 && (
+        <p className="text-sm text-slate-600 leading-relaxed">{rankReason(top3[0], top3[1])}</p>
+      )}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
-          <PrimerSetCard key={i} set={set} stemloop={stemloop_rt} reverse={universal_reverse} mirnaId={mirnaId} />
+          <PrimerSetCard
+            key={i}
+            set={set}
+            stemloop={stemloop_rt}
+            reverse={universal_reverse}
+            mirnaId={mirnaId}
+            mirnaSequence={metadata?.mirna_sequence}
+            conditions={metadata?.design_settings?.effective_p3}
+            species={metadata?.species_code}
+          />
         ))}
       </div>
 
-      {/* ── Family specificity (Phase 7 PART C): map + table toggle ── */}
-      {specificity_warnings?.cross_reactivity && (
-        <FamilySpecificityMap familyCrossReactivity={specificity_warnings.cross_reactivity} />
-      )}
+      {/* ── Assay specificity (ΔCq model): the headline specificity verdict, drives scoring ──
+           Collapsed by default; the worst label stays visible in the header so a
+           co-amplified result is never hidden behind a closed panel. */}
+      {specificity_warnings?.overhang_collision && (() => {
+        const oc = specificity_warnings.overhang_collision;
+        const label = oc.worst_assay_label || 'DISCRIMINATED';
+        const s = oc.summary || {};
+        const nSame = (s.shifted_5p || 0) + (s.shifted_3p || 0) + (s.same_sequence || 0);
+        const tone = label === 'CO-AMPLIFIED' ? 'danger' : label === 'PARTIAL' ? 'warn' : 'ok';
+        const parts = [label];
+        if (s['CO-AMPLIFIED']) parts.push(`${s['CO-AMPLIFIED']} co-amplified`);
+        if (s.PARTIAL) parts.push(`${s.PARTIAL} partial`);
+        if (nSame) parts.push(`${nSame} same-molecule`);
+        return (
+          <CollapsibleCard
+            title="Assay Specificity"
+            tone={tone}
+            summary={parts.join(' · ')}
+          >
+            <OverhangCollisionPanel overhangCollision={oc} />
+          </CollapsibleCard>
+        );
+      })()}
+
+      {/* ── Seed family (biological context only): map + table toggle ── */}
+      {specificity_warnings?.cross_reactivity && (() => {
+        const cr = specificity_warnings.cross_reactivity;
+        const fam = cr.family || 'ungrouped';
+        const nSib = (cr.cross_reactivity || []).length;
+        return (
+          <CollapsibleCard
+            title="Seed Family (biological context)"
+            summary={`${fam} · ${nSib} sibling${nSib !== 1 ? 's' : ''}`}
+          >
+            <FamilySpecificityMap familyCrossReactivity={cr} />
+          </CollapsibleCard>
+        );
+      })()}
 
       {/* ── Rejection log ── */}
       {metadata?.candidates_rejected > 0 && (
@@ -129,7 +223,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
       {/* ── Source footnote ── */}
       {metadata?.sources && (
-        <p className="text-center text-xs text-gray-400 pt-2">
+        <p className="text-center text-xs text-slate-500 pt-2">
           {metadata.sources.join(' · ')}
         </p>
       )}
@@ -155,12 +249,14 @@ function RtTmBadge({ stemloopRt }) {
       + `true DNA:RNA hybrid Tm may differ by 3–8°C. Not used in scoring.`;
 
   const label = hasHybrid ? 'Tm: modeled (DNA:RNA, Sugimoto 1995)' : 'Tm: approximate (DNA:RNA)';
+  // The "approximate" state is a modeling caveat shown on every result, not a
+  // problem — neutral slate (not amber) so it does not read as an alarm.
   const color = hasHybrid
-    ? 'bg-blue-50 text-blue-700 border-blue-200'
-    : 'bg-amber-50 text-amber-700 border-amber-200';
+    ? 'bg-slate-50 text-slate-700 border-slate-200'
+    : 'bg-slate-50 text-slate-500 border-slate-200';
 
   return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${color}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border ${color}`}>
       {label}
       <Tooltip text={tooltipText} />
     </span>
@@ -244,7 +340,7 @@ function CrossReactivityPanel({ data }) {
           <p className="text-xs font-semibold text-slate-600">Recommendation</p>
           <p className="text-xs text-slate-600">{rec.reason}</p>
           {rec.off_label_warning && (
-            <p className="text-xs text-amber-700 mt-1">⚠ {rec.off_label_warning}</p>
+            <p className="text-xs text-amber-800 mt-1">{rec.off_label_warning}</p>
           )}
           {!rec.resolved && rec.remaining_high_risk_siblings?.length > 0 && (
             <p className="text-xs text-red-700">
@@ -255,7 +351,7 @@ function CrossReactivityPanel({ data }) {
       )}
 
       {/* Data warning */}
-      <p className="text-xs text-slate-400 italic">{data.data_warning}</p>
+      <p className="text-xs text-slate-500 italic">{data.data_warning}</p>
     </div>
   );
 }
@@ -322,7 +418,7 @@ const REJECTION_LABELS = {
   too_short:             'Primer too short',
   too_long:              'Primer too long',
   homopolymer_run:       'Homopolymer run ≥ 5',
-  gc_clamp_fail:         'GC clamp fail (< 2 G/C in last 3 nt)',
+  gc_clamp_fail:         'No G/C in last 3 nt (all-A/T 3′ end)',
   gc_end_window_fail:    'Too many GC in 3\' window (> 5 in last 5 nt)',
   amplicon_out_of_range: 'Amplicon size out of range',
 };

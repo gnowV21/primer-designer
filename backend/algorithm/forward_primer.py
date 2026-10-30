@@ -8,6 +8,7 @@
 #   - Exact amplicon formula derived from cDNA/primer geometry [Fix L4]
 # ================================================================
 
+import hashlib
 import itertools
 import random
 
@@ -16,7 +17,8 @@ from .constants import (
     FORWARD_EXCLUDES_LAST_NT,
     FORWARD_TAIL_MIN, FORWARD_TAIL_MAX,
     FORWARD_MIN_LENGTH, FORWARD_MAX_LENGTH, FORWARD_OPTIMAL_LENGTH,
-    GC_MIN, GC_MAX, MAX_HOMOPOLYMER_RUN, GC_CLAMP_MIN_IN_LAST3,
+    GC_MIN, GC_MAX, MAX_HOMOPOLYMER_RUN, GC_CLAMP_MIN_IN_LAST3, GC_CLAMP_HARD_MIN_IN_LAST3,
+    FORWARD_TAILS_PER_LENGTH,
     GC_MAX_IN_3PRIME_WINDOW, PRIMER_AVOID_T_AT_3PRIME,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR,
     STEMLOOP_BODY, STEMLOOP_BODY_LENGTH, UNIVERSAL_REVERSE,
@@ -37,8 +39,15 @@ from .thermodynamics import calculate_tm_nn, calculate_tm_binding_only
 _UNIV_REV_POS   = STEMLOOP_BODY.find(UNIVERSAL_REVERSE)   # = 7
 _AMPLICON_OFFSET = STEMLOOP_BODY_LENGTH - _UNIV_REV_POS    # = 37
 
-# Fixed seed for reproducible random tail sampling across requests
-_RNG = random.Random(42)
+# Determinism: the len-7..12 tail pools use weighted-random sampling. A module-global
+# RNG would carry state ACROSS design calls, so the same miRNA designed twice would
+# yield different primers (state-order dependence). Instead each _generate_tail_pool
+# call builds its OWN RNG, seeded from that call's inputs (sequence, tail_len,
+# max_pool) — no generator is shared or passed around, so a pool depends only on its
+# arguments, never on call order, other pools, or the process. [determinism invariant]
+def _rng_for(*key) -> random.Random:
+    digest = hashlib.sha256("|".join(map(str, key)).encode("utf-8")).hexdigest()
+    return random.Random(int(digest[:12], 16))
 
 
 def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
@@ -70,7 +79,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     # Previously called _generate_tail_pool inside _find_tails_for_target_tm which
     # was called 6 times — resulting in 60 pool builds instead of 10.
     _tail_pool_cache = {
-        tl: _generate_tail_pool(tl)
+        tl: _generate_tail_pool(tl, sequence=dna_seq)
         for tl in range(FORWARD_TAIL_MIN, FORWARD_TAIL_MAX + 1)
     }
 
@@ -105,25 +114,9 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
             for r in hard_reasons:
                 rejection_log.append({"sequence": c["sequence"], "reason": r})
 
-    # ── Relaxed GC-clamp fallback ──────────────────────────────────────────────
-    # Some miRNAs have AT-rich 5' regions where ALL specific lengths end in A/T,
-    # making it impossible to satisfy GC clamp = 2 in last 3 bases.
-    # In that case, relax to 1 GC in last 3 and annotate with a warning.
-    if not passed and all_candidates and any(
-        r["reason"] == "gc_clamp_fail" for r in rejection_log
-    ):
-        relaxed_params = dict(params)
-        relaxed_params["_gcClampMin"] = 1
-        for c in all_candidates:
-            hard_reasons, warning_reasons = _prefilter(c, relaxed_params)
-            if not hard_reasons:
-                warning_reasons.append("gc_clamp_relaxed_warning")
-                c["warnings_from_prefilter"] = warning_reasons
-                passed.append(c)
-        if passed:
-            rejection_log = []  # clear old log — we found candidates
-
-    passed = _apply_diversity_filter(passed, target_tm)
+    # Hand the best few tails of EVERY 3' end to scoring; which sets are returned is
+    # decided after scoring by select_diverse_top (v3.2.0).
+    passed = _candidate_pool(passed, target_tm)
     return passed, rejection_log
 
 
@@ -185,12 +178,12 @@ def _find_tails_for_target_tm(
     if len(selected) < 5:
         selected = [t for t, d in scored[:10]]
 
-    # Cap at 200: diversity filter keeps ≤1 candidate per specific_length anyway,
-    # so more than ~200 tails here just wastes prefilter computation.
+    # Cap at 200: _candidate_pool keeps only FORWARD_TAILS_PER_LENGTH per specific
+    # length anyway, so more than ~200 tails here just wastes prefilter computation.
     return selected[:200]
 
 
-def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
+def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") -> list:
     """
     Build a pool of GC-rich (≥50 %), no-homopolymer-run (< 4) tail sequences.
 
@@ -199,7 +192,8 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
     v2.8 fix: previously capped BEFORE sorting → alphabetically-first 400
     sequences were kept, discarding 83 % of valid len-6 tails (A-biased pool).
 
-    Lengths 7–12: weighted-random sampling (GC bases biased 2×) until max_pool.
+    Lengths 7–12: weighted-random sampling (GC bases biased 2×) until max_pool,
+    from an RNG local to this call and seeded from (sequence, tail_len, max_pool).
 
     Pool sizes (approximate, after GC and homopolymer filtering):
       len 3 → ~32     len 4 → ~176     len 5 → ~480     len 6 → ~2 400
@@ -226,13 +220,16 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400) -> list:
         result.sort(key=lambda s: -sum(1 for b in s if b in GC_BASES))
         result = result[:max_pool]
     else:
+        # Build the RNG ONCE, before the loop: re-creating it per attempt would replay
+        # the same draw every time and collapse the pool to a single tail.
+        rng      = _rng_for(sequence, tail_len, max_pool)
         seen     = set()
         attempts = 0
         max_att  = max_pool * 30
         while len(result) < max_pool and attempts < max_att:
             attempts += 1
             # Weight G/C 2× over A/T to bias toward GC-rich tails
-            tail = "".join(_RNG.choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
+            tail = "".join(rng.choices("ACGT", weights=[1, 2, 2, 1], k=tail_len))
             if tail in seen:
                 continue
             seen.add(tail)
@@ -276,13 +273,15 @@ def _prefilter(candidate: dict, params: dict) -> tuple:
     if check_homopolymer(seq, MAX_HOMOPOLYMER_RUN):
         hard_reasons.append("homopolymer_run")
 
-    # GC Clamp: ≥ N G/C in last 3 bases [IDT PrimerQuest]
-    # _gcClampMin is set to 1 by the relaxed fallback in generate_forward_candidates
-    gc_clamp_min = params.get("_gcClampMin", GC_CLAMP_MIN_IN_LAST3)
+    # GC Clamp [IDT PrimerQuest]: 2 G/C in the last 3 bases preferred. The forward
+    # primer's 3' end is set by the miRNA, so 1 G/C only warns (and scores 75 on the
+    # gc_clamp criterion); 0 G/C — an all-A/T 3' end — is rejected. (v3.2.0)
     if params.get("gcClamp3prime", True):
-        last3 = seq[-3:].upper()
-        if sum(1 for b in last3 if b in "GC") < gc_clamp_min:
+        gc_last3 = sum(1 for b in seq[-3:].upper() if b in "GC")
+        if gc_last3 < GC_CLAMP_HARD_MIN_IN_LAST3:
             hard_reasons.append("gc_clamp_fail")
+        elif gc_last3 < GC_CLAMP_MIN_IN_LAST3:
+            warning_reasons.append("gc_clamp_weak_warning")
 
     # GC end window: total GC in last 5 bases must be < max [P3P Max End GC=5]
     # v2.8 fix: was `> 5` on a 5-base window — impossible (max=5), never fired.
@@ -303,30 +302,63 @@ def _prefilter(candidate: dict, params: dict) -> tuple:
     return hard_reasons, warning_reasons
 
 
-def _apply_diversity_filter(candidates: list, target_tm: float) -> list:
+def _candidate_pool(candidates: list, target_tm: float,
+                    per_length: int = FORWARD_TAILS_PER_LENGTH) -> list:
     """
-    Ensure diversity: remove candidates whose 3' ends are too close to already-selected ones.
-    Mapping: Primer3Plus PRIMER_MIN_LEFT_THREE_PRIME_DISTANCE (adjusted to 2 for miRNA). [P3P]
+    Keep the `per_length` tails closest to target_tm for EACH specific length (each
+    3' end), so every usable 3' end reaches the 15-criterion score.
 
-    v2.8 fix: previously sorted descending by tm_full, selecting the HIGHEST Tm.
-    Highest Tm ≠ best Tm — criterion 1 (weight 0.20) rewards closeness to target_tm.
-    Now sorts ascending by |tm_full - target_tm| so the candidate that will score
-    best on the highest-weighted criterion is pre-selected.
+    Replaces the pre-score diversity filter (≤ v3.1.2), which kept one candidate per
+    3' end picked by |Tm_full − Ta| alone — Tm ties fell to generation order, so the
+    12-nt region won over the 13-nt one just by being generated first — and dropped
+    3' ends 1 nt from a kept one before anything was scored. Ties here break on the
+    sequence, so the pool never depends on generation order.
     """
-    if not candidates:
-        return candidates
+    by_length: dict[int, list] = {}
+    for c in sorted(candidates, key=lambda x: (abs(x.get("tm_full", 0) - target_tm),
+                                               x["sequence"])):
+        kept = by_length.setdefault(c["specific_length"], [])
+        if len(kept) < per_length:
+            kept.append(c)
+    return [c for length in sorted(by_length) for c in by_length[length]]
 
-    selected           = []
-    selected_positions = []
 
-    for c in sorted(candidates, key=lambda x: abs(x.get("tm_full", 0) - target_tm)):
-        pos       = c["specific_length"]
-        too_close = any(abs(pos - p) < MIN_CANDIDATE_3PRIME_DISTANCE for p in selected_positions)
-        if not too_close:
-            selected.append(c)
-            selected_positions.append(pos)
+def select_diverse_top(ranked: list, n: int) -> list:
+    """
+    Pick n sets from score-ranked candidates (best first) — the score decides, and
+    diversity only shapes the alternatives, relaxing in steps until n are found:
 
-    return selected
+      1. 3' end ≥ MIN_CANDIDATE_3PRIME_DISTANCE nt from every pick [P3P]
+      2. 3' end ≥ 1 nt away (adjacent specific lengths)
+      3. same 3' end, different tail — same binding region, so same specificity
+
+    Each pick is labelled in `selection` against the higher-ranked picks:
+    'best' (rank 1), 'distinct_3prime', 'adjacent_3prime' or 'tail_variant'
+    (+ `same_binding_as_rank`). The result is re-sorted by score.
+    """
+    chosen: list[int] = []                       # indices into `ranked`
+    for spacing in (MIN_CANDIDATE_3PRIME_DISTANCE, 1, 0):
+        for i, c in enumerate(ranked):
+            if len(chosen) == n:
+                break
+            if i not in chosen and all(
+                    abs(c["specific_length"] - ranked[j]["specific_length"]) >= spacing
+                    for j in chosen):
+                chosen.append(i)
+    picked = [ranked[i] for i in sorted(chosen)]
+
+    for i, c in enumerate(picked):
+        gaps = [abs(c["specific_length"] - p["specific_length"]) for p in picked[:i]]
+        if i == 0:
+            c["selection"] = "best"
+        elif 0 in gaps:
+            c["selection"] = "tail_variant"
+            c["same_binding_as_rank"] = gaps.index(0) + 1
+        elif min(gaps) < MIN_CANDIDATE_3PRIME_DISTANCE:
+            c["selection"] = "adjacent_3prime"
+        else:
+            c["selection"] = "distinct_3prime"
+    return picked
 
 
 def _compute_amplicon_size(tail_len: int, miRNA_len: int) -> int:

@@ -1,0 +1,4 @@
+{
+  "_description": "miRNAs this lab handles as synthetic oligos or spike-ins (e.g. cel-miR-39-3p). Designs for these are flagged as elevated contamination risk in the PDF report. Use miRBase names; matching is case-insensitive.",
+  "synthetic_controls": []
+}

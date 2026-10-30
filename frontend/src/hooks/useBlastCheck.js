@@ -28,7 +28,9 @@ export default function useBlastCheck() {
     return () => { cancelled = true; };
   }, []);
 
-  async function run(forwardPrimer, reversePrimer, mirnaId) {
+  // mirnaSequence + conditions (the design's effective_p3) feed the duplex-Tm gate;
+  // without them the backend falls back to the DB sequence and default salts.
+  async function run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species } = {}) {
     // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
@@ -41,7 +43,14 @@ export default function useBlastCheck() {
     try {
       const resp = await axios.post(
         '/api/blast-check',
-        { forward_primer: forwardPrimer, reverse_primer: reversePrimer, mirna_id: mirnaId },
+        {
+          forward_primer: forwardPrimer,
+          reverse_primer: reversePrimer,
+          mirna_id: mirnaId,
+          mirna_sequence: mirnaSequence || undefined,
+          conditions: conditions || undefined,
+          species: species || undefined,
+        },
         { signal: controller.signal, timeout: BLAST_TIMEOUT_MS },
       );
       setResult(resp.data);

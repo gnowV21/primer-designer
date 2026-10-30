@@ -16,7 +16,7 @@
 # Sources: [IDT] OligoAnalyzer guidelines; [K11] Kramer 2011 Table 2
 # ================================================================
 
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from ..thermodynamics import _get_p3_params
 from ..constants import (
     HETERODIMER_HIGH_RISK_DG, HETERODIMER_LOW_RISK_DG, HETERODIMER_3PRIME_MIN_BP,

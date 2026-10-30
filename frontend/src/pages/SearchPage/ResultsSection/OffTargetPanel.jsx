@@ -10,11 +10,11 @@ const BLAST_RISK_STYLE = {
   SAFE:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }) {
+export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions, species }) {
   const { status, result, error, run, reset, dbAvailable, dbMessage } = useBlastCheck();
 
   function handleRun() {
-    run(forwardPrimer, reversePrimer, mirnaId);
+    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species });
   }
 
   // DB unavailable (Phase 7 PART A) — show disabled state with explanation
@@ -30,7 +30,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
           <button
             type="button"
             onClick={handleRun}
-            className="text-xs text-slate-400 hover:text-slate-600 underline"
+            className="text-xs text-slate-500 hover:text-slate-600 underline"
           >
             Re-check
           </button>
@@ -49,7 +49,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
               disabled
               title="Off-target database is being prepared. Please try again shortly."
               className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border
-                bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
+                bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed"
             >
               Check off-target
             </button>
@@ -60,7 +60,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
         {!dbNotReady && status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Checks primer against miRBase (all species) for miRNA family cross-reactivity using Primer-BLAST rules (Ye 2012).
+              Where else the forward primer anneals in miRBase (Primer-BLAST rules, Ye 2012; duplex-Tm gate). Detail for the Assay Specificity verdict, which also models the RT step.
             </p>
             <BlastCheckButton status={status} onClick={handleRun} />
           </div>
@@ -70,7 +70,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId }
         {status === 'loading' && (
           <div className="flex items-center gap-3">
             <BlastCheckButton status={status} onClick={() => {}} />
-            <p className="text-xs text-slate-400">Running BLAST… (up to 70 s)</p>
+            <p className="text-xs text-slate-500">Running BLAST… (up to 70 s)</p>
           </div>
         )}
 
@@ -99,7 +99,7 @@ function BlastCheckButton({ status, onClick }) {
       disabled={loading}
       className={`shrink-0 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors
         ${loading
-          ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+          ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed'
           : 'bg-teal-50 border-teal-300 text-teal-700 hover:bg-teal-100'
         }`}
     >
@@ -142,11 +142,11 @@ function RateLimitError({ error, onRetry }) {
 
 function CircuitOpenError({ error }) {
   return (
-    <div className="rounded-lg bg-orange-50 border border-orange-200 px-3 py-2 space-y-1">
-      <p className="text-xs font-semibold text-orange-700">BLAST temporarily unavailable</p>
-      <p className="text-xs text-orange-700">{error.message}</p>
+    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 space-y-1">
+      <p className="text-xs font-semibold text-amber-700">BLAST temporarily unavailable</p>
+      <p className="text-xs text-amber-700">{error.message}</p>
       {error.retryAfter && (
-        <p className="text-xs text-orange-500">Try again in ~{error.retryAfter}s.</p>
+        <p className="text-xs text-amber-500">Try again in ~{error.retryAfter}s.</p>
       )}
       <p className="text-xs text-slate-500 mt-1">Primer design results above are unaffected.</p>
     </div>
@@ -178,10 +178,12 @@ function ResultDisplay({ result }) {
   const dbInfo  = result.database_info ?? {};
   const fwdHits = result.forward_primer_hits ?? [];
   const revHits = result.reverse_primer_hits ?? [];
+  const clf     = result.classification ?? {};
 
   return (
     <div className="space-y-3">
-      <OverallRiskRow summary={summary} />
+      <OverallRiskRow summary={summary} identical={result.identical_sequence_hits ?? []}
+                      variants={result.identical_sequence_variants ?? {}} />
 
       {summary.hits_truncated && (
         <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
@@ -200,17 +202,33 @@ function ResultDisplay({ result }) {
       )}
 
       {/* Footnote */}
-      <div className="text-xs text-slate-400 border-t border-slate-100 pt-2">
+      <div className="text-xs text-slate-500 border-t border-slate-100 pt-2 space-y-0.5">
+        <p>
+          {clf.tm_gate_applied
+            ? `Forward primer on its target: duplex Tm ${clf.tm_ontarget?.toFixed(1)} °C. `
+              + `Hits more than ${clf.safe_margin_c} °C weaker are SAFE; within `
+              + `${clf.critical_margin_c} °C are CRITICAL.`
+            : (clf.tm_gate_note || 'Target sequence unknown — classified by mismatch rules only (no duplex-Tm gate).')}
+        </p>
+        <p>
+          Forward primer only — the RT overhang is not modelled here; see Assay Specificity for the
+          combined RT + forward prediction.
+        </p>
+        {result.reverse_primer_skipped && <p>{result.reverse_primer_skipped}</p>}
+        <p>
         {result.cache?.hit ? 'Cached result · ' : ''}
         DB: miRBase {dbInfo.mirbase_version} (all species)
-        {dbInfo.outdated_warning && ' · ⚠ DB may be outdated'}
+        {dbInfo.outdated_warning && ' · DB may be outdated'}
         {' · built '}{dbInfo.build_date}
+        </p>
       </div>
     </div>
   );
 }
 
-function OverallRiskRow({ summary }) {
+const VARIANT_TEXT = { same_sequence: 'same sequence', shifted_5p: "5′ shifted", shifted_3p: "3′ shifted" };
+
+function OverallRiskRow({ summary, identical, variants }) {
   const risk  = summary.overall_risk ?? 'SAFE';
   const style = BLAST_RISK_STYLE[risk] ?? BLAST_RISK_STYLE.SAFE;
 
@@ -233,10 +251,23 @@ function OverallRiskRow({ summary }) {
           <span className="text-amber-600 font-medium">{summary.medium_risk_count.toLocaleString()} medium</span>
         )}
         {summary.safe_count > 0 && (
-          <span className="text-slate-400">{summary.safe_count.toLocaleString()} safe</span>
+          <span className="text-slate-500">{summary.safe_count.toLocaleString()} safe</span>
+        )}
+        {summary.same_family_count > 0 && (
+          <span className="text-purple-600" title="Hits that belong to the target's seed family. They are listed and counted in the risk like any other hit — the seed is the mRNA-targeting axis, not a primer-binding one.">
+            {summary.same_family_count.toLocaleString()} same seed family
+          </span>
+        )}
+        {summary.identical_sequence_count > 0 && (
+          <span
+            className="text-slate-600"
+            title={`Other miRBase entries carrying this molecule — ${identical.map((id) => `${id} (${VARIANT_TEXT[variants[id]] || 'same sequence'})`).join(', ')}. Synonyms, renamed entries or paralogues from another locus; a 5′-shifted one is bound by both primers, a 3′-shifted one only partly resolved by the RT overhang. No primer design separates them, so the signal is their sum — not counted as off-target risk.`}
+          >
+            {summary.identical_sequence_count.toLocaleString()} same molecule
+          </span>
         )}
         {summary.cross_species_excluded > 0 && (
-          <span className="text-slate-400" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
+          <span className="text-slate-500" title="Cross-species miRBase orthologs excluded (not relevant for this species' assay)">
             {summary.cross_species_excluded.toLocaleString()} excluded
           </span>
         )}
@@ -257,7 +288,12 @@ function HitsAccordion({ label, hits }) {
           <thead className="bg-slate-100 border-b border-slate-200">
             <tr>
               <th className="text-left px-2 py-1.5 font-semibold text-slate-600">Target</th>
-              <th className="text-center px-2 py-1.5 font-semibold text-slate-600">DB</th>
+              <th
+                className="text-center px-2 py-1.5 font-semibold text-slate-600"
+                title="Duplex Tm of the primer on this off-target's cDNA, compared with the primer on its own target (same salt conditions as the design)"
+              >
+                Tm °C
+              </th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">Mismatch</th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ mm</th>
               <th className="text-center px-2 py-1.5 font-semibold text-slate-600">3′ type</th>
@@ -269,13 +305,23 @@ function HitsAccordion({ label, hits }) {
               const aln   = h.alignment ?? {};
               const style = BLAST_RISK_STYLE[h.risk] ?? BLAST_RISK_STYLE.SAFE;
               const termCat = aln.terminal_category ?? '—';
-              const termMm  = aln.primer_3prime_base && aln.template_3prime_base && aln.primer_3prime_base !== aln.template_3prime_base
+              // primer:template (Kwok 1990) — template is the strand the primer anneals to,
+              // so a match is a Watson-Crick pair (A:T), not two equal letters.
+              const termMm  = termCat !== 'MATCH' && aln.primer_3prime_base && aln.template_3prime_base
                 ? `${aln.primer_3prime_base}:${aln.template_3prime_base}`
+                : '—';
+              const tm = aln.tm_offtarget != null
+                ? `${aln.tm_offtarget.toFixed(1)} / ${aln.tm_ontarget.toFixed(1)}`
                 : '—';
               return (
                 <tr key={i} title={h.risk_reason}>
-                  <td className="px-2 py-1.5 font-mono text-slate-700 truncate max-w-[160px]">{h.subject_id}</td>
-                  <td className="px-2 py-1.5 text-center text-slate-500">{h.database?.replace('_', ' ')}</td>
+                  <td className="px-2 py-1.5 font-mono text-slate-700 truncate max-w-[160px]">
+                    {h.subject_id}
+                    {h.same_seed_family && (
+                      <span className="ml-1 font-sans text-purple-600" title="Same seed family as the target (context only)">·fam</span>
+                    )}
+                  </td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-slate-500">{tm}</td>
                   <td className="px-2 py-1.5 text-center tabular-nums text-slate-600">{aln.mismatches ?? '—'}</td>
                   <td className="px-2 py-1.5 text-center font-mono text-slate-600">{termMm}</td>
                   <td className="px-2 py-1.5 text-center text-slate-500">{termCat}</td>

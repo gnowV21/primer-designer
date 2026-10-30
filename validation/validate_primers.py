@@ -43,6 +43,110 @@ def revcomp(dna: str) -> str:
     return "".join(COMP.get(b, "N") for b in reversed(dna.upper()))
 
 
+def specific_region(primer: str, mirna_dna: str) -> str:
+    """Longest 3' suffix of `primer` that is a 5' prefix of `mirna_dna`.
+
+    Both stem-loop-qPCR forward primers = [5' Tm-raising tail] + [miRNA 5' prefix].
+    This recovers the miRNA-specific part, letting us compare the biologically
+    meaningful core across tools/protocols that use different tails.
+    """
+    primer = primer.upper()
+    for length in range(len(primer), 0, -1):
+        if mirna_dna.startswith(primer[-length:]):
+            return primer[-length:]
+    return ""
+
+
+def anchored_region(primer: str, mirna_dna: str):
+    """(core, start) — where a published forward primer sits on the miRNA.
+
+    Normally the 5'-prefix core above (start 0). Some protocols print a forward with
+    no 5' tail that starts at miRNA nt 2-3 (e.g. Bagheri 2021); then fall back to the
+    longest 3' suffix of the primer found anywhere in the miRNA.
+    """
+    core = specific_region(primer, mirna_dna)
+    if len(core) >= 10:
+        return core, 0
+    primer = primer.upper()
+    for length in range(len(primer), len(core), -1):
+        pos = mirna_dna.find(primer[-length:])
+        if pos >= 0:
+            return primer[-length:], pos
+    return core, 0
+
+
+def _norm(s):
+    return (s or "").upper().replace("U", "T").replace(" ", "")
+
+
+def compare_published(entry, rt, fwd, dna, olen):
+    """Tool primers vs a cited published primer table. Returns (checks, row fields).
+
+    Entry fields (all optional, never invented — only from a cited paper table):
+      published_rt          full RT primer. Compared only when its stem-loop body is the
+                            tool's (Chen 2005). Same length -> byte-exact; different
+                            overhang length (5/7/8 nt) -> body must be identical.
+      published_rt_overhang 3' overhang. Every overhang starts with the base pairing the
+                            miRNA 3'-terminal nt, so the shorter one must be the 5'
+                            prefix of the longer one.
+      published_forward     forward primer. Scored: its miRNA core overlaps the tool's
+                            core by >= 10 nt at the same miRNA coordinates. Cores < 10 nt
+                            are recorded but not scored. Exact match recorded, not scored.
+      published_rt_unscored reason the printed RT is shown but NOT scored (paper erratum,
+                            modified body). Its printed sequence goes in published_rt_printed.
+    """
+    checks, row = [], {}
+    rt, fwd = _norm(rt), _norm(fwd)
+    tool_over = rt[-olen:]
+    pub_rt = _norm(entry.get("published_rt"))
+    pub_over = _norm(entry.get("published_rt_overhang"))
+    pub_fwd = _norm(entry.get("published_forward"))
+
+    if pub_rt:
+        if len(pub_rt) == len(rt):
+            c = rt == pub_rt
+            checks.append(("published_rt_exact_match", c))
+            row["published_rt_match"] = ok(c)
+        else:
+            plen = len(pub_over) or olen
+            c = pub_rt[:-plen] == rt[:-olen]
+            checks.append(("published_rt_body_match", c))
+            row["published_rt_match"] = f"BODY {ok(c)} ({plen}-nt overhang)"
+
+    if pub_over:
+        if len(pub_over) >= olen:
+            c = pub_over.startswith(tool_over)
+        else:
+            c = tool_over.startswith(pub_over)
+        checks.append(("published_rt_overhang_match", c))
+        row["published_rt_overhang_match"] = ok(c)
+
+    if pub_fwd:
+        tool_spec = specific_region(fwd, dna)
+        pub_spec, pub_start = anchored_region(pub_fwd, dna)
+        ov = max(0, min(len(tool_spec), pub_start + len(pub_spec)) - pub_start)
+        row.update({
+            "published_forward_exact": ok(fwd == pub_fwd),
+            "published_forward_tool": fwd,
+            "published_forward_ref": entry.get("published_forward"),
+            "forward_tool_specific": tool_spec,
+            "forward_pub_specific": pub_spec,
+            "forward_pub_start_nt": pub_start + 1,
+            "forward_specific_overlap_nt": ov,
+        })
+        if len(pub_spec) >= 10:
+            c = ov >= 10
+            checks.append(("published_forward_specific_agrees", c))
+            row["published_forward_specific_shared"] = ok(c)
+        else:
+            row["published_forward_specific_shared"] = f"N/A (published core {len(pub_spec)} nt < 10)"
+
+    for k in ("published_source", "published_rt_unscored", "published_rt_printed", "benchmark_group"):
+        if entry.get(k):
+            row[k] = entry[k]
+    return checks, row
+
+
 def to_dna(rna: str) -> str:
     return rna.upper().replace("U", "T")
 
@@ -122,14 +226,24 @@ def validate_one(base, entry, consts, windows):
                      "edge_found": ",".join(codes) or "-",
                      "edge_check": ok(hit)},
                     [("edge_case", hit)])
-        return {"target": label, "status": f"HTTP {resp.status_code}: {body.get('error', '')[:60]}"}, []
+        # Documented known limitation: the tool is EXPECTED to refuse this miRNA.
+        if entry.get("expect_design_failure"):
+            return ({"target": label, "status": f"HTTP {resp.status_code} (expected)",
+                     "failed_checks": ""}, [("expected_design_failure", True)])
+        # A real miRNA the tool cannot design for is a FAIL, not a silent skip.
+        return ({"target": label, "status": f"HTTP {resp.status_code}: {body.get('error', '')[:60]}"},
+                [("design_succeeded", False)])
 
     data = resp.json()
     used_seq = get(data, "metadata", "mirna_sequence", default=mature).upper()
     dna = to_dna(used_seq)
 
-    checks = []
+    checks = [] if entry.get("expect_edge_code") else [("design_succeeded", True)]
     row = {"target": label, "source": src, "length": len(used_seq), "status": "200"}
+
+    # A documented limitation that now designs fine: flag it so the dataset gets updated.
+    if entry.get("expect_design_failure"):
+        return row, [("expected_design_failure", False)]
 
     # --- Edge-case entries: just verify the expected code fired ---
     if entry.get("expect_edge_code"):
@@ -165,6 +279,11 @@ def validate_one(base, entry, consts, windows):
     c_fwd_tail = bool(spec) and fwd.endswith(spec)  # forward = 5' tail + specific region
     checks += [("forward_specific_is_5prime_prefix", c_spec_prefix),
                ("forward_ends_with_specific", c_fwd_tail)]
+
+    # --- Optional match vs published primer sequences (never fabricated) ---
+    pub_checks, pub_row = compare_published(entry, rt, fwd, dna, olen)
+    checks += pub_checks
+    row.update(pub_row)
 
     # --- Plausibility: Tm / GC / amplicon ---
     tm = top.get("tm_full")
@@ -202,6 +321,8 @@ def main():
     ap.add_argument("--base-url", default="http://localhost:5000")
     ap.add_argument("--dataset", default="validation/reference_mirnas.json")
     ap.add_argument("--out", default="validation/results.csv")
+    ap.add_argument("--json-out", default="validation/results.json",
+                    help="machine-readable summary (mergeable into benchmark_results.json)")
     args = ap.parse_args()
 
     with open(args.dataset, encoding="utf-8") as f:
@@ -210,7 +331,7 @@ def main():
     windows = ds["plausibility_windows"]
     entries = list(ds.get("mirnas", [])) + list(ds.get("edge_cases", []))
 
-    all_rows, total_pass, total_checks = [], 0, 0
+    all_rows, json_records, total_pass, total_checks = [], [], 0, 0
     print(f"\n=== Primer designer validation — {args.base_url} ===\n")
     for e in entries:
         row, checks = validate_one(args.base_url, e, consts, windows)
@@ -222,6 +343,35 @@ def main():
         failed = [name for name, c in checks if not c]
         row["failed_checks"] = ",".join(failed) if failed else ""
         all_rows.append(row)
+        json_records.append({
+            "target": row["target"],
+            "checks_pass": p,
+            "checks_total": n,
+            "passed": bool(n and p == n),
+            "rt_overhang_expected": row.get("rt_overhang_expected"),
+            "rt_overhang_actual": row.get("rt_overhang_actual"),
+            "forward_tm_c": row.get("tm_full"),
+            "forward_gc_pct": row.get("gc_pct"),
+            "amplicon_bp": row.get("amplicon_bp"),
+            "siblings_flagged": row.get("siblings_flagged"),
+            "edge_expected": row.get("edge_expected"),
+            "edge_found": row.get("edge_found"),
+            "published_rt_match": row.get("published_rt_match"),
+            "published_rt_overhang_match": row.get("published_rt_overhang_match"),
+            "published_forward_exact": row.get("published_forward_exact"),
+            "published_forward_specific_shared": row.get("published_forward_specific_shared"),
+            "published_forward_tool": row.get("published_forward_tool"),
+            "published_forward_ref": row.get("published_forward_ref"),
+            "forward_tool_specific": row.get("forward_tool_specific"),
+            "forward_pub_specific": row.get("forward_pub_specific"),
+            "forward_specific_overlap_nt": row.get("forward_specific_overlap_nt"),
+            "forward_pub_start_nt": row.get("forward_pub_start_nt"),
+            "published_rt_printed": row.get("published_rt_printed"),
+            "published_rt_unscored": row.get("published_rt_unscored"),
+            "benchmark_group": row.get("benchmark_group"),
+            "published_source": row.get("published_source"),
+            "failed_checks": failed,
+        })
         flag = "OK " if (n and p == n) else ("--- " if not n else "!!! ")
         print(f"{flag}{row['target']:<20} {row['checks_pass']:<8} "
               f"{('FAILED: ' + row['failed_checks']) if failed else row.get('status','')}")
@@ -230,7 +380,10 @@ def main():
     cols = ["target", "source", "length", "status", "checks_pass", "failed_checks",
             "rt_overhang_expected", "rt_overhang_actual", "tm_full", "gc_pct",
             "amplicon_bp", "grade", "score", "siblings_flagged",
-            "edge_expected", "edge_found", "edge_check"]
+            "published_rt_match", "published_rt_overhang_match",
+            "published_forward_exact", "published_forward_specific_shared",
+            "forward_specific_overlap_nt", "benchmark_group", "published_rt_unscored",
+            "published_source", "edge_expected", "edge_found", "edge_check"]
     with open(args.out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
@@ -239,7 +392,30 @@ def main():
 
     print(f"\n--- Summary: {total_pass}/{total_checks} checks passed "
           f"({100*total_pass/total_checks:.1f}%) ---")
-    print(f"CSV written: {args.out}\n")
+    print(f"CSV written: {args.out}")
+
+    # Machine-readable summary (mergeable into benchmark_results.json)
+    from datetime import datetime, timezone
+    summary = {
+        "method": (
+            "Deterministic ground truth from the Chen 2005 stem-loop method "
+            "(RT primer = fixed universal body + revcomp of 3'-terminal 6 nt; "
+            "universal reverse = fixed constant; forward specific region = 5' prefix "
+            "of the miRNA), recomputed independently from the sequence the tool used. "
+            "Plus thermodynamic-plausibility windows and let-7 specificity concordance "
+            "with Wang 2017."
+        ),
+        "sources": ds.get("_meta", {}).get("sources", []),
+        "run_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "checks_passed": total_pass,
+        "checks_total": total_checks,
+        "success_rate": round(total_pass / total_checks, 4) if total_checks else None,
+        "targets": json_records,
+    }
+    with open(args.json_out, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+    print(f"JSON written: {args.json_out}\n")
+
     # Non-zero exit if any deterministic check failed (useful for CI)
     sys.exit(0 if total_pass == total_checks else 1)
 

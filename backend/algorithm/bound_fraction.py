@@ -3,7 +3,9 @@
 #
 # Calculates the fraction (%) of primer molecules bound to target at Ta.
 # Two-step model mirrors Phase 2's 2-step Tm:
-#   Round 1 — binding region only (specific_region binds cDNA)  [weight 0.05]
+#   Round 1 — binding region only (specific_region binds first-strand cDNA in
+#             PCR cycle 1, at the user's Ta) — informational, NOT scored
+#             (UNSCORED_CRITERIA_V4, audit SCI-02)
 #   Round 2 — full primer binds amplicon (after tail-complement) [weight 0.03]
 #
 # dH and dS obtained from primer3.calc_heterodimer(seq, revcomp(seq)):
@@ -18,11 +20,11 @@
 # ================================================================
 
 import math
-import primer3
+import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from functools import lru_cache
 from .constants import (
-    BOUND_FRACTION_RT_TEMP,
     BOUND_FRACTION_ANNEALING_TEMP,
+    TM_ANNEALING_TEMP_DEFAULT,
     BOUND_FRACTION_OPT,
     BOUND_FRACTION_MIN,
     P3_DEFAULT_DNA_CONC,
@@ -107,12 +109,22 @@ def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> flo
 
 def calculate_bound_fraction_binding(specific_region: str, params: dict) -> float:
     """
-    Round 1: % specific region (12-17 nt) bound to cDNA during RT extension step.
-    Evaluated at BOUND_FRACTION_RT_TEMP = 42°C (SuperScript III RT temperature [K11]).
+    Round 1: % specific region (12-17 nt) bound to first-strand cDNA in PCR
+    cycle 1. The forward primer is not present during RT, so this is evaluated
+    at the qPCR annealing temperature (params["annealingTemp"], default 60 °C).
+    Only the specific region can pair in cycle 1 — the 5' tail has no template yet.
     Concentration: P3_DEFAULT_DNA_CONC = 200 nM (equimolar convention per [SL04]).
-    [spec §4.5]
+    Informational only (audit SCI-02).
     """
-    return _calculate_bound_fraction(specific_region, params, BOUND_FRACTION_RT_TEMP)
+    return _calculate_bound_fraction(specific_region, params, annealing_temp_c(params))
+
+
+def annealing_temp_c(params: dict) -> float:
+    """User's qPCR annealing temperature (°C), falling back to the default Ta."""
+    try:
+        return float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
+    except (TypeError, ValueError):
+        return float(TM_ANNEALING_TEMP_DEFAULT)
 
 
 def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:

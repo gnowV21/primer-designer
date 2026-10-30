@@ -53,55 +53,27 @@ def download(url: str, dest: str):
 
 # ── makeblastdb ───────────────────────────────────────────────────
 
-def _win_short_path(path: str) -> str:
-    """
-    On Windows, convert a path with spaces to its 8.3 short form.
-    makeblastdb on Windows rejects paths containing spaces even when quoted.
-    GetShortPathNameW requires the path to exist; for DB output paths (just a
-    prefix, not a real file) we shorten the parent directory and re-append the
-    basename.
-    No-op on non-Windows or if the path has no spaces.
-    """
-    if not sys.platform.startswith("win") or " " not in path:
-        return path
-    try:
-        import ctypes
-        get_short = ctypes.windll.kernel32.GetShortPathNameW
-
-        # If path exists as-is (e.g. a .fa file), shorten directly.
-        if os.path.exists(path):
-            buf = ctypes.create_unicode_buffer(32767)
-            get_short(path, buf, 32767)
-            return buf.value or path
-
-        # Otherwise shorten the nearest existing ancestor, then re-append the tail.
-        head, tail_parts = path, []
-        while head and not os.path.exists(head):
-            head, part = os.path.split(head)
-            tail_parts.insert(0, part)
-        buf = ctypes.create_unicode_buffer(32767)
-        get_short(head, buf, 32767)
-        short_head = buf.value or head
-        return os.path.join(short_head, *tail_parts)
-    except Exception:
-        return path
-
-
 def run_makeblastdb(fasta_path: str, db_out: str, title: str) -> dict:
     """
     Run makeblastdb and return {ok, sequences_count, size_mb}.
     Raises CalledProcessError on failure.
+
+    BLAST+ splits -in and -out on spaces (both accept lists), so a path such as
+    'D:\\Users\\TIEN VUONG\\...' breaks them, and 8.3 short names are disabled on
+    non-system volumes by default. Run inside the output directory and pass bare
+    file names instead; -in is given relative to that directory.
     """
+    out_dir = os.path.dirname(os.path.abspath(db_out))
     cmd = [
         "makeblastdb",
-        "-in", _win_short_path(fasta_path),
+        "-in", os.path.relpath(os.path.abspath(fasta_path), out_dir),
         "-dbtype", "nucl",
-        "-out", _win_short_path(db_out),
+        "-out", os.path.basename(db_out),
         "-title", title,
         "-parse_seqids",
     ]
-    print(f"  Running: {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    print(f"  Running (in {out_dir}): {' '.join(cmd)}", flush=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=out_dir)
     if result.returncode != 0:
         print(result.stderr or result.stdout, file=sys.stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
@@ -114,9 +86,11 @@ def verify_db_build(db_path: str) -> dict:
     Returns {ok, sequences_count, size_mb}.
     """
     try:
+        # BLASTDB locates the directory (spaces allowed); -db gets the bare name.
+        env = dict(os.environ, BLASTDB=os.path.dirname(os.path.abspath(db_path)))
         result = subprocess.run(
-            ["blastdbcmd", "-db", _win_short_path(db_path), "-info"],
-            capture_output=True, text=True, timeout=30,
+            ["blastdbcmd", "-db", os.path.basename(db_path), "-info"],
+            capture_output=True, text=True, timeout=30, env=env,
         )
         output = result.stdout + result.stderr
         # Parse sequence count from output
@@ -163,6 +137,9 @@ def main():
     mirbase_fa = os.path.join(tmp_dir, "mature.fa")
     if not os.path.exists(mirbase_fa):
         download(MIRBASE_MATURE_URL, mirbase_fa)
+    # miRBase does not stamp a release in mature.fa; the hash pins the exact input.
+    with open(mirbase_fa, "rb") as f:
+        metadata["mature_fa_sha256"] = hashlib.sha256(f.read()).hexdigest()
 
     mirbase_db = os.path.join(out_dir, "mirbase_multi")
     print("Building miRBase BLAST db ...", flush=True)

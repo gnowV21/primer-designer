@@ -14,13 +14,15 @@ import subprocess
 from flask import Blueprint, jsonify, request
 
 from algorithm.specificity_check.blast_offtarget import (
-    check_offtarget, _METADATA,
+    is_mirbase_species,
+    check_offtarget, resolve_p3_conditions, _METADATA,
 )
 from algorithm.specificity_check.blast_cache import BlastCache
+from algorithm.sequence_utils import rna_to_dna
 from db.circuit_breaker import CircuitBreaker
 from scripts.build_blast_db import check_db_freshness
 from algorithm.constants import (
-    BLAST_CB_FAILURE_THRESHOLD, BLAST_CB_RECOVERY_TIMEOUT,
+    BLAST_CB_FAILURE_THRESHOLD, BLAST_CB_RECOVERY_TIMEOUT, BLAST_CLASSIFIER_VERSION,
 )
 
 blast_check_bp = Blueprint("blast_check", __name__)
@@ -42,7 +44,11 @@ def blast_check():
         {
           "forward_primer": "CACGCATGGAAGGACGGG",
           "reverse_primer": "CCAGTGCAGGGTCCGAGGTA",  // optional
-          "mirna_id": "hsa-miR-21-5p"                 // optional, to skip self-hit
+          "mirna_id": "hsa-miR-21-5p",                // optional, to skip self-hit
+          "mirna_sequence": "UAGCUUAUCAGACUGAUGUUGA", // optional, on-target for the Tm gate
+          "conditions": {"mv_conc": 50, "dv_conc": 1.5,
+                         "dntp_conc": 0.8, "dna_conc": 200}, // optional, design effective_p3
+          "species": "hsa"                            // optional, design species
         }
 
     Response: see SPEC_phase3.md §8.9
@@ -54,6 +60,19 @@ def blast_check():
     fwd  = (data.get("forward_primer") or "").upper().strip()
     rev  = (data.get("reverse_primer") or "").upper().strip()
     mirna_id = (data.get("mirna_id") or "").strip()
+    mirna_seq = rna_to_dna((data.get("mirna_sequence") or "").strip()).upper()
+    if mirna_seq and (set(mirna_seq) - set("ACGT") or len(mirna_seq) > 60):
+        return jsonify({"error": "mirna_sequence must be ≤60 nt of A/C/G/U/T"}), 400
+    try:
+        p3 = resolve_p3_conditions(data.get("conditions"))
+    except (TypeError, ValueError, AttributeError):
+        return jsonify({"error": "conditions must map mv_conc/dv_conc/dntp_conc/dna_conc to "
+                                 "finite concentrations (mv_conc, dna_conc > 0)"}), 400
+    # Species of the design (3-letter miRBase code). Without it the scan defaults to
+    # mirna_id's prefix, or human when designing from a raw sequence.
+    species = (data.get("species") or "").strip().lower() or None
+    if species and not is_mirbase_species(species):
+        return jsonify({"error": "species must be a miRBase species code, e.g. 'mmu' or 'kshv'"}), 400
 
     if not fwd:
         return jsonify({"error": "forward_primer is required"}), 400
@@ -63,8 +82,9 @@ def blast_check():
     if invalid_chars:
         return jsonify({"error": f"Invalid characters in forward_primer: {invalid_chars}"}), 400
 
-    # mirna_id must carry arm designation (-5p/-3p) to prevent _is_self_hit false-positives.
-    # e.g. 'hsa-miR-1' (no arm) → m = 'hsa-mir-1' is a substring of 'hsa-mir-10-5p' [spec §8.12]
+    # mirna_id must carry arm designation (-5p/-3p): an arm-less id ('hsa-miR-21') names
+    # both arms, so when the sequence check cannot run the other arm would be skipped
+    # as a self-hit. [spec §8.12; boundary-safe name matching since classifier v3]
     if mirna_id and not (mirna_id.endswith("-5p") or mirna_id.endswith("-3p")):
         return jsonify({
             "error": "mirna_id must include arm designation (-5p or -3p), e.g. 'hsa-miR-21-5p'."
@@ -75,9 +95,12 @@ def blast_check():
 
     # ── 3. Cache lookup ─────────────────────────────────────────
     db_version = db_info.get("build_date", "unknown")
-    cached = _cache.get_result(fwd, rev, db_version)
+    context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq, species or ""]
+                       + [f"{k}={p3[k]:g}" for k in sorted(p3)])
+    cache_key = BlastCache._compute_key(fwd, rev, db_version, mirna_id, context)
+    cached = _cache.get_result(fwd, rev, db_version, mirna_id, context)
     if cached is not None:
-        cached["cache"] = {"hit": True, "cache_key": BlastCache._compute_key(fwd, rev, db_version)}
+        cached["cache"] = {"hit": True, "cache_key": cache_key}
         cached["database_info"] = db_info
         return jsonify(cached)
 
@@ -96,6 +119,9 @@ def blast_check():
             reverse_primer=rev or None,
             mirna_id=mirna_id or None,
             timeout=60,
+            target_sequence=mirna_seq or None,
+            conditions=p3,
+            species=species,
         )
         _circuit_breaker.record_success()
     except subprocess.TimeoutExpired:
@@ -119,9 +145,9 @@ def blast_check():
         return jsonify({"error": f"Internal error: {e}"}), 500
 
     # ── 6. Cache result ──────────────────────────────────────────
-    _cache.set_result(fwd, rev, result, db_version)
+    _cache.set_result(fwd, rev, result, db_version, mirna_id, context)
 
-    result["cache"]         = {"hit": False, "cache_key": BlastCache._compute_key(fwd, rev, db_version)}
+    result["cache"]         = {"hit": False, "cache_key": cache_key}
     result["database_info"] = db_info
 
     return jsonify(result)
