@@ -25,6 +25,7 @@ import os
 from ..constants import (
     ISOMIR_3P_FRACTION_HIGH, ISOMIR_3P_FRACTION_MODERATE,
     ISOMIR_3P_BIAS_MIN_FRACTION, ISOMIR_3P_BIAS_MIN_IQR,
+    OVERHANG_LENGTH_DEFAULT,
 )
 
 _DB_PATH = os.path.join(
@@ -109,7 +110,7 @@ def check_isomir_flag(
 _BIOFLUIDS = ("serum", "plasma", "urine")
 
 
-def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = 6,
+def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = OVERHANG_LENGTH_DEFAULT,
                              sample_type: str | None = None) -> dict:
     """
     How much of this miRNA exists as 3'-end isoforms (isomiRdb, audit SCI-10).

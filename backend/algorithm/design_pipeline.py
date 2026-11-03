@@ -82,7 +82,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         })
 
     # Edge-case detection
-    edge_cases = detect_edge_cases(seq)
+    edge_cases = detect_edge_cases(seq, binding_len)
     for ec in edge_cases:
         if ec["severity"] == "critical":
             global_warnings.append({

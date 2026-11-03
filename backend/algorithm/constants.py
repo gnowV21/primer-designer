@@ -118,7 +118,9 @@ MULTIPLEX_PANEL_MAX = 20   # >20 assays per tube: cross-dimer risk increases sig
 FORWARD_SPECIFIC_LENGTH_MAX = 17
 FORWARD_SPECIFIC_LENGTHS = [12, 13, 14, 15, 16, 17]
 
-# [V07]: forward primers EXCLUDE the last 6 nt (used as stemloop overhang)
+# [V07]: forward primers EXCLUDE the last 6 nt (used as stemloop overhang).
+# DEFAULT ONLY — forward_primer.py reads params["bindingRegion3prime"] (5-7 nt)
+# and falls back to this, so the exclusion always tracks the real overhang.
 # "Forward primers are specific to the miRNA sequence but EXCLUDE the last six
 #  nucleotides at the 3' end of the miRNA" [V07]
 FORWARD_EXCLUDES_LAST_NT = 6

@@ -887,7 +887,7 @@ def _rt_tm_note(sl: dict) -> str:
     """
     Describe the RT stem-loop primer Tm honestly. tm_full is the DNA:DNA
     nearest-neighbor Tm of the whole 50-nt oligo (primer3) — INDICATIVE only, NOT
-    the hybridization Tm of the 6-nt overhang with the miRNA. When available, the
+    the hybridization Tm of the 3' overhang with the miRNA. When available, the
     DNA:RNA overhang hybrid Tm (Sugimoto 1995) is the biologically relevant value.
     """
     parts = []

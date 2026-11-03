@@ -42,7 +42,10 @@ _SCRIPTS_DIR = Path(__file__).parent
 _BACKEND_DIR = _SCRIPTS_DIR.parent
 OUTPUT_PATH = _BACKEND_DIR / "data" / "mirbase_overhang_index.json"
 
-OVERHANG_NT = 6          # Chen 2005 stem-loop RT binding length
+# Chen 2005 stem-loop RT binding length. Used ONLY by the printed bucket summary
+# below: the index itself stores FULL mature sequences, and the real overhang window
+# is resolved at runtime from the design's bindingRegion3prime (5-7 nt).
+OVERHANG_NT = 6
 SEED_START, SEED_END = 1, 8   # seed positions 2-8 (0-indexed slice), for context only
 
 
@@ -132,7 +135,8 @@ def main() -> None:
             "n_total": sum(n_mirnas.values()),
             "n_mirnas": n_mirnas,
             "axes": {
-                "rt": "mature[-6:] (RNA). RT primer 3' segment = revcomp(dna(window)).",
+                "rt": ("mature[-N:] (RNA), N = RT overhang length (bindingRegion3prime, 5-7 nt), "
+                       "resolved at runtime. RT primer 3' segment = revcomp(dna(window))."),
                 "fwd": "mature[0:L] (RNA), L = forward primer specific_length, resolved at runtime.",
             },
             "provenance": "generated",
