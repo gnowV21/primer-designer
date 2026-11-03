@@ -131,7 +131,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
                   [Nejad 2018] — fires even when the canonical form is still the majority. */}
               {stemloop_rt.three_prime_isomir?.fold_change_bias_risk && (
                 <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                  <span className="font-semibold">Fold-change caution:</span>{' '}
+                  {/* The backend message already opens with "Fold-change caution:". */}
                   {stemloop_rt.three_prime_isomir.fold_change_bias_warning}
                 </p>
               )}

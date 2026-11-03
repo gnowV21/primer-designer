@@ -3,7 +3,7 @@ import { PLACEHOLDER } from './helpers.js';
 
 test.describe('miRBase lookup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/design/advanced');
+    await page.goto('/design');
   });
 
   test('hsa-miR-21-5p search fills sequence', async ({ page }) => {

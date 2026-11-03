@@ -3,7 +3,7 @@ import { PLACEHOLDER } from './helpers.js';
 
 test.describe('SequenceGroup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/design/advanced');
+    await page.goto('/design');
   });
 
   test('lowercase sequence input is accepted (auto-uppercase)', async ({ page }) => {

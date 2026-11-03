@@ -1,11 +1,13 @@
 import { test, expect } from '@playwright/test';
+import { openParameters } from './helpers.js';
 
-// DetectionMethodGroup on the Advanced designer. The family-discrimination and
+// DetectionMethodGroup in the designer's Parameters panel. The family-discrimination and
 // pre-miRNA toggles were removed (audit SCI-09/ENG-02): the first always runs,
 // the second was never computed.
 test.describe('DetectionMethodGroup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/design/advanced');
+    await page.goto('/design');
+    await openParameters(page);
     await page.getByText('Detection Method', { exact: true }).click();
     await page.getByText('Advanced options').click();
   });

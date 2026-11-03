@@ -17,6 +17,14 @@ import { useEffect, useState } from 'react';
 
 const _store = new Map();
 
+/**
+ * Write a draft from outside its page (e.g. the results page hands its tuned
+ * parameters back to the designer). Picked up the next time the key mounts.
+ */
+export function setDraft(key, value) {
+  _store.set(key, value);
+}
+
 /** Remove one draft (e.g. an explicit "reset" action). */
 export function clearDraft(key) {
   _store.delete(key);
