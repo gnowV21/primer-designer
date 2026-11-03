@@ -48,7 +48,10 @@ In production, `/api/*` must be reverse-proxied to the Flask server separately (
 - `constants/defaults.js` — single source of truth for all default slider/input values and their min/max limits
 - `hooks/useMiRBase.js` — async miRNA lookup; states: `idle | loading | found | not_found | error`
 - `components/ui/` — four low-level primitives: `Tooltip`, `Toggle`, `Slider`, `RangeSlider`
-- `pages/SearchPage/` — main feature page; state owned at `index.jsx`, passed down to four sub-groups: `SequenceGroup`, `ThermodynamicGroup`, `PrimerConstraintsGroup`, `QpcrConditionsGroup`
+- `pages/DesignPage/index.jsx` — the single designer (`/design`): miRNA input first; every parameter folded under "Parameters" (defaults until opened). `/design/advanced` redirects here. Form state lives in `hooks/useDesignForm.js` (in-memory draft, survives navigation)
+- `components/ParameterEditor.jsx` — the full parameter editor, used on BOTH `/design` and `/results`; it renders the groups in `pages/SearchPage/` (`PrimerConstraintsGroup` incl. thermodynamics, `QpcrConditionsGroup`, `DetectionMethodGroup`, `ExperimentalContextGroup`). Add a parameter there and it appears on both pages
+- `pages/ResultsPage/RerunBar.jsx` — "Adjust & re-run" on `/results`: edits a draft of the active run's parameters, runs only on the Re-run button, lists changes, keeps a run switcher (`utils/designRuns.js`, max 8 runs, stored in router state). Re-runs are saved to History and handed back to the designer draft
+- `utils/designRequest.js` — the only `POST /api/design` call and error mapping (designer + re-run); `utils/paramSummary.js` — labels/units for chips, change lists and run labels
 
 ### Tailwind custom colors
 Colors are defined under `theme.extend.colors` (not `theme.colors`) to preserve Tailwind's built-in palette:
