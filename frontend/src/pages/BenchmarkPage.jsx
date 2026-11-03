@@ -105,13 +105,9 @@ export default function BenchmarkPage() {
           <strong>different RT chemistries</strong>: HG Lab uses Chen 2005 stem-loop RT-qPCR;
           miRprimer and miPrimer use linear RT primers — direct efficiency comparison is not valid.
         </p>
-        {data?._metadata?.comparison_note && (
-          <p className="text-xs text-amber-600 border-t border-amber-200 pt-1 mt-1">
-            {data._metadata.comparison_note}
-          </p>
-        )}
+        {/* _metadata.comparison_note restates the paragraph above, so it is not shown again. */}
         {data?._metadata?.validation_note && (
-          <p className="text-xs text-amber-700 pt-1">
+          <p className="text-xs text-amber-700 border-t border-amber-200 pt-1.5 mt-1">
             {data._metadata.validation_note}
           </p>
         )}
@@ -136,7 +132,7 @@ export default function BenchmarkPage() {
           <p className="text-xs text-slate-500">
             Run the benchmark offline to populate results:
           </p>
-          <pre className="text-xs bg-white border border-slate-200 rounded px-3 py-2 font-mono text-slate-700">
+          <pre className="text-xs bg-white border border-slate-200 rounded px-3 py-2 font-mono text-slate-700 overflow-x-auto">
             cd benchmark{'\n'}python run_benchmark.py{'\n'}# Then commit benchmark_results.json
           </pre>
         </div>
@@ -256,7 +252,7 @@ export default function BenchmarkPage() {
                     Exact match vs a published primer table
                   </p>
                   {data.validation.published_exact_match.map((p) => (
-                    <div key={p.id} className="rounded-lg border border-teal-200 bg-teal-50/40 px-3 py-2 space-y-1.5">
+                    <div key={p.id} className="min-w-0 [overflow-wrap:anywhere] rounded-lg border border-teal-200 bg-teal-50/40 px-3 py-2 space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-semibold text-slate-700">{p.id}</span>
                         {p.rt_exact_match === 'PASS' && (
