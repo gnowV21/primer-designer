@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import Tooltip from './Tooltip.jsx';
 
 const ACCENTS = {
-  gray:   { border: 'border-gray-200',   text: 'text-gray-500' },
-  indigo: { border: 'border-indigo-200', text: 'text-gray-500' },
-  purple: { border: 'border-purple-200', text: 'text-gray-500' },
+  gray:   { border: 'border-slate-200',   text: 'text-slate-500' },
+  purple: { border: 'border-purple-200', text: 'text-slate-500' },
 };
 
 export default function CollapsibleSection({
@@ -51,7 +50,7 @@ export default function CollapsibleSection({
           >
             ▸
           </span>
-          <span className={`text-sm font-semibold shrink-0 ${text}`}>
+          <span className={`text-sm font-semibold min-w-0 leading-snug ${text}`}>
             {title}
           </span>
           {tooltip && <Tooltip text={tooltip} />}

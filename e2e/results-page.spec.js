@@ -1,15 +1,16 @@
 // E2E tests for ResultsPage — Phase 4 §4/§5/§6/§7.4
-// Covers: state handoff from SearchPage, empty-state, Quality Summary,
+// Covers: state handoff from the designer, empty-state, Quality Summary,
 // ThermoTable tabs, EdgeCaseBanner, Back navigation.
 
 import { test, expect } from '@playwright/test';
+import { PLACEHOLDER, showScientificDetails } from './helpers.js';
 
 const SEQUENCE = 'UAGCUUAUCAGACUGAUGUUGA'; // hsa-miR-21-5p 22 nt
 
 // Helper: run a full design flow and land on /results
 async function runDesign(page) {
-  await page.goto('/search');
-  const input = page.locator('input[placeholder*="hsa-miR"]');
+  await page.goto('/design');
+  const input = page.getByPlaceholder(PLACEHOLDER);
   await input.fill(SEQUENCE);
   // Trigger the sequence lookup/validation
   await page.evaluate(() => {
@@ -53,15 +54,15 @@ test('results page shows single Design Results header', async ({ page }) => {
   await expect(headers).toHaveCount(1);
 });
 
-test('Back button navigates to /search', async ({ page }) => {
+test('Back button returns to the designer', async ({ page }) => {
   await runDesign(page);
   await page.getByRole('button', { name: /Back/i }).click();
-  await expect(page).toHaveURL('/search');
+  await expect(page).toHaveURL('/design');
 });
 
 test('algorithm version badge visible on results page', async ({ page }) => {
   await runDesign(page);
-  await expect(page.locator('text=v3.0.0')).toBeVisible();
+  await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible();
 });
 
 // ── Quality Summary ───────────────────────────────────────────────
@@ -73,7 +74,8 @@ test('Quality Summary panel is visible', async ({ page }) => {
 
 test('Off-target BLAST not run shows Run check button', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/Off-target.*not run yet/i)).toBeVisible();
+  await page.getByText('Quality Summary').first().click();   // collapsed by default
+  await expect(page.getByText('Off-target (BLAST) — run to include in the exported report.')).toBeVisible();
   await expect(page.getByText('Run check')).toBeVisible();
 });
 
@@ -87,29 +89,32 @@ test('at least one primer set card renders with score', async ({ page }) => {
 
 test('stem-loop RT primer section visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/STEM-LOOP RT PRIMER/i)).toBeVisible();
+  await expect(page.getByText(/STEM-LOOP RT PRIMER/i).first()).toBeVisible();
 });
 
 test('universal reverse primer section visible', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/UNIVERSAL REVERSE PRIMER/i)).toBeVisible();
+  await expect(page.getByText(/Universal reverse/i).first()).toBeVisible();
 });
 
 // ── ThermoTable ───────────────────────────────────────────────────
 
 test('Thermodynamic Parameters section heading visible', async ({ page }) => {
   await runDesign(page);
+  await showScientificDetails(page);
   await expect(page.getByText('Thermodynamic Parameters').first()).toBeVisible();
 });
 
 test('ThermoTable Tab A shows by default', async ({ page }) => {
   await runDesign(page);
+  await showScientificDetails(page);
   await expect(page.getByRole('button', { name: /Tab A.*Comparison/i })).toBeVisible();
   await expect(page.getByText('Total score')).toBeVisible();
 });
 
 test('ThermoTable Tab B switch shows per-primer detail', async ({ page }) => {
   await runDesign(page);
+  await showScientificDetails(page);
   await page.getByRole('button', { name: /Tab B.*Per-primer/i }).click();
   await expect(page.getByText('Forward Primer', { exact: true })).toBeVisible();
   await expect(page.getByText('RT Stem-loop Primer')).toBeVisible();
@@ -118,6 +123,7 @@ test('ThermoTable Tab B switch shows per-primer detail', async ({ page }) => {
 
 test('ThermoTable Tab B has copy button on sequence', async ({ page }) => {
   await runDesign(page);
+  await showScientificDetails(page);
   await page.getByRole('button', { name: /Tab B.*Per-primer/i }).click();
   await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible();
 });

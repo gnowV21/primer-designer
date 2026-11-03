@@ -1,4 +1,8 @@
 // ScoreGauge — circular arc gauge showing total score 0–100 with grade label.
+// Colours come from the shared severity scale so the gauge, the score bars and
+// the rest of the UI stay on one palette and follow the active theme.
+
+import { gradeColor } from '../../../utils/scoreSeverity.js';
 
 export default function ScoreGauge({ score, grade, compact = false }) {
   const pct  = Math.min(100, Math.max(0, score));
@@ -9,13 +13,7 @@ export default function ScoreGauge({ score, grade, compact = false }) {
   const arc  = circ * 0.75; // 270° sweep
   const fill = arc * (pct / 100);
 
-  const colors = {
-    Excellent:  '#0d9488',
-    Good:       '#2563eb',
-    Acceptable: '#d97706',
-    Poor:       '#dc2626',
-  };
-  const stroke = colors[grade] ?? '#94a3b8';
+  const stroke = gradeColor(grade);
 
   return (
     <div className={`flex flex-col items-center gap-0.5 ${compact ? '' : 'py-1'}`}>
@@ -48,7 +46,7 @@ export default function ScoreGauge({ score, grade, compact = false }) {
       ) : (
         <div className="text-center -mt-3 space-y-0.5">
           <p className="text-2xl font-bold tabular-nums" style={{ color: stroke }}>{pct.toFixed(1)}</p>
-          <p className="text-xs text-gray-400">/ 100</p>
+          <p className="text-xs text-slate-500">/ 100</p>
           <p className="text-xs font-semibold" style={{ color: stroke }}>{grade}</p>
         </div>
       )}

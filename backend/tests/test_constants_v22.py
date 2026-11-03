@@ -21,8 +21,8 @@ from algorithm.constants import (
     FORWARD_MAX_LENGTH,
     MFE_STEMLOOP_MIN,
     MFE_STEMLOOP_MAX,
-    MFE_STEMLOOP_MIN_RNA,
-    MFE_STEMLOOP_MAX_RNA,
+    MFE_STEMLOOP_MIN_DNA,
+    MFE_STEMLOOP_MAX_DNA,
     OVERHANG_LENGTH_DEFAULT,
     SCORING_WEIGHTS_V3,
     SCORING_WEIGHTS_V4,
@@ -102,10 +102,21 @@ def test_mfe_dna_proxy_range():
     assert MFE_STEMLOOP_MAX == -10.0
 
 
-def test_mfe_rna_range():
-    """ViennaRNA RNA MFE thresholds must be [-35, -20] kcal/mol."""
-    assert MFE_STEMLOOP_MIN_RNA == -35.0
-    assert MFE_STEMLOOP_MAX_RNA == -20.0
+def test_mfe_dna_vienna_range_brackets_real_primers():
+    """ViennaRNA DNA window (SCI-04) must contain the S fold for every 5–7-nt overhang."""
+    from algorithm.stemloop_rt import _compute_mfe
+    from algorithm.constants import STEMLOOP_BODY
+    for tail in ("CGCCA", "CGCCAA", "TCAACAT", "AAAAAA", "GGGGGGG"):
+        mfe, _, method = _compute_mfe(STEMLOOP_BODY + tail, {})
+        assert "DNA" in method
+        assert MFE_STEMLOOP_MIN_DNA <= mfe <= MFE_STEMLOOP_MAX_DNA, (tail, mfe)
+
+
+def test_rt_primer_folded_as_dna_not_rna():
+    """Regression SCI-04: the DNA fold is far weaker than the old RNA-parameter −27 kcal/mol."""
+    from algorithm.stemloop_rt import _compute_mfe
+    mfe, _, _ = _compute_mfe("GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCAA", {})
+    assert -16.0 < mfe < -14.0, mfe
 
 
 # ── Overhang length — critical Chen 2005 parameter ─────────────────

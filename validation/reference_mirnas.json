@@ -9,34 +9,70 @@
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ]
   },
+  "_published_primer_exact_match": {
+    "purpose": "OPTIONAL exact-match layer vs a real published primer table. Absent by default — sequences are NEVER fabricated; add them only from a cited paper table.",
+    "how_to_add": "On any entry in `mirnas`, add one or more of: `published_rt` (full stem-loop RT primer), `published_rt_overhang` (3' 6-nt overhang only), `published_forward` (forward qPCR primer), `published_source` (citation). U/T and case are normalized before comparison.",
+    "checks_emitted": [
+      "published_rt_exact_match — tool RT primer == published_rt",
+      "published_rt_overhang_match — tool RT 3' end == published_rt_overhang",
+      "published_forward_exact_match — tool forward == published_forward",
+      "published_forward_contains_specific — published forward contains the tool's miRNA-specific region (tolerant of differing 5' tails)"
+    ],
+    "caveat": "Exact forward-primer match only holds vs papers using the SAME universal stem-loop tail (Chen 2005 system). For different tails, rely on `published_forward_contains_specific`."
+  },
   "expected_constants": {
     "stemloop_body": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC",
     "universal_reverse": "CCAGTGCAGGGTCCGAGGTA",
     "overhang_len": 6
   },
   "plausibility_windows": {
-    "forward_tm_c": [55.0, 65.0],
-    "forward_gc_pct": [40.0, 60.0],
-    "amplicon_bp": [40, 110],
-    "qpcr_efficiency_ref_pct": [90, 110]
+    "forward_tm_c": [
+      55.0,
+      65.0
+    ],
+    "forward_gc_pct": [
+      40.0,
+      60.0
+    ],
+    "amplicon_bp": [
+      40,
+      110
+    ],
+    "qpcr_efficiency_ref_pct": [
+      90,
+      110
+    ]
   },
   "mirnas": [
     {
       "id": "hsa-miR-21-5p",
       "role": "canonical positive control; widely published stem-loop assay target",
-      "expected_family": null
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCAACA",
+      "published_rt_overhang": "TCAACA",
+      "published_forward": "GCCCGCTAGCTTATCAGACTGATG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
     },
     {
       "id": "hsa-let-7a-5p",
       "role": "family discrimination anchor",
       "expected_family": "let-7",
-      "expected_cross_reactive_siblings": ["hsa-let-7c-5p", "hsa-let-7f-5p"],
-      "note": "[Wang17]: let-7a/c/f differ by as little as 1 nt; specificity module SHOULD flag siblings."
+      "expected_cross_reactive_siblings": [
+        "hsa-let-7c-5p",
+        "hsa-let-7f-5p"
+      ],
+      "note": "[Wang17]: let-7a/c/f differ by as little as 1 nt; specificity module SHOULD flag siblings.",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — Chen's let-7a RT uses a 5-nt overhang (AACTA, RT GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA); this tool's 6-nt AACTAT extends it by one nt. Not exact-matched; forward core scored."
     },
     {
       "id": "hsa-let-7c-5p",
       "role": "family discrimination (1-nt from let-7a)",
-      "expected_family": "let-7"
+      "expected_family": "let-7",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt_overhang": "AACCAT",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
     },
     {
       "id": "hsa-let-7f-5p",
@@ -45,13 +81,20 @@
     },
     {
       "id": "hsa-miR-16-5p",
-      "role": "common reference/normalizer miRNA",
-      "expected_family": null
+      "role": "common reference/normalizer miRNA; FULL-TRIPLET EXACT-MATCH anchor (RT primer + universal reverse both byte-identical) vs an independent, PubMed-indexed journal paper",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCAA",
+      "published_rt_overhang": "CGCCAA",
+      "published_forward": "GCGCCCGTAGCAGCACGTAAATA",
+      "published_universal_reverse": "CCAGTGCAGGGTCCGAGGTA",
+      "published_source": "Chen L, Bosmajian C, Woo S (2024). 'A highly sensitive stem-loop RT-qPCR method to study siRNA intracellular pharmacokinetics and pharmacodynamics.' Biology Methods & Protocols 9(1):bpae029. DOI 10.1093/biomethods/bpae029 (PMID 38783988, PMC11112049, open access; confirmed on PubMed), Supplemental Table 2 — independent lab (University at Buffalo, SUNY), uses miR-16 as the endogenous normalizer for intracellular siRNA quantification. Uses the identical Chen-2005 44-nt universal stem-loop body AND the identical 20-nt universal reverse primer as this tool; the tool's RT primer and universal reverse are byte-identical to this published set (independently re-verified against the live tool's /api/design output). SECOND, independent source for the same miRNA: Nguyen Hoang Thao Vy et al. (2020), Hoi nghi Cong nghe Sinh hoc Toan quoc 2020 (Vietnam national biotech conference proceedings, not PubMed-indexed), pp. 181-186, Table 1 — reports the same stem-loop RT primer and the same forward-primer specific region; that source's own reverse-primer entry is 19 nt ('CCAGTGCAGGGCCGAGGTA', and its own length column inconsistently says '16 bp'), an apparent transcription anomaly in that table, not used for matching here. THIRD source: Chen C et al. Nucleic Acids Res 2005;33(20):e179, DOI 10.1093/nar/gni178 (PMID 16314309), supplementary 'TaqMan miRNA assays' — RT primer GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCCAA, byte-identical; forward CGCGCTAGCAGCACGTAAAT."
     },
     {
       "id": "hsa-miR-155-5p",
-      "role": "23-nt miRNA (length variation)",
-      "expected_family": null
+      "role": "length variation (miRBase v22: 24 nt) + forward-core concordance vs TWO independent published assays; also documents a 3'-end annotation change that affects the RT overhang",
+      "expected_family": null,
+      "published_forward": "GTGGGTTAATGCTAATCGTGAT",
+      "published_source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-155): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACCCCT, forward GTGGGTTAATGCTAATCGTGAT. Also Yang L-h, et al. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293: forward GCGGTTAATGCTAATCGTGATA (same miRNA-specific core; different USLP body). Forward-core comparison only. NOTE — overhang NOT scored: both papers anchor the RT primer on the older 23-nt mature miR-155 (3' end ...AGGGGU; Czimmerer overhang ACCCCT; Yang 8-nt ACCCCTAT), whereas miRBase v22 / this tool's database annotate hsa-miR-155-5p as 24 nt (3' end ...GGGGUU), giving overhang AACCCC. This is a reference-annotation difference, not a design error — but it means a primer ordered from the 2013/2014 papers binds a 1-nt-shifted 3' end."
     },
     {
       "id": "hsa-miR-122-5p",
@@ -59,9 +102,1945 @@
       "expected_family": null
     },
     {
+      "id": "hsa-miR-150-5p",
+      "role": "cross-system forward-primer concordance vs a DIFFERENT universal stem-loop system (Yang 2014 USLP) — validates the miRNA-specific forward-primer principle across independent chemistries",
+      "expected_family": null,
+      "published_forward": "GCTCTCCCAACCCTTGTACC",
+      "published_source": "Yang L-h, et al. Universal Stem-Loop Primer Method. PLoS ONE 2014;9(12):e115293. DOI 10.1371/journal.pone.0115293 — miR-150 forward qPCR primer (5' GC tail added to raise Tm). NOTE: Yang 2014 uses a different stem-loop body and reverse (random 3' end), so only the forward miRNA-specific core is comparable; no RT exact-match applies. Yang's miR-150 stem-loop 3' end is CACTGGTA (8 nt binding); this tool's 6-nt overhang CACTGG is its prefix — within Chen's 6-8 nt range, not scored."
+    },
+    {
       "id": "cel-miR-39-3p",
       "role": "spike-in control (non-human); cross-species sanity",
       "expected_family": null
+    },
+    {
+      "id": "hsa-miR-1-3p",
+      "role": "cross-system RT-overhang + forward concordance vs a DIFFERENT universal stem-loop system (Czimmerer 2013). The 6-nt RT overhang (the miRNA-specific biological invariant) matches across systems even though the stem-loop bodies differ.",
+      "expected_family": null,
+      "published_rt_overhang": "ATACAT",
+      "published_forward": "GTTGGGTGGAATGTAAAGAAGT",
+      "published_source": "Czimmerer Z, et al. A Versatile Method to Design Stem-Loop Primer-Based Quantitative PCR Assays. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (mmu-mir-1; sequence identical to hsa-miR-1-3p). NOTE: different universal body (GTTGGCTCTGG...CCAGAGCCAAC) and reverse (GTGCAGGGTCCGAGGT), so no full-RT exact-match applies — only the 6-nt overhang and the forward miRNA-specific core are comparable."
+    },
+    {
+      "id": "hsa-miR-181a-5p",
+      "role": "cross-system RT-overhang + forward concordance vs Czimmerer 2013 (different universal body). Confirms the deterministic overhang rule holds for a 23-nt miRNA in an independent published assay.",
+      "expected_family": null,
+      "published_rt_overhang": "ACTCAC",
+      "published_forward": "GGAACATTCAACGCTGTCG",
+      "published_source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181a). Different universal body/reverse — overhang + forward-core comparison only."
+    },
+    {
+      "id": "hsa-miR-181b-5p",
+      "role": "cross-system RT-overhang + forward concordance vs Czimmerer 2013; 23-nt miR-181 family member (1-3 nt from miR-181a/c)",
+      "expected_family": null,
+      "published_rt_overhang": "ACCCAC",
+      "published_forward": "GTTTGAACATTCATTGCTGTCG",
+      "published_source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181b): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACCCAC. Different universal body/reverse — overhang + forward-core comparison only."
+    },
+    {
+      "id": "hsa-miR-181c-5p",
+      "role": "cross-system RT-overhang + forward concordance vs Czimmerer 2013; same 3' end as miR-181a-5p (overhang ACTCAC) — discrimination rests on the forward primer",
+      "expected_family": null,
+      "published_rt_overhang": "ACTCAC",
+      "published_forward": "GGGAACATTCAACCTGTCG",
+      "published_source": "Czimmerer Z, et al. PLoS ONE 2013;8(1):e55168. DOI 10.1371/journal.pone.0055168, Table 2 (hsa-mir-181c): RT GTTGGCTCTGGTGCAGGGTCCGAGGTATTCGCACCAGAGCCAACACTCAC. Different universal body/reverse — overhang + forward-core comparison only."
+    },
+    {
+      "id": "hsa-miR-125b-5p",
+      "role": "SECOND full-RT EXACT-MATCH anchor. Uses the identical Chen-2005 universal body as this tool; RT primer is byte-identical. Verified: 3' UUGUGA -> revcomp TCACAA matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAA",
+      "published_rt_overhang": "TCACAA",
+      "published_forward": "GACTCCCTGAGACCCTAAC",
+      "published_source": "Ngo Thi Mai Vy (student ID 20187223). 'Development of the Quantification Procedure for miR-125b-5p in Human Plasma Samples Using Stemloop RT-qPCR.' Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18 nt, a different loop window than this tool's fixed 20-nt reverse, so reverse is not exact-matched). RT overhang TCACAA = revcomp of 3'-terminal UUGUGA (independently verified)."
+    },
+    {
+      "id": "hsa-miR-195-5p",
+      "role": "forward-core concordance + demonstrates the Chen 6-8 nt binding range. The published RT used a 7-nt overhang (GCCAATA = revcomp of 3' UAUUGGC... last 7 nt), whereas this tool uses a fixed 6-nt overhang (GCCAAT). No 6-nt RT exact-match is asserted; only the forward-specific core is scored.",
+      "expected_family": null,
+      "published_forward": "TAGCAGCACAGAAATAT",
+      "published_source": "Zhao F-L, Dou Y-C, Wang X-F, Han D-C, Lv Z-G, Ge S-L, Zhang Y-K. 'Serum microRNA-195 is down-regulated in breast cancer: a potential marker for the diagnosis of breast cancer.' Mol Biol Rep. 2014;41(9):5913-5922. DOI 10.1007/s11033-014-3466-1, Table 2 ('The sequences of miR-16 and miR-195 stem-loop RT and PCR primers'). Same Chen-2005 universal stem-loop body (GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC) and universal reverse GCAGGGTCCGAGGTATTC. NOTE: the published RT hybridizes 7 nt (GCCAATA = revcomp of 3'-terminal UAUUGGC); this tool's fixed 6-nt overhang (GCCAAT) is the 6-nt prefix of it — a deliberate design choice within Chen's 6-8 nt binding range, not a mismatch. Forward-specific core comparison only."
+    },
+    {
+      "id": "hsa-miR-9-3p",
+      "role": "forward-core concordance. Published forward (GGCGCC tail + ATAAAGCTAGATAAC) anchors the miRNA 5' prefix. Qualitative support for the short-duplex Tm caveat: the published table lists the 50-nt stem-loop primer Tm as 16 C, illustrating why a point Tm on the 6-nt binding duplex is not meaningful.",
+      "expected_family": null,
+      "published_forward": "GGCGCCATAAAGCTAGATAAC",
+      "published_source": "Truong Gia Hung. 'Xay dung quy trinh dinh luong miR-9-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-9-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished), 'Bang 3.2'. Universal reverse GCAGGGTCCGAGGTATTC. Forward-specific core comparison only (stem-loop 3' overhang in the source table was not machine-legible)."
+    },
+    {
+      "id": "hsa-miR-222-3p",
+      "role": "THIRD full-RT EXACT-MATCH anchor. Identical Chen-2005 universal body; RT primer byte-identical. Verified: 3' CUGGGU -> revcomp ACCCAG matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACCCAG",
+      "published_rt_overhang": "ACCCAG",
+      "published_forward": "GGCAGCTACATCTGGCT",
+      "published_source": "Le Tran Bao Bao. 'Xay dung quy trinh dinh luong miR-222-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-222-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18-nt loop window, not exact-matched vs this tool's 20-nt reverse). RT overhang ACCCAG = revcomp of 3'-terminal CUGGGU (independently verified). Published amplicon 56 bp."
+    },
+    {
+      "id": "hsa-miR-221-3p",
+      "role": "FOURTH full-RT EXACT-MATCH anchor (sibling of miR-222-3p; family 221-3p/222-3p). Identical Chen-2005 universal body; RT primer byte-identical. Verified: 3' GGUUUC -> revcomp GAAACC matches the published stem-loop 3' overhang.",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAAACC",
+      "published_rt_overhang": "GAAACC",
+      "published_forward": "GGCGAGCTACATTGTCTG",
+      "published_source": "Tran Thuy Linh. 'Xay dung quy trinh dinh luong miR-221-3p trong huyet tuong bang phuong phap stemloop RT-qPCR' (Building a quantification procedure for miR-221-3p in plasma by stem-loop RT-qPCR). Bachelor's thesis (lab internal, unpublished). Same Chen-2005 universal stem-loop body; universal reverse GCAGGGTCCGAGGTATTC (18-nt loop window, not exact-matched vs this tool's 20-nt reverse). RT overhang GAAACC = revcomp of 3'-terminal GGUUUC (independently verified)."
+    },
+    {
+      "id": "hsa-miR-10a-5p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCACAAA",
+      "published_rt_overhang": "CACAAA",
+      "published_forward": "TGCGGTACCCTGTAGATCCG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-miR-22-3p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACAGTT",
+      "published_rt_overhang": "ACAGTT",
+      "published_forward": "GCCTGAAGCTGCCAGTTGA",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-miR-26b-5p",
+      "role": "full-RT exact-match anchor vs Chen 2005",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACACCTAT",
+      "published_rt_overhang": "ACCTAT",
+      "published_forward": "CGCCGCTTCAAGTAATTCAGGAT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched). RT primer byte-identical to this tool's output (re-verified against the live /api/design)."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "role": "forward-core concordance vs Chen 2005; documents a source-table anomaly",
+      "expected_family": null,
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTGT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — the supplementary table lists the let-7b RT overhang as AATCAC, which is NOT the reverse complement of let-7b's 3' end (expected AACCAC, as this tool designs) — an apparent typo in the source table; RT not scored, forward core scored."
+    },
+    {
+      "id": "hsa-miR-7-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "CGGCGGTGGAAGACTAGTGATT",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGGAAGACUAGUGAUUUUGUU (21 nt) (overhang AACAAA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-miR-10b-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "TCGGGTACCCTGTAGAACCG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UACCCUGUAGAACCGAAUUUGU (22 nt) (overhang ACAAAT); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-miR-20a-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "GCGGCGGTAAAGTGCTTATAGTG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UAAAGUGCUUAUAGUGCAGGUA (22 nt) (overhang TACCTG); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-let-7d-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "GCCGCAGAGGTAGTAGGTTGC",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence AGAGGUAGUAGGUUGCAUAGU (21 nt) (overhang ACTATG); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "hsa-let-7e-5p",
+      "role": "forward-core concordance vs Chen 2005; 3'-end annotation changed since 2005",
+      "expected_family": null,
+      "published_forward": "TGCCGGTGAGGTAGGAGG",
+      "published_source": "Chen C, Ridzon DA, Broomer AJ, et al. 'Real-time quantification of microRNAs by stem-loop RT-PCR.' Nucleic Acids Res 2005;33(20):e179. DOI 10.1093/nar/gni178 (PMID 16314309, PMC1292995; confirmed on PubMed), supplementary 'TaqMan miRNA assays' table. Same 44-nt stem-loop body as this tool; Chen's universal reverse is the 16-nt GTGCAGGGTCCGAGGT, a sub-window of this tool's 20-nt CCAGTGCAGGGTCCGAGGTA (reverse not exact-matched).  NOTE — RT overhang NOT scored: Chen 2005 used the then-current mature sequence UGAGGUAGGAGGUUGUAUAGU (21 nt) (overhang ACTATA); miRBase v22 / this tool's database annotate a longer 3' end, so the tool's overhang differs. Reference-annotation change, not a design error. Forward-primer core (5' end, unchanged) is scored."
+    },
+    {
+      "id": "ath-miR156a-5p",
+      "matureSequence": "UGACAGAAGAGAGUGAGCAC",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGTGCTC",
+      "published_rt_overhang": "GTGCTC",
+      "published_forward": "GCGGCGGTGACAGAAGAGAGT",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR159a",
+      "matureSequence": "UUUGGAUUGAAGGGAGCUCUA",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTAGAGC",
+      "published_rt_overhang": "TAGAGC",
+      "published_forward": "CGGCGGTTTGGATTGAAGGGA",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR166a-3p",
+      "matureSequence": "UCGGACCAGGCUUCAUUCCCC",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGGGGAA",
+      "published_rt_overhang": "GGGGAA",
+      "published_forward": "TCGCTTCGGACCAGGCTTCA",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR167a-5p",
+      "matureSequence": "UGAAGCUGCCAGCAUGAUCUA",
+      "role": "plant miRNA (cross-kingdom check of the stem-loop RT rule) vs Varkonyi-Gasic 2007",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTAGATC",
+      "published_rt_overhang": "TAGATC",
+      "published_forward": "TCGCGTGAAGCTGCCAGCAT",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated."
+    },
+    {
+      "id": "ath-miR171a-3p",
+      "matureSequence": "UGAUUGAGCCGCGCCAAUAUC",
+      "role": "plant miRNA vs Varkonyi-Gasic 2007 — KNOWN LIMITATION: GC-rich 5' prefix, tool refuses by design",
+      "expected_family": null,
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGATATT",
+      "published_rt_overhang": "GATATT",
+      "published_forward": "TTCCTTGATTGAGCCGCGCC",
+      "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated.",
+      "expect_design_failure": "Every forward 3' end inside the miRNA's 5' prefix at 12-15 nt ends in 5/5 G/C (TGATTGAGCC|GCGCC), rejected by the hard 3'-end GC rule (Primer3 Max End GC, forward_primer.py); at 16 nt the GC tail pushes GC%/Tm out of range. The published forward TTCCTT+TGATTGAGCCGCGCC itself ends in GCGCC, i.e. violates that rule. Kept as a documented limitation (owner decision 2026-10-08), not relaxed in the algorithm."
+    },
+    {
+      "id": "ebv-miR-BHRF1-1",
+      "matureSequence": "UAACCUGAUCAGCCCCGGAGUU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BHRF1-1')",
+      "expected_family": null,
+      "published_rt_overhang": "AACTCCGG",
+      "published_forward": "ACACTCCAGCTGGGTAACCTGATCAGCCCC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BHRF1-2-5p",
+      "matureSequence": "AAAUUCUGUUGCAGCAGAUAGC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BHRF1-2*')",
+      "expected_family": null,
+      "published_rt_overhang": "GCTATCTG",
+      "published_forward": "ACACTCCAGCTGGGAAATTCTGTTGCAGCA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART2-5p",
+      "matureSequence": "UAUUUUCUGCAUUCGCCCUUGC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART2-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "GCAAGGGC",
+      "published_forward": "ACACTCCAGCTGGGTATTTTCTGCATTCGC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART2-3p",
+      "matureSequence": "AAGGAGCGAUUUGGAGAAAAUAAA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART2-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "TTTATTTT",
+      "published_forward": "ACACTCCAGCTGGGAAGGAGCGATTTGGAG",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART3-3p",
+      "matureSequence": "CGCACCACUAGUCACCAGGUGU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART3*')",
+      "expected_family": null,
+      "published_rt_overhang": "ACACCTGG",
+      "published_forward": "ACACTCCAGCTGGGCGCACCACTAGTCACC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells. NOTE: Table II row 'BART3*' primers actually match Table I 'BART3' (label mix-up in the paper); attributed here by sequence."
+    },
+    {
+      "id": "ebv-miR-BART4-5p",
+      "matureSequence": "GACCUGAUGCUGCUGGUGUGCU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART4')",
+      "expected_family": null,
+      "published_rt_overhang": "AGCACACC",
+      "published_forward": "ACACTCCAGCTGGGGACCTGATGCTGCTGG",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART5-5p",
+      "matureSequence": "CAAGGUGAAUAUAGCUGCCCAUCG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART5')",
+      "expected_family": null,
+      "published_rt_overhang": "CGATGGGC",
+      "published_forward": "ACACTCCAGCTGGGCAAGGTGAATATAGCT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART6-5p",
+      "matureSequence": "UAAGGUUGGUCCAAUCCAUAGG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART6-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "CCTATGGA",
+      "published_forward": "ACACTCCAGCTGGGTAAGGTTGGTCCAATC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART6-3p",
+      "matureSequence": "CGGGGAUCGGACUAGCCUUAGA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART6-3p') — KNOWN LIMITATION",
+      "expected_family": null,
+      "published_rt_overhang": "TCTAAGGC",
+      "published_forward": "ACACTCCAGCTGGGCGGGGATCGGACTAGC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells.",
+      "expect_design_failure": "GC-rich 5' prefix (CGGGGAUCGG...): every forward candidate fails the GC clamp or GC% window (rejections: gc_clamp_fail, gc_out_of_range). Documented limitation, same policy as ath-miR171a-3p."
+    },
+    {
+      "id": "ebv-miR-BART7-3p",
+      "matureSequence": "CAUCAUAGUCCAGUGUCCAGGG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART7')",
+      "expected_family": null,
+      "published_rt_overhang": "CCCTGGAC",
+      "published_forward": "ACACTCCAGCTGGGCATCATAGTCCAGTGT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART7-5p",
+      "matureSequence": "CCUGGACCUUGACUAUGAAACA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART7*')",
+      "expected_family": null,
+      "published_rt_overhang": "TGTTTCAT",
+      "published_forward": "ACACTCCAGCTGGGCCTGGACCTTGACTAT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART8-5p",
+      "matureSequence": "UACGGUUUCCUAGAUUGUACAG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART8')",
+      "expected_family": null,
+      "published_rt_overhang": "CTGTACAA",
+      "published_forward": "ACACTCCAGCTGGGTACGGTTTCCTAGATT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART9-5p",
+      "matureSequence": "UACUGGACCCUGAAUUGGAAAC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART9*')",
+      "expected_family": null,
+      "published_rt_overhang": "GTTTCCAA",
+      "published_forward": "ACACTCCAGCTGGGTACTGGACCCTGAATT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART10-5p",
+      "matureSequence": "GCCACCUCUUUGGUUCUGUACA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART10*')",
+      "expected_family": null,
+      "published_rt_overhang": "TGTACAGA",
+      "published_forward": "ACACTCCAGCTGGGGCCACCTCTTTGGTTC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART11-5p",
+      "matureSequence": "UCAGACAGUUUGGUGCGCUAGUUG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART11-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "CAACTAGC",
+      "published_forward": "ACACTCCAGCTGGGTCAGACAGTTTGGTGC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART11-3p",
+      "matureSequence": "ACGCACACCAGGCUGACUGCC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART11-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "GGCAGTCA",
+      "published_forward": "ACACTCCAGCTGGGACGCACACCAGGCTGA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART13-3p",
+      "matureSequence": "UGUAACUUGCCAGGGACGGCUGA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART13')",
+      "expected_family": null,
+      "published_rt_overhang": "TCAGCCGT",
+      "published_forward": "ACACTCCAGCTGGGTGTAACTTGCCAGGGA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART13-5p",
+      "matureSequence": "AACCGGCUCGUGGCUCGUACAG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART13*')",
+      "expected_family": null,
+      "published_rt_overhang": "CTGTACGA",
+      "published_forward": "ACACTCCAGCTGGGAACCGGCTCGTGGCTC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART14-3p",
+      "matureSequence": "UAAAUGCUGCAGUAGUAGGGAU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART14*')",
+      "expected_family": null,
+      "published_rt_overhang": "ATCCCTAC",
+      "published_forward": "ACACTCCAGCTGGGTAAATGCTGCAGTAGT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells. NOTE: Table II row 'BART14*' primers actually match Table I 'BART14' (label mix-up in the paper); attributed here by sequence."
+    },
+    {
+      "id": "ebv-miR-BART15",
+      "matureSequence": "GUCAGUGGUUUUGUUUCCUUGA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART15')",
+      "expected_family": null,
+      "published_rt_overhang": "TCAAGGAA",
+      "published_forward": "ACACTCCAGCTGGGGTCAGTGGTTTTGTTT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART16",
+      "matureSequence": "UUAGAUAGAGUGGGUGUGUGCUCU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART16')",
+      "expected_family": null,
+      "published_rt_overhang": "AGAGCACA",
+      "published_forward": "ACACTCCAGCTGGGTTAGATAGAGTGGGTG",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART17-5p",
+      "matureSequence": "UAAGAGGACGCAGGCAUACAAG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART17-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "CTTGTATG",
+      "published_forward": "ACACTCCAGCTGGGTAAGAGGACGCAGGCA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART17-3p",
+      "matureSequence": "UGUAUGCCUGGUGUCCCCUUAGU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART17-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "ACTAAGGG",
+      "published_forward": "ACACTCCAGCTGGGTGTATGCCTGGTGTCC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART18-5p",
+      "matureSequence": "UCAAGUUCGCACUUCCUAUACA",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART18-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "TGTATAGG",
+      "published_forward": "ACACTCCAGCTGGGTCAAGTTCGCACTTCC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART18-3p",
+      "matureSequence": "UAUCGGAAGUUUGGGCUUCGUC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART18-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "GACGAAGC",
+      "published_forward": "ACACTCCAGCTGGGTATCGGAAGTTTGGGC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART19-5p",
+      "matureSequence": "ACAUUCCCCGCAAACAUGACAUG",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART19-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "CATGTCAT",
+      "published_forward": "ACACTCCAGCTGGGACATTCCCCGCAAACA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART19-3p",
+      "matureSequence": "UUUUGUUUGCUUGGGAAUGCU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART19-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "AGCATTCC",
+      "published_forward": "ACACTCCAGCTGGGTTTTGTTTGCTTGGGA",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART20-5p",
+      "matureSequence": "UAGCAGGCAUGUCUUCAUUCC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART20-5p')",
+      "expected_family": null,
+      "published_rt_overhang": "GGAATGAA",
+      "published_forward": "ACACTCCAGCTGGGTAGCAGGCATGTCTTC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART20-3p",
+      "matureSequence": "CAUGAAGGCACAGCCUGUUACC",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART20-3p')",
+      "expected_family": null,
+      "published_rt_overhang": "GGTAACAG",
+      "published_forward": "ACACTCCAGCTGGGCATGAAGGCACAGCCT",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "ebv-miR-BART22",
+      "matureSequence": "UUACAAAGUCAUGGUCUAGUAGU",
+      "role": "EBV viral miRNA vs Cosmopoulos 2009 (paper row 'BART22')",
+      "expected_family": null,
+      "published_rt_overhang": "ACTACTAG",
+      "published_forward": "ACACTCCAGCTGGGTTACAAAGTCATGGTC",
+      "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "label": "hsa-let-7b-5p (Mashayekhi 2019)",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAC",
+      "published_rt_overhang": "AACCAC",
+      "published_forward": "GCTCTTGAGGTAGTAGGTTGTGTG",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-200b-3p",
+      "label": "hsa-miR-200b-3p",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCATCA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCATCA",
+      "published_rt_overhang": "TCATCA",
+      "published_forward": "CGCTAATACTGCCTGGTAATGATGA",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-145-5p",
+      "label": "hsa-miR-145-5p",
+      "role": "Chen-body benchmark vs Mashayekhi 2019 (bm_01)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGAT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGAT",
+      "published_rt_overhang": "AGGGAT",
+      "published_forward": "CATCCGTCCAGTTTTCCCAGG",
+      "published_source": "Mashayekhi P, Noruzinia M, Zeinali S, Khodaverdi S. 'Endometriotic mesenchymal stem cells epigenetic pathogenesis: deregulation of miR-200b, miR-145, and let7b in a functional imbalanced epigenetic disease.' Cell J 2019;21(2):179-185. DOI 10.22074/cellj.2019.5903, Table 1. Chen 2005 44-nt body + 6-nt overhang; universal reverse CAGTGCAGGGTCCGAGGTA (19-nt sub-window of the tool's 20-nt reverse)."
+    },
+    {
+      "id": "hsa-miR-15b-5p",
+      "label": "hsa-miR-15b-5p",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACTGTAAAC",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "TGTAAAC",
+      "published_forward": "GCAGCACATCATGGTTTACA",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3."
+    },
+    {
+      "id": "hsa-miR-195-5p",
+      "label": "hsa-miR-195-5p (Bagheri 2021)",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACGCCAATA",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "GCCAATA",
+      "published_forward": "GCAGCACAGAAATATTGGC",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3."
+    },
+    {
+      "id": "hsa-miR-103a-2-5p",
+      "label": "hsa-miR-103a-2-5p",
+      "role": "Chen-body benchmark vs Bagheri 2021 (bm_02)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGACCAAGGCA",
+      "published_rt_unscored": "Modified stem (not the Chen 2005 body) - body not compared; overhang scored.",
+      "published_rt_overhang": "CAAGGCA",
+      "published_forward": "GCTTCTTTACAGTGCTGCC",
+      "published_source": "Bagheri M, Khansarinejad B, Mosayebi G, Moradabadi A, Mondanizadeh M. 'Alterations in the plasma expression of mir-15b, mir-195 and the tumor-suppressor gene DLEU7 in patients with B-cell chronic lymphocytic leukemia.' Rep Biochem Mol Biol 2021;10(1):20-29, Tables 2-3. MODIFIED Chen body (GTCGTATCGAGAGCAGGGTCCGAGGTATTCGCACTCGATACGAC: stem CCAGTG/CACTGG swapped to CGAGAG/CACTCG) + 7-nt overhang; reverse AGAGCAGGGTCCGAGGT. Forwards have no 5' tail and start at miRNA nt 2-3. Paper calls it 'miR-103' (reference miRNA); both primers match hsa-miR-103a-2-5p (MIMAT0009196), not miR-103a-3p."
+    },
+    {
+      "id": "hsa-let-7a-5p",
+      "label": "hsa-let-7a-5p (Zhang 2007)",
+      "role": "Chen-body benchmark vs Zhang 2007 (bm_03)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTA",
+      "published_rt_overhang": "AACTA",
+      "published_forward": "GCCGCTGAGGTAGTAGGTTGTA",
+      "published_source": "Zhang HH, Wang XJ, Li GX, Yang E, Yang NM. 'Detection of let-7a microRNA by real-time PCR in gastric carcinoma.' World J Gastroenterol 2007;13(20):2883-2888, Table 1. Chen 2005 44-nt body; the RT primer is printed with a 5-nt overhang (AACTA) while the MGB probe TGGATACGACAACTATAC implies 8 nt (AACTATAC) - likely truncated in print. Reverse GTGCAGGGTCCGAGGT (16-nt sub-window)."
+    },
+    {
+      "id": "hsa-miR-143-3p",
+      "label": "hsa-miR-143-3p",
+      "role": "Chen-body benchmark vs Zheng 2014 (bm_04)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAGCTACA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAGCTACA",
+      "published_rt_overhang": "GAGCTACA",
+      "published_forward": "ATGGTTCGTGGGTGAGATGAAGCACTG",
+      "published_source": "Zheng B, Xue X, Zhao Y, Chen J, Xu CY, Duan P. 'The differential expression of microRNA-143,145 in endometriosis.' Iran J Reprod Med 2014;12(8):555-560, Table I. Chen 2005 44-nt body + 8-nt overhang. NOTE: the printed reverse GTGTCGTGGAGTCGGCAATTC belongs to a different stem-loop body (CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG), inconsistent with the paper's own RT primers."
+    },
+    {
+      "id": "hsa-miR-145-5p",
+      "label": "hsa-miR-145-5p (Zheng 2014)",
+      "role": "Chen-body benchmark vs Zheng 2014 (bm_04)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGATTC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGGGATTC",
+      "published_rt_overhang": "AGGGATTC",
+      "published_forward": "ATGGTTCGTGGGGTCCAGTTTTCCCAG",
+      "published_source": "Zheng B, Xue X, Zhao Y, Chen J, Xu CY, Duan P. 'The differential expression of microRNA-143,145 in endometriosis.' Iran J Reprod Med 2014;12(8):555-560, Table I. Chen 2005 44-nt body + 8-nt overhang. NOTE: the printed reverse GTGTCGTGGAGTCGGCAATTC belongs to a different stem-loop body (CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG), inconsistent with the paper's own RT primers."
+    },
+    {
+      "id": "hsa-let-7a-5p",
+      "label": "hsa-let-7a-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7b-5p",
+      "label": "hsa-let-7b-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGAGCTAGTTTCGTCGTAGGGCAGTTGAGAACCACAC",
+      "published_rt_overhang": "AACCACAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7c-5p",
+      "label": "hsa-let-7c-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCAT",
+      "published_rt_overhang": "AACCAT",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7d-5p",
+      "label": "hsa-let-7d-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATGC",
+      "published_rt_overhang": "AACTATGC",
+      "published_forward": "CCAGCTGGGAGAGGTAGTAGGTTGC",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7e-5p",
+      "label": "hsa-let-7e-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGGAGGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7f-5p",
+      "label": "hsa-let-7f-5p (Wang 2018)",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTATAC",
+      "published_rt_overhang": "AACTATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGATTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7g-5p",
+      "label": "hsa-let-7g-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACTGTAC",
+      "published_rt_overhang": "AACTGTAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGTTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-let-7i-5p",
+      "label": "hsa-let-7i-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACAGC",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACAGC",
+      "published_rt_overhang": "AACAGC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAGTTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "hsa-miR-98-5p",
+      "label": "hsa-miR-98-5p",
+      "role": "other-system benchmark vs Wang 2018 (bm_11)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAGAACAATAC",
+      "published_rt_overhang": "AACAATAC",
+      "published_forward": "CCAGCTGGGTGAGGTAGTAAGTTGT",
+      "published_source": "Wang Y, Zhou J, Chen Y, Wang C, Wu E, Fu L, Xie C. 'Quantification of distinct let-7 microRNA family members by a modified stem-loop RT-qPCR.' Mol Med Rep 2018;17:3690-3696. DOI 10.3892/mmr.2017.8297, Table I. Mixed systems: 36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG + 8-nt overhang (Uni R2), let-7b own body (Uni R3), let-7c/let-7i Chen 2005 body + 6-nt overhang (Uni R1). Forward = CCAGCTGGG + 16-nt miRNA prefix."
+    },
+    {
+      "id": "mmu-miR-223-5p",
+      "label": "mmu-miR-223-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAACTC",
+      "published_rt_overhang": "CAACTC",
+      "published_forward": "CTGTGTCGGTCGTGTATTTGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-223-3p",
+      "label": "mmu-miR-223-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTGGGGT",
+      "published_rt_overhang": "TGGGGT",
+      "published_forward": "CGTCAGTGTGTGTCAGTTTGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-501-3p",
+      "label": "mmu-miR-501-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAAATC",
+      "published_rt_overhang": "CAAATC",
+      "published_forward": "CCTTCCACAATGCACCCG",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-669a-5p",
+      "label": "mmu-miR-669a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGACAT",
+      "published_rt_overhang": "AGACAT",
+      "published_forward": "CTCGTCGGTTAGTTGTGTGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-129b-5p",
+      "label": "mmu-miR-129b-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGAAGC",
+      "published_rt_overhang": "GGAAGC",
+      "published_forward": "CCTCTTCCCTTTGCTTTTTGG",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467a-5p",
+      "label": "mmu-miR-467a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCAGCTC",
+      "published_rt_unscored": "Printed RT overhang CAGCTC is not complementary to the miRNA 3' end (expected CGCATA); the paper's own probe GTGTCCGCATATACATGC contains CGCATA, so the RT row is a misprint.",
+      "published_forward": "CCAAGGACGTAAGTGCCTGC",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-335-3p",
+      "label": "mmu-miR-335-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGTCAG",
+      "published_rt_overhang": "GGTCAG",
+      "published_forward": "CTTGGTTGTGGTTGGTTTTTCATT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-335-5p",
+      "label": "mmu-miR-335-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACATTT",
+      "published_rt_overhang": "ACATTT",
+      "published_forward": "CTCCTCCCTATCAAGAGCAA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-147-3p",
+      "label": "mmu-miR-147-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTAGCAG",
+      "published_rt_overhang": "TAGCAG",
+      "published_forward": "CGTCAGACTGTGTGCGGAA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-7a-5p",
+      "label": "mmu-miR-7a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACAACA",
+      "published_rt_overhang": "ACAACA",
+      "published_forward": "CTCGTGCATGATGGAAGACTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-342-3p",
+      "label": "mmu-miR-342-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCACGGGT",
+      "published_rt_overhang": "ACGGGT",
+      "published_forward": "CAACCACACTCTCACACAGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467b-5p",
+      "label": "mmu-miR-467b-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCATATA",
+      "published_rt_overhang": "CATATA",
+      "published_forward": "CTTGCTGTCTCGTAAGTGCCT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-1983",
+      "label": "mmu-miR-1983",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGAAAA",
+      "published_rt_overhang": "AGAAAA",
+      "published_forward": "CTTTCTGTCTCTCACCTGGA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-21a-5p",
+      "label": "mmu-miR-21a-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTCAACA",
+      "published_rt_overhang": "TCAACA",
+      "published_forward": "CATCACCCTCGTAGCTTATCA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-34c-5p",
+      "label": "mmu-miR-34c-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGCAATG",
+      "published_rt_unscored": "Printed RT overhang GCAATG differs from the expected GCAATC at its last base; the paper's own probe CTTGTGTCGCAATCAGCTAAC contains GCAATC, so the RT row is a misprint.",
+      "published_forward": "CCATGGTAGTAGGCAGTGTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-181c-3p",
+      "label": "mmu-miR-181c-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGGTCCA",
+      "published_rt_overhang": "GGTCCA",
+      "published_forward": "CAAGAGCACCATCGACCGTT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-19a-3p",
+      "label": "mmu-miR-19a-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTCAGTT",
+      "published_rt_overhang": "TCAGTT",
+      "published_forward": "CCGTGTCGTGTGCAAATCTA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-144-3p",
+      "label": "mmu-miR-144-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCAGTACA",
+      "published_rt_overhang": "AGTACA",
+      "published_forward": "CGTTCCGATGAGTAATACAGTATA",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-511-5p",
+      "label": "mmu-miR-511-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCTGAGTG",
+      "published_rt_overhang": "TGAGTG",
+      "published_forward": "CCTTCGCTTCCATGCCTTTT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-467c-5p",
+      "label": "mmu-miR-467c-5p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCCACATA",
+      "published_rt_overhang": "CACATA",
+      "published_forward": "CTCTTCCTATTCCTAAGTGCGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-21a-3p",
+      "label": "mmu-miR-21a-3p",
+      "role": "other-system benchmark vs Cao 2023 (bm_12)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTCGACAGC",
+      "published_rt_overhang": "GACAGC",
+      "published_forward": "CAACAGAACACCAACAGCAGT",
+      "published_source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
+    },
+    {
+      "id": "osa-miR164a",
+      "label": "osa-miR164a",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTGCACGTG",
+      "published_rt_overhang": "TGCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR164a/b/f' (identical mature sequences)."
+    },
+    {
+      "id": "osa-miR164c",
+      "label": "osa-miR164c",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTGCACGTA",
+      "published_rt_overhang": "TGCACGTA",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR164d",
+      "label": "osa-miR164d",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGAGCACGTG",
+      "published_rt_overhang": "AGCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR164e",
+      "label": "osa-miR164e",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGCTCACGTG",
+      "published_rt_overhang": "CTCACGTG",
+      "published_forward": "ACACTCCAGCTGGGTGGAGAAGCA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR530-5p",
+      "label": "osa-miR530-5p",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGTAGGTGCA",
+      "published_rt_overhang": "TAGGTGCA",
+      "published_forward": "ACACTCCAGCTGGGTGCATTTGCACC",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b."
+    },
+    {
+      "id": "osa-miR1846a-5p",
+      "label": "osa-miR1846a-5p",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGAGCGGCCC",
+      "published_rt_overhang": "AGCGGCCC",
+      "published_forward": "ACACTCCAGCTGGGAGTGAGGAGG",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR1846a/b/c-5p'."
+    },
+    {
+      "id": "osa-miR1858a",
+      "label": "osa-miR1858a",
+      "role": "other-system benchmark vs Mou 2013 (bm_13)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAGGCCCCACT",
+      "published_rt_overhang": "GCCCCACT",
+      "published_forward": "ACACTCCAGCTGGGGAGAGGAGGA",
+      "published_source": "Mou G, Wang K, Xu D, Zhou G. 'Evaluation of three RT-qPCR-based miRNA detection methods using seven rice miRNAs.' Biosci Biotechnol Biochem 2013;77(6):1349-1353. DOI 10.1271/bbb.130192, Table 2. DIFFERENT body (SL37 CTCAACTGGTGTCGTGGAGTCCGGCAATTCAGTTGAG) + 8-nt overhang; forward = FW14 ACACTCCAGCTGGG + 10-12 nt miRNA prefix. RICE miRNA (outside hsa/mmu/rno specificity data; only primer design validated). Wet-lab: stem-loop detected miR164a/c/d/e and miR530-5p (Ct 19-27) but NOT the low-abundance GC-rich miR1846a/b/c-5p and miR1858a/b. Paper row 'miR1858a/b'."
+    },
+    {
+      "id": "ssc-miR-1",
+      "label": "ssc-miR-1 (Busk 2014)",
+      "matureSequence": "UGGAAUGUAAAGAAGUAUGUA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTGGAATGTAAAGAAG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTACATAC",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-let-7a",
+      "label": "ssc-let-7a (Busk 2014)",
+      "matureSequence": "UGAGGUAGUAGGUUGUAUAGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTGAGGTAGTAGGTTGT",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTAACTATAC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-let-7d",
+      "label": "ssc-let-7d (Busk 2014)",
+      "matureSequence": "AGAGGUAGUAGGUUGCAUAGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGAGAGGTAGTAGGTTGCAT",
+      "published_reverse_printed": "AGGTCCAGTTTTTTTTTTTTTTTAACT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-let-7f",
+      "label": "ssc-let-7f (Busk 2014)",
+      "matureSequence": "UGAGGUAGUAGAUUGUAUAGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTGAGGTAGTAGATTG",
+      "published_reverse_printed": "AGGTCCAGTTTTTTTTTTTTTTTAACT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR15a",
+      "label": "ssc-miR15a (Busk 2014)",
+      "matureSequence": "UAGCAGCACAUAAUGGUUUGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTAGCAGCACATAATG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTACAA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "published_failed_forwards": [
+        "CAGTAGCAGCACATAATGGT"
+      ]
+    },
+    {
+      "id": "ssc-miR-17-5p",
+      "label": "ssc-miR-17-5p (Busk 2014)",
+      "matureSequence": "CAAAGUGCUUACAGUGCAGGUAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAAAGTGCTTACAGTGCAG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCTAC",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-17-3p",
+      "label": "ssc-miR-17-3p (Busk 2014)",
+      "matureSequence": "ACUGCAGUGAAGGCACUUGUAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GACTGCAGTGAAGGCA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCTACAAG",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-20",
+      "label": "ssc-miR-20 (Busk 2014)",
+      "matureSequence": "UAAAGUGCUUAUAGUGCAGGUAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "ACAGTAAAGTGCTTATAGTGCA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCTACCT",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-21",
+      "label": "ssc-miR-21 (Busk 2014)",
+      "matureSequence": "UAGCUUAUCAGACUGAUGUUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TCAGTAGCTTATCAGACTGATG",
+      "published_reverse_printed": "CGTCCAGTTTTTTTTTTTTTTTCAAC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-22-3p",
+      "label": "hsa-miR-22-3p (Busk 2014)",
+      "matureSequence": "AAGCUGCCAGUUGAAGAACUGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGAAGCTGCCAGTTGA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTACAGT",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "published_failed_forwards": [
+        "GAAGCTGCCAGTTGAAGA"
+      ]
+    },
+    {
+      "id": "ssc-miR-23a",
+      "label": "ssc-miR-23a (Busk 2014)",
+      "matureSequence": "AUCACAUUGCCAGGGAUUUCCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CATCACATTGCCAGGGAT",
+      "published_reverse_printed": "CGTCCAGTTTTTTTTTTTTTTTGGAA",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-23b",
+      "label": "ssc-miR-23b (Busk 2014)",
+      "matureSequence": "AUCACAUUGCCAGGGAUUACCAC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CATCACATTGCCAGGGAT",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGTGGTA",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-25",
+      "label": "hsa-miR-25 (Busk 2014)",
+      "matureSequence": "CAUUGCACUUGUCUCGGUCUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CATTGCACTTGTCTCGGT",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCAGA",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-26a",
+      "label": "ssc-miR-26a (Busk 2014)",
+      "matureSequence": "UUCAAGUAAUCCAGGAUAGGCU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTTCAAGTAATCCAGGA",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTAGCCT",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-27a",
+      "label": "ssc-miR-27a (Busk 2014)",
+      "matureSequence": "UUCACAGUGGCUAAGUUCCGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTTCACAGTGGCTAAGT",
+      "published_reverse_printed": "CAGTTTTTTTTTTTTTTTGCGGAA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-27b",
+      "label": "mmu-miR-27b (Busk 2014)",
+      "matureSequence": "UUCACAGUGGCUAAGUUCUGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTTCACAGTGGCTAAGT",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGCAGA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-29c",
+      "label": "ssc-miR-29c (Busk 2014)",
+      "matureSequence": "UAGCACCAUUUGAAAUCGGUUA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTAGCACCATTTGAAATC",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTAACC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-30a-3p",
+      "label": "ssc-miR-30a-3p (Busk 2014)",
+      "matureSequence": "CUUUCAGUCGGAUGUUUGCAGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCTTTCAGTCGGATGTTTG",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGCTG",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-30c-5p",
+      "label": "ssc-miR-30c-5p (Busk 2014)",
+      "matureSequence": "UGUAAACAUCCUACACUCUCAGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTGTAAACATCCTACACTCT",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGCTG",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-30d",
+      "label": "mmu-miR-30d (Busk 2014)",
+      "matureSequence": "UGUAAACAUCCCCGACUGGAAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TGTAAACATCCCCGACTG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCTTC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-93",
+      "label": "hsa-miR-93 (Busk 2014)",
+      "matureSequence": "AAAGUGCUGUUCGUGCAGGUA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAAAGTGCTGTTCGTG",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCTACCT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-101",
+      "label": "ssc-miR-101 (Busk 2014)",
+      "matureSequence": "UACAGUACUGUGAUAACUGAA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTACAGTACTGTGATAAC",
+      "published_reverse_printed": "AGGTCCAGTTTTTTTTTTTTTTTCAG",
+      "published_design_origin": "F: Manual; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-103",
+      "label": "ssc-miR-103 (Busk 2014)",
+      "matureSequence": "AGCAGCAUUGUACAGGGCUAUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGAGCAGCATTGTACAGG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCATAG",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-106a",
+      "label": "ssc-miR-106a (Busk 2014)",
+      "matureSequence": "AAAAGUGCUUACAGUGCAGGUAGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GAAAAGTGCTTACAGTGCAG",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGCTAC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-107",
+      "label": "ssc-miR-107 (Busk 2014)",
+      "matureSequence": "AGCAGCAUUGUACAGGGCUAUCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGAGCAGCATTGTACAG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTGAT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-122",
+      "label": "ssc-miR-122 (Busk 2014)",
+      "matureSequence": "UGGAGUGUGACAAUGGUGUUUGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "ACAGTGGAGTGTGACAATG",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCAAACAC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-125b-5p",
+      "label": "mmu-miR-125b-5p (Busk 2014)",
+      "matureSequence": "UCCCUGAGACCCUAACUUGUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTCCCTGAGACCCTAACT",
+      "published_reverse_printed": "GGTCACGTTTTTTTTTTTTTTTCACA",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-126-3p",
+      "label": "ssc-miR-126-3p (Busk 2014)",
+      "matureSequence": "UCGUACCGUGAGUAAUAAUGCG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTCGTACCGTGAGTAA",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCGCAT",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-129-3p",
+      "label": "ssc-miR-129-3p (Busk 2014)",
+      "matureSequence": "AAGCCCUUACCCCAAAAAGCAU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGAAGCCCTTACCCCA",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTATGCT",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-133a-3p",
+      "label": "ssc-miR-133a-3p (Busk 2014)",
+      "matureSequence": "UUGGUCCCCUUCAACCAGCUG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTTGGTCCCCTTCAACC",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCAGC",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-135b",
+      "label": "mmu-miR-135b (Busk 2014)",
+      "matureSequence": "UAUGGCUUUUCAUUCCUAUGUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTATGGCTTTTCATTCCT",
+      "published_reverse_printed": "GGTCACGTTTTTTTTTTTTTTTCACA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-mir-139-5p",
+      "label": "ssc-mir-139-5p (Busk 2014)",
+      "matureSequence": "UCUACAGUGCACGUGUCUCCAGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TCTACAGTGCACGTGTCT",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTACTGGA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-140-3p",
+      "label": "ssc-miR-140-3p (Busk 2014)",
+      "matureSequence": "UACCACAGGGUAGAACCACGG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTACCACAGGGTAGAACC",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCCGT",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-142-5p",
+      "label": "ssc-miR-142-5p (Busk 2014)",
+      "matureSequence": "CAUAAAGUAGAAAGCACUACU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGCATAAAGTAGAAAGCAC",
+      "published_reverse_printed": "AGGTCCAGTTTTTTTTTTTTTTTAGTAG",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-142-3p",
+      "label": "ssc-miR-142-3p (Busk 2014)",
+      "matureSequence": "UGUAGUGUUUCCUACUUUAUGGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTGTAGTGTTTCCTACT",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCCAT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-143-3p",
+      "label": "ssc-miR-143-3p (Busk 2014)",
+      "matureSequence": "UGAGAUGAAGCACUGUAGCUC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTGAGATGAAGCACTGT",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGAGC",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-144-5p",
+      "label": "mmu-miR-144-5p (Busk 2014)",
+      "matureSequence": "GGAUAUCAUCAUAUACUGUAAGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGGGATATCATCATATACT",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTACTTAC",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-146a",
+      "label": "hsa-miR-146a (Busk 2014)",
+      "matureSequence": "UGAGAACUGAAUUCCAUGGGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTGAGAACTGAATTCCATG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTAACC",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-146a-3p",
+      "label": "ssc-miR-146a-3p (Busk 2014)",
+      "matureSequence": "CCUGUGAAGUUUAGUUCUUCAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGCCTGTGAAGTTTAGTTC",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCTGAAG",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "published_failed_forwards": [
+        "CAGCCTGTGAAGTTTAGTTCT"
+      ]
+    },
+    {
+      "id": "ssc-miR-146b-5p",
+      "label": "ssc-miR-146b-5p (Busk 2014)",
+      "matureSequence": "UGAGAACUGAAUUCCAUAGGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTGAGAACTGAATTCCA",
+      "published_reverse_printed": "GTCACGTTTTTTTTTTTTTTTGCCTA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "gga-miR-146c-5p",
+      "label": "gga-miR-146c-5p (Busk 2014)",
+      "matureSequence": "UGAGAACUGAAUUCCAUGGACUG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTGAGAACTGAATTCCA",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCAGTC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-148a-3p",
+      "label": "ssc-miR-148a-3p (Busk 2014)",
+      "matureSequence": "UCAGUGCACUACAGAACUUUGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGTCAGTGCACTACAGAAC",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTACAAAG",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-150",
+      "label": "ssc-miR-150 (Busk 2014)",
+      "matureSequence": "UCUCCCAACCCUUGUACCAGUG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTCTCCCAACCCTTGTAC",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCACTG",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-152",
+      "label": "ssc-miR-152 (Busk 2014)",
+      "matureSequence": "UCAGUGCAUGACAGAACUUGG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTCAGTGCATGACAGAAC",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCCAAG",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-155-5p",
+      "label": "ssc-miR-155-5p (Busk 2014)",
+      "matureSequence": "UUAAUGCUAAUUGUGAUAGGGG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTTAATGCTAATTGTG",
+      "published_reverse_printed": "CAGTTTTTTTTTTTTTTTCCCCTATC",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-181a",
+      "label": "ssc-miR-181a (Busk 2014)",
+      "matureSequence": "AACAUUCAACGCUGUCGGUGAGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CATTCAACGCTGTCGGT",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTAACTCA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-182",
+      "label": "mmu-miR-182 (Busk 2014)",
+      "matureSequence": "UUUGGCAAUGGUAGAACUCACACCG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TTTGGCAATGGTAGAACTCA",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCGGTG",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-191",
+      "label": "ssc-miR-191 (Busk 2014)",
+      "matureSequence": "CAACGGAAUCCCAAAAGCAGCUG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAACGGAATCCCAAAAGCA",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCAGC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "bta-miR-193b",
+      "label": "bta-miR-193b (Busk 2014)",
+      "matureSequence": "AACUGGCCCACAAAGUCCCGCU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGAACTGGCCCACAAAGTC",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTAGCGG",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-195",
+      "label": "ssc-miR-195 (Busk 2014)",
+      "matureSequence": "UAGCAGCACAGAAAUAUUGGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTAGCAGCACAGAA",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTGCCA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-199b-3p",
+      "label": "ssc-miR-199b-3p (Busk 2014)",
+      "matureSequence": "UACAGUAGUCUGCACAUUGGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGTACAGTAGTCTGCACAT",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTAACCAA",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-200b",
+      "label": "mmu-miR-200b (Busk 2014)",
+      "matureSequence": "UAAUACUGCCUGGUAAUGAUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTAATACTGCCTGGTAATG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCATC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-200c",
+      "label": "ssc-miR-200c (Busk 2014)",
+      "matureSequence": "UAAUACUGCCGGGUAAUGAUGGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGTAATACTGCCGGGTAATG",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCCATC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-206",
+      "label": "ssc-miR-206 (Busk 2014)",
+      "matureSequence": "UGGAAUGUAAGGAAGUGUGUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTGGAATGTAAGGA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCACA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "published_failed_forwards": [
+        "GCAGTGGAATGTAAGGAAGT",
+        "CGCAGTGGAATGTAAGGA"
+      ]
+    },
+    {
+      "id": "mmu-miR-210",
+      "label": "mmu-miR-210 (Busk 2014)",
+      "matureSequence": "CUGUGCGUGUGACAGCGGCUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CTGTGCGTGTGACAGC",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCAGC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-223-3p",
+      "label": "hsa-miR-223-3p (Busk 2014)",
+      "matureSequence": "UGUCAGUUUGUCAAAUACCCCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTGTCAGTTTGTCA",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTGGGGTA",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-335",
+      "label": "ssc-miR-335 (Busk 2014)",
+      "matureSequence": "UCAAGAGCAAUAACGAAAAAUG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTCAAGAGCAATAACGA",
+      "published_reverse_printed": "AGGTCCAGTTTTTTTTTTTTTTTCATT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-423-5p",
+      "label": "ssc-miR-423-5p (Busk 2014)",
+      "matureSequence": "UGAGGGGCAGAGAGCGAGACUUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TGAGGGGCAGAGAGCGA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTAAAGTC",
+      "published_design_origin": "F: Manual; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-451",
+      "label": "ssc-miR-451 (Busk 2014)",
+      "matureSequence": "AAACCGUUACCAUUACUGAGUU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGAAACCGTTACCATTACT",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTAACTCA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-486",
+      "label": "ssc-miR-486 (Busk 2014)",
+      "matureSequence": "UCCUGUACUGAGCUGCCCCGAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGTCCTGTACTGAGCTG",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCTCG",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "hsa-miR-491-3p",
+      "label": "hsa-miR-491-3p (Busk 2014)",
+      "matureSequence": "CUUAUGCAAGAUUCCCUUCUAC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGCTTATGCAAGATTC",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTGTAGAAG",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "published_failed_forwards": [
+        "CAGCTTATGCAAGATTCCCT"
+      ]
+    },
+    {
+      "id": "ssc-miR-664-5p",
+      "label": "ssc-miR-664-5p (Busk 2014)",
+      "matureSequence": "CAGGCUAGGAGAAGUGAUUGGAU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGGCTAGGAGAAGTG",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTATCCAATC",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-667",
+      "label": "mmu-miR-667 (Busk 2014)",
+      "matureSequence": "UGACACCUGCCACCCAGCCCAAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TGACACCTGCCACCCA",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCTTG",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-670",
+      "label": "ssc-miR-670 (Busk 2014)",
+      "matureSequence": "AUCCCUGAGUGUAUGUGGUGAA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "ACAGATCCCTGAGTGTATGT",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCACCA",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-673",
+      "label": "ssc-miR-673 (Busk 2014)",
+      "matureSequence": "CUCACAGCUCCGGUCCUUGGAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CTCACAGCTCCGGTC",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCTCCAAG",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-881",
+      "label": "mmu-miR-881 (Busk 2014)",
+      "matureSequence": "AACUGUGUCUUUUCUGAAUAGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGAACTGTGTCTTTTCTGA",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTCTATTC",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-882",
+      "label": "ssc-miR-882 (Busk 2014)",
+      "matureSequence": "AGGAGAGAGUUAGCGCAUUAGU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "AGGAGAGAGTTAGCGCA",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTACTAATG",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-1246",
+      "label": "ssc-miR-1246 (Busk 2014)",
+      "matureSequence": "AAUGGAUUUUUGGAGCAGG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGAATGGATTTTTGGAGC",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCCTG",
+      "published_design_origin": "F: miRprimer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-1290",
+      "label": "ssc-miR-1290 (Busk 2014)",
+      "matureSequence": "UGGAUUUUUGGAUCAGGGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CGCAGTGGATTTTTGGATCA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCCCT",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-1937a",
+      "label": "ssc-miR-1937a (Busk 2014)",
+      "matureSequence": "AAUCCCGGACGAGCCCCCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGAATCCCGGACGAG",
+      "published_reverse_printed": "GTTTTTTTTTTTTTTTGGGGGCT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-2134",
+      "label": "ssc-miR-2134 (Busk 2014)",
+      "matureSequence": "GUCUUGGGAAACGGGGUGC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCAGGTCTTGGGAAACG",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTGCAC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-2137",
+      "label": "ssc-miR-2137 (Busk 2014)",
+      "matureSequence": "GCCGGCGGGAGCCCCAGGGAG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCGGGAGCCCCAG",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTCTCC",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table.",
+      "expect_design_failure": "85.7% GC miRNA (E5): every forward candidate fails the GC% window and the Tm window (rejections: gc_out_of_range, tm_out_of_range). Busk's validated forward GCGGGAGCCCCAG (13 nt, starts at miRNA nt 5) works in the wet lab. Documented limitation (owner decision 2026-10-10), same policy as ath-miR171a-3p."
+    },
+    {
+      "id": "ssc-miR-7134-3p",
+      "label": "ssc-miR-7134-3p (Busk 2014)",
+      "matureSequence": "UGCGGAACCUGCGGAUACGG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCGGAACCTGCGGAT",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCCGT",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "putative miRNA1",
+      "label": "putative miRNA1 (Busk 2014)",
+      "matureSequence": "UCCGUAUCCGCAGGUUCCGCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TCCGTATCCGCAGGT",
+      "published_reverse_printed": "CAGTTTTTTTTTTTTTTTGCGGAA",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "putative miRNA2",
+      "label": "putative miRNA2 (Busk 2014)",
+      "matureSequence": "UCCGUAUCCGCAGGUUCCGCAUC",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "TCCGTATCCGCAGGT",
+      "published_reverse_printed": "GGTCCAGTTTTTTTTTTTTTTTGATG",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-31-3p",
+      "label": "mmu-miR-31-3p (Busk 2014)",
+      "matureSequence": "CUGCUAUGCCAACAUAUUGCCA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGCTGCTATGCCAACA",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTGGCAA",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-194-5p (var)",
+      "label": "mmu-miR-194-5p (var) (Busk 2014)",
+      "matureSequence": "CUGUAACAGCAACUCCAUGUGGAA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GCTGTAACAGCAACTCCA",
+      "published_reverse_printed": "TCCAGTTTTTTTTTTTTTTTCCAC",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-138-5p",
+      "label": "mmu-miR-138-5p (Busk 2014)",
+      "matureSequence": "CAGCUGGUGUUGUGAAUCAGGCCG",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "CAGCTGGTGTTGTGAATC",
+      "published_reverse_printed": "GTTTTTTTTTTTTTTTCGGCCT",
+      "published_design_origin": "F: Best primer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "putative miRNA3",
+      "label": "putative miRNA3 (Busk 2014)",
+      "matureSequence": "GUUGGUGUACACUGGAAUAGCU",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GGTTGGTGTACACTGGAA",
+      "published_reverse_printed": "GTCCAGTTTTTTTTTTTTTTTAGCT",
+      "published_design_origin": "F: miRprimer; R: miRprimer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "ssc-miR-1468 (var)",
+      "label": "ssc-miR-1468 (var) (Busk 2014)",
+      "matureSequence": "UCUCCGUUUGCCUGUUUUGCUGA",
+      "role": "poly(A)-system benchmark vs Busk 2014 miRprimer (wet-lab validated assay)",
+      "benchmark_group": "polyA_system",
+      "published_forward": "GTCTCCGTTTGCCTGT",
+      "published_reverse_printed": "CCAGTTTTTTTTTTTTTTTCAGCA",
+      "published_design_origin": "F: Best primer; R: Best primer",
+      "published_source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
+    },
+    {
+      "id": "mmu-miR-124-3p",
+      "label": "mmu-miR-124-3p",
+      "role": "Chen-body benchmark vs Lukashevich 2026 (bm_001)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGGCATT",
+      "published_rt_overhang": "GGCATT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGGCATT",
+      "published_forward": "AAGTACTCTAAGGCACGCGG",
+      "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA.",
+      "expect_design_failure": "20-nt miRNA: only 14 nt (UAAGGCACGCGGUG) remain for the forward after the 6-nt overhang region. At 12 nt the 3' end is CGCGG (5/5 G/C, hard 3'-end GC rule); at 13-14 nt the specific region is 62-64% GC, so every tail that reaches the Tm target leaves the full primer above the 60% GC window (rejections: gc_out_of_range, gc_end_window_fail). The published, wet-lab validated forward AAGTACTCT+AAGGCACGCGG (E 107%, R2 0.99) ends in CGCGG, i.e. violates the 3'-end rule. Documented limitation (owner decision 2026-10-10), same policy as ath-miR171a-3p; not relaxed in the algorithm."
+    },
+    {
+      "id": "mmu-miR-125a-5p",
+      "label": "mmu-miR-125a-5p",
+      "role": "Chen-body benchmark vs Lukashevich 2026 (bm_001)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAG",
+      "published_rt_overhang": "TCACAG",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAG",
+      "published_forward": "AGCGTTCCCTGAGACCCTT",
+      "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-125b-5p",
+      "label": "mmu-miR-125b-5p",
+      "role": "Chen-body benchmark vs Lukashevich 2026 (bm_001)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAA",
+      "published_rt_overhang": "TCACAA",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAA",
+      "published_forward": "CAGCATCCCTGAGACCCTAA",
+      "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-205-5p",
+      "label": "mmu-miR-205-5p",
+      "role": "Chen-body benchmark vs Lukashevich 2026 (bm_001)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCAGACT",
+      "published_rt_overhang": "CAGACT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCAGACT",
+      "published_forward": "CGCGGCATCCTTCATTCCA",
+      "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA."
+    },
+    {
+      "id": "mmu-miR-135b-5p",
+      "label": "mmu-miR-135b-5p",
+      "role": "Chen-body benchmark vs Lukashevich 2026 (bm_001)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAT",
+      "published_rt_overhang": "TCACAT",
+      "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACAT",
+      "published_forward": "CCGCTCGTATGGCTTTTCATTC",
+      "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA."
+    },
+    {
+      "id": "hsa-miR-155-5p",
+      "label": "hsa-miR-155-5p (Keyhani 2025)",
+      "role": "other-system benchmark vs Keyhani 2025 (bm_002)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTATGCTGCTACCTCGGACCCTGCTTAGTGCCATGCCTGCCATCGAGCAGCATACAACCCC",
+      "published_rt_overhang": "AACCCC",
+      "published_source": "Keyhani A, Jafarzadeh A, Sharifi I, Salarkia E. 'Leptin enhances the efficacy of glucantime to modulate macrophage polarization toward the M1 phenotype in Leishmania tropica-infected macrophages.' Parasites & Vectors 2025;18:360. DOI 10.1186/s13071-025-07004-6, Table 2. DIFFERENT stem-loop body (GTATGCTGCTACCTCGGACCCTGCTTAGTGCCATGCCTGCCATCGAGCAGCATAC) + 6-nt overhang; reverse GCTGCTACCTCGGACCCT. Paper prints the SAME forward for miR-155-5p and miR-146a (GCGCCTGAGAACTGAATTCCATGGGTT = miR-146a-5p prefix) - copy error, miR-155 forward not scored."
+    },
+    {
+      "id": "hsa-miR-146a-5p",
+      "label": "hsa-miR-146a-5p",
+      "role": "other-system benchmark vs Keyhani 2025 (bm_002)",
+      "benchmark_group": "other_body",
+      "published_rt_printed": "GTATGCTGCTACCTCGGACCCTGCTTAGTGCCATGCCTGCCATCGAGCAGCATACAACCCA",
+      "published_rt_overhang": "AACCCA",
+      "published_forward": "GCGCCTGAGAACTGAATTCCATGGGTT",
+      "published_source": "Keyhani A, Jafarzadeh A, Sharifi I, Salarkia E. 'Leptin enhances the efficacy of glucantime to modulate macrophage polarization toward the M1 phenotype in Leishmania tropica-infected macrophages.' Parasites & Vectors 2025;18:360. DOI 10.1186/s13071-025-07004-6, Table 2. DIFFERENT stem-loop body (GTATGCTGCTACCTCGGACCCTGCTTAGTGCCATGCCTGCCATCGAGCAGCATAC) + 6-nt overhang; reverse GCTGCTACCTCGGACCCT."
+    },
+    {
+      "id": "hsa-miR-9-5p",
+      "label": "hsa-miR-9-5p",
+      "role": "Chen-body benchmark vs Nourmohammadi 2019 (bm_003)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGACCGGTATTCGCACTGGATACGACTCATAC",
+      "published_rt_overhang": "TCATAC",
+      "published_rt_unscored": "Modified Chen loop (CCGACCGG) - body not compared; overhang scored.",
+      "published_forward": "GCGCCGTCTTTGGTTATCTAG",
+      "published_source": "Nourmohammadi B, Tafsiri E, Rahimi A, et al. 'Expression of miR-9 and miR-200c, ZEB1, ZEB2 and E-cadherin in Non-Small Cell Lung Cancers in Iran.' Asian Pac J Cancer Prev 2019;20(6):1633-9. DOI 10.31557/APJCP.2019.20.6.1633, Tables 1-2. MODIFIED Chen body (46 nt: loop CCGAGG -> CCGACCGG) + 6-nt overhang - body not scored; reverse TCGTATCCAGTGCAGGG."
+    },
+    {
+      "id": "hsa-miR-200c-3p",
+      "label": "hsa-miR-200c-3p",
+      "role": "Chen-body benchmark vs Nourmohammadi 2019 (bm_003)",
+      "benchmark_group": "chen_body",
+      "published_rt_printed": "GTCGTATCCAGTGCAGGGTCCGACCGGTATTCGCACTGGATACGACTCCATC",
+      "published_rt_overhang": "TCCATC",
+      "published_rt_unscored": "Modified Chen loop (CCGACCGG) - body not compared; overhang scored.",
+      "published_forward": "CTGCTTTAATACTGCCGGG",
+      "published_source": "Nourmohammadi B, Tafsiri E, Rahimi A, et al. 'Expression of miR-9 and miR-200c, ZEB1, ZEB2 and E-cadherin in Non-Small Cell Lung Cancers in Iran.' Asian Pac J Cancer Prev 2019;20(6):1633-9. DOI 10.31557/APJCP.2019.20.6.1633, Tables 1-2. MODIFIED Chen body (46 nt: loop CCGAGG -> CCGACCGG) + 6-nt overhang - body not scored; reverse TCGTATCCAGTGCAGGG."
     }
   ],
   "edge_cases": [

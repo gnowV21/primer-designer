@@ -1,17 +1,19 @@
 import { test, expect } from '@playwright/test';
+import { openParameters } from './helpers.js';
 
 test.describe('Form submit button', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/search');
+    await page.goto('/design');
   });
 
   test('submit button disabled with no sequence', async ({ page }) => {
-    const btn = page.getByRole('button', { name: 'Design Primers →' });
+    const btn = page.getByRole('button', { name: 'Enter a miRNA to continue' });
     await expect(btn).toBeDisabled();
   });
 
   test('submit button shows Fix errors state on validation error', async ({ page }) => {
     // Open Primer Design Constraints to access thermodynamic inputs
+    await openParameters(page);
     await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.fill('');
@@ -20,6 +22,7 @@ test.describe('Form submit button', () => {
   });
 
   test('NumInput clear shows empty field not zero', async ({ page }) => {
+    await openParameters(page);
     await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
@@ -29,6 +32,7 @@ test.describe('Form submit button', () => {
   });
 
   test('NumInput focus selects all text', async ({ page }) => {
+    await openParameters(page);
     await page.getByText('Primer Design Constraints').click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();

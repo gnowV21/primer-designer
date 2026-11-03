@@ -661,10 +661,12 @@ PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES = 6    # Ye12 - safe nếu >=6 mismatch
 | G | A | 1/100 (~1%) | **BLOCKING** |
 | C | C | 1/100 (~1%) | **BLOCKING** |
 | A | A | 1/20 (~5%) | **REDUCING** |
-| T | any (T/C/G/A) | 1.0 | **TOLERANT** |
-| any | T | 1.0 | **TOLERANT** |
-| G | G | 1.0 (800 μM); poor (50 μM) | context-dep, mặc định **TOLERANT** |
-| còn lại (C:A, A:C, G:T, T:G, C:T, T:C, T:T, G:C, C:G) | | 1.0 | **TOLERANT** |
+| T | C/G/T | 1.0 | **TOLERANT** |
+| C/G | T | 1.0 | **TOLERANT** |
+| G | G | 1.0 (800 μM); poor (50 μM) | context-dep, mặc định **TOLERANT**; ở vùng Tm sát đích (classifier v4) hạ CRITICAL → **HIGH** |
+| còn lại (C:A, A:C) | | 1.0 | **TOLERANT** |
+
+Các cặp Watson–Crick (A:T, T:A, G:C, C:G) là MATCH, không thuộc bảng này. Abstract Kwok 1990 (PMID 2179874): *"All other 3'-terminal mismatches were efficiently amplified, although the G:G mismatches appeared to be more sensitive to sequence context and dNTP concentrations"*; *"mismatches of T with either G, C, or T had a minimal effect"*; *"The presence of a mismatched T at the 3'-terminus, however, allowed significant amplification even when coupled with an adjacent mismatch."*
 
 Trích Kwok 1990 §Conclusions:
 > "A:G and C:C resulted in approximately a 100-fold reduction... A:A mismatch moderately reduced PCR amplification efficiency per cycle... some 3'-terminal mismatches (T:C, T:G, T:T, G:G, and A:C) appear to amplify as efficiently as the fully complementary primer-template duplex."
@@ -917,7 +919,165 @@ def _is_self_hit(subject_id: str, mirna_id: str, m_norm: Optional[str] = None) -
 
 **Performance (v2.0):** `m_norm` được tính 1 lần trong `check_offtarget` rồi truyền xuống `_check_primer` → `_is_self_hit`. Trước v2.0, mỗi BLAST hit gọi `_normalize_mirna_name(mirna_id)` lại từ đầu (N lần tính cùng 1 giá trị).
 
+### 8.13 Cổng Tm duplex — bộ phân loại v2 (2026-10-28)
+
+**Thứ tự cổng trong `classify_hit_risk`:**
+1. **Neo 3′** — ≥2 nt đầu 3′ của mồi nằm ngoài vùng căn → SAFE. Đứng trước vì Tm của cả duplex không thấy được đầu 3′ có bắt cặp hay không.
+2. **Cổng Tm duplex** (khi có Tm đúng đích):
+   - `Tm_off < Tm_on − 10 °C` → SAFE
+   - `Tm_on − 10 ≤ Tm_off < Tm_on − 5` → luật Ye 2012 / Kwok 1990, **tối đa MEDIUM**
+   - `Tm_off ≥ Tm_on − 5 °C` → CRITICAL; **HIGH** nếu base cuối 3′ hở (1 nt) hoặc là mismatch chặn Kwok (A:G, G:A, C:C)
+3. **Luật Ye/Kwok** — khi không có Tm đúng đích (không biết trình tự đích): áp dụng như cũ, kèm luật neo tối thiểu 10 nt.
+
+**Tính Tm.** `primer3.calc_heterodimer(mồi, revcomp(miRNA))` — mồi xuôi mang trình tự sense của miRNA và bám cDNA (bổ sung đảo). Cùng điều kiện với thiết kế (`effective_p3`: mv hiệu dụng Na⁺+K⁺+Tris⁺, Mg²⁺ theo von Ahsen 2001, dNTP, nồng độ mồi); frontend gửi `metadata.design_settings.effective_p3` và `metadata.mirna_sequence`. Trình tự đầy đủ của off-target lấy bằng `blastdbcmd` (DB có `-parse_seqids`).
+
+**Vì sao so với Tm đúng đích chứ không phải Ta.** Vùng đặc hiệu được thiết kế để bám ở ~45 °C (`TM_BINDING_TARGET`); đuôi 5′ chỉ nâng Tm lên ~60 °C từ chu kỳ 2. Đo trên 189 mồi xuôi của bộ validation: Tm duplex đúng đích trung vị **45,5 °C** (33,1–58,6); **161/189 (85 %) < 50 °C** — nếu dùng `Tm_off < Ta − 10` thì chính miRNA đích cũng bị xếp SAFE. Off-target đi đúng con đường bám chu kỳ 1 như đích, nên câu hỏi là "bám kém đích bao nhiêu".
+
+**Cơ sở của biên 10 °C.** Theo quy ước của Primer3, ngưỡng mispriming nhiệt động được đặt thấp hơn Tm tối thiểu của mồi (`PRIMER_MIN_TM`) 10 °C: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (`PRIMER_MAX_SELF_ANY_TH`, `PRIMER_MAX_HAIRPIN_TH`) và *"47.0 would be a reasonable choice if PRIMER_MIN_TM is 57.0"* (`PRIMER_MAX_TEMPLATE_MISPRIMING_TH`, mặc định −1 = tắt trong Primer3, 47 trong Primer3Plus) — đã đối chiếu manual primer3.org. Các ngưỡng `*_TH` của Primer3 là giá trị Tm tuyệt đối, không phải độ chênh; việc đo khoảng 10 °C từ Tm_on của vùng đặc hiệu là lựa chọn của tool, chưa hiệu chỉnh bằng thực nghiệm. Ước tính hai trạng thái (van 't Hoff, ΔH ≈ −90 kcal/mol, tự tính — không lấy từ tài liệu): quanh Tm_on ≈ 45 °C, Tm_off thấp hơn 5 °C → tỷ lệ bám off/on ~10 %; thấp hơn 10 °C → ~1 %, dưới ngưỡng cross-reactivity 5 %.
+
+**Phân tích độ nhạy** (`backend/scripts/blast_tm_gate_sensitivity.py` → `benchmark/blast_tm_gate_sensitivity.json`, bộ phân loại v6): mồi xuôi #1 của bộ validation, 175/178 mồi (loại 3 "putative miRNA" Busk 2014: không có trong miRBase, bài báo không ghi loài). Biên SAFE 5/10/15/20 °C, biên CRITICAL cố định 5 °C. Báo riêng nhóm stem-loop (100 mồi) — nhóm Busk 2014 (75 mồi, hệ poly(A), không có mồi RT stem-loop) có trong file JSON.
+
+Số liệu dưới đây dùng mồi #1 của **algorithm v3.4.0**, bộ phân loại v6 (chạy lại 2026-10-29). Lịch sử stem-loop, biên 10 °C: v3 29 hit CRITICAL / 13 mồi → v4 32 / 13 (base đầu 3′ bị BLAST cắt được khôi phục, §8.15) → v5 63 / 27 (hit cùng họ seed không còn được miễn trừ, §8.16) → **v6 65 / 29** (target EBV sàng lọc cả miRNA người, §8.17).
+
+| Biên SAFE (stem-loop, 100 mồi) | Mồi SAFE / MEDIUM / HIGH / CRITICAL | Hit CRITICAL / HIGH / MEDIUM |
+|---|---|---|
+| 5 °C | 71 / 0 / 0 / 29 | 65 / 0 / 0 |
+| **10 °C** | **55 / 16 / 0 / 29** | **65 / 0 / 78** |
+| 15 °C | 27 / 44 / 0 / 29 | 65 / 0 / 184 |
+| 20 °C | 15 / 56 / 0 / 29 | 65 / 0 / 345 |
+| Không có cổng Tm | 17 / 9 / 8 / 66 | 343 / 132 / 529 |
+
+Busk 2014 (75 mồi), biên 10 °C: hit CRITICAL 121 → 27 (mồi có CRITICAL 52 → 21). Ở mọi cài đặt, 24 hit (20 stem-loop, 4 Busk) thuộc nhóm trùng trình tự (xem dưới) và không được tính vào bậc rủi ro nào.
+
+CRITICAL/HIGH không đổi theo biên SAFE là **do cấu trúc** (chỉ phụ thuộc biên 5 °C), không phải bằng chứng thực nghiệm; biên SAFE chỉ dời hit giữa SAFE và MEDIUM, và số MEDIUM tăng đều chứ không có "bình nguyên" quanh 10 °C. Lựa chọn 10 °C vì thế dựa trên quy ước Primer3 + ước tính van 't Hoff, không dựa trên độ nhạy.
+
+**Giới hạn (đưa vào Thảo luận).**
+- Tm toàn duplex không phân biệt được đầu 3′ khớp hoàn toàn với mismatch giữa duplex; cổng neo 3′ đứng trước để bù một phần.
+- Không mô hình bước RT: off-target thật phải qua cả mồi RT (overhang 6 nt, 16 °C → 42 °C, Chen 2005) — rủi ro báo cáo cao hơn thực tế. Không áp cổng cho mồi RT (cần nhiệt độ RT và mô hình DNA:RNA, Sugimoto 1995).
+- Không mô hình LNA (primer3 không có tham số LNA).
+- Chỉ mục family chỉ có hsa/mmu/rno → paralog ở loài khác không được gộp "same-family" và hiện là CRITICAL.
+- Paralog khác nhau ở giữa trình tự (miR-23a/b, miR-103/107, miR-17/106a/20b) vẫn là CRITICAL vì mồi xuôi bám như nhau; thực tế chúng chỉ được phân biệt (một phần) nhờ mồi RT ở đầu 3′.
+- Nhóm "trùng trình tự" coi lệch đầu ≤ 2 nt là cùng một phân tử; khác biệt đầu 3′ (isomiR, chú giải lệch) chỉ được phân biệt ở bước RT, không mô hình ở đây.
+- Ngưỡng chưa hiệu chỉnh bằng wet-lab. Đề xuất: thử cross-reactivity mồi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C so với 44,3 °C đúng đích; trước v2 bị xếp CRITICAL) — kết quả < 5 % là bằng chứng trực tiếp cho cổng Tm.
+
+**Sửa kèm.** Bảng Kwok tra theo base **mạch khuôn** (= bổ sung của base sense off-target); mồi ngược universal không còn BLAST; khóa cache gồm `BLAST_CLASSIFIER_VERSION` + trình tự đích + điều kiện muối; DB tìm qua `BLASTDB` (đường dẫn có dấu cách).
+
+### 8.14 Chính đích và hit trùng trình tự — bộ phân loại v3 (2026-10-28)
+
+Mỗi hit BLAST cùng loài được xét theo thứ tự (trình tự đầy đủ lấy bằng `blastdbcmd`):
+
+1. **Chính đích** — tên khớp với `mirna_id` **có ranh giới**: bằng nhau, hoặc tên này nối dài tên kia bằng `-` sau khi chuẩn hóa số bản sao tiền chất (`hsa-miR-16-1-5p` ↔ `hsa-miR-16-5p`; `ssc-miR-21` ↔ `ssc-miR-21-5p`). Khi biết cả hai trình tự, phải **tương thích**: giống hệt trên phần giao nhau ≥ 15 nt, mỗi đầu lệch ≤ 2 nt (`SELF_MAX_END_SHIFT`). → bỏ qua.
+2. **Trùng trình tự** — tên khác nhưng trình tự giống hệt hoặc tương thích: bản sao ở locus khác (ath-miR156a = 156b–f) hoặc mục đã đổi tên/chú giải (Busk `ssc-miR-20` = 22.1 `ssc-miR-20a-5p`, lệch 1 nt đầu 3′). → `identical_sequence_hits`, không phân loại rủi ro, không tính vào `overall_risk`.
+3. Khác loài → `cross_species_excluded`. 4. Còn lại → các cổng của §8.13 và §8.15.
+
+**Vì sao không còn so chuỗi con.** Luật cũ `mirna_id in subject_id` làm `ssc-miR-21` khớp `ssc-miR-210` (che off-target thật); tên sai định dạng (`ssc-miR15a`) thì không khớp và chính đích bị báo CRITICAL.
+
+**Vì sao cần trình tự khi tên khớp.** miRBase đổi chú giải theo phiên bản: `mmu-miR-138-5p` 22.1 là `AGCTGG…`, bản Busk 2014 là `CAGCTGG…` (lệch 1 nt) → vẫn là chính đích; còn `ssc-miR-670` 22.1 là trình tự **khác hẳn** bản Busk → là off-target, không phải chính đích. Ngưỡng 2 nt bao trọn độ lệch quan sát được giữa 22.1 và các trình tự Busk 2014 (138-5p, 31-3p, 194-5p, 7134-3p, 1468: 1–2 nt).
+
+Khi không biết trình tự đích (mirna_id không có trong DB, không gửi `mirna_sequence`), chỉ dùng luật tên — vì vậy route vẫn bắt buộc `-5p/-3p`: ID thiếu nhánh khớp tên với cả hai nhánh. `check_offtarget(species=…)` cho phép chỉ định loài khi tên không có tiền tố.
+
 ---
+
+
+### 8.15 Bộ phân loại v4 — base đầu 3′ thật và Tm theo khung đọc (2026-10-29)
+
+**Base đầu 3′ bị BLAST cắt.** Căn chỉnh cục bộ không bao giờ kết thúc bằng một mismatch, nên base cuối 3′ của mồi bị lệch luôn bị cắt và hiện ra như "dangling" (Ye 2012 Fig. 5). Đo trên 175 mồi: 234 hit sợi plus thiếu 1 nt (148 thực ra là TOLERANT, 46 BLOCKING, 20 REDUCING) và 262 hit thiếu 2 nt (63 có base cuối khớp thật — trước đây bị gán SAFE sai). Với hit sợi plus (mồi = trình tự sense của off-target, bám vào cDNA của nó), v4 lấy các base đối diện từ trình tự đầy đủ của off-target, nối vào alignment rồi căn lại Needleman–Wunsch; chỉ các base vượt quá đầu off-target mới còn là "dangling".
+
+**Luật Kwok 1990 (abstract, PMID 2179874) ở vùng Tm sát đích** (Tm_off ≥ Tm_on − 5 °C):
+
+| Cặp mồi:khuôn ở đầu 3′ | Mức |
+|---|---|
+| khớp | CRITICAL |
+| TOLERANT (trừ G:G) — *"efficiently amplified"* | CRITICAL |
+| G:G — *"more sensitive to sequence context and dNTP concentrations"* | HIGH |
+| BLOCKING (A:G, G:A, C:C) / REDUCING (A:A) | HIGH |
+| base cuối vượt quá đầu off-target (không có khuôn) | HIGH |
+
+**Hai base cuối cùng lệch** (bất kể Tm): SAFE — *"double mismatches … reduced PCR product yield dramatically"* — trừ khi base cuối của mồi là T → MEDIUM (*"a mismatched T at the 3'-terminus … allowed significant amplification even when coupled with an adjacent mismatch"*); nếu Tm_off thấp hơn Tm_on quá 10 °C thì vẫn SAFE.
+
+**Tm_off theo khung đọc.** `calc_heterodimer` trên toàn off-target trả về duplex bền nhất ở bất kỳ đâu, có thể không phải duplex mà đầu 3′ của mồi kéo dài được. v4 chỉ tính Tm trên đoạn off-target đối diện mồi trong khung BLAST, cộng 1 base phía sau (thal chỉ tính năng lượng dangling của 1 base liền kề — trên chính đích, cửa sổ này cho Tm **trùng khớp** Tm_on tính trên cả miRNA, 111/111 mồi, nên Tm_on và Tm_off vẫn so sánh trực tiếp). Trên 542 hit có đầu 3′ bắt cặp: Tm toàn trình tự cao hơn Tm khung đọc trung bình 2,1 °C (tối đa 19 °C); 27 hit chuyển vùng xám → SAFE, 4 CRITICAL → vùng xám, 1 SAFE → vùng xám.
+
+Hit sợi minus (mồi bổ sung với off-target sense, không bám cDNA của nó) giữ cách tính cũ; với cổng Tm chúng đều ra SAFE (1 MEDIUM trên 175 mồi).
+
+### 8.16 Đặc hiệu cấp assay — mô hình ΔCq và bộ phân loại BLAST v5 (2026-10-29, algorithm v3.3.0)
+
+**Vì sao đổi.** Đến v3.2.0 có hai kết luận đặc hiệu tách rời: BLAST chỉ hỏi *mồi xuôi* bám vào đâu (không xét bước RT), còn `overhang_collision` dùng ma trận rủi ro RT × FWD với cửa sổ **cố định vị trí** (`target[-6:]` so `other[-6:]`, `target[:L]` so `other[:L]`). Biến thể lệch 1 nt làm trượt cả cửa sổ → khoảng cách Hamming lớn → SAFE giả cho đúng nhóm dễ khuếch đại chung nhất. Thêm vào đó, BLAST miễn trừ hit cùng họ seed (`same_family_count`) và gộp mọi trình tự "tương thích" (đầu lệch ≤ 2 nt) thành "assay đo tổng".
+
+**Mô hình.** Off-target chỉ cho tín hiệu khi qua **cả hai** bước: overhang RT bắt được nó, *và* mồi xuôi mồi được trên cDNA của nó (chỉ vài chu kỳ đầu chịu mismatch — sản phẩm sau đó mang trình tự mồi). Độ trễ cộng lại:
+
+  ΔCq_assay ≈ ΔCq_RT + ΔCq_FWD,  tín hiệu chéo ≈ 2^−ΔCq × 100 %.
+
+Mỗi trục thử lệch đầu −2…+2 nt và giữ khung đọc cho ΔCq **nhỏ nhất**. Mọi giá trị lấy **cận dưới** của khoảng đã công bố (quyết định 2026-10-29) — mô hình dự đoán tín hiệu chéo cao nhất mà dữ liệu cho phép.
+
+| Trục | Tình huống | ΔCq | Nguồn |
+|---|---|---|---|
+| RT | đầu 3′ off-target dài hơn 1–2 nt | 0 | Schamberger 2014 Fig. 6 (*"'GA' specific assay detected all three isoforms similarly"*) |
+| RT | ngắn hơn 1 nt | 0 | *"Assays specific for the 'GACA' and 'GAC' 3′ ends detected both … similarly"* |
+| RT | ngắn hơn 2 nt | 3,0 | *"'GA' ending was detected with ~3 Ct delay"* |
+| RT | 1 mismatch rG·dT | 4,75 | Chen 2005: 3,7 % (assay let-7a đo let-7c) |
+| RT | 1 mismatch khác, vị trí 1–3 từ đầu 3′ mồi RT | 7,0 | Chen 2005: 0,1 % ≈ 10 Cq; khoảng 7–10 → 7 |
+| RT | 1 mismatch khác, vị trí 4–6 | 3,5 | Czimmerer 2013: 6,8–9,0 % |
+| RT | ≥ 2 mismatch | 8,0 | Chen 2005: ≤ 0,3 % |
+| FWD | base cuối 3′ nhóm nặng A–A, A–G, G–A, G–G, C–C | 8,3 | Stadhouders 2010 (PMC2797725): 8,29–9,09 Ct |
+| FWD | nhóm trung bình T–C, C–T, T–T | 3,8 | 3,77–4,75 Ct |
+| FWD | nhóm nhẹ A–C, C–A, T–G, G–T | 1,0 | 0,99–1,91 Ct |
+| FWD | vị trí 2 (kế cuối) | 1,9 | trung bình 1,87 Ct (không có khoảng) |
+| FWD | vị trí 3–5 | 0,5 | trung bình 0,53 / 0,71 Ct (vị trí 4 không đo) |
+| FWD | ≥ 6 nt từ đầu 3′ | 0 | Kwok 1990; Ye 2012 |
+| FWD | ≥ 2 mismatch trong 5 nt cuối | 8,3 | Stadhouders: Taq không khuếch đại — *trừ* base cuối T với đúng 1 mismatch kế bên (Kwok 1990) → lấy giá trị của cặp cuối |
+| FWD | độ bền duplex | 0,66 × (Tm_on − Tm_off), trần 8,3 | tự tính (van 't Hoff, như §8.13); ΔCq_FWD = max(bảng, Tm) |
+
+Tm_off tính trên khung đọc của mồi + 1 base phía sau, cùng quy ước BLAST v4 (§8.15). Nhãn theo tiêu chí thành công của đề cương: **CO-AMPLIFIED** ΔCq < 3,3 (> 10 %), **PARTIAL** 3,3–4,3 (5–10 %), **DISCRIMINATED** ≥ 4,3 (< 5 %).
+
+**Ba nhóm off-target.** *isomiR đầu 5′* (khuếch đại chung, không tránh được), *isomiR đầu 3′* (khuếch đại chung hoặc phân biệt một phần, kèm ΔCq), *trùng trình tự* — báo cáo riêng, **không chấm điểm** (không thiết kế mồi nào tránh được; báo cáo kết quả là tổng isoform, Magee 2017). *miRNA khác* — nhãn tệ nhất quyết định tiêu chí `family_discrimination` (100 / 70 / 0) và là kết luận đặc hiệu chính trên giao diện ("Assay Specificity").
+
+**BLAST (bộ phân loại v5).** Giữ làm chi tiết "mồi xuôi bám đâu". Hit cùng họ seed được đánh dấu (`same_seed_family`) và tính vào `overall_risk` như mọi hit; nhóm trùng trình tự tách thành `identical` / `isomir_5p` / `isomir_3p` (`identical_sequence_variants`). Mồi xuôi không kết thúc bằng tiền tố 5′ của đích (gõ sai, nhầm nhánh) → bỏ cổng Tm, ghi `tm_gate_note`. Route kiểm tra nồng độ (hữu hạn, mv/dna > 0) và nhận `species` (mã miRBase 3 chữ).
+
+**Ví dụ — vùng mù ở giữa.** let-7a so với let-7d khác ở nt 1 và nt 16. Với mồi xuôi 12 nt, nt 16 nằm ngoài cả cửa sổ mồi xuôi (nt 1–12) lẫn overhang RT (nt 17–22): mô hình dự đoán khuếch đại chung (~94 %). Chen 2005 đo bằng TaqMan, probe phủ đoạn giữa mới phân biệt được; với SYBR không có lớp này. Dự đoán của mô hình là **giới hạn lạc quan** cho SYBR.
+
+**Kiểm chứng đề xuất (thí nghiệm cross-reactivity của đề cương, oligo RNA tổng hợp cùng nồng độ):** let-7a ↔ let-7c (rG·dT ở bước RT, dự đoán ΔCq 4,75 — đây là điểm hiệu chỉnh, không phải kiểm chứng độc lập); miR-21-5p ↔ isomiR 0|+1 (dự đoán ΔCq ≈ 0); một cặp lệch đầu 5′ −1|0 (dự đoán ≈ 0); let-7a ↔ let-7d (vùng mù, dự đoán khuếch đại chung với SYBR).
+
+**Giới hạn.** Giá trị tra đo ở enzyme/master mix khác (Stadhouders báo hiệu ứng lệch đến ~2 lần giữa các hệ RT-PCR) → chỉ là thứ tự độ lớn. Mô hình cộng hai trục giả định độc lập. Chưa tính độ phong phú tương đối của off-target trong mẫu (rủi ro thật = tín hiệu chéo × tỷ lệ nồng độ). Hệ số 0,66 Cq/°C tự suy, không từ tài liệu.
+
+**Kết quả trên 165 miRNA thiết kế được (v3.2.0 → v3.3.0).** Mồi #1 giữ vùng bám ở 164/165 (đổi: mmu-miR-467c-5p, 12 → 13 nt); điểm #1 trung bình +0,67 (−3,7 … +5,3) — chủ yếu vì bản sao trùng trình tự không còn bị tính là CRITICAL. Nhãn tệ nhất: 68 DISCRIMINATED, 6 CO-AMPLIFIED, 1 PARTIAL, **90 không có chỉ mục** (chỉ mục overhang mới có hsa/mmu/rno). Các ca cảnh báo đều là paralog đã biết khó tách: miR-20a ↔ miR-17/106a/20b (ΔCq 1,0–1,7), let-7a ↔ let-7d (1,4), miR-103a-2 ↔ 103a-1 (0,2), miR-19a ↔ 19b (2,8), miR-669 (3,0), miR-27b ↔ 27a (3,5, PARTIAL). 14 mục isomiR/trùng trình tự (10 identical — thường là tên cũ ↔ tên miRBase 22.1, ví dụ hsa-miR-25 ↔ hsa-miR-25-3p; 4 isomiR 5′, ví dụ mmu-miR-467a/b).
+
+
+### 8.17 Chỉ mục mọi loài, virus + loài chủ (2026-10-29, algorithm v3.4.0, BLAST v6)
+
+**Nguồn duy nhất.** `scripts/build_overhang_index.py` mặc định dựng chỉ mục cho **mọi loài** từ chính file `mature.fa` đã dùng để dựng BLAST DB (miRBase **22.1**, 271 loài, 48.885 trình tự). Script dừng nếu số trình tự khác với `data/blast_db/metadata.json`; metadata ghi `mirbase_release` và `mature_fa_sha256`. Tải miRBase CURRENT chỉ khi gọi rõ `--download-current` (nâng cấp phiên bản phải dựng lại cả BLAST). Test `test_index_matches_blast_db_release` khóa sự nhất quán này.
+
+**miRNA virus đo trong tế bào chủ.** Bộ sàng lọc = loài của target + loài chủ tự nhiên có trong miRBase (`VIRUS_HOST_SPECIES`): ebv, kshv, hcmv, hsv1/2, hiv1, hhv6b, bkv, jcv → hsa; rlcv, rrv, sv40, hbv (herpes B) → mml; mcmv, mghv → mmu; mdv1/2, hvt, iltv → gga; dev → apl; bhv1/5, blv → bta; prv → ssc. Virus mà loài chủ không có trong miRBase (hvsa, sfv, bpcv1/2, racpv) chỉ sàng lọc chính nó. Áp dụng cho cả mô hình ΔCq và BLAST (BLAST v6 giữ hit của loài chủ thay vì loại là "khác loài").
+
+**Độ phủ chú giải.** Ngoài hsa/mmu, kết quả kèm `annotation_note`: số miRNA miRBase 22.1 chú giải cho loài đó, và câu "DISCRIMINATED nghĩa là không có off-target **đã được chú giải**". Không thêm loài khác làm proxy (quyết định 2026-10-29) để tránh báo off-target không có thật.
+
+**Tiền tố loài 3–5 ký tự.** Regex cũ `^[a-z]{3}-` đọc `kshv-miR-K12-1`, `hcmv-…`, `mdv1-…` thành người (BLAST loại toàn bộ miRNA virus là "khác loài"). Nay `MIRBASE_PREFIX_PATTERN` = `[a-z][a-z0-9]{2,4}`, và mã loài gửi vào API phải có trong chỉ mục (`is_mirbase_species`). Bộ validation chỉ có `ebv` (3 ký tự) nên số liệu cũ không bị ảnh hưởng.
+
+**Kết quả trên 90 target trước đây `no_index_data`.** 77 DISCRIMINATED, 7 PARTIAL, 6 CO-AMPLIFIED; mồi #1 **không đổi ở cả 90**; điểm #1 trung bình −0,47 (trước là điểm trung tính 100). Ca cảnh báo đều là paralog đã biết: ath-miR156a ↔ 156g (ΔCq 1,3), osa-miR164a/b/c (0,0), ssc-miR-17 ↔ 106a/20b, ssc-miR-30c ↔ 30b (0,0), ssc-miR-103 ↔ 107, ssc-miR-27a ↔ 27b, ssc-miR-133a ↔ 133b (3,5). Còn 3 target "putative" (Busk 2014) không có tiền tố miRBase → vẫn không đánh giá được.
+
+### 8.18 Rà soát xử lý isomiR (2026-10-30, algorithm v3.5.0)
+
+**(a) Giá trị lệch đầu 3′ đi kèm khoảng đo được.** Toàn bộ bảng lệch đầu dựa trên **một bài báo, hai miRNA** (Schamberger & Orbán 2014):
+
+| Lệch | Giá trị tool dùng | Khoảng đo được | n |
+|---|---|---|---|
+| ±1 nt | 0 | **0–4 Ct** | 2 |
+| −2 nt | 3,0 | 3–4 Ct | 1 |
+| ≥3 nt | — | không có dữ liệu | 0 |
+
+Nguyên văn: miR-877-5p — *"Assays specific for the 'GACA' and 'GAC' 3′ ends detected both … similarly"* (±1 nt ≈ 0 Ct), *"'GA' ending was detected with ~3 Ct delay"* (−2 nt); miR-33b-5p — *"the cross-detections were still considerable (2–4 Ct delayed)"* với khác biệt 1 nt. **Phương sai giữa hai trình tự (tới 4 Ct) lớn bằng chính hiệu ứng**, nên giá trị điểm là cận dưới, không phải hệ số hiệu chỉnh. `rt_axis` trả thêm `shift_range` = (thấp, cao, n) và `shift_evidence_note`; `evaluate` trả `delta_cq_high`. Giao diện hiển thị "ΔCq 0–4 (n = 2 miRNA)".
+
+*Đính chính một cách đọc sai.* Các giá trị Ct 36/37/39,6 trong chú thích Figure 6 là của **mẫu đối chứng dùng làm tham chiếu** (*"Non-target controls were chosen as reference samples"*), không phải của phản ứng đo isomiR; tương tự "không phát hiện đến 40 chu kỳ" ở miR-33b là nói về đối chứng. Vì vậy không thể kết luận thí nghiệm nằm dưới LLOQ.
+
+**(b) Thuật ngữ: mục miRBase lệch đầu không phải isomiR.** `variant_category` so các **mục có tên trong miRBase**, nên những gì nó bắt được là tên đồng nghĩa (hsa-miR-25 ↔ hsa-miR-25-3p), mục đổi tên, hoặc paralog từ locus khác (mmu-miR-467a ↔ 467b). isomiR sinh học (Drosha/Dicer cắt lệch, gắn thêm nucleotide) **hầu như không có mục riêng trong miRBase** — chúng được xử lý bằng dữ liệu isomiRdb trong `isomir_flag.py`. Đổi tên: `identical` → `same_sequence`, `isomir_5p` → `shifted_5p`, `isomir_3p` → `shifted_3p`; trường `isomirs` → `same_molecule_entries`. Kết luận "không mồi nào tách được, tín hiệu là tổng" (Magee 2017) giữ nguyên.
+
+**(c) Cảnh báo sai lệch fold-change (mới).** Kích hoạt khi tỷ lệ isoform 3′ ≥ 20 % **và** IQR rộng ≥ 0,15 — tức pool isoform vừa lớn vừa dao động giữa các mẫu (658/2032 miRNA = 32 %; trung vị toàn bộ chỉ 0,3 %, nên đây đúng là nhóm có nguy cơ). Cơ sở: Nejad 2018 (PMID 29263133) chứng minh biến thể 3′ > 23 nt của miR-222-3p **giảm chọn lọc** khi kích thích IFN-β, xác nhận ở hơn 40 họ miRNA sau nhiễm *Salmonella*, và stem-loop TaqMan RT-qPCR *"exhibits selectivity between 3′-isoforms, according to their length, and that this can lead to misinterpretation of results"*. Nếu điều kiện thí nghiệm làm đổi thành phần isoform, fold-change đo được lẫn cả thay đổi thành phần. **Cố ý viết định tính** — không quy ra "sai lệch tới ×Y", vì hệ số quy đổi lại dựa chính vào bảng ΔCq n = 2 ở mục (a).
+
+**Chưa làm (ghi là hướng phát triển).**
+- Ghép isomiRdb với mô hình ΔCq để báo "assay bắt ≈ X % tổng lượng": hoãn, vì con số sẽ trông chính xác hơn bằng chứng (n = 2 miRNA) rất nhiều. Chỉ nên làm sau thí nghiệm hiệu chỉnh.
+- Chỉ mục 5′ từ nhãn `lv5p` của isomiRdb: cần tải lại ma trận 1,2 GB; danh sách 5′ hiện vẫn là 8 miRNA tự tuyển.
+- Phân tầng theo loại mẫu.
+
+**Thí nghiệm hiệu chỉnh đề xuất.** Oligo RNA tổng hợp miR-21-5p gồm dạng chuẩn, +1, −1, −2 và +U, cùng số bản sao, đo bằng một assay stem-loop của dạng chuẩn; 5 oligo, 1 đường chuẩn, 3 lặp. Điểm mấu chốt: **chạy ở lượng mẫu cho Ct 20–30**, trong vùng định lượng tin cậy. Kết quả sẽ thay bảng lệch đầu hiện tại bằng số đo trên một trình tự xác định.
 
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 

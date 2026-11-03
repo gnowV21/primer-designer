@@ -7,8 +7,10 @@ requests==2.31.0
 primer3-py==2.0.3
 # Tm nearest-neighbor (SantaLucia 1998), hairpin ΔG, self-dimer, hetero-dimer
 
-ViennaRNA==2.6.4
-# MFE of stem-loop hairpin (RNA.fold) — requires C library installed first:
+ViennaRNA==2.7.2
+# MFE of the stem-loop RT primer, folded with DNA parameters (Mathews 2004) —
+# version pinned to the one the test suite and audit fixes were verified on.
+# Requires the C library installed first:
 #   Ubuntu/WSL: sudo apt-get install -y libRNA-dev
 #               pip install ViennaRNA --break-system-packages
 #   conda:      conda install -c bioconda viennarna

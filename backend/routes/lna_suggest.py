@@ -13,6 +13,7 @@ from flask import Blueprint, jsonify, request
 from algorithm.lna_tm import calc_lna_tm, suggest_lna_positions
 from algorithm.thermodynamics import calculate_tm_nn
 from algorithm.constants import USE_LNA_SUGGESTIONS
+from algorithm.constants import LNA_MAX_SUBSTITUTIONS, LNA_TARGET_TM_DEFAULT
 
 lna_suggest_bp = Blueprint("lna_suggest", __name__)
 
@@ -100,7 +101,7 @@ def lna_suggest():
     target_tm = data.get("target_tm")
     sibling   = data.get("sibling_mismatch_positions") or []
     try:
-        max_lna = int(data.get("max_lna", 4))
+        max_lna = int(data.get("max_lna", LNA_MAX_SUBSTITUTIONS))
     except (TypeError, ValueError):
         return jsonify({"error": "'max_lna' must be an integer between 1 and 8."}), 400
     params    = data.get("params") or {}
@@ -179,7 +180,16 @@ def lna_suggest():
         primer3_warning = f"primer3 reference Tm unavailable: {exc}"
 
     # --- Suggest LNA positions ---
-    effective_target = target_tm if target_tm is not None else 60.0
+    # The LNA engine (SL98/McTigue04/Owczarzy11 doublets) reads DNA Tm ~3 °C
+    # below primer3 (audit SCI-12). Only its ΔTm is trusted, so the target is
+    # moved into the engine's frame: reach target ⇔ tm_primer3 + ΔTm_LNA ≥ target.
+    effective_target = target_tm if target_tm is not None else LNA_TARGET_TM_DEFAULT
+    engine_offset = 0.0
+    if tm_reference_primer3 is not None:
+        engine_dna_tm = calc_lna_tm(sequence, [], params).get("tm_dna")
+        if engine_dna_tm is not None:
+            engine_offset = round(tm_reference_primer3 - engine_dna_tm, 2)
+            effective_target -= engine_offset
     suggest_result = suggest_lna_positions(
         sequence=sequence,
         target_tm=effective_target,
@@ -192,6 +202,12 @@ def lna_suggest():
     # --- Compute full Tm breakdown for the suggested set ---
     suggested_pos = suggest_result.get("suggested_positions", [])
     calc_result   = calc_lna_tm(sequence, suggested_pos, params)
+    # Report in the primer3 frame used everywhere else in the tool.
+    if tm_reference_primer3 is not None and calc_result.get("delta_tm") is not None:
+        calc_result["tm_dna_primer3_frame"] = tm_reference_primer3
+        calc_result["tm_lna_primer3_frame"] = round(tm_reference_primer3 + calc_result["delta_tm"], 1)
+    if suggest_result.get("tm_achieved") is not None:
+        suggest_result["tm_achieved"] = round(suggest_result["tm_achieved"] + engine_offset, 1)
 
     # --- Assemble response warnings ---
     response_warnings: list[str] = []
@@ -204,6 +220,7 @@ def lna_suggest():
         "tm_reference_primer3": tm_reference_primer3,
         "lna_result":           suggest_result,
         "calc_at_suggestion":   calc_result,
+        "engine_offset_c":      engine_offset,
         "informational_notice": (
             "LNA Tm values are informational only — not used in scoring "
             "or primer filtering. Verify with synthesis provider."

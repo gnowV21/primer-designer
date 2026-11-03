@@ -130,3 +130,28 @@ def test_blast_cache_key_differs_on_different_input():
     k1 = BlastCache._compute_key("ATCG", "", "v1")
     k2 = BlastCache._compute_key("TTTT", "", "v1")
     assert k1 != k2
+
+
+def test_blast_cache_key_differs_on_different_mirna_id():
+    # Same forward/reverse/db_version but a different target miRNA must NOT collide:
+    # the on-target (and its family/precursor variants) is excluded per mirna_id,
+    # so the cached result differs.
+    from algorithm.specificity_check.blast_cache import BlastCache
+    k_a = BlastCache._compute_key("ATCG", "", "v1", "hsa-miR-21-5p")
+    k_b = BlastCache._compute_key("ATCG", "", "v1", "hsa-miR-16-5p")
+    k_none = BlastCache._compute_key("ATCG", "", "v1")
+    assert k_a != k_b
+    assert k_a != k_none and k_b != k_none
+
+
+def test_blast_cache_miss_different_mirna_id():
+    from algorithm.specificity_check.blast_cache import BlastCache
+    tmp = tempfile.mktemp(suffix=".sqlite")
+    bc = BlastCache(db_path=tmp)
+
+    bc.set_result("ATCGATCG", "", {"summary": {"overall_risk": "SAFE"}}, "2026-01-01",
+                  "hsa-miR-21-5p")
+    # Same primer, different target → cache miss (must re-run with correct exclusion)
+    assert bc.get_result("ATCGATCG", "", "2026-01-01", "hsa-miR-16-5p") is None
+    # Same target → hit
+    assert bc.get_result("ATCGATCG", "", "2026-01-01", "hsa-miR-21-5p") is not None

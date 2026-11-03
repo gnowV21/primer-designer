@@ -1,0 +1,601 @@
+openapi: 3.1.0
+
+# ============================================================================
+# HG Lab — Stem-loop RT-qPCR Primer Designer — HTTP API contract
+#
+# This file is the AUTHORITATIVE list of live /api/* routes. It is kept in sync
+# with the Flask app by tests/test_openapi_sync.py (route-sync test): every
+# registered /api route must appear here and vice-versa, so undocumented drift
+# fails CI. Add a path here in the SAME commit that adds the route. [PLAN Gap B §2]
+#
+# Schemas below are documented from the actual route handlers (not the spec, which
+# had drifted). Request/response bodies list the fields that matter; deeply nested
+# scoring/structure objects are described at object level with representative keys.
+# ============================================================================
+
+info:
+  title: HG Lab Primer Designer API
+  version: 3.1.0
+  description: >
+    Backend for stem-loop RT-qPCR primer design (Chen 2005). Designs three
+    primers per mature miRNA — a stem-loop RT primer, a forward qPCR primer, and
+    a fixed universal reverse primer — plus specificity (BLAST + family
+    cross-reactivity), multiplex cross-dimer checks, export, and an informational
+    LNA-position suggester. All science-facing numbers are computed server-side;
+    the frontend is a thin client.
+  contact:
+    name: HG Lab, HCMUS
+    url: https://hglab.hcmus.edu.vn
+
+servers:
+  - url: /
+    description: Same-origin (dev Vite proxy → :5000; prod reverse-proxy → gunicorn)
+
+tags:
+  - name: meta
+    description: Liveness, docs, and the OpenAPI document itself.
+  - name: mirbase
+    description: miRNA lookup and autocomplete (local SQLite first, miRBase fallback).
+  - name: design
+    description: Primer design and single-set analysis.
+  - name: specificity
+    description: Off-target (BLAST) and multiplex cross-dimer checks.
+  - name: export
+    description: Report generation (PDF / CSV / FASTA).
+  - name: benchmark
+    description: Precomputed benchmark + validation results.
+  - name: visualization
+    description: Reaction / melting / gel SVG panels for a designed primer set.
+
+paths:
+
+  # ── meta ────────────────────────────────────────────────────────────────
+  /api/health:
+    get:
+      tags: [meta]
+      summary: Liveness probe
+      description: >
+        Always returns 200 so the frontend can render a readable status.
+        `features` gates optional UI (e.g. LNA suggestions).
+      responses:
+        "200":
+          description: Backend is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:   { type: string, example: ok }
+                  message:  { type: string, example: Backend is running }
+                  version:  { type: string, example: 3.1.0 }
+                  features:
+                    type: object
+                    properties:
+                      lna_suggestions: { type: boolean }
+                required: [status, version, features]
+
+  /api/docs:
+    get:
+      tags: [meta]
+      summary: Swagger UI
+      description: Interactive API docs (Swagger UI loaded from a CDN; no backend dependency).
+      responses:
+        "200":
+          description: HTML page embedding Swagger UI
+          content:
+            text/html:
+              schema: { type: string }
+
+  /api/openapi.yaml:
+    get:
+      tags: [meta]
+      summary: This OpenAPI document
+      responses:
+        "200":
+          description: The OpenAPI 3.1 spec as YAML
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  # ── mirbase ─────────────────────────────────────────────────────────────
+  /api/mirbase/suggest:
+    get:
+      tags: [mirbase]
+      summary: Autocomplete miRNA identifiers
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Query prefix (≥ 2 chars; shorter returns an empty list).
+          schema: { type: string, minLength: 2 }
+      responses:
+        "200":
+          description: Ranked suggestions (empty array if q < 2 chars)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:      { type: string, example: hsa-miR-21-5p }
+                    accession: { type: string }
+                    species: { type: string }
+
+  /api/mirbase/{mirna_id}:
+    get:
+      tags: [mirbase]
+      summary: Resolve a miRNA id / accession to its mature sequence
+      description: Local SQLite first (offline), then miRBase REST fallback for names/accessions.
+      parameters:
+        - name: mirna_id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 100 }
+      responses:
+        "200":
+          description: Resolved miRNA
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:        { type: string }
+                  accession: { type: string }
+                  sequence:  { type: string, description: Mature RNA sequence (5'→3') }
+                  family:    { type: string }
+                  species:   { type: string }
+                  length:    { type: integer }
+                  source:    { type: string, enum: [local, mirbase] }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404":
+          description: miRNA not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ── design ──────────────────────────────────────────────────────────────
+  /api/design:
+    post:
+      tags: [design]
+      summary: Design a stem-loop RT-qPCR primer set for a mature miRNA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DesignRequest" }
+      responses:
+        "200":
+          description: Ranked primer candidates plus deterministic primers and advisories
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DesignResponse" }
+        "400":
+          description: Invalid mature sequence
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: Pipeline could not produce a valid design (constraints too tight, etc.)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:      { type: string }
+                  edge_cases: { type: array, items: { type: object } }
+
+  /api/analyze:
+    post:
+      tags: [design]
+      summary: Analyze a user-supplied primer set (no scoring)
+      description: >
+        Computes per-primer intrinsic parameters, the hetero-dimer matrix, and
+        context checks (RT overhang vs miRNA 3', universal-reverse match, forward
+        anchoring) for three primers the user already has. No V4 scoring.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [primers, matureSequence]
+              properties:
+                primers:
+                  type: object
+                  properties:
+                    rt:      { type: string }
+                    forward: { type: string }
+                    reverse: { type: string }
+                matureSequence: { type: string, description: Mature miRNA (RNA or DNA) }
+                mirnaId: { type: string, description: Optional; echoed for client-side BLAST }
+                params:  { $ref: "#/components/schemas/IonParams" }
+      responses:
+        "200":
+          description: Per-primer metrics, cross-dimer matrix, and context checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  primers:      { type: object }
+                  cross_dimers: { type: array, items: { type: object } }
+                  context:      { type: object }
+                  meta:         { type: object }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  # ── specificity ─────────────────────────────────────────────────────────
+  /api/blast-check:
+    post:
+      tags: [specificity]
+      summary: Off-target check of a forward (and optional reverse) primer via BLAST
+      description: Rate-limited to 10 requests/minute/IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [forward_primer]
+              properties:
+                forward_primer: { type: string, maxLength: 60, description: A/C/G/T/N only }
+                reverse_primer:
+                  type: string
+                  description: >
+                    Optional. The fixed universal reverse primer is not searched (it
+                    anneals to the stem-loop body, not a miRNA); see reverse_primer_skipped.
+                mirna_id:
+                  type: string
+                  description: >
+                    Optional; must include arm designation (-5p/-3p) to exclude the
+                    on-target self-hit. Rejected with 400 if the arm is missing.
+                mirna_sequence:
+                  type: string
+                  maxLength: 60
+                  description: >
+                    Optional mature sequence of the target (RNA or DNA) for the forward
+                    primer's on-target duplex Tm. Falls back to the BLAST DB entry for
+                    mirna_id; without either, the duplex-Tm gate is skipped.
+                conditions:
+                  type: object
+                  description: >
+                    Optional primer3 conditions for the duplex-Tm gate — pass the design's
+                    metadata.design_settings.effective_p3. Missing keys use design defaults.
+                  properties:
+                    mv_conc: { type: number, description: effective monovalent mM }
+                    dv_conc: { type: number, description: Mg2+ mM }
+                    dntp_conc: { type: number, description: total dNTP mM }
+                    dna_conc: { type: number, description: primer nM }
+      responses:
+        "200":
+          description: >
+            Off-target hits classified by risk (see cross_species_excluded, hits_truncated).
+            `classification` reports the duplex-Tm gate (tm_ontarget, margins, conditions,
+            classifier_version, species); each hit's alignment carries tm_offtarget /
+            tm_ontarget. `identical_sequence_hits` lists other miRNA names carrying the
+            target's mature sequence (identical, or ends shifted ≤2 nt) — not risk-classified.
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429":
+          description: Rate limit exceeded (10/min/IP)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: BLAST database unavailable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/blast-status:
+    get:
+      tags: [specificity]
+      summary: BLAST database availability + freshness
+      description: Lightweight read-only check the frontend calls before enabling the off-target button.
+      responses:
+        "200":
+          description: DB availability
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:        { type: boolean }
+                  sequences_count:  { type: [integer, "null"] }
+                  build_date:       { type: [string, "null"] }
+                  outdated_warning: { type: boolean }
+                  message:          { type: string }
+
+  /api/multiplex-check:
+    post:
+      tags: [specificity]
+      summary: Cross-dimer check across a panel of primer sets
+      description: Rate-limited to 10 requests/minute/IP. Requires ≥ 2 primer sets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [primer_sets]
+              properties:
+                primer_sets:
+                  type: array
+                  minItems: 2
+                  items:
+                    type: object
+                    required: [forward]
+                    properties:
+                      mirna_id: { type: string }
+                      forward:  { type: string }
+                      probe:    { type: [string, "null"] }
+                params: { $ref: "#/components/schemas/IonParams" }
+      responses:
+        "200":
+          description: Pairwise cross-dimer risk and panel verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pairs:           { type: array, items: { type: object } }
+                  worst_risk:      { type: string }
+                  panel_ok:        { type: boolean }
+                  warnings:        { type: array, items: { type: string } }
+                  recommendations: { type: array, items: { type: string } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429":
+          description: Rate limit exceeded (10/min/IP)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/lna-suggest:
+    post:
+      tags: [design]
+      summary: Suggest LNA substitution positions (informational only)
+      description: >
+        Informational only — LNA Tm is never scored or used in hard filters.
+        Returns 503 when USE_LNA_SUGGESTIONS is disabled. RT role is out of scope (400).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sequence]
+              properties:
+                sequence: { type: string, description: DNA primer (A/T/G/C), 2–60 nt }
+                role:     { type: string, enum: [forward, reverse] }
+                mode:     { type: string, enum: [tm, discrimination], default: tm }
+                target_tm: { type: number, description: Required when mode=tm }
+                sibling_mismatch_positions:
+                  type: array
+                  items: { type: integer }
+                  description: 0-based positions (mode=discrimination)
+                max_lna: { type: integer, minimum: 1, maximum: 8, default: 4 }
+                params:  { $ref: "#/components/schemas/IonParams" }
+      responses:
+        "200":
+          description: Suggested positions and predicted Tm breakdown
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sequence:              { type: string }
+                  role:                  { type: string }
+                  tm_reference_primer3:  { type: [number, "null"] }
+                  lna_result:            { type: object }
+                  calc_at_suggestion:    { type: object }
+                  informational_notice:  { type: string }
+                  warnings:              { type: array, items: { type: string } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "503":
+          description: LNA suggestions disabled (USE_LNA_SUGGESTIONS=False)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ── export ──────────────────────────────────────────────────────────────
+  /api/export:
+    post:
+      tags: [export]
+      summary: Export a design as PDF / CSV / FASTA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [format, results]
+              properties:
+                format:  { type: string, enum: [pdf, csv, fasta] }
+                results: { type: object, description: The object returned by /api/design (must include top3) }
+                blast_result: { type: object, description: Optional /api/blast-check output to embed }
+                include_checklist: { type: boolean, default: true }
+      responses:
+        "200":
+          description: "File stream (Content-Disposition: attachment)"
+          content:
+            application/pdf: { schema: { type: string, format: binary } }
+            text/csv: { schema: { type: string } }
+            text/plain: { schema: { type: string, description: FASTA } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "503":
+          description: reportlab not installed (PDF only)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  # ── benchmark ───────────────────────────────────────────────────────────
+  /api/benchmark:
+    get:
+      tags: [benchmark]
+      summary: Precomputed benchmark + validation results
+      description: >
+        Serves the static benchmark_results.json (design-characteristic comparison
+        plus the validation block: deterministic ground truth, published exact-match,
+        specificity concordance, edge cases). Returns available:false if not yet run.
+      responses:
+        "200":
+          description: Benchmark payload, or an availability notice
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _metadata:  { type: object }
+                  metrics:    { type: [object, "null"] }
+                  per_assay:  { type: array, items: { type: object } }
+                  validation: { type: object }
+                  available:  { type: boolean, description: Present (false) only when results are missing }
+
+  /api/visualize:
+    post:
+      tags: [visualization]
+      summary: Render reaction / melting / gel SVG panels for a designed primer set
+      description: >
+        Consumes /api/design output (sequences + predicted_amplicon_tm) and returns
+        SVG panels. Never designs or scores. Results cached 30 days; theme excluded
+        from the cache key (colours are CSS variables).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mirna_sequence, mirna_id, stemloop_rt, forward, forward_binding_length, universal_reverse]
+              properties:
+                mirna_sequence:         { type: string }
+                mirna_id:               { type: string, description: "Validated ^[A-Za-z0-9\\-\\._]{1,64}$" }
+                stemloop_rt:            { type: string }
+                forward:                { type: string }
+                forward_binding_length: { type: integer }
+                universal_reverse:      { type: string }
+                predicted_amplicon_tm:  { type: [number, "null"] }
+                dimer_tm_warning:       { type: [object, "null"] }
+                panels:                 { type: array, items: { type: string, enum: [reaction, melting, gel] } }
+                theme:                  { type: string }
+      responses:
+        "200":
+          description: SVG panels plus amplicon metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  panels: { type: object }
+                  meta:   { type: object }
+        "422":
+          description: Structural assertion failed (A1–A6) or invalid mirna_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error_code: { type: string }
+                  detail:     { type: string }
+                  expected:   {}
+                  actual:     {}
+
+components:
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+
+    IonParams:
+      type: object
+      description: Ion conditions; all optional (server defaults applied when omitted).
+      properties:
+        saltConcentration:      { type: number, description: mM Na+ }
+        magnesiumConcentration: { type: number, description: mM Mg²+ }
+        dntpTotal:              { type: number, description: mM total dNTP }
+        primerConcentration:    { type: number, description: nM }
+
+    DesignRequest:
+      type: object
+      required: [sequence]
+      properties:
+        sequence:
+          type: object
+          required: [matureSequence]
+          properties:
+            matureSequence: { type: string, description: Mature miRNA (RNA 5'→3') }
+            mirnaId:        { type: string, description: Optional; enables family + BLAST self-hit exclusion }
+            species:        { type: string, enum: [human, mouse, rat], description: Optional; scopes family cross-reactivity when the miRNA is pasted without a name }
+        thermodynamic:       { type: object, description: Tm/GC targets and ion conditions }
+        primerConstraints:   { type: object, description: Length / GC-clamp / amplicon constraints }
+        qpcr:                { type: object, description: qPCR conditions (annealing temp, etc.) }
+        detectionMethod:     { type: object, description: e.g. signalMethod sybr|probe }
+        experimentalContext: { type: object }
+
+    DesignResponse:
+      type: object
+      description: >
+        Ranked candidates plus deterministic primers and advisories. Nested scoring
+        and structure objects are large; representative top-level keys are listed.
+      properties:
+        top3:
+          type: array
+          description: Ranked forward-primer candidates with sub-scores and structure checks.
+          items: { type: object }
+        stemloop_rt:
+          type: object
+          description: Deterministic RT primer (fixed universal body + 6-nt overhang).
+        universal_reverse:
+          type: object
+          description: Fixed universal reverse primer.
+        metadata:
+          type: object
+          description: mirna_sequence, mirna_id, timing, versions, forward_axis_refined.
+        specificity_warnings:
+          type: object
+          description: >
+            Dual-axis specificity. Only `overhang_collision` drives warnings and scoring;
+            `cross_reactivity` is the seed-based mRNA-targeting axis, kept for biological context.
+          properties:
+            cross_reactivity:
+              type: object
+              description: Seed-family grouping (positions 2-8). Informational context only.
+            overhang_collision:
+              type: object
+              description: >
+                Primer-binding collision analysis. Specificity = RT 3'-overhang capture x
+                forward 5'-prefix discrimination; an off-target co-amplifies only when BOTH
+                axes fail.
+              properties:
+                axis_model:          { type: string, example: dual }
+                species:             { type: string }
+                overhang_len:        { type: integer }
+                forward_specific_len: { type: integer }
+                collisions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      mirna:          { type: string }
+                      rt_mismatch:    { type: integer }
+                      rt_risk:        { type: string, enum: [IDENTICAL, HIGH, LOW, SAFE] }
+                      fwd_mismatch:   { type: integer }
+                      fwd_risk:       { type: string, enum: [IDENTICAL, HIGH, LOW, SAFE] }
+                      combined_risk:  { type: string, enum: [CRITICAL, LOW, SAFE] }
+                      same_seed_family: { type: boolean }
+                summary:             { type: object }
+                worst_rt_risk:       { type: string }
+                worst_combined_risk: { type: string, enum: [CRITICAL, LOW, SAFE, no_index_data] }
+                recommendation:      { type: object }
+            axis_note: { type: string }
+        edge_cases:           { type: array, items: { type: object } }

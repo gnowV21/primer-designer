@@ -8,11 +8,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const DISCLAIMER =
-  'LNA Tm predicted by doublet nearest-neighbor model (SantaLucia 1998 + McTigue 2004 + ' +
-  'Owczarzy 2011, LNA·DNA:DNA). Salt correction approximate for LNA away from ~100 mM Na⁺. ' +
-  'Informational — confirm with synthesis provider (IDT). Not used in scoring. ' +
-  'RT overhang (DNA:RNA context) is out of scope.';
+const DISCLAIMER = 'Informational only — confirm Tm with synthesis provider. Not used in scoring.';
 
 /**
  * @param {{
@@ -39,6 +35,15 @@ export default function LnaPanel({
   const [error,   setError]     = useState(null);
 
   async function handleSuggest() {
+    // The LNA NN model covers DNA only; guard here so a bad input shows a clear
+    // message instead of a raw 400 from /api/lna-suggest (which rejects non-DNA
+    // bases and sequences > 60 nt).
+    const seq = (sequence ?? '').toUpperCase();
+    if (!/^[ATGC]{2,60}$/.test(seq)) {
+      setResult(null);
+      setError('LNA suggestion needs a DNA sequence of 2–60 nt (A/T/G/C only).');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -52,7 +57,28 @@ export default function LnaPanel({
         params,
       };
       const res = await axios.post('/api/lna-suggest', body);
-      setResult(res.data);
+      // Backend returns a nested shape; flatten it to what this panel renders.
+      const d    = res.data ?? {};
+      const lna  = d.lna_result ?? {};
+      const calc = d.calc_at_suggestion ?? {};
+      setResult({
+        // primer3 frame (same as the design Tm) when available; the LNA engine's own
+        // absolute Tm reads ~3 °C low, only its ΔTm is used (audit SCI-12).
+        tm_dna:               calc.tm_dna_primer3_frame ?? calc.tm_dna,
+        tm_lna:               calc.tm_lna_primer3_frame ?? calc.tm_lna,
+        delta_tm:             calc.delta_tm,
+        suggested_positions:  lna.suggested_positions ?? calc.lna_positions ?? [],
+        search:               lna.search,
+        target_met:           lna.target_met,
+        discrimination_gain:  lna.discrimination_gain,
+        method:               calc.method ?? [],
+        tm_reference_primer3: d.tm_reference_primer3,
+        warnings: [
+          ...(lna.warnings  ?? []),
+          ...(calc.warnings ?? []),
+          ...(d.warnings    ?? []),
+        ],
+      });
     } catch (err) {
       setError(err.response?.data?.error ?? err.message ?? 'Request failed');
     } finally {
@@ -69,7 +95,7 @@ export default function LnaPanel({
             className={
               lnaPositions.includes(i)
                 ? 'inline-block bg-amber-200 text-amber-900 font-bold rounded px-px mx-px'
-                : 'text-gray-700'
+                : 'text-slate-700'
             }
             title={lnaPositions.includes(i) ? `Position ${i}: LNA` : `Position ${i}: DNA`}
           >
@@ -91,23 +117,23 @@ export default function LnaPanel({
           </span>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-600 text-lg leading-none">&times;</button>
         )}
       </div>
 
       {/* Primer sequence preview */}
-      <div className="bg-white border border-amber-100 rounded p-2 text-xs text-gray-500">
-        <span className="font-medium text-gray-700">Primer ({role}):&nbsp;</span>
+      <div className="bg-white border border-amber-100 rounded p-2 text-xs text-slate-500">
+        <span className="font-medium text-slate-700">Primer ({role}):&nbsp;</span>
         <span className="font-mono">{sequence}</span>
       </div>
 
       {mode === 'tm' && (
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-slate-600">
           Target Tm: <strong>{targetTm}°C</strong> — will suggest minimal LNA positions to reach target.
         </div>
       )}
       {mode === 'discrimination' && siblingMismatchPositions.length > 0 && (
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-slate-600">
           Mismatch positions vs HIGH-risk sibling: <strong>[{siblingMismatchPositions.join(', ')}]</strong> — LNA prioritised here.
         </div>
       )}
@@ -131,26 +157,26 @@ export default function LnaPanel({
         <div className="space-y-3">
           {/* Tm before/after */}
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="bg-gray-100 rounded px-2 py-1 text-xs font-mono">
+            <span className="bg-slate-100 rounded px-2 py-1 text-xs font-mono">
               DNA: <strong>{result.tm_dna?.toFixed(1)}°C</strong>
             </span>
-            <span className="text-gray-400">→</span>
+            <span className="text-slate-500">→</span>
             <span className="bg-amber-100 rounded px-2 py-1 text-xs font-mono">
               +LNA: <strong>{result.tm_lna?.toFixed(1)}°C</strong>
             </span>
-            <span className={`text-xs font-semibold ${result.delta_tm >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+            <span className={`text-xs font-semibold ${result.delta_tm >= 0 ? 'text-teal-700' : 'text-red-700'}`}>
               Δ {result.delta_tm >= 0 ? '+' : ''}{result.delta_tm?.toFixed(1)}°C
             </span>
             {result.target_met && (
-              <span className="text-xs text-green-700 font-medium">Target met</span>
+              <span className="text-xs text-teal-700 font-medium">Target met</span>
             )}
           </div>
 
           {/* Sequence with LNA highlighted */}
-          <div className="bg-white border border-gray-100 rounded p-2">
-            <div className="text-xs text-gray-500 mb-1">LNA positions highlighted:</div>
+          <div className="bg-white border border-slate-100 rounded p-2">
+            <div className="text-xs text-slate-500 mb-1">LNA positions highlighted:</div>
             {renderSequence(sequence, result.suggested_positions ?? [])}
-            <div className="mt-1 text-xs text-gray-500">
+            <div className="mt-1 text-xs text-slate-500">
               Positions: [{(result.suggested_positions ?? []).join(', ')}] (0-based) &nbsp;·&nbsp;
               Search: {result.search ?? '–'}
             </div>
@@ -158,23 +184,22 @@ export default function LnaPanel({
 
           {/* Discrimination gain */}
           {result.discrimination_gain != null && (
-            <div className="bg-blue-50 border border-blue-100 rounded p-2 text-xs text-blue-800">
+            <div className="bg-slate-50 border border-slate-100 rounded p-2 text-xs text-slate-800">
               Discrimination gain (directional): <strong>{result.discrimination_gain?.toFixed(1)}°C</strong>
-              <span className="ml-1 text-blue-600">(LNA at mismatch positions vs sibling)</span>
+              <span className="ml-1 text-slate-600">(LNA at mismatch positions vs sibling)</span>
             </div>
           )}
 
           {/* method metadata */}
-          <div className="text-xs text-gray-400">
-            Params: {(result.method ?? []).join(' + ')} &nbsp;|&nbsp;
-            Ref (primer3): {result.tm_reference_primer3?.toFixed(1)}°C
+          <div className="text-xs text-slate-500">
+            Tm = primer3 DNA Tm + ΔTm from {(result.method ?? []).join(' + ')}
           </div>
 
           {/* Warnings */}
           {result.warnings?.length > 0 && (
             <div className="space-y-1">
               {result.warnings.map((w, i) => (
-                <div key={i} className="bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-xs text-yellow-800">
+                <div key={i} className="bg-amber-50 border border-amber-200 rounded px-2 py-1 text-xs text-amber-800">
                   {w}
                 </div>
               ))}
@@ -184,7 +209,7 @@ export default function LnaPanel({
       )}
 
       {/* Disclaimer */}
-      <div className="text-[10px] text-gray-400 border-t border-amber-100 pt-2 leading-relaxed">
+      <div className="text-xs text-slate-500 border-t border-amber-100 pt-2 leading-relaxed">
         {DISCLAIMER}
       </div>
     </div>

@@ -577,7 +577,8 @@ def main():
     # Write JSON report
     report = {
         "run_date": run_date,
-        "db_path": os.path.abspath(args.db),
+        # repo-relative, so the committed report does not embed a machine path
+        "db_path": os.path.relpath(os.path.abspath(args.db), os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")).replace(os.sep, "/"),
         "db_metadata": meta,
         "summary": {
             "test_cases_passed": test_pass,

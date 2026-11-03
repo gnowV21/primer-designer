@@ -21,7 +21,7 @@ export default function OverhangComparison({ comparison, recommended }) {
         ))}
       </div>
 
-      <p className="text-xs text-slate-400 pt-1 border-t border-slate-100">
+      <p className="text-xs text-slate-500 pt-1 border-t border-slate-100">
         Composite score = 60 % best primer quality + 40 % stemloop MFE quality.
         Candidates found with default constraints.
       </p>
@@ -59,7 +59,7 @@ function OverhangCard({ data }) {
 
       {/* Overhang sequence */}
       <div>
-        <p className="text-xs text-slate-400 mb-0.5">3' overhang (miRNA)</p>
+        <p className="text-xs text-slate-500 mb-0.5">3' overhang (miRNA)</p>
         <span className="font-mono text-xs text-slate-700 tracking-wider">{overhang_rna}</span>
       </div>
 
@@ -112,7 +112,7 @@ function Row({ label, value, unit = '', badge, sub }) {
         {badge === 'ok' && <span className="text-teal-500 text-xs">✓</span>}
         {badge === 'warn' && <span className="text-amber-500 text-xs">⚠</span>}
         <strong className="tabular-nums">{value}{unit}</strong>
-        {sub && <span className="text-slate-400 text-xs">({sub})</span>}
+        {sub && <span className="text-slate-500 text-xs">({sub})</span>}
       </span>
     </div>
   );

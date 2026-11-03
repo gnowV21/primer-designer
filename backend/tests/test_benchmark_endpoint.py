@@ -80,3 +80,70 @@ class TestBenchmarkEndpoint:
         data = resp.get_json()
         # miPrimer forward_tm should be null (not crash)
         assert data["metrics"]["forward_tm"]["miprimer"] is None
+
+
+class TestValidationBlock:
+    """
+    The committed benchmark_results.json must carry the `validation` block
+    (real output of validation/validate_primers.py) — it is the scientific
+    substitute for the null competitor columns. Guards against accidental loss.
+    """
+
+    def _load_real(self):
+        path = os.path.normpath(os.path.join(
+            _BACKEND_DIR, "..", "benchmark", "benchmark_results.json"))
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_validation_block_present_and_passing(self):
+        data = self._load_real()
+        v = data.get("validation")
+        assert v is not None, "validation block missing from benchmark_results.json"
+        assert v["checks_passed"] == v["checks_total"], "not all validation checks passed"
+        assert v["checks_total"] > 0
+
+    def test_deterministic_overhangs_match(self):
+        data = self._load_real()
+        for t in data["validation"]["deterministic_primer_targets"]:
+            assert t["rt_overhang_expected"] == t["rt_overhang_actual"], (
+                f"{t['id']}: overhang mismatch "
+                f"{t['rt_overhang_expected']} != {t['rt_overhang_actual']}"
+            )
+
+    def test_published_exact_match_mir16_rt_byte_identical(self):
+        data = self._load_real()
+        pub = data["validation"].get("published_exact_match", [])
+        assert pub, "published_exact_match block missing"
+        mir16 = next((p for p in pub if p["id"] == "hsa-miR-16-5p"), None)
+        assert mir16 is not None, "miR-16 published exact-match row missing"
+        assert mir16["rt_exact_match"] == "PASS", "miR-16 RT primer no longer byte-identical to published"
+        assert mir16["rt_overhang_match"] == "PASS"
+        assert mir16["forward_shares_specific"] == "PASS"
+
+    def test_validation_block_matches_generator(self):
+        """CI gate (Week2 C9): the committed validation block must equal what
+        build_benchmark_validation.py regenerates from results.json — no manual drift."""
+        import importlib.util
+        repo = os.path.normpath(os.path.join(_BACKEND_DIR, ".."))
+        gen_path = os.path.join(repo, "validation", "build_benchmark_validation.py")
+        results_path = os.path.join(repo, "validation", "results.json")
+        if not (os.path.isfile(gen_path) and os.path.isfile(results_path)):
+            pytest.skip("generator or results.json not present")
+        spec = importlib.util.spec_from_file_location("bbv", gen_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with open(results_path, encoding="utf-8") as f:
+            results = json.load(f)
+        expected = mod.build_validation_block(results)
+        assert self._load_real().get("validation") == expected, (
+            "benchmark validation block is stale — run "
+            "`python validation/build_benchmark_validation.py --in-place`"
+        )
+
+    def test_endpoint_passes_validation_through(self, client):
+        # The endpoint is a passthrough; served payload must include validation.
+        resp = client.get("/api/benchmark")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "validation" in data
+        assert data["validation"]["checks_passed"] == data["validation"]["checks_total"]

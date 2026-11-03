@@ -7,8 +7,17 @@
  *   - Cảnh báo kỹ thuật trong PrimerConstraintsGroup (repeat, fwdRegionGC, fwdEndGC)
  *   - Ghi chú sinh học trong DetectionMethodGroup (startsWithU)
  *   - Gửi lên backend khi thiết kế primer (bindingRegion, fwdRegion*)
+ *
+ * `bindingLen` = số nt ở đầu 3' mà overhang RT bám vào (tham số
+ * `bindingRegion3prime`, 5-7 nt). KHÔNG mặc định cứng 6: người dùng đổi được,
+ * và mọi chỉ số binding region bên dưới phải đi theo giá trị đó.
  */
-export function computeSeqAnalysis(matureSequence) {
+import { DEFAULTS } from '../constants/defaults.js';
+
+export function computeSeqAnalysis(
+  matureSequence,
+  bindingLen = DEFAULTS.primerConstraints.bindingRegion3prime,
+) {
   const seq = (matureSequence || '').trim().toUpperCase();
   const isValid =
     seq.length >= 15 &&
@@ -21,9 +30,14 @@ export function computeSeqAnalysis(matureSequence) {
   const gcCount          = (seq.match(/[GC]/g) || []).length;
   const seedSeq          = seq.slice(1, 8);                       // nt 2–8
   const seedGcCount      = (seedSeq.match(/[GC]/g) || []).length;
-  const bindingSeq       = seq.slice(-6);                         // 6 nt cuối
+  // Cửa sổ overhang: đọc từ bindingLen, kẹp vào [1, chiều dài trình tự].
+  const bindingNt        = Math.max(
+    1,
+    Math.min(seq.length, Number(bindingLen) || DEFAULTS.primerConstraints.bindingRegion3prime),
+  );
+  const bindingSeq       = seq.slice(-bindingNt);                 // bindingNt nt cuối
   const bindingGcCount   = (bindingSeq.match(/[GC]/g) || []).length;
-  const bindingAUcount   = 6 - bindingGcCount;
+  const bindingAUcount   = bindingSeq.length - bindingGcCount;
   const fwdRegion        = seq.slice(0, Math.min(12, seq.length));
   const fwdGcCount       = (fwdRegion.match(/[GC]/g) || []).length;
   const fwdAUcount       = fwdRegion.length - fwdGcCount;
@@ -45,11 +59,13 @@ export function computeSeqAnalysis(matureSequence) {
     seed6mer: seq.slice(1, 7),
     gcSeed:   parseFloat(((seedGcCount / seedSeq.length) * 100).toFixed(1)),
 
-    // === Binding region (6 nt cuối — RT primer bám vào đây) ===
-    bindingRegion:    bindingSeq,
-    bindingRegionGC:  parseFloat(((bindingGcCount / 6) * 100).toFixed(1)),
+    // === Binding region (bindingNt nt cuối — RT primer bám vào đây) ===
+    bindingRegion:        bindingSeq,
+    bindingRegionLen:     bindingSeq.length,
+    bindingRegionGcCount: bindingGcCount,
+    bindingRegionGC:  parseFloat(((bindingGcCount / bindingSeq.length) * 100).toFixed(1)),
     // Tm ước tính theo Wallace rule: Tm = 2×(A+U) + 4×(G+C)
-    // Chỉ dùng để ước tính nhanh độ bền của overhang RT primer (6 nt).
+    // Chỉ dùng để ước tính nhanh độ bền của overhang RT primer (bindingNt nt).
     // Giá trị điển hình: 12°C (toàn AU) → 24°C (toàn GC).
     // Tm thực tế cao hơn do hairpin giữ primer ở vị trí, nhưng Tm thấp → phân biệt kém.
     bindingRegionTm: 2 * bindingAUcount + 4 * bindingGcCount,

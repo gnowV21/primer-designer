@@ -205,6 +205,19 @@ def advise_normalization(sample_type: str, panel_size: int = 1) -> dict:
     for _, r in matched:
         all_cautions.extend(r.get("cautions", []))
 
+    # Surface the large-panel (N4) advice explicitly. When a large panel co-triggers
+    # N4 alongside a sample-type rule (e.g. tissue), the global-mean recommendation
+    # would otherwise stay buried in the cautions — lift it into the primary strategy
+    # so the advisory is unambiguous for ≥10-target panels.
+    matched_ids = {rid for rid, _ in matched}
+    recommended_strategy = primary_rule["strategy"]
+    if "N4" in matched_ids and primary_id != "N4":
+        recommended_strategy = (
+            recommended_strategy
+            + " For panels ≥10 targets, consider global-mean normalization "
+            "instead of a single reference miRNA (see N4). [Hellemans14]"
+        )
+
     # Reference candidates filtered by sample_type
     all_refs = _load_reference_mirnas()
     st_lower = (sample_type or "").lower().strip()
@@ -219,7 +232,7 @@ def advise_normalization(sample_type: str, panel_size: int = 1) -> dict:
 
     return {
         "sample_type": sample_type,
-        "recommended_strategy": primary_rule["strategy"],
+        "recommended_strategy": recommended_strategy,
         "rule_id": primary_id,
         "rule_label": primary_rule["label"],
         "reference_candidates": candidates,

@@ -13,7 +13,7 @@ export default function Toggle({ checked, onChange, label, tooltip, disabled = f
           relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent
           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-100 focus:ring-offset-1
           ${disabled ? 'cursor-not-allowed opacity-50' : ''}
-          ${checked ? 'bg-teal-600' : 'bg-gray-200'}
+          ${checked ? 'bg-teal-600' : 'bg-slate-200'}
         `}
       >
         <span
@@ -26,7 +26,7 @@ export default function Toggle({ checked, onChange, label, tooltip, disabled = f
       </button>
 
       {label && (
-        <span className={`text-xs font-medium ${checked ? 'text-teal-700' : 'text-gray-400'}`}>
+        <span className={`text-xs font-medium ${checked ? 'text-teal-700' : 'text-slate-500'}`}>
           {typeof label === 'string' ? label : (checked ? 'ON' : 'OFF')}
         </span>
       )}

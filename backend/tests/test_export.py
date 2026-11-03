@@ -27,7 +27,7 @@ _RESULTS = {
                 "fwd_reverse": {"dg": -3.0},
                 "fwd_stemloop": {"dg": -2.5},
             },
-            "scores": {"bound_fraction_binding": 85.0, "gc_clamp": 100},
+            "scores": {"bound_fraction_binding_pct": 4.1, "gc_clamp": 100},
             "isomir_flag": {"isomir_discrimination_risk": False},
         },
         {
@@ -39,7 +39,7 @@ _RESULTS = {
                                  "end_stability": {"stability_kcal_mol": 4.0, "pass": True},
                                  "overall_pass": True, "has_critical_flag": False},
             "heterodimer_checks": {"fwd_reverse": {"dg": -2.8}, "fwd_stemloop": {"dg": -2.0}},
-            "scores": {"bound_fraction_binding": 80.0, "gc_clamp": 100},
+            "scores": {"bound_fraction_binding_pct": 3.2, "gc_clamp": 100},
             "isomir_flag": {"isomir_discrimination_risk": False},
         },
         {
@@ -51,7 +51,7 @@ _RESULTS = {
                                  "end_stability": {"stability_kcal_mol": 3.8, "pass": True},
                                  "overall_pass": True, "has_critical_flag": False},
             "heterodimer_checks": {"fwd_reverse": {"dg": -2.5}, "fwd_stemloop": {"dg": -1.9}},
-            "scores": {"bound_fraction_binding": 77.0, "gc_clamp": 60},
+            "scores": {"bound_fraction_binding_pct": 2.0, "gc_clamp": 60},
             "isomir_flag": {"isomir_discrimination_risk": False},
         },
     ],

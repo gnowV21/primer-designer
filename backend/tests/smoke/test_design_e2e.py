@@ -39,7 +39,8 @@ def test_design_v4_scoring_present():
     data = r.json()
     top = data["top3"][0]
     # V4 criteria must be present
-    assert "bound_fraction_binding" in top["scores"]
+    # bound_fraction_binding is informational only since audit SCI-02
+    assert "bound_fraction_binding_pct" in top["scores"]
     assert "bound_fraction_full" in top["scores"]
     assert "family_discrimination" in top["scores"]
 

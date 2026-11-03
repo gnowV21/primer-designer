@@ -39,21 +39,19 @@ export const DEFAULTS = {
   },
 
   detectionMethod: {
-    signalMethod: 'taqman',
+    // SYBR Green by default (project decision 2026-11-03): no probe to order, so the
+    // cheapest assay to start from; TaqMan is one click away under Parameters.
+    // The API's own default stays 'taqman' so validation/benchmark runs are unchanged.
+    signalMethod: 'sybr',
     quantMode: 'relative',
     referenceGene: 'miR-16',
     customReferenceGene: '',
-    enableFamilyDiscrimination: true,
-    enablePrecursorCheck: false,
     enableRefoldingProtocol: true,
   },
 
   experimentalContext: {
     sampleType: 'tissue',
     qpcrSystem: 'other',
-    rtEnzyme: 'mmlv',
-    exportFormat: ['copy'],
-    userLevel: 'advanced',
   },
 };
 
@@ -117,9 +115,3 @@ export const QPCR_SYSTEM_NOTES = {
   other:  'Consult your instrument manual for reference dye requirements, optimal reaction volume, and compatible master mixes.',
 };
 
-export const RT_ENZYME_NOTES = {
-  mmlv:        { optimalTemp: '37–42°C', note: 'M-MLV RNase H+: the original RT enzyme. Works well at 37–42°C. Well-suited for standard stem-loop RT-qPCR protocols.' },
-  superscript: { optimalTemp: '50–55°C', note: 'SuperScript III/IV (Thermo): thermostable at 50–55°C, reduces RNA secondary structure. Better yield for difficult or low-input samples.' },
-  revertaid:   { optimalTemp: '42–50°C', note: 'RevertAid (Thermo): a balance between M-MLV and SuperScript. Good for routine samples.' },
-  other:       { optimalTemp: 'See manufacturer datasheet', note: 'Check the optimal temperature of your RT enzyme before setting up the protocol.' },
-};
