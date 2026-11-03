@@ -281,7 +281,7 @@ export default function PrimerConstraintsGroup({
         <WarnBox text={`AU-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): The 5′-most 12 nt are heavily AU — the forward primer will require a long 5′ tail to reach the Tm target. Consider lowering the Tm minimum below.`} />
       )}
       {seqAnalysis && seqAnalysis.fwdRegionGC > 70 && (
-        <WarnBox text={`GC-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): Risk of self-complementarity and hairpin formation. Enable precursor check in Advanced specificity options below.`} />
+        <WarnBox text={`GC-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): Risk of self-complementarity and hairpin formation — check the structure flags on each primer set in the results.`} />
       )}
 
       {/* ══ 2. THERMODYNAMIC PARAMETERS ═══════════════════════════════════ */}

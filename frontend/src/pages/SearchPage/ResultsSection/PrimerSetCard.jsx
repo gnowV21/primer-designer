@@ -45,9 +45,10 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        className="w-full flex items-start sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left"
       >
-        <div className="flex items-center gap-3">
+        {/* Wraps on phones: badges on one line, the sequence below them. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 min-w-0 flex-1">
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${rankColor}`}>
             #{set.rank}
           </span>
@@ -68,31 +69,31 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
               {set.same_binding_as_rank && ` as #${set.same_binding_as_rank}`}
             </span>
           )}
-          <div>
-            <p className="text-sm font-semibold text-slate-800 font-mono">{set.sequence}</p>
+          <div className="min-w-0 basis-full sm:basis-auto">
+            <p className="text-sm font-semibold text-slate-800 font-mono break-all">{set.sequence}</p>
             <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
               {set.length} nt · Tm {set.tm_full?.toFixed(1)}°C · GC {set.gc_percent}%
               {set.amplicon_size && ` · ~${set.amplicon_size} bp amplicon`}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <ScoreGauge score={set.total_score} grade={set.grade} compact />
           <span className="text-slate-500 text-sm">{expanded ? '▲' : '▼'}</span>
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-slate-100 px-5 py-4 space-y-5">
+        <div className="border-t border-slate-100 px-4 sm:px-5 py-4 space-y-5">
           {/* ── Primer sequences ── */}
-          <div className="grid gap-2">
+          <div className="grid grid-cols-1 gap-2">
             <PrimerRow label="Forward" seq={set.sequence} detail={`Binding: ${set.specific_region || '—'} (${set.specific_length} nt)`} />
             {stemloop && <PrimerRow label="RT (stem-loop)" seq={stemloop.sequence} detail={`Tm ${stemloop.tm_full?.toFixed(1)}°C · MFE ${stemloop.mfe?.toFixed(2)} kcal/mol`} />}
             {reverse  && <PrimerRow label="Reverse (universal)" seq={reverse.sequence}  detail={`Tm ${reverse.tm?.toFixed(1)}°C · GC ${reverse.gc_percent}%`} />}
           </div>
 
           {/* ── Score + structure ── */}
-          <div className="grid md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-3">
               <ScoreGauge score={set.total_score} grade={set.grade} />
               {set.scores && set.weights && (
@@ -193,7 +194,7 @@ function PrimerRow({ label, seq, detail }) {
     <div className="bg-slate-50 rounded-lg px-3 py-2.5 space-y-1">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold text-slate-500 shrink-0">{label}</span>
-        <span className="text-xs text-slate-500 truncate">{detail}</span>
+        <span className="text-xs text-slate-500 truncate min-w-0">{detail}</span>
       </div>
       <p className="font-mono text-xs text-slate-800 break-all">5'–{seq}–3'</p>
     </div>

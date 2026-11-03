@@ -14,8 +14,9 @@ import { severityColor, severityOf, AT_TARGET, CRITERION_LABELS as LABELS } from
 
 // Label column width, shared by the row and its expanded explanation so the
 // two can never drift apart.
-const LABEL_W = 'w-44';
-const LABEL_INDENT = 'ml-44';
+// Narrower label column on phones so a row (label · bar · value · weight) fits ~300 px.
+const LABEL_W = 'w-28 sm:w-44';
+const LABEL_INDENT = 'sm:ml-44';
 
 // Fallback: turn any unmapped key into a readable phrase instead of showing
 // "some_raw_key". Defensive only — every weighted key should be in LABELS.

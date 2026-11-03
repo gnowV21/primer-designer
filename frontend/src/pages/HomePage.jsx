@@ -47,14 +47,14 @@ const steps = [
   },
   {
     step: '02',
-    title: 'Adjust parameters',
-    desc: 'Set Tm, salt concentration, GC content, primer length, and detection method (TaqMan / SYBR Green).',
+    title: 'Tune if needed',
+    desc: 'Every parameter starts at a validated default. Open Parameters to change Tm, salt, overhang or SYBR Green / TaqMan.',
     color: 'text-teal-500',
   },
   {
     step: '03',
     title: 'Get results',
-    desc: 'Three optimized primers with thermodynamic parameters — ready for synthesis or export to CSV/PDF.',
+    desc: 'Three primers with thermodynamic checks, ready to export to CSV/PDF. Not happy? Adjust parameters on the results page and re-run.',
     color: 'text-teal-400',
   },
 ];
@@ -141,7 +141,7 @@ export default function HomePage() {
     <div className="max-w-3xl mx-auto space-y-10">
 
       {/* Hero */}
-      <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-white via-teal-50 to-teal-100 px-8 py-12 text-center space-y-5 shadow-sm">
+      <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-white via-teal-50 to-teal-100 px-5 sm:px-8 py-8 sm:py-12 text-center space-y-5 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-800 leading-snug">
           Automated primer design for<br />
           <span className="text-teal-600">Stem-loop RT-qPCR</span>
@@ -150,10 +150,10 @@ export default function HomePage() {
           A tool for molecular biology researchers to design 3 specialized primers
           for mature miRNA quantification — fast, accurate, with thermodynamic validation.
         </p>
-        <div className="flex items-center justify-center gap-3 pt-1">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
           <button
             onClick={() => navigate('/design')}
-            className="px-7 py-2.5 bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-medium rounded-xl shadow-sm hover:opacity-90 transition-all active:scale-[0.98]"
+            className="whitespace-nowrap px-7 py-2.5 bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-medium rounded-xl shadow-sm hover:opacity-90 transition-all active:scale-[0.98]"
           >
             Start designing →
           </button>
@@ -208,11 +208,11 @@ export default function HomePage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {stats.map(({ value, label }) => (
           <div
             key={label}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-center space-y-1 shadow-sm"
+            className="rounded-xl border border-slate-200 bg-white px-2 sm:px-4 py-4 text-center space-y-1 shadow-sm"
           >
             <p className="text-lg font-black text-teal-600 leading-none tabular-nums">{value}</p>
             <p className="text-xs text-slate-500 leading-snug">{label}</p>
@@ -254,7 +254,7 @@ export default function HomePage() {
           Mature miRNAs are only ~22 nt — too short for conventional RT-PCR. Chen et al. (2005) solved this with a
           hairpin RT primer that physically discriminates mature from pre-miRNA and extends the cDNA to enable qPCR.
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {advantages.map(({ Icon, title, desc }) => (
             <div
               key={title}
@@ -273,7 +273,7 @@ export default function HomePage() {
       {/* How it works */}
       <div>
         <h2 className="text-sm font-semibold text-slate-600 mb-4">How to use</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {steps.map((s) => (
             <div
               key={s.step}

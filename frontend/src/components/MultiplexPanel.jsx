@@ -123,21 +123,22 @@ export default function MultiplexPanel() {
       {/* Assay inputs */}
       <div className="space-y-2">
         {assays.map((a, i) => (
-          <div key={i} className="grid grid-cols-[1fr_2fr_2fr_auto] gap-2 items-start">
+          // Phones: [ID][✕] on one row, both sequences full width below. sm+: one row.
+          <div key={i} className="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)_auto] gap-2 items-start">
             <input
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              className="min-w-0 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
               placeholder={`ID (e.g. miR-21)`}
               value={a.mirna_id}
               onChange={(e) => updateAssay(i, 'mirna_id', e.target.value)}
             />
             <input
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-mono placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              className="order-2 col-span-2 sm:order-none sm:col-span-1 min-w-0 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-mono placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
               placeholder="Forward primer sequence"
               value={a.forward}
               onChange={(e) => updateAssay(i, 'forward', e.target.value)}
             />
             <input
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-mono placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              className="order-2 col-span-2 sm:order-none sm:col-span-1 min-w-0 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-mono placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-teal-400"
               placeholder="Probe sequence (optional)"
               value={a.probe}
               onChange={(e) => updateAssay(i, 'probe', e.target.value)}
@@ -145,7 +146,7 @@ export default function MultiplexPanel() {
             <button
               onClick={() => removeAssay(i)}
               disabled={assays.length <= 1}
-              className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-500 hover:text-red-500 hover:border-red-200 disabled:opacity-30"
+              className="order-1 sm:order-none rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-500 hover:text-red-500 hover:border-red-200 disabled:opacity-30"
             >
               ✕
             </button>

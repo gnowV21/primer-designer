@@ -50,7 +50,7 @@ export default function CollapsibleSection({
           >
             ▸
           </span>
-          <span className={`text-sm font-semibold shrink-0 ${text}`}>
+          <span className={`text-sm font-semibold min-w-0 leading-snug ${text}`}>
             {title}
           </span>
           {tooltip && <Tooltip text={tooltip} />}
