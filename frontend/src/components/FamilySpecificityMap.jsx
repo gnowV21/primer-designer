@@ -176,7 +176,8 @@ function MapView({ data }) {
             )}
           </div>
           {/* Highlight mismatched positions in overhang */}
-          {activeData.sibling_overhang && activeData.sibling_overhang.length === (data.overhang_used || 6) && (
+          {activeData.sibling_overhang
+            && activeData.sibling_overhang.length === (data.target_overhang || '').length && (
             <div className="mt-1 font-mono text-xs">
               <span className="text-slate-500 mr-1">vs target:</span>
               {(data.target_overhang || '').split('').map((nt, idx) => {

@@ -154,7 +154,7 @@ export default function AnalyzePage() {
             label="Stem-loop RT primer" accent="border-l-teal-400"
             value={rt} onChange={setRt}
             placeholder="GTCGTATCCAGTGCAGGGTCCGAGGTA…TCAACA"
-            hint="Hairpin body + 3' overhang (6 nt) complementary to the miRNA 3' end"
+            hint="Hairpin body + 3' overhang complementary to the miRNA 3' end; its length is read from the primer (standard 6 nt, 5-7 supported)"
           />
           <PrimerInput
             label="Forward qPCR primer" accent="border-l-teal-400"

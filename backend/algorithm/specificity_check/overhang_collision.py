@@ -28,6 +28,7 @@ import algorithm.primer3_safe as primer3
 from ..constants import (
     FWD_PREFIX_LEN_FALLBACK,
     COLLISION_MAX_REPORT,
+    OVERHANG_LENGTH_DEFAULT,
     OVERHANG_LENGTH_MAX,
     FORWARD_SPECIFIC_LENGTH_MAX,
     VIRUS_HOST_SPECIES,
@@ -200,7 +201,7 @@ def check_overhang_collision(
     mature_seq: str,
     mirna_name: str,
     params: dict,
-    overhang_len: int = 6,
+    overhang_len: int = OVERHANG_LENGTH_DEFAULT,
     forward_specific_len: int | None = None,
     species: str | None = None,
     max_report: int = COLLISION_MAX_REPORT,

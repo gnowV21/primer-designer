@@ -180,7 +180,7 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
     # [RESEARCH_QUESTIONS_UX A2] Compute DNA:RNA hybrid Tm for the RT overhang.
     # overhang_rc = DNA 5'→3' strand that anneals to miRNA 3' end (RNA).
     # USE_HYBRID_TM gate: True → Sugimoto 1995 NN; False → label-only fallback.
-    # Week2 P4: the RT overhang is 6 nt — below SHORT_DUPLEX_NT_THRESHOLD (8), a point Tm
+    # Week2 P4: the RT overhang is 5-7 nt — below SHORT_DUPLEX_NT_THRESHOLD (8), a point Tm
     # from an NN model is not defensible (initiation + terminal fraying dominate). Report
     # dG37 and an indicative Tm band instead of a point value.
     _reportable_as_tm = binding_len >= SHORT_DUPLEX_NT_THRESHOLD

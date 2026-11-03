@@ -2,7 +2,8 @@
 # forward_primer.py — Module 2: Forward primer candidate generation
 # v2.8 key changes:
 #   - specific_lengths = [12..17] nt [K11]
-#   - EXCLUDES last 6 nt of miRNA (used by stemloop overhang) [V07]
+#   - EXCLUDES the last `bindingRegion3prime` nt of the miRNA (the stemloop
+#     overhang); default FORWARD_EXCLUDES_LAST_NT = 6 [V07], 5-7 supported
 #   - Exhaustive/random tail pool generation (vs hardcoded 6-7 seqs) [Fix L1]
 #   - Real 2-step Tm: compute actual Tm for every (tail+specific) pair [Fix L2]
 #   - Exact amplicon formula derived from cDNA/primer geometry [Fix L4]

@@ -25,7 +25,8 @@ import re
 from ..thermodynamics import calculate_tm_nn
 from ..sequence_utils import rna_to_dna
 from ..constants import (
-    KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX, OVERHANG_LENGTH_MAX,
+    KWOK_POSITION_WEIGHTS, KWOK_DIST_DISCRIMINATING, MIRBASE_HUMAN_PREFIX,
+    OVERHANG_LENGTH_DEFAULT, OVERHANG_LENGTH_MAX,
     MIRBASE_PREFIX_PATTERN,
 )
 from .kwok import kwok_weighted_distance, PRIMER_3P_AT_WINDOW_START
@@ -68,7 +69,7 @@ def check_family_crossreactivity(
     mature_seq: str,
     mirna_name: str,
     params: dict,
-    overhang_len: int = 6,
+    overhang_len: int = OVERHANG_LENGTH_DEFAULT,
     species: str | None = None,
 ) -> dict:
     """
@@ -78,7 +79,8 @@ def check_family_crossreactivity(
         mature_seq:  Mature miRNA sequence (RNA, 5'→3').
         mirna_name:  miRNA identifier, e.g. 'hsa-let-7a-5p' or 'hsa-miR-21-5p'.
         params:      User formData (for Tm calculation salt conditions).
-        overhang_len: Stemloop RT primer binding length (default 6 nt per Chen 2005).
+        overhang_len: Stemloop RT primer binding length; the caller passes the design's
+            bindingRegion3prime (5-7 nt). The default is only a fallback [Chen05].
         species:     Optional species override ('human'|'mouse'|'rat' or a raw
                      miRBase prefix). Used only when `mirna_name` carries no
                      prefix. Family cross-reactivity is scoped to one species —

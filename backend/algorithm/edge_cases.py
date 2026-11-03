@@ -16,10 +16,11 @@ from .constants import (
     POLY_G_RUN_MIN,
     LOW_COMPLEXITY_TOP2_PCT,
     LOW_COMPLEXITY_DINUC_REP,
+    OVERHANG_LENGTH_DEFAULT,
 )
 
 
-def detect_edge_cases(seq: str) -> list[dict]:
+def detect_edge_cases(seq: str, overhang_len: int = OVERHANG_LENGTH_DEFAULT) -> list[dict]:
     """
     Analyse a mature miRNA sequence for conditions that reduce primer design reliability.
 
@@ -54,8 +55,8 @@ def detect_edge_cases(seq: str) -> list[dict]:
             "code": "E1",
             "severity": "critical",
             "message": (
-                f"miRNA length {n} nt is unusually short; the 6-nt overhang + specific region "
-                f"may be unreliable."
+                f"miRNA length {n} nt is unusually short; the {overhang_len}-nt overhang + "
+                f"specific region may be unreliable."
             ),
             "value": n,
         })

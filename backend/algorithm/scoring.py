@@ -322,7 +322,7 @@ def score_candidate(
             explanations["family_discrimination"] = (
                 f"Assay-level specificity — worst other miRNA: {worst_label}{worst_txt}. "
                 f"{summ.get('CO-AMPLIFIED', 0)} co-amplified (ΔCq < 3.3), "
-                f"{summ.get('PARTIAL', 0)} partial (3.3–4.3). ΔCq = RT ({oc.get('overhang_len', 6)}-nt "
+                f"{summ.get('PARTIAL', 0)} partial (3.3–4.3). ΔCq = RT ({oc.get('overhang_len', '?')}-nt "
                 f"overhang) + forward ({oc.get('forward_specific_len', '?')} nt), lower bounds of "
                 "published data. Score 100 = DISCRIMINATED, 70 = PARTIAL, 0 = CO-AMPLIFIED. "
                 "isomiRs and identical copies are reported but not scored. Sources: Chen 2005; "
