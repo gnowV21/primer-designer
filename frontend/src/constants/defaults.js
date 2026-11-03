@@ -39,7 +39,10 @@ export const DEFAULTS = {
   },
 
   detectionMethod: {
-    signalMethod: 'taqman',
+    // SYBR Green by default (project decision 2026-11-03): no probe to order, so the
+    // cheapest assay to start from; TaqMan is one click away under Parameters.
+    // The API's own default stays 'taqman' so validation/benchmark runs are unchanged.
+    signalMethod: 'sybr',
     quantMode: 'relative',
     referenceGene: 'miR-16',
     customReferenceGene: '',
@@ -49,12 +52,6 @@ export const DEFAULTS = {
   experimentalContext: {
     sampleType: 'tissue',
     qpcrSystem: 'other',
-    // Which designer produced the request: 'basic' (/design) or 'advanced'
-    // (/design/advanced). Set by useDesignForm on submit; ResultsPage reads it to
-    // decide whether the deep-science panels start collapsed. Does NOT affect the
-    // algorithm. Defaults to 'advanced' so any caller that omits it sees the full
-    // report rather than a trimmed one.
-    userLevel: 'advanced',
   },
 };
 

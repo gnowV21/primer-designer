@@ -7,7 +7,7 @@ import { PLACEHOLDER } from './helpers.js';
 const SEQUENCE = 'UAGCUUAUCAGACUGAUGUUGA'; // hsa-miR-21-5p 22 nt
 
 async function runDesign(page) {
-  await page.goto('/design/advanced');
+  await page.goto('/design');
   const input = page.getByPlaceholder(PLACEHOLDER);
   await input.fill(SEQUENCE);
   await page.evaluate(() => {

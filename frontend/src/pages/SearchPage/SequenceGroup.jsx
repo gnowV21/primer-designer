@@ -422,14 +422,15 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
             type="button"
             onClick={handleSearch}
             disabled={status === 'loading' || !data.searchQuery.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-semibold
+            aria-label="Search"
+            className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-semibold
               shadow-sm hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
           >
             <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true">
               <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.7"/>
               <line x1="9.8" y1="9.8" x2="13.5" y2="13.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
             </svg>
-            Search
+            <span className="hidden sm:inline">Search</span>
           </button>
         </div>
 
@@ -509,12 +510,12 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
             )}
             {seqAnalysis.bindingRegionGC < 33 && (
               <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg px-3 py-2 leading-relaxed">
-                <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≤ 2 G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
+                <strong>GC-poor binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most {seqAnalysis.bindingRegionLen} nt contain only {seqAnalysis.bindingRegionGcCount} G/C — the RT primer overhang will have very low Tm and may dissociate before cDNA synthesis. Consider increasing the RT reaction temperature or using a more thermostable reverse transcriptase.
               </p>
             )}
             {seqAnalysis.bindingRegionGC > 83 && (
               <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most 6 nt contain ≥ 5 G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
+                <strong>GC-rich binding region ({seqAnalysis.bindingRegionGC}%):</strong> The 3′-most {seqAnalysis.bindingRegionLen} nt contain {seqAnalysis.bindingRegionGcCount} G/C — the RT primer overhang may bind non-specifically to other GC-rich sites in the genome.
               </p>
             )}
             {seqAnalysis.bindingRegionHasRepeat && (

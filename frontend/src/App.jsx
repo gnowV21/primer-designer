@@ -5,12 +5,12 @@ import Navbar from './components/Navbar.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import Footer from './components/Footer.jsx';
 import HomePage from './pages/HomePage.jsx';
-import BasicDesignPage from './pages/DesignPage/BasicDesignPage.jsx';
-import SearchPage from './pages/SearchPage/index.jsx';
+import DesignPage from './pages/DesignPage/index.jsx';
 import ResultsPage from './pages/ResultsPage/index.jsx';
 import AnalyzePage from './pages/AnalyzePage/index.jsx';
 import HistoryPage from './pages/HistoryPage/index.jsx';
 import BenchmarkPage from './pages/BenchmarkPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 
 export default function App() {
   // <main> is the scroll container (the document itself never scrolls), so
@@ -23,19 +23,21 @@ export default function App() {
         <Navbar />
         <ScrollToTop containerRef={mainRef} />
         <div className="flex flex-row flex-1 min-h-0">
-          <main ref={mainRef} className="flex-1 overflow-y-auto p-6">
+          <main ref={mainRef} className="flex-1 overflow-y-auto px-4 py-5 sm:p-6">
             <Routes>
               <Route path="/" element={<Navigate to="/design" replace />} />
               <Route path="/home" element={<HomePage />} />
-              {/* Basic is the default designer; Advanced exposes every parameter. */}
-              <Route path="/design" element={<BasicDesignPage />} />
-              <Route path="/design/advanced" element={<SearchPage />} />
+              {/* One designer: miRNA first, every parameter folded under "Parameters". */}
+              <Route path="/design" element={<DesignPage />} />
+              {/* Former Basic/Advanced split — old links and bookmarks land on the designer. */}
+              <Route path="/design/advanced" element={<Navigate to="/design" replace />} />
               {/* Legacy route — keeps older links and bookmarks working. */}
               <Route path="/search" element={<Navigate to="/design" replace />} />
               <Route path="/analyze" element={<AnalyzePage />} />
               <Route path="/results" element={<ResultsPage />} />
               <Route path="/benchmark" element={<BenchmarkPage />} />
               <Route path="/history" element={<HistoryPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
         </div>
