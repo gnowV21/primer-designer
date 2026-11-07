@@ -12,7 +12,6 @@ import ExportBar from './ExportBar.jsx';
 import RerunBar from './RerunBar.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 import ProbeCard from '../../components/ProbeCard.jsx';
-import MultiplexPanel from '../../components/MultiplexPanel.jsx';
 import NormalizationAdvisor from '../../components/NormalizationAdvisor.jsx';
 import VisualizationPanel from '../../components/VisualizationPanel.jsx';
 import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
@@ -172,7 +171,7 @@ export default function ResultsPage() {
           <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           {showDetails ? 'Hide scientific details' : 'Show scientific details'}
           <span className="text-xs font-normal text-slate-500">
-            thermodynamics · normalization · multiplex
+            thermodynamics · normalization
           </span>
         </button>
 
@@ -212,16 +211,6 @@ export default function ResultsPage() {
 
         {/* ── Export bar — always available ── */}
         <ExportBar results={results} blastResult={blastByRun[activeRun.id] ?? null} />
-
-        {/* ── Multiplex panel check (Phase 6 §B) — standalone tool ── */}
-        {showDetails && (
-          <div>
-            <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-              Multiplex Panel Check
-            </h2>
-            <MultiplexPanel />
-          </div>
-        )}
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ export async function openParameters(page) {
   if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
 }
 
-/** Unfold the scientific-details block on /results (ThermoTable, advisors, multiplex). */
+/** Unfold the scientific-details block on /results (ThermoTable, advisors). */
 export async function showScientificDetails(page) {
   await page.getByRole('button', { name: /Show scientific details/ }).click();
 }
