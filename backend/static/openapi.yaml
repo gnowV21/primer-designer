@@ -20,7 +20,7 @@ info:
     Backend for stem-loop RT-qPCR primer design (Chen 2005). Designs three
     primers per mature miRNA — a stem-loop RT primer, a forward qPCR primer, and
     a fixed universal reverse primer — plus specificity (BLAST + family
-    cross-reactivity), multiplex cross-dimer checks, export, and an informational
+    cross-reactivity), export, and an informational
     LNA-position suggester. All science-facing numbers are computed server-side;
     the frontend is a thin client.
   contact:
@@ -39,7 +39,7 @@ tags:
   - name: design
     description: Primer design and single-set analysis.
   - name: specificity
-    description: Off-target (BLAST) and multiplex cross-dimer checks.
+    description: Off-target (BLAST) checks.
   - name: export
     description: Report generation (PDF / CSV / FASTA).
   - name: benchmark
@@ -307,50 +307,6 @@ paths:
                   build_date:       { type: [string, "null"] }
                   outdated_warning: { type: boolean }
                   message:          { type: string }
-
-  /api/multiplex-check:
-    post:
-      tags: [specificity]
-      summary: Cross-dimer check across a panel of primer sets
-      description: Rate-limited to 10 requests/minute/IP. Requires ≥ 2 primer sets.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [primer_sets]
-              properties:
-                primer_sets:
-                  type: array
-                  minItems: 2
-                  items:
-                    type: object
-                    required: [forward]
-                    properties:
-                      mirna_id: { type: string }
-                      forward:  { type: string }
-                      probe:    { type: [string, "null"] }
-                params: { $ref: "#/components/schemas/IonParams" }
-      responses:
-        "200":
-          description: Pairwise cross-dimer risk and panel verdict
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pairs:           { type: array, items: { type: object } }
-                  worst_risk:      { type: string }
-                  panel_ok:        { type: boolean }
-                  warnings:        { type: array, items: { type: string } }
-                  recommendations: { type: array, items: { type: string } }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "429":
-          description: Rate limit exceeded (10/min/IP)
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/Error" }
 
   /api/lna-suggest:
     post:
