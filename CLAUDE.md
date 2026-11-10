@@ -26,7 +26,10 @@ npm run preview        # preview production build
 ```bash
 cd backend && python -m pytest tests visualization -q --ignore=tests/smoke   # unit + route tests
 npx playwright test          # e2e (repo root; needs both dev servers running)
+python -m pytest crossreactivity/tests -q   # offline cross-reactivity matrix (repo root)
 ```
+
+`crossreactivity/` is an offline analysis package (not part of the web app): it designs primer set #1 for every miRNA of a species, builds the assay-level cross-reactivity matrix R(i, j) = 2^−ΔCq from the webtool's own assay model, and exposes an API for ML feature grouping. Its extra libraries live in `crossreactivity/requirements.txt`, not in `backend/requirements.txt`. See `crossreactivity/README.md` and `docs/DECISIONS_crossreactivity.md`.
 No linter is configured yet.
 
 ## Architecture

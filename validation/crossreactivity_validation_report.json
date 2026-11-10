@@ -1,0 +1,34 @@
+{
+ "matrix": "outputs\\crossreactivity_long.parquet",
+ "tool_version": "3.5.0",
+ "mirbase_release": "22.1",
+ "threshold_R": 0.01,
+ "sources": [
+  {
+   "source": "chen2005",
+   "file": "validation\\crossreactivity_chen2005.csv",
+   "rows": 25,
+   "rows_filled": 0,
+   "circular": "ΔCq_RT constants (rG·dT 3.7 %, 0.1 %, ≤ 0.3 %) come from Chen 2005",
+   "status": "no measured values yet — fill measured_value in the CSV"
+  },
+  {
+   "source": "mestdagh2014",
+   "file": "validation\\crossreactivity_mestdagh2014.csv",
+   "rows": 0,
+   "rows_filled": 0,
+   "circular": null,
+   "status": "no measured values yet — fill measured_value in the CSV"
+  }
+ ],
+ "sanity": {
+  "n_close_pairs": 322,
+  "n_random_pairs": 20000,
+  "close_mean_R": 0.14141854031487877,
+  "close_median_R": 0.00893363460994308,
+  "close_frac_above_10pct": 0.2111801242236025,
+  "random_mean_R": 1.0918917894338314e-05,
+  "random_frac_above_10pct": 0.0,
+  "passes": true
+ }
+}
