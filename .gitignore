@@ -65,3 +65,4 @@ backend/data/visualize_cache.sqlite
 
 # Claude Code local settings (per machine)
 .claude/
+outputs/crossreactivity_cache/
