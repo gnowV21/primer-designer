@@ -1,0 +1,65 @@
+{
+ "run_date": "2026-11-10T10:41:55",
+ "tool_version": "3.5.0",
+ "git_commit": "d0c43f15dae0eaf706d90ff7db789444303c2fc6",
+ "species": "hsa",
+ "mirbase": {
+  "mirbase_release": "22.1",
+  "mature_fa_sha256": "3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342",
+  "build_date": "2026-10-29"
+ },
+ "config": {
+  "_comment": "Cross-reactivity matrix settings. Levels and ΔG conditions are NOT wet-lab calibrated — see docs/DECISIONS_crossreactivity.md.",
+  "mirbase_release": "22.1",
+  "mirbase_index_path": "backend/data/mirbase_overhang_index.json",
+  "species": "hsa",
+  "design_request": {
+   "_comment": "Empty groups = the backend's own defaults, the same request the validation set (validation/validate_primers.py) uses.",
+   "thermodynamic": {},
+   "primerConstraints": {},
+   "qpcr": {},
+   "detectionMethod": {},
+   "experimentalContext": {}
+  },
+  "levels": {
+   "_comment": "R = 2^-ΔCq_assay = p_RT × p_PCR. HIGH/MEDIUM use the assay model's CO-AMPLIFIED/PARTIAL cut-offs; LOW/NONE split at 10 Cq ≈ 0.1 % (Chen 2005: the lowest single-mismatch cross-signal it reports). NONE pairs are stored as R = 0.",
+   "high_below_delta_cq": 3.3,
+   "medium_below_delta_cq": 4.3,
+   "low_below_delta_cq": 10.0
+  },
+  "dg_rt": {
+   "_comment": "ΔG of RT-overhang : miRNA, computed with DNA:DNA nearest-neighbour parameters (primer3) on the DNA analogue — flagged approx_hybrid=True. RT buffer of Kramer 2011 Table 2 (backend constants P3_RT_*), 37 °C.",
+   "temp_c": 37.0
+  },
+  "dg_pcr": {
+   "_comment": "ΔG of the forward specific region on the off-target cDNA window (anchored register, +1 base), design qPCR conditions, at the annealing temperature.",
+   "temp_c": 60.0
+  },
+  "workers": 14
+ },
+ "n_mirnas": 2656,
+ "n_assays": 2253,
+ "n_failed_designs": 403,
+ "n_pairs": 5983968,
+ "n_pairs_stored": 23274,
+ "pairs_by_level": {
+  "LOW": 20708,
+  "HIGH": 2464,
+  "MEDIUM": 102,
+  "NONE": 5960694
+ },
+ "n_pairs_screened_out": 5401614,
+ "diagonal_check": {
+  "passed": true,
+  "failing_assays": []
+ },
+ "model": "R = 2^-ΔCq_assay = p_RT × p_PCR, ΔCq from the webtool's assay model (backend/algorithm/specificity_check/assay_model.py), not wet-lab calibrated",
+ "files": [
+  "crossreactivity_long.parquet",
+  "crossreactivity_long.csv",
+  "crossreactivity_row_stats.csv",
+  "crossreactivity_failed_designs.csv",
+  "crossreactivity_top30_offdiagonal.csv"
+ ],
+ "seconds": 0.7
+}
