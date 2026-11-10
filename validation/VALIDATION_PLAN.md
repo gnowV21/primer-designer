@@ -63,6 +63,36 @@ Kết quả: bảng PASS/FAIL trên console + `results.csv` + `results.json` (ch
 - **Wet-lab loop:** đặt tổng hợp top-1 cho 2–3 miRNA, chạy qPCR thật, kiểm hiệu suất 90–110% [MIQE09] và melting curve đơn đỉnh.
 - **CI:** đưa `validate_primers.py` vào GitHub Actions (mock miRBase) như một regression gate cho thuật toán.
 
+### 6.1 Kiểm chứng ma trận phản ứng chéo (2026-11-10, SPEC_phase3 §8.20)
+
+**Câu hỏi.** R(i, j) dự đoán có xếp đúng thứ tự, và có phân loại đúng "có / không phản ứng chéo" so với độ đặc hiệu đo được của assay stem-loop hay không.
+
+**Dữ liệu** — `validation/crossreactivity_<nguồn>.csv`, cột `assay_mirna, target_mirna, measured_value, unit, source_figure_or_table`. Đơn vị `%` (phát hiện tương đối so với khớp hoàn toàn) hoặc `dCq`.
+- **Không bịa số liệu:** dòng có `measured_value` trống bị bỏ qua và đếm riêng, không bao giờ được nội suy.
+
+| Nguồn | Phạm vi | Trạng thái | Độc lập? |
+|---|---|---|---|
+| Chen 2005, NAR 33:e179, **Figure 7** | 5 × 5: let-7a, b, c, d, e (bài không có let-7f/g/i hay miR-98); đơn vị % | template 25 dòng, **trống**: giá trị chỉ in trong ảnh hình, không có trong bảng/chữ — cần điền tay | **Không** — hằng số ΔCq_RT (3,7 %, 0,1 %, ≤ 0,3 %) lấy từ bài này; so sánh chỉ kiểm tra cài đặt |
+| Mestdagh 2014, Nat Methods 11:809 (miRQC, doi 10.1038/nmeth.3014) | cặp miRNA gần giống nhau, nhiều nền tảng | chỉ có header: không có bản PMC, nature.com yêu cầu đăng nhập | Có — chỉ lấy số của nền tảng TaqMan stem-loop, và ghi rõ trong cột nguồn |
+
+**Chỉ số** (`python -m crossreactivity.validate [--threshold-pct 1]`):
+- Spearman ρ giữa R dự đoán và R đo (R đo = % / 100, hoặc 2^−ΔCq);
+- ROC AUC (Mann–Whitney) cho "có phản ứng chéo" với R ≥ ngưỡng; mặc định 1 %, đổi theo ngưỡng của bài báo;
+- bảng các cặp dự đoán sai phía ngưỡng;
+- cặp đường chéo bị loại khỏi phép so sánh.
+
+Kết quả ghi ở `validation/crossreactivity_validation_report.{md,json}`.
+
+**Tiêu chí chấp nhận (đề xuất, chưa chốt):** với nguồn độc lập, ρ ≥ 0,6 và AUC ≥ 0,8. Nguồn vòng tròn (Chen 2005) chỉ dùng làm kiểm tra cài đặt.
+
+**Kiểm tra hợp lý** (đã chạy, đạt): các cặp miRNA cùng độ dài chỉ khác 1–2 vị trí phải có R trung bình lớn hơn 10 lần cặp ngẫu nhiên. Kết quả: 322 cặp có thứ tự, R trung bình 0,14 (trung vị 0,0089; 21,1 % trên 10 %), so với 20.000 cặp ngẫu nhiên có R trung bình 0,000011 (0 % trên 10 %).
+
+**Wet-lab đề xuất** (oligo RNA tổng hợp cùng nồng độ, đo cả SYBR và TaqMan):
+- let-7a ↔ let-7c (rG·dT, dự đoán R 3,7 % — điểm hiệu chỉnh);
+- let-7a ↔ let-7d và miR-100 ↔ miR-99a (vùng mù giữa trình tự, dự đoán R 0,37 / 1,0);
+- miR-30b ↔ miR-30c (indel giữa phân tử, R = 1 do khung độc lập — D-3);
+- một cặp ở đỉnh trần FWD (R ≈ 0,32 %, D-4) để biết trần này quá cao hay vừa đủ.
+
 ## 7. Nguồn (đã kiểm chứng trên PubMed)
 - [Chen05] Chen C et al. *Nucleic Acids Res.* 2005;33(20):e179.
 - [Wang17] Wang Y et al. *Mol Med Rep.* 2017;17(3):3690–3696. DOI [10.3892/mmr.2017.8297](https://doi.org/10.3892/mmr.2017.8297) (PMID 29257343).

@@ -20,6 +20,7 @@
 | v1.9 | **[CẢI THIỆN TÍNH ĐÚNG KHOA HỌC — 2026-07-01]** commit `b36f124`. (1) **Loại Ensembl khỏi BLAST:** DNase treatment trước RT loại toàn bộ genomic DNA và unspliced RNA — template còn lại chỉ là mature miRNA; off-target risk giới hạn ở miRNA family cross-reactivity đã được miRBase multi-species cover đủ. (2) **Bound fraction recalibrate:** `BOUND_FRACTION_ANNEALING_TEMP` 60→**55°C** (Tm−5°C = Ta thực tế qPCR); tại đúng Tm=60°C fraction ~50% theo định nghĩa nhiệt động học → score luôn gần 0 → vô nghĩa. `BOUND_FRACTION_MIN/OPT` 90/97→**60/80%**: threshold cũ dành cho duplex hybridization dài (~27 nt), không phù hợp primer ngắn 12–24 nt. Formula `score_bound_fraction` sửa sang `fract/MIN*70` thay vì `(fract-50)/40*70` hardcoded. (3) **Self-hit precursor variants:** thêm `_normalize_mirna_name()` (strip precursor copy number, guard ≥5 components) + `_is_self_hit()` — loại đúng hsa-miR-16-1-5p và hsa-miR-16-2-5p khỏi off-target khi design cho hsa-miR-16-5p. (4) **SCORING_WEIGHTS_V4 v3.1 rebalance:** `mfe_stemloop` 0.15→**0.14** (body 44 nt cố định; chỉ overhang 6 nt thay đổi → variance thấp), `tm_pair_match` 0.03→**0.01** (reverse cố định Tm≈60.4°C, redundant với tm_accuracy), `gc_clamp` 0.02→**0.04** (3' GC critical cho extension), `gc_skew` 0.01→**0.02**. (5) **E2E / frontend:** baseURL centralize qua `playwright.config.js`; `OffTargetPanel` loại Ensembl references; `detectInputType` bỏ `q.length >= 10` (fix 8–9 nt gap). |
 | v2.1 | **[SPEC CONSISTENCY FIXES — 2026-07-02]** 9 điểm không nhất quán giữa spec và implementation. *Stale pseudocode:* (1) §4.7 test examples cập nhật 97.0→80.0 / 85.0→40.0 (v1.9 recalibrate); (2) §4.3/4.4/4.5 pseudocode thêm `temp_c` parameter (42°C vs 55°C), `Ct = dna_conc_nm/1e9` thay vì `dna_conc/4e9`. *Ensembl stale (v1.9 đã loại):* (3) §3 folder structure xóa `ensembl_human_cdna.{nhr,nin,nsq}`; (4) §9.5 rewrite storage table (370 MB Ensembl → ~2 MB miRBase-only); (5) §13.6 cache footnote sửa `ensembl_version` → `miRBase version + build_date`. *Inconsistency:* (6) §12 checklist 2 items đổi "miFam.dat" → "seed-based grouping" theo thực tế §5.5 (HTTP 500). *Logic:* (7) §6.3 vestigial `in_risk_window` — quyết định bỏ geometric check, đơn giản hóa flag thành DB lookup only; (8) §8.2 thêm HTTP 503 spec cho FileNotFoundError trong route; (9) §8.12 thêm note về `m in s` edge case khi thiếu arm designation + yêu cầu validate tại API layer. |
 | v2.0 | **[CODE REVIEW FIXES — 2026-07-02]** commit `c18a9a4`. 8 vấn đề từ medium code review. *Correctness:* (1) DB vắng mặt → `check_offtarget` nay raise `FileNotFoundError` thay vì trả `overall_risk='SAFE'` sai; (2) `_is_self_hit` bỏ nhánh `s in m` gây false-positive (e.g. 'hsa-mir-1' match bên trong 'hsa-mir-10-5p') — thay bằng word-boundary prefix check + áp dụng boundary rule tương tự cho normalized comparison; (3) `_normalize_mirna_name` regex `[12]` → **`\d+`** — bắt copy number ≥3 (hsa-miR-509-**3**-5p và hsa-miR-550a-**3**-5p có trong project data); (4) `test_bound_fraction.py` cập nhật theo MIN=60/OPT=80 (bị bỏ sót ở v1.9). *Efficiency:* (5) Forward + reverse BLAST nay chạy song song qua `ThreadPoolExecutor(max_workers=2)` — giảm latency 50%; (6) `m_norm` tính 1 lần trong `check_offtarget`, truyền qua `_check_primer` → `_is_self_hit` — loại N lần tính lại per hit; (7) `_RISK_ORDER` hoisted lên module-level constant. *Cleanup:* (8) `bound_fraction.py` private `_reverse_complement`/`_to_dna` thay bằng delegate sang `sequence_utils.reverse_complement` / `sequence_utils.rna_to_dna`. |
+| v2.2 | **[RÀ SOÁT A1–A4 + MA TRẬN PHẢN ỨNG CHÉO — 2026-11-10]** Nhánh `feat/assay-crossreactivity`. (1) §8.19 BLAST classifier v7: bước RT cho hit mồi xuôi (`rt_primer`, A4) và mục lệch đầu tính vào `overall_risk` (A3); A1/A2 đã đúng từ v4. Stem-loop, biên 10 °C: CRITICAL 65 hit / 29 mồi → 16 / 10. Validation 2439/2439, `results.csv` không đổi. (2) §8.9/§8.10 cập nhật request/response và logic `overall_risk`. (3) §8.20 mới: ma trận R(i, j) cấp assay cho toàn bộ hsa miRBase 22.1 (module offline `crossreactivity/`), dùng lại mô hình ΔCq §8.16. (4) §13: trang Results gửi `rt_primer`. Quyết định cần duyệt: `docs/DECISIONS_crossreactivity.md`. |
 
 ---
 
@@ -814,6 +815,39 @@ def classify_hit_risk(primer: str, alignment: dict) -> str:
 }
 ```
 
+**[CẬP NHẬT — classifier v7, 2026-11-10] Request và response hiện tại.** Ví dụ ở trên là bản v1.x. Bản đang chạy:
+
+```json
+// Request — mọi trường ngoài forward_primer đều tùy chọn
+{
+  "forward_primer": "CGCAGTGAGGTAGTAGGTTGT",
+  "reverse_primer": "CCAGTGCAGGGTCCGAGGTA",   // universal → bỏ qua (reverse_primer_skipped)
+  "mirna_id": "hsa-let-7a-5p",                 // phải có -5p/-3p, nếu không → 400
+  "mirna_sequence": "UGAGGUAGUAGGUUGUAUAGUU",  // đích cho cổng Tm (§8.13) và bước RT
+  "conditions": {"mv_conc": 50, "dv_conc": 1.5, "dntp_conc": 0.8, "dna_conc": 200},
+  "species": "hsa",                            // mã miRBase 3–5 ký tự (§8.17)
+  "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTAT"  // v7: bước RT (§8.19)
+}
+```
+
+`rt_primer` phải bắt đầu bằng thân stem-loop 44 nt, và overhang (`len − 44`) phải trong 5–7 nt; sai thì trả **400**. Khóa cache gồm phiên bản classifier, `mirna_sequence`, `species`, `rt_primer` và điều kiện muối.
+
+Các trường response có thêm từ v3–v7:
+
+| Trường | Từ | Ý nghĩa |
+|---|---|---|
+| `forward_primer_hits[].alignment.tm_offtarget`, `tm_ontarget` | v2 | Tm duplex dùng cho cổng Tm (§8.13, khung đọc §8.15) |
+| `forward_primer_hits[].same_seed_family` | v5 | hit cùng họ seed (đánh dấu, vẫn tính vào rủi ro) |
+| `forward_primer_hits[].primer_risk` | v7 | mức khi chỉ xét mồi xuôi, trước bước RT |
+| `forward_primer_hits[].rt_step` | v7 | `{delta_cq, shift_3p, mismatch_positions, basis}`, hoặc `null` khi không áp bước RT |
+| `identical_sequence_hits`, `identical_sequence_variants` | v3/v5 | mục miRBase cùng phân tử: `same_sequence` / `shifted_5p` / `shifted_3p` |
+| `identical_sequence_risk` | v7 | `{sid: {category, risk, rt_delta_cq}}` (§8.19) |
+| `summary.same_family_count`, `identical_sequence_count` | v5 | |
+| `summary.rt_discriminated_count` | v7 | số hit bị bước RT loại (ΔCq_RT ≥ 4,3) |
+| `summary.unresolvable_variant_count` | v7 | số mục lệch đầu khác SAFE |
+| `classification.{classifier_version, tm_gate_applied, tm_gate_note, tm_ontarget, species, host_species, safe_margin_c, critical_margin_c, conditions}` | v2–v6 | |
+| `classification.rt_step_applied`, `rt_overhang_len` | v7 | bước RT có chạy hay không, và overhang đọc từ RT primer |
+
 ### 8.10 Overall risk logic
 ```
 if any hit CRITICAL:       overall = "CRITICAL"
@@ -821,6 +855,8 @@ elif any hit HIGH:         overall = "HIGH"
 elif any hit MEDIUM:       overall = "MEDIUM"
 else:                      overall = "SAFE"
 ```
+
+**v7 (2026-11-10):** "hit" ở đây là mức **sau** bước RT khi có `rt_primer` (§8.19). Sau đó `overall_risk = max(overall từ hit, max(identical_sequence_risk[*].risk))`, với thứ tự SAFE < MEDIUM < HIGH < CRITICAL. Như vậy một mục lệch đầu 5′ (HIGH) không để mồi ở mức SAFE. Mục `same_sequence` luôn là SAFE.
 
 ### 8.11 Cross-species filtering (thêm 2026-07-01)
 
@@ -1102,6 +1138,166 @@ Mỗi hit có `primer_risk` (mức trước bước RT) và `rt_step` (`delta_cq
 `overall_risk` lấy mức tệ nhất giữa các hit và các mục này; `summary.unresolvable_variant_count` đếm số mục khác SAFE.
 
 **Kết quả** (`benchmark/blast_tm_gate_sensitivity.json`, cấu hình mới `10_rt_step`, 100 mồi stem-loop): CRITICAL 65 → 16 hit, 29 → 10 mồi; `overall_risk` SAFE 55 → 78. Khóa cache có thêm `rt_primer` và phiên bản classifier 7.
+
+**Rà soát lại A1–A4 (bản yêu cầu viết cho v3.2.0; code đang ở v3.5.0).**
+
+| Mục | Sửa lần đầu | Kết quả rà soát | v7 |
+|---|---|---|---|
+| A1 — Kwok ở base cuối gần như không chạy | §8.15 (v4): khôi phục base 3′ bị BLAST cắt | đúng | — |
+| A2 — Tm off-target đo sai vị trí | §8.15 (v4): Tm theo khung đọc + 1 base | đúng; thal vẫn có thể trượt 1–2 nt trong cửa sổ (mở, AUDIT REV-16) | — |
+| A3 — "trình tự tương thích" coi như trùng đích | §8.16 (v5): tách `same_sequence` / `shifted_5p` / `shifted_3p` | **sót:** các mục này nằm ngoài `overall_risk` | `identical_sequence_risk` |
+| A4 — BLAST bỏ qua bước RT | §8.16 (v3.3.0): mô hình ΔCq là kết luận chính | **sót:** hit BLAST vẫn chỉ xét mồi xuôi | `apply_rt_step` |
+
+**Vì sao chọn cách hạ mức thay vì cộng ΔCq.** Mức của BLAST là định tính: luật Kwok kết hợp cổng Tm, không có ΔCq_FWD để cộng vào. Con số ΔCq đầy đủ nằm ở mô hình assay (§8.16) và trong ma trận (§8.20). Phương án quy đổi mức BLAST sang ΔCq rồi cộng được ghi ở DECISIONS D-18.
+
+**Kết quả đầy đủ** (175 mồi xuôi #1 của bộ validation: 100 stem-loop và 75 Busk 2014 poly(A); file `benchmark/blast_tm_gate_sensitivity.json`):
+
+| Stem-loop, biên 10 °C | Hit CRITICAL / HIGH / MEDIUM | Mồi có ≥ 1 CRITICAL | `overall_risk` |
+|---|---|---|---|
+| v6 | 65 / 0 / 78 | 29 | SAFE 55, MEDIUM 16, CRITICAL 29 |
+| v7, không có `rt_primer` | 65 / 0 / 78 | 29 | SAFE 55, MEDIUM 14, HIGH 2, CRITICAL 29 |
+| **v7 + bước RT** | **16 / 0 / 31** | **10** | **SAFE 78, MEDIUM 10, HIGH 2, CRITICAL 10** |
+
+- Có 96 hit bị bước RT loại.
+- 16 hit CRITICAL còn lại là paralog cùng overhang, mà §8.16 cũng xếp CO-AMPLIFIED: let-7a ↔ 7d; miR-20a ↔ 17/106a/20b; miR-103a-2 ↔ 103a-1; mmu-miR-19a ↔ 19b; mmu-miR-669a ↔ 669o/669l (ΔCq_RT 3,0); mmu-miR-21a ↔ miR-3965 (3,0); ath-miR156a ↔ 156g/j; osa-miR164a/c ↔ 164b/c/f.
+- Phần sửa A3 không đổi số hit ở bất kỳ biên nào (5/10/15/20 °C, không có cổng Tm). Ở mọi biên có cổng Tm, đúng 3 mồi lên HIGH: mmu-miR-467a/b-5p (`shifted_5p`) và ssc-miR-199b-3p.
+- Không có code thiết kế nào bị sửa. Validation 2439/2439, `results.csv` giống hệt từng byte; mồi và nhãn ΔCq của 165 miRNA không đổi.
+
+**Test:** `backend/tests/test_blast_rt_step.py`, 14 test:
+- đọc overhang 5/6/7 nt, và từ chối 4/8 nt hoặc thân sai;
+- ngưỡng của `apply_rt_step`;
+- họ let-7 qua `check_offtarget`: 7b và 7c bị RT loại, 7d giữ CRITICAL, một mismatch ở vị trí 5 → MEDIUM;
+- không có trình tự đích → không áp bước RT;
+- `shifted_5p` → HIGH; `shifted_3p` chấm theo RT; `same_sequence` không tính;
+- route kiểm tra và chuyển tiếp `rt_primer`.
+
+**Còn mở:**
+- REV-15 / D-16: rU·dG chưa được coi là wobble ở bước RT.
+- REV-16 / D-17: thal có thể trượt trong cửa sổ Tm.
+
+Bảng trước/sau đầy đủ: `docs/A1-A4_changes.md`.
+
+### 8.20 Ma trận phản ứng chéo cấp assay R(i, j) (2026-11-10, module `crossreactivity/`)
+
+**Mục đích.** R(i, j) trả lời câu hỏi: assay thiết kế cho miRNA i (bộ mồi #1) nhận tín hiệu từ miRNA j mạnh đến mức nào. Ma trận dùng cho (1) thesis/bài báo, và (2) pipeline ML chọn biomarker trên TCGA-BRCA, nơi các miRNA mà assay không tách được sẽ được gộp thành một "đơn vị đo được". Đây là module phân tích offline, không phải một phần của webtool; hướng dẫn chạy ở `crossreactivity/README.md`.
+
+**Mô hình** (`crossreactivity/model.py`). Dùng lại nguyên mô hình §8.16. Hàm `assay_model.evaluate(..., full=True)` luôn tính cả hai trục; mặc định `full=False` giữ hành vi cũ của webtool.
+
+    p_RT  = 2^−ΔCq_RT        tỉ lệ miRNA j được RT primer của i phiên mã ngược
+    p_PCR = 2^−ΔCq_FWD       hiệu suất mồi xuôi của i trên cDNA của j
+    R     = p_RT × p_PCR = 2^−ΔCq_assay
+
+Các tính chất:
+- R(i, i) = 1, và ma trận **bất đối xứng**: overhang và vùng xuôi là của assay i, đem đọc trên miRNA j.
+- Overhang của mỗi assay đọc từ RT primer (`len − 44`).
+- Hai trục chọn khung đọc độc lập (lệch ±2 nt mỗi đầu, lấy khung có ΔCq nhỏ nhất). Vì vậy một indel ở giữa phân tử được cho phép ngầm; ví dụ miR-30b ↔ 30c có R = 1 (D-3).
+
+**Mức** (`crossreactivity/config.json → levels`, **chưa hiệu chỉnh wet-lab**):
+
+| Mức | ΔCq_assay | R | Ghi chú |
+|---|---|---|---|
+| HIGH | < 3,3 | > 10 % | = CO-AMPLIFIED (§8.16) |
+| MEDIUM | 3,3–4,3 | 5–10 % | = PARTIAL |
+| LOW | 4,3–10 | 0,1–5 % | |
+| NONE | ≥ 10 | < 0,1 % | lưu R = 0, không ghi vào file long; 10 Cq ≈ 0,1 % là mức thấp nhất Chen 2005 báo |
+
+**Mô tả từng cặp** (cột của file long):
+
+| Cột | Nội dung |
+|---|---|
+| `assay_mirna`, `target_mirna` | i, j |
+| `R`, `level`, `delta_cq`, `p_RT`, `p_PCR` | như trên |
+| `rt_shift` | k: đầu 3′ của j dài hơn (> 0) hoặc ngắn hơn (< 0) đích i |
+| `rt_mismatches` | số mismatch trong overhang ở khung đã chọn |
+| `rt_3p_class` | cặp đối diện đầu 3′ của RT primer: `MATCH` / `WOBBLE` (rG·dT) / `MISMATCH` / `NO_TEMPLATE` |
+| `pcr_shift`, `pcr_mismatches` | khung 5′ và số mismatch trên vùng đặc hiệu xuôi |
+| `pcr_3p_class` | cặp ở đầu 3′ mồi xuôi theo Stadhouders 2010: `MATCH` / `minor` / `intermediate` / `severe` / `NO_TEMPLATE` |
+| `dG_rt` | ΔG (kcal/mol) của overhang : miRNA j theo khung đã chọn + 1 base; primer3 DNA:DNA trên bản DNA tương đương; đệm RT Kramer 2011 (75 mM KCl, 3 mM Mg²⁺), 37 °C |
+| `dG_pcr` | ΔG của vùng đặc hiệu xuôi trên cDNA của j, khung neo + 1 base (quy ước A2); điều kiện qPCR mặc định, 60 °C |
+| `approx_hybrid` | luôn `True`: ΔG RNA:DNA xấp xỉ bằng tham số DNA:DNA. Sugimoto 1995 (`hybrid_tm.py`) chỉ có cặp Watson–Crick, trong khi hầu hết các cặp ở đây có mismatch. **ΔG chỉ báo cáo, không vào R.** |
+| `category` | `same_sequence` / `shifted_5p` / `shifted_3p` / `other` (§8.16) |
+| `mirbase_version`, `tool_version` | 22.1, algorithm 3.5.0 |
+
+**Quy trình tính** (hsa, miRBase 22.1, từ chính `backend/data/mirbase_overhang_index.json` đã dùng cho BLAST DB):
+
+1. **Thiết kế mồi #1** (`python -m crossreactivity.design_all`): mỗi miRNA gọi `POST /api/design` qua Flask test client, với các nhóm tham số rỗng như `validation/validate_primers.py`.
+   - Mỗi worker là một tiến trình riêng, có primer3 riêng; khóa của `primer3_safe.py` chỉ tuần tự hóa luồng trong một tiến trình.
+   - Cache JSON-lines, chạy tiếp được khi bị ngắt; khoảng 0,85 giây mỗi miRNA.
+2. **Sàng lọc**: ΔCq tính **không có hạng Tm** cho mọi cặp, khoảng 35 µs/cặp.
+   - Đây là cận dưới đã chứng minh của ΔCq thật, vì ΔCq_FWD = max(bảng, hạng Tm). Cặp có cận dưới ≥ 10 chắc chắn là NONE và không cần gọi primer3.
+   - Sàng lọc ungapped bằng numpy theo số mismatch không dùng được: RT ≥ 2 mismatch cho 8, FWD ≥ 2 mismatch cho ≥ 1 (ngoại lệ T của Kwok), tổng 9 < 10, nên không loại được cặp nào (D-9).
+3. **Tính chính xác** các cặp còn lại (có hạng Tm và ΔG); mỗi block 32 assay một file cache.
+4. **Kiểm tra bắt buộc**: R(i, i) là cực đại của hàng; chạy dừng với mã 2 nếu sai.
+
+**Kết quả lần chạy 2026-11-10** (commit `d0c43f1`, `outputs/crossreactivity_metadata.json`):
+
+| | |
+|---|---|
+| miRNA trưởng thành hsa | 2656 |
+| Assay thiết kế được | **2253** (overhang 6 nt cho cả 2253) |
+| Độ dài vùng đặc hiệu xuôi 12 / 13 / 14 / 15 / 16 / 17 nt | 392 / 450 / 490 / 480 / 385 / 56 assay |
+| Thiết kế thất bại | **403** — đều do "no valid forward primer candidates" với tham số mặc định; trung vị GC 70 % (so với 50 % ở nhóm thành công); có 66 miRNA số < 1000, ví dụ miR-1-5p, miR-23a-5p, miR-210-5p, miR-326, miR-375-5p, miR-663a. Danh sách: `outputs/crossreactivity_failed_designs.csv` |
+| Số cặp | 5.983.968; loại bằng sàng lọc 5.960.694; thời gian 62 giây với 14 tiến trình |
+| Ngoài đường chéo | **211 HIGH**, **102 MEDIUM**, **20.708 LOW**; còn lại NONE |
+| HIGH ngoài đường chéo theo loại | other 106, same_sequence 74, shifted_3p 22, shifted_5p 9 |
+| Assay có ≥ 1 cặp HIGH / MEDIUM ngoài đường chéo | 86 / 78 |
+| Kiểm tra đường chéo | **đạt** cho cả 2253 assay |
+
+**Các cặp rủi ro cao nhất giữa hai phân tử khác nhau** (`outputs/crossreactivity_top30_offdiagonal.csv`):
+- R = 1: miR-100 → 99a; miR-106a → 17; miR-1269a → 1269b; miR-30b ↔ 30c; cụm C19MC (miR-518/519/520/522/523/526a); miR-548ad → 548ay/548d.
+- Kế tiếp: miR-103a-2 → 103a-1 (0,85), miR-374b → 374c (0,79), miR-376c → 376a (0,72).
+- Đa số là vùng mù giữa trình tự: hai miRNA chỉ khác nhau ở đoạn không phủ bởi cả overhang lẫn vùng xuôi, giống let-7a ↔ 7d trong §8.16.
+
+**Đỉnh R ≈ 0,32 % trong histogram (D-4).**
+- 20.105 / 20.708 cặp LOW là cặp mà RT primer bắt được (overhang trùng, có thể lệch) nhưng mồi xuôi không bám.
+- ΔCq_FWD bị chặn ở 8,3, mức "không khuếch đại" của Stadhouders 2010, nên R của nhóm này không thấp hơn 2^−8,3.
+- Nếu coi nhóm này là NONE thì LOW còn khoảng 600 cặp. Ngưỡng gộp mặc định là HIGH, nên kết quả ML không bị ảnh hưởng.
+
+**Đầu ra** (`outputs/`, có commit; cache trong `outputs/crossreactivity_cache/` thì không):
+
+| File | Nội dung |
+|---|---|
+| `crossreactivity_long.parquet` / `.csv` | các cặp R > 0 (cột như bảng trên) |
+| `crossreactivity_metadata.json` | phiên bản tool, git commit, config, ngày chạy, miRBase release + sha256, số cặp theo mức, kết quả kiểm tra đường chéo |
+| `crossreactivity_row_stats.csv` | theo assay: số cặp mỗi mức, số cặp bị loại ở sàng lọc, R(i, i), R lớn nhất ngoài đường chéo |
+| `crossreactivity_failed_designs.csv`, `crossreactivity_top30_offdiagonal.csv` | |
+| `figures/heatmap_{let-7_miR-98, miR-200, miR-17-92, miR-30, miR-29, miR-181}.{png,svg}` | hàng = assay, cột = miRNA được đo; thang log một màu 0,1–100 %; NONE để trống "·" |
+| `figures/r_histogram.{png,svg}` | phân bố R ngoài đường chéo, có đánh dấu ngưỡng 5 % / 10 % và đỉnh trần FWD |
+
+**API Python** (`crossreactivity/api.py`):
+
+| Hàm | Kết quả |
+|---|---|
+| `load_matrix(path)` / `CrossReactivity.load(path)` | đọc file long (.parquet hoặc .csv) kèm metadata |
+| `get_risk(assay, target)` | bản ghi đầy đủ của cặp; cặp không lưu → `{R: 0, level: NONE}`; assay không tồn tại → `KeyError` (để không đọc nhầm thành "đặc hiệu") |
+| `submatrix(mirna_list)` | DataFrame N×N của R (hàng = assay, cột = đích); miRNA không có assay → hàng NaN |
+| `assay_resolvable_groups(mirna_list, threshold=2^−3,3)` | đối xứng hóa S = max(R(i, j), R(j, i)), thành phần liên thông của S ≥ ngưỡng, trả `{miRNA: "a/b/c"}`; `group_report()` báo liên kết yếu nhất trong mỗi nhóm để phát hiện nối chuỗi (D-13) |
+| `aggregate_expression(expr_df, groups, method="sum", mirna_axis="columns")` | gộp ma trận biểu hiện (RPM) theo đơn vị; `sum` (mặc định), `mean`, `max`; tên miRNA phải theo miRBase 22.1 — TCGA dùng MIMAT nên cần ánh xạ trước (D-14) |
+
+Ví dụ chạy được: `python -m crossreactivity.example`. Trong panel let-7a–e + miR-17/20a/106a + miR-21, kết quả gộp thành let-7a/7d và miR-17/20a/106a.
+
+**Kiểm chứng** (`python -m crossreactivity.validate`, chi tiết ở `validation/VALIDATION_PLAN.md` §6.1):
+- Có tính Spearman ρ, ROC AUC và danh sách cặp sai, nhưng **chưa có số liệu đo** (template trống).
+- Kiểm tra hợp lý: đạt. 322 cặp có thứ tự chỉ khác 1–2 vị trí có R trung bình 0,14 (21 % trên 10 %), so với 0,000011 ở 20.000 cặp ngẫu nhiên.
+
+**Test** (`crossreactivity/tests/`, 25 test):
+- đường chéo = 1; R = p_RT × p_PCR;
+- let-7a/7c = 2^−4,75; let-7a/7d HIGH; bất đối xứng (miR-17/20a);
+- ngưỡng các mức;
+- sàng lọc là cận dưới (906 cặp ngẫu nhiên) và giữ đủ mọi cặp cùng họ của let-7, miR-17, miR-200bc/429, miR-30;
+- cặp cùng họ có R lớn hơn 50 lần cặp ngẫu nhiên;
+- overhang lấy từ assay;
+- API: cặp không lưu, NaN, nối chuỗi, ngưỡng, gộp theo hai layout.
+
+**Giới hạn:**
+- Trọng số và ngưỡng chưa hiệu chỉnh wet-lab; dữ liệu miRBase 22.1.
+- Không xét isomiR làm off-target, và không mô hình gap/indel một cách tường minh.
+- Không mô hình probe TaqMan (D-5): với SYBR, R là giới hạn lạc quan; với TaqMan là giới hạn bi quan.
+- ΔG là xấp xỉ DNA:DNA.
+- Chỉ loài hsa, overhang 6 nt.
+- 15 % miRNA chưa có assay (D-8).
+
+Mọi lựa chọn và phương án thay thế: `docs/DECISIONS_crossreactivity.md` (D-1 … D-20).
 
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 
@@ -1575,6 +1771,7 @@ Output JSON Phase 2 giữ schema, mở rộng:
 - Mỗi `PrimerSetCard` có forward primer khác nhau → state/result là **per-card** (local state trong `PrimerSetCard`, không lift lên parent)
 - Universal reverse primer là cố định → giống nhau cho tất cả cards
 - Gọi `POST /api/blast-check` với `forward_primer`, `reverse_primer`, `mirna_id`
+  - **[Hiện tại, 2026-11-10]** Nút đã chuyển vào `pages/ResultsPage/QualitySummary.jsx` (mồi #1). Request gửi `mirna_id`, `forward_primer`, `mirna_sequence`, `conditions` (`metadata.design_settings.effective_p3`), `species` (`metadata.species_code`) và `rt_primer` (`stemloop_rt.sequence`, bước RT §8.19).
 
 **Placement:**
 ```
