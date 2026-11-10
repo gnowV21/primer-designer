@@ -15,7 +15,8 @@ blocks already present are skipped.
 Usage (repo root):
     python -m crossreactivity.build_matrix [--workers 14]
 Writes outputs/crossreactivity_long.{parquet,csv}, outputs/crossreactivity_metadata.json,
-outputs/crossreactivity_row_stats.csv, outputs/crossreactivity_failed_designs.csv.
+outputs/crossreactivity_row_stats.csv, outputs/crossreactivity_failed_designs.csv,
+outputs/crossreactivity_top30_offdiagonal.csv.
 """
 
 from __future__ import annotations
@@ -157,6 +158,13 @@ def main(argv=None) -> int:
     long.to_parquet(os.path.join(args.out, "crossreactivity_long.parquet"), index=False)
     long.to_csv(os.path.join(args.out, "crossreactivity_long.csv"), index=False)
     row_stats.to_csv(os.path.join(args.out, "crossreactivity_row_stats.csv"), index=False)
+    # Highest-risk pairs between DIFFERENT molecules: same_sequence entries are the
+    # target under another miRBase name (R = 1 by construction), not off-targets.
+    distinct = long[(long["assay_mirna"] != long["target_mirna"])
+                    & (long["category"] != "same_sequence")]
+    distinct.sort_values(["R", "assay_mirna", "target_mirna"], ascending=[False, True, True]) \
+        .head(30).to_csv(os.path.join(args.out, "crossreactivity_top30_offdiagonal.csv"),
+                         index=False)
     pd.DataFrame(failed)[["mirna", "sequence", "reason"]].to_csv(
         os.path.join(args.out, "crossreactivity_failed_designs.csv"), index=False)
 
@@ -182,7 +190,8 @@ def main(argv=None) -> int:
         "model": ("R = 2^-ΔCq_assay = p_RT × p_PCR, ΔCq from the webtool's assay model "
                   "(backend/algorithm/specificity_check/assay_model.py), not wet-lab calibrated"),
         "files": ["crossreactivity_long.parquet", "crossreactivity_long.csv",
-                  "crossreactivity_row_stats.csv", "crossreactivity_failed_designs.csv"],
+                  "crossreactivity_row_stats.csv", "crossreactivity_failed_designs.csv",
+                  "crossreactivity_top30_offdiagonal.csv"],
         "seconds": round(time.time() - t0, 1),
     }
     with open(os.path.join(args.out, "crossreactivity_metadata.json"), "w", encoding="utf-8") as f:
