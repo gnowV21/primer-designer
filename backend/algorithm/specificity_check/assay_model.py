@@ -249,14 +249,16 @@ def evaluate(
     overhang_len: int,
     fwd_len: int,
     tm_gap_for: Optional[Callable[[str, int], Optional[float]]] = None,
+    full: bool = False,
 ) -> dict:
     """Both axes for one off-target (DNA alphabet). tm_gap_for(other, r) supplies the
     FWD stability term. When the RT step alone already discriminates an unrelated
     miRNA, the forward axis is not evaluated (fwd = None): the total can only grow,
-    and delta_cq is then a lower bound."""
+    and delta_cq is then a lower bound. full=True always evaluates both axes, for
+    callers that need the exact ΔCq (the cross-reactivity matrix)."""
     category = variant_category(target, other)
     rt = rt_axis(target, other, overhang_len)
-    if category == "other" and rt["delta_cq"] >= ASSAY_DCQ_DISCRIMINATED_AT:
+    if not full and category == "other" and rt["delta_cq"] >= ASSAY_DCQ_DISCRIMINATED_AT:
         return {
             "category": category, "rt": rt, "fwd": None,
             "delta_cq": rt["delta_cq"], "delta_cq_is_lower_bound": True,

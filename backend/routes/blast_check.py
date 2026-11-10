@@ -14,7 +14,7 @@ import subprocess
 from flask import Blueprint, jsonify, request
 
 from algorithm.specificity_check.blast_offtarget import (
-    is_mirbase_species,
+    is_mirbase_species, overhang_len_from_rt_primer,
     check_offtarget, resolve_p3_conditions, _METADATA,
 )
 from algorithm.specificity_check.blast_cache import BlastCache
@@ -48,7 +48,8 @@ def blast_check():
           "mirna_sequence": "UAGCUUAUCAGACUGAUGUUGA", // optional, on-target for the Tm gate
           "conditions": {"mv_conc": 50, "dv_conc": 1.5,
                          "dntp_conc": 0.8, "dna_conc": 200}, // optional, design effective_p3
-          "species": "hsa"                            // optional, design species
+          "species": "hsa",                           // optional, design species
+          "rt_primer": "GTCGTATCC…TCAACA"             // optional, design RT primer → RT step
         }
 
     Response: see SPEC_phase3.md §8.9
@@ -74,6 +75,14 @@ def blast_check():
     if species and not is_mirbase_species(species):
         return jsonify({"error": "species must be a miRBase species code, e.g. 'mmu' or 'kshv'"}), 400
 
+    # The design's stem-loop RT primer: enables the assay-level RT step (A4).
+    rt_primer = (data.get("rt_primer") or "").upper().strip()
+    if rt_primer:
+        try:
+            overhang_len_from_rt_primer(rt_primer)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
     if not fwd:
         return jsonify({"error": "forward_primer is required"}), 400
     if len(fwd) > 60:
@@ -95,7 +104,7 @@ def blast_check():
 
     # ── 3. Cache lookup ─────────────────────────────────────────
     db_version = db_info.get("build_date", "unknown")
-    context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq, species or ""]
+    context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq, species or "", rt_primer]
                        + [f"{k}={p3[k]:g}" for k in sorted(p3)])
     cache_key = BlastCache._compute_key(fwd, rev, db_version, mirna_id, context)
     cached = _cache.get_result(fwd, rev, db_version, mirna_id, context)
@@ -122,6 +131,7 @@ def blast_check():
             target_sequence=mirna_seq or None,
             conditions=p3,
             species=species,
+            rt_primer=rt_primer or None,
         )
         _circuit_breaker.record_success()
     except subprocess.TimeoutExpired:

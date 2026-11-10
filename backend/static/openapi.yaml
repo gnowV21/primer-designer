@@ -256,6 +256,14 @@ paths:
                     Optional mature sequence of the target (RNA or DNA) for the forward
                     primer's on-target duplex Tm. Falls back to the BLAST DB entry for
                     mirna_id; without either, the duplex-Tm gate is skipped.
+                rt_primer:
+                  type: string
+                  description: >
+                    Optional stem-loop RT primer of the design (44-nt body + 5–7 nt
+                    overhang). With it each forward-primer hit is judged at assay level:
+                    a miRNA the RT overhang does not capture (ΔCq_RT ≥ 4.3) is SAFE, one
+                    only partly captured (3.3–4.3) is capped at MEDIUM. 400 if the body
+                    or overhang length is invalid.
                 conditions:
                   type: object
                   description: >

@@ -135,6 +135,9 @@ export default function QualitySummary({ results, onBlastResult }) {
         mirna_sequence: metadata?.mirna_sequence || undefined,
         conditions: metadata?.design_settings?.effective_p3 || undefined,
         species: metadata?.species_code || undefined,
+        // The RT primer lets the check judge each hit at assay level: an off-target
+        // the RT overhang does not capture has no cDNA for the forward primer.
+        rt_primer: results.stemloop_rt?.sequence || undefined,
       }, { timeout: 65000 });   // backend allows the search itself up to 60 s
       setBlastResult(resp.data);
       setBlastState('done');

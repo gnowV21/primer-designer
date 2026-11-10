@@ -30,6 +30,19 @@
 
 ---
 
+### 2026-11-10 — BLAST classifier v7 + ma trận phản ứng chéo (algorithm 3.5.0 không đổi)
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-13 (A4) | `specificity_check/blast_offtarget.py`, `routes/blast_check.py` | Correctness | Hit BLAST của mồi xuôi đi qua bước RT của mô hình assay khi request có `rt_primer` (§16, SPEC_phase3 §8.19) |
+| REV-14 (A3) | `specificity_check/blast_offtarget.py` | Correctness | Mục lệch đầu 5′/3′ tính vào `overall_risk` (`identical_sequence_risk`) |
+| — | `specificity_check/assay_model.py` | API | `evaluate(..., full=True)` luôn tính cả hai trục; mặc định `False`, hành vi webtool không đổi |
+| — | `crossreactivity/` (mới, offline) | Feature | Ma trận R(i, j) = 2^−ΔCq cho toàn bộ hsa miRBase 22.1 (SPEC_phase3 §8.20) |
+
+Validation 2439/2439 (`results.csv` không đổi), backend 692 test, e2e 74/74.
+
+---
+
 ### Lịch sử phiên bản Phase 3 (tóm tắt, nguồn gốc `SPEC_phase3.md`)
 
 | Phiên bản | Thay đổi chính |
@@ -1234,6 +1247,17 @@ def _is_self_hit(subject_id, mirna_id, m_norm=None) -> bool:
 
 **Edge case (v2.1):** API route `blast_check.py` phải validate `mirna_id` có arm suffix (-5p/-3p). Thiếu arm → 400 Bad Request.
 
+### Classifier v7 — bước RT và mục lệch đầu (2026-11-10)
+
+- **Bước RT (A4).** `check_offtarget(..., rt_primer=…)`: overhang đọc bằng `overhang_len_from_rt_primer` (`len − 44`, 5–7 nt, không mặc định 6). Mỗi hit sợi plus đã có trình tự đầy đủ được tính `assay_model.rt_axis` rồi qua `apply_rt_step`:
+  - ΔCq_RT ≥ 4,3 → SAFE (`summary.rt_discriminated_count`);
+  - 3,3–4,3 → tối đa MEDIUM;
+  - < 3,3 → giữ nguyên.
+
+  Mỗi hit giữ `primer_risk` và `rt_step`. Không có `rt_primer` hoặc trình tự đích thì kết quả như v6 (`classification.rt_step_applied = false`).
+- **Mục lệch đầu (A3).** `variant_risk`: `same_sequence` → SAFE; `shifted_5p` → HIGH; `shifted_3p` → theo ΔCq_RT (HIGH khi không có RT primer). `overall_risk` lấy mức tệ nhất giữa hit và các mục này.
+- **Kết quả** (100 mồi stem-loop, biên 10 °C): CRITICAL 65 hit / 29 mồi → 16 / 10. Chi tiết: SPEC_phase3 §8.19, `docs/A1-A4_changes.md`.
+
 ### Performance (v2.0)
 
 Forward + reverse BLAST chạy song song qua `ThreadPoolExecutor(max_workers=2)` → giảm latency 50%.
@@ -1282,6 +1306,14 @@ Schema giữ nguyên Phase 2, mở rộng:
 }
 ```
 
+**Trường tùy chọn hiện tại** (chi tiết SPEC_phase3 §8.9):
+- `mirna_sequence`: đích cho cổng Tm và bước RT;
+- `conditions`: điều kiện primer3, `effective_p3` của bản thiết kế;
+- `species`: mã miRBase;
+- `rt_primer` (v7): RT primer của bản thiết kế, bật bước RT. Thân sai hoặc overhang ngoài 5–7 nt → 400.
+
+Response v7 có thêm `primer_risk`, `rt_step`, `identical_sequence_risk`, `summary.rt_discriminated_count`, `summary.unresolvable_variant_count` và `classification.rt_step_applied` / `rt_overhang_len`.
+
 **Response:**
 ```json
 {
@@ -1316,7 +1348,7 @@ CRITICAL → HIGH → MEDIUM → SAFE (worst-case wins)
 ```
 
 **HTTP error codes:**
-- 400: thiếu arm suffix trong mirna_id
+- 400: thiếu arm suffix trong mirna_id; `conditions`/`species` không hợp lệ; `rt_primer` sai thân hoặc overhang ngoài 5–7 nt
 - 429: rate limit (flask-limiter, 10 req/min/IP)
 - 503: DB not found (FileNotFoundError) hoặc circuit breaker OPEN
 
@@ -1757,3 +1789,11 @@ else:
 9. **Binding Tm 2-step**: `tm_binding` của forward primer thường thấp (30–50°C) do specific_region ngắn 12–17 nt. Đây là thiết kế đúng — tail làm nhiệm vụ nâng Tm.
 
 10. **Render deployment**: Ephemeral filesystem → không thể giữ BLAST database giữa các restarts. Cần Railway (persistent disk 1 GB) hoặc Cloud storage.
+
+11. **BLAST — bước RT là hạ mức, không cộng ΔCq** (v7): mức BLAST là định tính nên chỉ hạ theo ΔCq_RT; ΔCq đầy đủ nằm ở mô hình assay và ma trận (DECISIONS D-18).
+
+12. **rU·dG chưa được coi là wobble ở bước RT**: chỉ rG·dT (Chen 2005, 3,7 %) được tính; rU·dG nhận giá trị mismatch thường, 7,0 hoặc 3,5 (D-16, AUDIT REV-15).
+
+13. **Tm theo khung đọc**: thal vẫn có thể trượt 1–2 nt trong cửa sổ L + 1; chưa kiểm tra base 3′ có bắt cặp trong cấu trúc trả về (D-17, AUDIT REV-16).
+
+14. **Ma trận phản ứng chéo** (`crossreactivity/`): chưa hiệu chỉnh wet-lab; chưa có số liệu công bố để kiểm chứng; 403/2656 hsa miRNA chưa có assay với tham số mặc định; R của cặp mà RT bắt được nhưng mồi xuôi không bám dừng ở 2^−8,3 do trần ΔCq_FWD; khung RT và FWD độc lập nên indel ở giữa phân tử được cho phép ngầm (SPEC_phase3 §8.20, DECISIONS D-3/D-4/D-8).
