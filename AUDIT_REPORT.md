@@ -274,6 +274,19 @@ Sau khi chủ dự án quyết định các điểm mở, code đã được s�
 | ISO-05 | ⏳ Mở | Chưa ghép isomiRdb với mô hình ΔCq ("assay bắt ≈ X % tổng lượng") — hoãn tới khi có thí nghiệm hiệu chỉnh, vì n = 2 miRNA. |
 | ISO-06 | ⏳ Mở | Chỉ mục 5′ vẫn là danh sách 8 miRNA tự tuyển; dựng từ nhãn `lv5p` của isomiRdb cần tải lại 1,2 GB. |
 
+### 10.4 Bổ sung 2026-11-10 — rà soát lại A1–A4 (BLAST classifier v7)
+
+Chi tiết và bảng trước/sau: `docs/A1-A4_changes.md`. Quyết định: `docs/DECISIONS_crossreactivity.md`.
+
+| ID | Trạng thái | Nội dung |
+|---|---|---|
+| REV-13 | ✅ Đã sửa (BLAST v7) | **A4 còn sót: BLAST vẫn chỉ xét mồi xuôi.** Hit mà overhang RT đã phân biệt vẫn là CRITICAL và hiện thành "critical issue" trên trang Results. Nay `/api/blast-check` nhận `rt_primer` (overhang đọc từ `len − 44`, phải 5–7 nt). Mỗi hit sợi plus đi qua bước RT của mô hình assay: ΔCq_RT ≥ 4,3 → SAFE; 3,3–4,3 → tối đa MEDIUM. Mỗi hit giữ thêm `primer_risk` và `rt_step`. Trên 100 mồi stem-loop, biên 10 °C: CRITICAL **65 hit / 29 mồi → 16 / 10**; 96 hit bị bước RT loại. 16 hit còn lại đều là paralog cùng overhang mà mô hình ΔCq cũng xếp CO-AMPLIFIED, nên hai kết luận nay thống nhất. |
+| REV-14 | ✅ Đã sửa (BLAST v7) | **A3 còn sót: mục lệch đầu đứng ngoài `overall_risk`.** Paralog lệch đầu 5′ (khuếch đại chung, không tránh được) vẫn để mồi ở mức SAFE. Nay `shifted_5p` → HIGH; `shifted_3p` chấm theo bước RT; `same_sequence` vẫn không tính. 3/175 mồi đổi mức (mmu-miR-467a/b MEDIUM → HIGH; ssc-miR-199b-3p SAFE → HIGH). Số hit ở mọi biên không đổi. |
+| REV-15 | ⏳ Mở (DECISIONS D-16) | rU·dG chưa được coi là wobble ở bước RT; chỉ rG·dT (Chen 2005) được tính. |
+| REV-16 | ⏳ Mở (DECISIONS D-17) | Tm theo khung đọc: thal vẫn có thể trượt 1–2 nt trong cửa sổ L + 1; chưa kiểm tra base 3′ có bắt cặp trong cấu trúc trả về. |
+
+Validation in-silico vẫn **2439/2439**. Mồi, điểm và nhãn ΔCq của 165 miRNA không đổi (không có code thiết kế nào bị sửa).
+
 ## 11. Tài liệu tham khảo (đã kiểm chứng qua PubMed)
 
 Nguồn: PubMed. Mọi mục dưới đây đã được khớp PMID bằng PubMed MCP trong phiên audit.

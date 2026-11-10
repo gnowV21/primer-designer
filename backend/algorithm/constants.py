@@ -578,7 +578,7 @@ BLAST_TM_CRITICAL_MARGIN = 5.0    # °C
 #   3 = self-hit by name + compatible sequence; hits under other names with an
 #       identical/compatible sequence folded into identical_sequence
 #   2 = duplex-Tm gate (2026-10-28); 1 = 3'-anchoring
-BLAST_CLASSIFIER_VERSION = "6"
+BLAST_CLASSIFIER_VERSION = "7"
 # Self-hit identification. A hit named like the target is the target only if its
 # sequence agrees: identical over the overlap, each end differing by ≤ 2 nt —
 # the spread seen between miRBase 22.1 and sequences published against older

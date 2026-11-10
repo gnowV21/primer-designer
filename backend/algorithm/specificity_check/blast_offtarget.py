@@ -37,9 +37,11 @@ from algorithm.constants import (
     BLAST_MAX_HITS_RETURNED, MIRBASE_HUMAN_PREFIX, UNIVERSAL_REVERSE,
     KWOK_BLOCKING_PAIRS, KWOK_REDUCING_PAIRS,
     MIRBASE_PREFIX_PATTERN, VIRUS_HOST_SPECIES,
+    STEMLOOP_BODY, STEMLOOP_BODY_LENGTH, OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX,
+    ASSAY_DCQ_COAMPLIFIED_BELOW, ASSAY_DCQ_DISCRIMINATED_AT,
 )
 from algorithm.sequence_utils import reverse_complement, rna_to_dna
-from algorithm.specificity_check.assay_model import variant_category
+from algorithm.specificity_check.assay_model import rt_axis, variant_category
 from algorithm.thermodynamics import _get_p3_params
 from .family_crossreactivity import get_family_id
 
@@ -48,6 +50,57 @@ _MIRBASE_DB  = os.path.join(_DB_DIR, "mirbase_multi")
 _METADATA    = os.path.join(_DB_DIR, "metadata.json")
 
 _RISK_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
+_RISK_RANK = {"SAFE": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
+
+
+def overhang_len_from_rt_primer(rt_primer: str) -> int:
+    """RT 3' overhang length read from the stem-loop RT primer (len - 44 nt body).
+
+    Raises ValueError unless the primer starts with the fixed stem-loop body and the
+    overhang is 5-7 nt (the supported range) - never assumes 6.
+    """
+    rt = (rt_primer or "").upper().strip()
+    if not rt.startswith(STEMLOOP_BODY):
+        raise ValueError("rt_primer must start with the 44-nt stem-loop body")
+    n = len(rt) - STEMLOOP_BODY_LENGTH
+    if not OVERHANG_LENGTH_MIN <= n <= OVERHANG_LENGTH_MAX:
+        raise ValueError(f"rt_primer overhang must be {OVERHANG_LENGTH_MIN}-"
+                         f"{OVERHANG_LENGTH_MAX} nt, got {n}")
+    return n
+
+
+def apply_rt_step(risk: str, reason: str, rt: dict) -> tuple[str, str]:
+    """Assay-level risk of a forward-primer hit, given the RT step for that miRNA (A4).
+
+    An off-target gives signal only if the RT overhang first makes its cDNA. The
+    forward-primer class is kept as the ceiling and lowered by the RT delay
+    (rt = assay_model.rt_axis output; ΔCq thresholds of the assay model):
+      ΔCq_RT ≥ 4.3 (< 5 % captured)   → SAFE - no cDNA, nothing to prime
+      3.3 ≤ ΔCq_RT < 4.3 (5-10 %)     → at most MEDIUM
+      ΔCq_RT < 3.3                    → unchanged
+    """
+    dcq = rt["delta_cq"]
+    rt_text = f"RT step: {rt['basis']} (ΔCq_RT {dcq:g})"
+    if dcq >= ASSAY_DCQ_DISCRIMINATED_AT:
+        return "SAFE", (f"{rt_text} — the RT primer does not make cDNA of this miRNA, "
+                        f"so the forward primer has nothing to prime [Chen05]")
+    if dcq >= ASSAY_DCQ_COAMPLIFIED_BELOW and _RISK_RANK[risk] > _RISK_RANK["MEDIUM"]:
+        return "MEDIUM", f"{reason}; capped at MEDIUM — {rt_text}, only partly reverse-transcribed"
+    return risk, f"{reason}; {rt_text}"
+
+
+def variant_risk(category: str, rt: Optional[dict]) -> str:
+    """Risk of a same-molecule miRBase entry (A3). 'same_sequence' is the target under
+    another name → SAFE. A 5'-shifted entry is bound by both primers → HIGH. A
+    3'-shifted entry is judged by the RT step (end-shift delays 0-3 Cq) → HIGH /
+    MEDIUM / SAFE by the assay thresholds; HIGH when the RT step is unknown."""
+    if category == "same_sequence":
+        return "SAFE"
+    if category == "shifted_5p" or rt is None:
+        return "HIGH"
+    if rt["delta_cq"] < ASSAY_DCQ_COAMPLIFIED_BELOW:
+        return "HIGH"
+    return "MEDIUM" if rt["delta_cq"] < ASSAY_DCQ_DISCRIMINATED_AT else "SAFE"
 
 _P3_KEYS = ("mv_conc", "dv_conc", "dntp_conc", "dna_conc")
 
@@ -501,6 +554,7 @@ def check_offtarget(
     safe_margin: float = BLAST_TM_SAFE_MARGIN,
     critical_margin: float = BLAST_TM_CRITICAL_MARGIN,
     species: Optional[str] = None,
+    rt_primer: Optional[str] = None,
 ) -> dict:
     """
     Run BLAST for forward + reverse primers against the miRBase database.
@@ -515,7 +569,13 @@ def check_offtarget(
     conditions: primer3 conditions (mv_conc, dv_conc, dntp_conc, dna_conc) — pass
         the design's effective_p3 so Tm_on/Tm_off match the design's own Tm.
     species: miRBase species code ('hsa', 'ssc', …); defaults to mirna_id's prefix.
+    rt_primer: the design's stem-loop RT primer. With it (and a target sequence)
+        each forward hit is judged at assay level - the RT overhang must capture the
+        off-target before the forward primer can prime its cDNA (apply_rt_step) -
+        and 3'-shifted same-molecule entries are graded by the RT step. Without it
+        hits are forward-primer-only, as before (rt_step_applied = False).
     """
+    rt_overhang_len = overhang_len_from_rt_primer(rt_primer) if rt_primer else None
     db_available = [_MIRBASE_DB] if _db_exists(_MIRBASE_DB) else []
     if not db_available:
         raise FileNotFoundError(
@@ -552,6 +612,9 @@ def check_offtarget(
     else:
         tm_on = duplex_tm(forward_primer, target_sequence, p3) if target_sequence else None
     margins = (safe_margin, critical_margin)
+    # The RT step needs the target's 3' end: without a target sequence it is skipped.
+    rt_len = rt_overhang_len if target_sequence else None
+    rt_stats: dict = {}
 
     # The fixed universal reverse primer anneals to the stem-loop body the RT primer
     # introduces, not to any miRNA, so a miRBase search says nothing about it — and
@@ -563,7 +626,7 @@ def check_offtarget(
     # The Tm gate applies to the forward primer only: a reverse primer has no
     # miRNA on-target to compare against.
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
-        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, screen_prefixes, timeout, target_family, tm_on, p3, margins, target_sequence)
+        fwd_future = pool.submit(_check_primer, forward_primer, db_available, mirna_id, m_norm, screen_prefixes, timeout, target_family, tm_on, p3, margins, target_sequence, rt_len, rt_stats)
         rev_future = pool.submit(_check_primer, reverse_primer, db_available, mirna_id, m_norm, screen_prefixes, timeout, target_family) if check_reverse else None
         fwd_hits, fwd_safe, fwd_cs, fwd_fam, fwd_ident = fwd_future.result()
         rev_hits, rev_safe, rev_cs, rev_fam, _ = rev_future.result() if rev_future else ([], 0, 0, 0, [])
@@ -578,6 +641,22 @@ def check_offtarget(
               if target_sequence and sid in ident_seqs else "same_sequence")
         for sid in fwd_ident
     }
+    # A3: a shifted entry is a different molecule the assay cannot fully separate,
+    # so it must not leave overall_risk at SAFE. same_sequence (the target under
+    # another name) stays out of the risk.
+    variant_risks = {}
+    for sid, cat in identical_variants.items():
+        rt = (rt_axis(target_sequence, ident_seqs[sid], rt_len)
+              if rt_len and cat == "shifted_3p" and sid in ident_seqs else None)
+        variant_risks[sid] = {"category": cat, "risk": variant_risk(cat, rt),
+                              "rt_delta_cq": rt["delta_cq"] if rt else None}
+    worst_variant = max((v["risk"] for v in variant_risks.values()),
+                        key=_RISK_RANK.get, default="SAFE")
+    summary["unresolvable_variant_count"] = sum(
+        1 for v in variant_risks.values() if v["risk"] != "SAFE")
+    if _RISK_RANK[worst_variant] > _RISK_RANK[summary["overall_risk"]]:
+        summary["overall_risk"] = worst_variant
+    summary["rt_discriminated_count"] = rt_stats.get("rt_discriminated", 0)
     summary["hits_truncated"] = (
         len(fwd_hits) == BLAST_MAX_HITS_RETURNED or len(rev_hits) == BLAST_MAX_HITS_RETURNED
     )
@@ -589,6 +668,7 @@ def check_offtarget(
         # ≤2 nt): indistinguishable by the forward primer, so not risk-classified.
         "identical_sequence_hits": fwd_ident,
         "identical_sequence_variants": identical_variants,
+        "identical_sequence_risk": variant_risks,
         "reverse_primer_skipped": (
             "Universal reverse primer anneals to the stem-loop body, not to a miRNA — "
             "a miRBase search does not apply." if skip_reverse else None
@@ -596,6 +676,8 @@ def check_offtarget(
         "summary": summary,
         "classification": {
             "classifier_version": BLAST_CLASSIFIER_VERSION,
+            "rt_step_applied": rt_len is not None,
+            "rt_overhang_len": rt_overhang_len,
             "tm_gate_applied": tm_on is not None,
             "tm_gate_note": tm_gate_note,
             "tm_ontarget": tm_on,
@@ -621,6 +703,8 @@ def _check_primer(
     p3: Optional[dict] = None,
     margins: tuple[float, float] = (BLAST_TM_SAFE_MARGIN, BLAST_TM_CRITICAL_MARGIN),
     target_sequence: Optional[str] = None,
+    rt_overhang_len: Optional[int] = None,
+    rt_stats: Optional[dict] = None,
 ) -> tuple[list[dict], int, int, int, list[str]]:
     """Return (non_safe_hits, safe_count, cross_species_excluded, same_family_count,
     identical_sequence_ids).
@@ -646,6 +730,10 @@ def _check_primer(
 
     tm_on: on-target duplex Tm; when set, each 3'-anchored hit gets its own
     duplex Tm (full off-target sequence from the DB) and the Tm gate applies.
+
+    rt_overhang_len: RT overhang length of the design (with target_sequence). Each
+    plus-strand hit is then graded at assay level by apply_rt_step; hits the RT step
+    rules out count as SAFE and are tallied in rt_stats['rt_discriminated'].
     """
     non_safe_hits: list[dict] = []
     safe_count = 0
@@ -745,6 +833,15 @@ def _check_primer(
                 aln["tm_offtarget"] = duplex_tm(primer, tm_window, p3)
 
             risk, reason = classify_hit_risk(primer, aln, *margins)
+            primer_risk = risk
+            rt_step = None
+            # A4: the forward primer only matters if the RT overhang made this miRNA's
+            # cDNA. Plus-strand hits are miRNAs the primer anneals to as cDNA.
+            if risk != "SAFE" and rt_overhang_len and target_sequence and subject_full and plus:
+                rt_step = rt_axis(target_sequence, subject_full, rt_overhang_len)
+                risk, reason = apply_rt_step(risk, reason, rt_step)
+                if risk == "SAFE" and rt_stats is not None:
+                    rt_stats["rt_discriminated"] = rt_stats.get("rt_discriminated", 0) + 1
             # SAFE hits are counted in summary but omitted from hit list [Ye12]
             if risk == "SAFE":
                 safe_count += 1
@@ -777,6 +874,12 @@ def _check_primer(
                 "evalue": h["evalue"],
                 "risk":   risk,
                 "risk_reason": reason,
+                # Forward-primer-only class before the RT step (= risk when the RT
+                # step was not applied).
+                "primer_risk": primer_risk,
+                "rt_step": ({"delta_cq": rt_step["delta_cq"], "shift_3p": rt_step["shift_3p"],
+                             "mismatch_positions": rt_step["mismatch_positions"],
+                             "basis": rt_step["basis"]} if rt_step else None),
             })
     # Sort by risk severity then evalue, cap at BLAST_MAX_HITS_RETURNED
     non_safe_hits.sort(key=lambda h: (_RISK_ORDER.get(h["risk"], 9), h["evalue"]))

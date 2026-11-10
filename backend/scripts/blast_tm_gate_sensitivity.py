@@ -35,6 +35,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from algorithm.constants import (  # noqa: E402
     BLAST_TM_CRITICAL_MARGIN, BLAST_CLASSIFIER_VERSION, MIRBASE_PREFIX_PATTERN,
+    STEMLOOP_BODY,
 )
 from algorithm.sequence_utils import rna_to_dna  # noqa: E402
 from algorithm.specificity_check import blast_offtarget as bo  # noqa: E402
@@ -86,7 +87,9 @@ def _targets():
         if (primer, mirna_id) in seen:
             continue
         seen.add((primer, mirna_id))
+        overhang = (t.get("rt_overhang_actual") or "").upper()
         out.append({"target": t["target"], "mirna_id": mirna_id, "primer": primer,
+                    "rt_primer": (STEMLOOP_BODY + overhang) if overhang else None,
                     "specific": specific, "given_seq": entry.get("matureSequence"),
                     "group": "busk2014_polyA" if t.get("benchmark_group") == "polyA_system"
                              else "stem_loop"})
@@ -119,6 +122,13 @@ def main() -> int:
             r = bo.check_offtarget(t["primer"], "", t["mirna_id"], target_sequence=seq,
                                    safe_margin=m, critical_margin=BLAST_TM_CRITICAL_MARGIN)
             per_margin[f"{m:g}"] = r
+        # Assay level (classifier v7, A4): the design's RT primer gates each hit.
+        # Stem-loop only — Busk 2014 is poly(A)-tailing RT, with no overhang.
+        if t["group"] == "stem_loop" and t["rt_primer"]:
+            per_margin["10_rt_step"] = bo.check_offtarget(
+                t["primer"], "", t["mirna_id"], target_sequence=seq,
+                safe_margin=10.0, critical_margin=BLAST_TM_CRITICAL_MARGIN,
+                rt_primer=t["rt_primer"])
         # Baseline: the same hits and the same self/identity rules, but no Tm data
         # (tm_on=None → Ye12/Kwok90 rules + legacy 10-nt anchor).
         hits, safe, _, fam, ident = bo._check_primer(
@@ -140,8 +150,16 @@ def main() -> int:
                                for tier in TIERS},
                             "safe": v["summary"]["safe_count"],
                             "same_family": v["summary"]["same_family_count"],
-                            "identical_sequence": v["summary"]["identical_sequence_count"]}
+                            "identical_sequence": v["summary"]["identical_sequence_count"],
+                            "rt_discriminated": v["summary"].get("rt_discriminated_count", 0),
+                            "unresolvable_variants": v["summary"].get("unresolvable_variant_count", 0)}
                         for k, v in per_margin.items()},
+            "critical_hits_at_10_rt_step": [
+                {"subject_id": h["subject_id"], "risk": h["risk"], "primer_risk": h["primer_risk"],
+                 "rt_delta_cq": (h["rt_step"] or {}).get("delta_cq"), "reason": h["risk_reason"]}
+                for h in per_margin.get("10_rt_step", {}).get("forward_primer_hits", [])
+                if h["risk"] in ("CRITICAL", "HIGH")
+            ],
             "critical_hits_at_10": [
                 {"subject_id": h["subject_id"], "risk": h["risk"],
                  "tm_offtarget": h["alignment"]["tm_offtarget"], "reason": h["risk_reason"]}
@@ -152,16 +170,26 @@ def main() -> int:
               + "  ".join(f"{k}:{v['overall_risk']}" for k, v in rows[-1]["results"].items()),
               flush=True)
 
-    settings = [f"{m:g}" for m in SAFE_MARGINS] + ["no_tm_gate"]
+    settings = [f"{m:g}" for m in SAFE_MARGINS] + ["no_tm_gate", "10_rt_step"]
 
     def summarise(subset):
         return {
             "n_primers": len(subset),
             **{k: {
-                "primers_by_overall_risk": dict(Counter(r["results"][k]["overall_risk"] for r in subset)),
-                "hits_by_tier": {tier: sum(r["results"][k][tier] for r in subset) for tier in TIERS},
-                "safe_hits": sum(r["results"][k]["safe"] for r in subset),
-                "identical_sequence_hits": sum(r["results"][k]["identical_sequence"] for r in subset),
+                "n_primers": sum(k in r["results"] for r in subset),
+                "primers_by_overall_risk": dict(Counter(r["results"][k]["overall_risk"]
+                                                        for r in subset if k in r["results"])),
+                "hits_by_tier": {tier: sum(r["results"][k][tier] for r in subset if k in r["results"])
+                                 for tier in TIERS},
+                "primers_with_critical": sum(1 for r in subset
+                                             if k in r["results"] and r["results"][k]["CRITICAL"]),
+                "safe_hits": sum(r["results"][k]["safe"] for r in subset if k in r["results"]),
+                "rt_discriminated_hits": sum(r["results"][k]["rt_discriminated"]
+                                             for r in subset if k in r["results"]),
+                "unresolvable_variants": sum(r["results"][k]["unresolvable_variants"]
+                                             for r in subset if k in r["results"]),
+                "identical_sequence_hits": sum(r["results"][k]["identical_sequence"]
+                                               for r in subset if k in r["results"]),
             } for k in settings},
         }
 
@@ -182,7 +210,11 @@ def main() -> int:
                  "(with the Kwok orientation fix), i.e. the rules without the Tm gate; "
                  "self/identical-sequence handling is the same in every setting. "
                  "Hits identical in sequence to the target (other loci) are counted "
-                 "under identical_sequence_hits, not in any risk tier."),
+                 "under identical_sequence_hits, not in any risk tier. '10_rt_step' = "
+                 "10 °C SAFE margin plus the assay-level RT step with the design's RT "
+                 "primer (classifier v7, stem-loop group only); rt_discriminated_hits "
+                 "are hits the RT overhang rules out (ΔCq_RT ≥ 4.3), "
+                 "unresolvable_variants are shifted same-molecule entries (A3)."),
         "n_primers": len(rows),
         "n_skipped": len(skipped),
         "summary": summary,
@@ -192,7 +224,7 @@ def main() -> int:
     with open(_OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, indent=1, ensure_ascii=False)
     print(json.dumps(summary, indent=1))
-    print(f"{len(rows)} primers, {len(skipped)} skipped → {os.path.normpath(_OUT)}")
+    print(f"{len(rows)} primers, {len(skipped)} skipped -> {os.path.normpath(_OUT)}")
     return 0
 
 

@@ -1079,6 +1079,30 @@ Nguyên văn: miR-877-5p — *"Assays specific for the 'GACA' and 'GAC' 3′ end
 
 **Thí nghiệm hiệu chỉnh đề xuất.** Oligo RNA tổng hợp miR-21-5p gồm dạng chuẩn, +1, −1, −2 và +U, cùng số bản sao, đo bằng một assay stem-loop của dạng chuẩn; 5 oligo, 1 đường chuẩn, 3 lặp. Điểm mấu chốt: **chạy ở lượng mẫu cho Ct 20–30**, trong vùng định lượng tin cậy. Kết quả sẽ thay bảng lệch đầu hiện tại bằng số đo trên một trình tự xác định.
 
+### 8.19 BLAST classifier v7 — bước RT và mục lệch đầu (2026-11-10)
+
+**Bước RT cho hit mồi xuôi (A4).** Request `/api/blast-check` có thêm trường tùy chọn `rt_primer`; trang Results gửi `stemloop_rt.sequence`. Overhang đọc từ RT primer (`len − 44`, 5–7 nt, sai thì trả 400). Với mỗi hit sợi plus đã có trình tự đầy đủ, `assay_model.rt_axis(target, off-target, overhang)` cho ΔCq_RT, rồi `apply_rt_step` xử lý:
+
+| ΔCq_RT | Mức |
+|---|---|
+| ≥ 4,3 (< 5 % được phiên mã ngược) | SAFE, đếm trong `summary.rt_discriminated_count` |
+| 3,3–4,3 | tối đa MEDIUM |
+| < 3,3 | giữ mức của mồi xuôi |
+
+Mỗi hit có `primer_risk` (mức trước bước RT) và `rt_step` (`delta_cq`, `shift_3p`, `mismatch_positions`, `basis`). `classification.rt_step_applied` và `rt_overhang_len` cho biết bước RT có chạy hay không. Không có `rt_primer` hoặc không có trình tự đích thì kết quả như v6.
+
+**Mục lệch đầu (A3).** `identical_sequence_risk[sid] = {category, risk, rt_delta_cq}`:
+
+| Loại | Mức |
+|---|---|
+| `same_sequence` | SAFE (chính đích dưới tên khác) |
+| `shifted_5p` | HIGH (cả hai mồi đều bám) |
+| `shifted_3p` | theo ΔCq_RT: < 3,3 → HIGH, 3,3–4,3 → MEDIUM, ≥ 4,3 → SAFE; HIGH khi không có RT primer |
+
+`overall_risk` lấy mức tệ nhất giữa các hit và các mục này; `summary.unresolvable_variant_count` đếm số mục khác SAFE.
+
+**Kết quả** (`benchmark/blast_tm_gate_sensitivity.json`, cấu hình mới `10_rt_step`, 100 mồi stem-loop): CRITICAL 65 → 16 hit, 29 → 10 mồi; `overall_risk` SAFE 55 → 78. Khóa cache có thêm `rt_primer` và phiên bản classifier 7.
+
 ## 9. Kiến trúc hệ thống — Cache, Circuit Breaker, Rate Limit, CI (v1.4)
 
 ### 9.1 Cache SQLite — Refactor `LocalDB` Week 1 thành base class `SQLiteKVCache` (QUYẾT ĐỊNH v1.5)
