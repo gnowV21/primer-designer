@@ -21,6 +21,16 @@ function fmtDg(v) {
   return `${Number(v).toFixed(2)}`;
 }
 
+// Full-structure dimer ΔG behind hard-filter rule 1: RNAcofold, DNA parameters,
+// 37 °C (Kang 2017), worst of forward self-dimer and forward × universal reverse.
+// The other ΔG rows are primer3 at the annealing temperature — a different scale.
+function cofoldDimerDg(s) {
+  const a = get(s, 'structure_checks', 'self_dimer', 'dg_cofold');
+  const b = get(s, 'structure_checks', 'hetero_dimer', 'dg_cofold');
+  if (a == null || b == null) return undefined;
+  return Math.min(a, b);
+}
+
 function get(obj, ...keys) {
   let cur = obj;
   for (const k of keys) {
@@ -94,6 +104,12 @@ const ROWS = [
     label: 'Self-dimer ΔG',
     extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg_overall'),
     format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg_overall')),
+    best: 'min_abs',
+  },
+  {
+    label: 'Dimer ΔG (RNAcofold, 37 °C)',
+    extract: (s) => cofoldDimerDg(s),
+    format: (s) => fmtDg(cofoldDimerDg(s)),
     best: 'min_abs',
   },
   {
@@ -285,6 +301,7 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <PropRow label="Amplicon" value={set.amplicon_size !== undefined ? fmt(set.amplicon_size, 0) + ' bp' : undefined} />
           <PropRow label="Hairpin ΔG" value={fmtDg(get(set, 'structure_checks', 'hairpin', 'dg'))} />
           <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg_overall'))} />
+          <PropRow label="Dimer ΔG (RNAcofold, 37 °C)" value={fmtDg(cofoldDimerDg(set))} />
           <PropRow label="3′ stability ΔG" value={fmtDg(get(set, 'structure_checks', 'end_stability', 'stability_kcal_mol'))} />
           <PropRow label="Binding region" value={set.specific_length !== undefined ? `${set.specific_length} nt` : undefined} />
           <PropRow label="Binding pos (1-based)" value={

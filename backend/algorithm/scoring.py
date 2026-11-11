@@ -21,6 +21,7 @@ from .constants import (
 )
 from .sequence_utils import calculate_gc_skew
 from .stemloop_rt import mfe_thresholds
+from .structure_check import full_dimer_dg
 from .bound_fraction import (
     annealing_temp_c,
     calculate_bound_fraction_binding,
@@ -154,10 +155,10 @@ def score_candidate(
     worst    = min(sd_end, hd_end)
     critical = sc.get("has_critical_flag", False)
 
-    # Full-structure check [Kang17]: ΔG_total < -9 kcal/mol → inhibits qPCR
-    sd_full       = sc.get("self_dimer", {}).get("dg_overall", 0.0)
-    hd_full       = sc.get("hetero_dimer", {}).get("dg_overall", 0.0)
-    worst_full    = min(sd_full, hd_full)
+    # Full-structure check [Kang17]: ΔG < -9 kcal/mol is the miPrimer dimer limit
+    # (Kang redesigns such a primer; the outcome is not quantified there).
+    # ΔG by RNAcofold, DNA parameters — Kang's own method (full_dimer_dg).
+    worst_full, full_method = full_dimer_dg(sc)
     full_critical = worst_full < DIMER_FULL_DG_CRITICAL
 
     # Breakpoints derived from SELF_DIMER_DG_3PRIME_MAX so a single constant change
@@ -171,9 +172,10 @@ def score_candidate(
     scores["dimer_penalty"] = dimer_score
     explanations["dimer_penalty"] = (
         f"3'-end dimer ΔG = {worst:.2f} kcal/mol (threshold: > {SELF_DIMER_DG_3PRIME_MAX} kcal/mol). "
-        f"Full-structure dimer ΔG = {worst_full:.2f} kcal/mol (threshold: > {DIMER_FULL_DG_CRITICAL} kcal/mol). "
+        f"Full-structure dimer ΔG = {worst_full:.2f} kcal/mol by {full_method} "
+        f"(threshold: > {DIMER_FULL_DG_CRITICAL} kcal/mol). "
         + ("CRITICAL: polymerase can extend 3'-end dimer. " if critical else "")
-        + ("CRITICAL: full-structure ΔG below -9 kcal/mol — qPCR inhibition expected [Kang17]. " if full_critical else "")
+        + ("CRITICAL: full-structure ΔG below -9 kcal/mol — past the miPrimer dimer limit [Kang17]. " if full_critical else "")
         + "Sources: IDT OligoAnalyzer, Premier Biosoft qPCR guidelines; Kang 2017 (DOI 10.1261/rna.061150.117)."
     )
 

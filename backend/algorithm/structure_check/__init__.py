@@ -1,7 +1,9 @@
 # ================================================================
 # structure_check/__init__.py — Module 5: Secondary structure checks
-# All checks use primer3-py thermodynamic alignment.
-# Consistent with Primer3Plus P3_THERMODYNAMIC_OLIGO_ALIGNMENT=True
+# Hairpin, 3'-end dimers, overall dimer warning and end stability use primer3-py
+# thermodynamic alignment at Ta (Primer3Plus P3_THERMODYNAMIC_OLIGO_ALIGNMENT=True).
+# The full-structure dimer ΔG for hard-filter rule 1 (dg_cofold) uses RNAcofold
+# with DNA parameters, as Kang 2017 does — see vienna_dna.py and AUDIT REV-19.
 #
 # Package note: heterodimer.py lives as a sub-module of this package.
 # design.py imports: from algorithm.structure_check import run_all_structure_checks
@@ -9,6 +11,7 @@
 # ================================================================
 
 import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
+from .. import vienna_dna
 from ..constants import (
     HAIRPIN_DG_MAX_INTERNAL,
     SELF_DIMER_DG_MAX, SELF_DIMER_DG_3PRIME_MAX,
@@ -116,6 +119,7 @@ def _check_self_dimer(seq: str, p3: dict, temp_c: float) -> dict:
 
     return {
         "dg_overall": dg_any, "dg_3prime": dg_end,
+        **_cofold_fields(seq, seq),
         "pass_overall": pass_overall, "pass_3prime": pass_3prime,
         "critical_3prime": critical_3prime,
         "threshold_overall": SELF_DIMER_DG_MAX,
@@ -162,6 +166,7 @@ def _check_hetero_dimer(seq1: str, seq2: str, p3: dict, temp_c: float,
 
     return {
         "dg_overall": dg_any, "dg_3prime": dg_end,
+        **_cofold_fields(seq1, seq2),
         "pass_overall": pass_overall, "pass_3prime": pass_3prime,
         "critical_3prime": critical_3prime,
         "threshold_overall": HETERO_DIMER_DG_MAX,
@@ -192,6 +197,45 @@ def _check_end_stability(seq: str, p3: dict) -> dict:
                else "FAIL — high 3' end stability may increase mispriming risk.")
         ),
     }
+
+
+def _cofold_fields(seq1: str, seq2: str) -> dict:
+    """
+    Full-structure dimer ΔG by RNAcofold, DNA parameters (Kang 2017) — the value
+    hard-filter rule 1 and the dimer_penalty full-structure check compare with
+    DIMER_FULL_DG_CRITICAL. None when ViennaRNA is unavailable; full_dimer_dg()
+    then falls back to the primer3 dg_overall and says so.
+    """
+    try:
+        r = vienna_dna.cofold_dg(seq1, seq2)
+    except Exception:
+        r = None
+    if r is None:
+        return {"dg_cofold": None, "dg_cofold_structure": None}
+    dg, structure = r
+    return {"dg_cofold": dg, "dg_cofold_structure": structure}
+
+
+def full_dimer_dg(structure_checks: dict) -> tuple[float, str]:
+    """
+    Worst full-structure dimer ΔG over forward self-dimer and forward ×
+    universal reverse, and the method that produced it.
+
+    RNAcofold (DNA, 37 °C) when available — Kang 2017's own method, on which
+    the −9 kcal/mol limit was set. Otherwise primer3 thal at Ta, which is ~5.4
+    kcal/mol less negative (benchmark/dimer_dg_method_compare.json), so the
+    fallback is a looser gate and is labelled as such.
+    """
+    sd = structure_checks.get("self_dimer", {}) or {}
+    hd = structure_checks.get("hetero_dimer", {}) or {}
+    cof = [d.get("dg_cofold") for d in (sd, hd)]
+    if all(v is not None for v in cof):
+        return min(cof), vienna_dna.COFOLD_METHOD
+    return (min(sd.get("dg_overall", 0.0), hd.get("dg_overall", 0.0)),
+            FULL_DIMER_FALLBACK_METHOD)
+
+
+FULL_DIMER_FALLBACK_METHOD = "primer3 thal at Ta (ViennaRNA unavailable — looser than Kang 2017)"
 
 
 # ── Severity helpers ──────────────────────────────────────────────
