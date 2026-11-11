@@ -25,12 +25,13 @@
 #   rule 2  3'-end dimer: duplex of the LAST 8 nt (forward self, and forward vs
 #           universal reverse) ΔG ≤ END_DIMER_DG_CRITICAL (−5 kcal/mol). A proxy:
 #           it does not check that the 3'-terminal base itself is paired.
-#   rule 3  forward hairpin ΔG ≤ −6 kcal/mol (the "critical" tier of
-#           structure_check._hairpin_severity)
+#   rule 3  forward hairpin melting temperature Tm ≥ HAIRPIN_TM_HARD_MAX (47 °C, the
+#           Primer3 default PRIMER_MAX_HAIRPIN_TH). Since 3.7.0; before, ΔG at Ta
+#           ≤ −6 kcal/mol, which no candidate ever reached (AUDIT REV-20)
 # The stem-loop RT primer is a hairpin by design and is never hairpin-filtered
 # (its fold is scored as mfe_stemloop); the fixed universal reverse primer is
 # checked once per design and only warns.
-# Conditions, rules 2–3: primer3 thal (SantaLucia 2004 NN) at the annealing
+# Conditions, rules 2–3: primer3 thal (SantaLucia 2004 NN; rule 3 compares the Tm) at the annealing
 # temperature (default 60 °C), mv 50 mM, Mg²⁺ 1.5 mM, dNTP 0.8 mM, primer 200 nM
 # unless the user changes them. Rule 1: RNAcofold defaults (37 °C, 1.021 M Na⁺) —
 # fixed, because the −9 limit was set on that scale; the user's salts do not apply.
@@ -49,13 +50,15 @@
 #             average 5.4 kcal/mol less negative — a much looser gate
 #             (benchmark/dimer_dg_method_compare.json, AUDIT REV-19).
 #   [PB]      Premier Biosoft qPCR guidelines (web page) — rule 2
-#   rule 3    the −6 kcal/mol tier is this tool's own, no published source
+#   [P3]      Primer3 manual, PRIMER_MAX_HAIRPIN_TH default 47.0 ("10 degrees lower
+#             than the default value of PRIMER_MIN_TM"); Untergasser 2012 — rule 3
 # Contrast (scoring scheme, not a source for the gate):
 #   [Busk14]  DOI 10.1186/1471-2105-15-29, PMC3922658
 # ================================================================
 
 from .constants import (
     DIMER_FULL_DG_CRITICAL,
+    HAIRPIN_TM_HARD_MAX,
     HARD_FILTER_ENABLED,
 )
 from .structure_check import full_dimer_dg
@@ -92,10 +95,11 @@ def apply_hard_filters(candidate: dict) -> list[str]:
     if sc.get("has_critical_flag", False):
         reasons.append("hard_dimer_3prime_critical")
 
-    # ── Rule 3: Hairpin severity critical ────────────────────────────
-    if sc.get("hairpin", {}).get("severity") == "critical":
+    # ── Rule 3: Hairpin Tm ≥ 47 °C (Primer3 PRIMER_MAX_HAIRPIN_TH default) [P3] ──
+    hp_tm = sc.get("hairpin", {}).get("tm") or 0.0
+    if hp_tm >= HAIRPIN_TM_HARD_MAX:
         reasons.append(
-            f"hard_hairpin_critical (ΔG={sc.get('hairpin', {}).get('dg', 0):.2f})"
+            f"hard_hairpin_tm (Tm={hp_tm:.1f} °C ≥ {HAIRPIN_TM_HARD_MAX:g} °C)"
         )
 
     return reasons

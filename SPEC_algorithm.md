@@ -30,6 +30,19 @@
 
 ---
 
+### 2026-11-11 — Algorithm 3.7.0: lọc cứng hairpin theo Tm ≥ 47 °C (mặc định Primer3)
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-20 | `constants.py`, `hard_filters.py`, `scoring.py` | Correctness | Quy tắc 3 loại mồi xuôi khi Tm hairpin ≥ `HAIRPIN_TM_HARD_MAX` = 47 °C (mặc định `PRIMER_MAX_HAIRPIN_TH` của Primer3), thay cho ΔG ở Ta ≤ −6 kcal/mol. `hairpin_penalty` = 0 khi Tm ≥ 47 °C, trường hợp này chỉ xảy ra trong `hard_filter_fallback`. Mã lý do mới: `hard_hairpin_tm` |
+
+**Vì sao đổi.** Đo trên 9.268 ứng viên của 150 miRNA hsa chọn ngẫu nhiên: quy tắc ΔG ≤ −6 không loại ứng viên nào, vì ΔG hairpin ở 60 °C thấp nhất chỉ −2,36 kcal/mol. Trong khi đó 847 ứng viên (9,1 %) có Tm hairpin > 47 °C. Ví dụ mồi ebv-miR-BART15 của 3.6.0 có Tm hairpin 72 °C nhưng được xếp "safe".
+
+**Tác động:**
+- **Validation:** 2439/2439 vẫn đạt; 9 target đổi điểm. Thêm 1 target dùng `hard_filter_fallback` (ssc-miR-101, 90,8 → 84,6). Các phép so khớp với mồi công bố không đổi.
+- **Benchmark:** 50/50 OK; 4 target đổi điểm (≤ 0,9).
+- **Ma trận hsa:** 197/2253 mồi xuôi đổi. Mồi có Tm hairpin ≥ 47 °C giảm từ 215 xuống 19; 19 mồi này đều ở chế độ dự phòng. Ngoài đường chéo, HIGH / MEDIUM / LOW đổi từ 208 / 103 / 20.710 thành 214 / 100 / 20.700.
+
 ### 2026-11-11 — Algorithm 3.6.0: ΔG dimer toàn cấu trúc tính bằng RNAcofold (DNA), như Kang 2017
 
 | Mã | File | Loại | Mô tả |
@@ -971,7 +984,7 @@ Mồi có điểm 0,2 *"will not be designed in practice if alternatives with mo
 |---|---|---|---|
 | Dimer bền nhất, ở bất kỳ vị trí nào | F tự bắt cặp; F × URP | ΔG < −9,0 kcal/mol (`DIMER_FULL_DG_CRITICAL`), tính bằng **RNAcofold, tham số DNA, 37 °C** (`structure_check.full_dimer_dg`, từ 3.6.0) | Kang 2017 (miPrimer, RNA 24:304): cùng ngưỡng, cùng phạm vi, cùng cách tính ΔG — xem ghi chú dưới bảng |
 | Dimer đầu 3′ | 8 nt cuối của F tự bắt cặp; 8 nt cuối F × 8 nt cuối URP | ΔG ≤ −5,0 kcal/mol (`END_DIMER_DG_CRITICAL`) | Premier Biosoft (trang hướng dẫn, không phải bài báo). Đây là phép xấp xỉ: không kiểm tra base cuối 3′ có thật sự bắt cặp |
-| Hairpin | chỉ F | ΔG ≤ −6,0 kcal/mol (mức "critical" của `_hairpin_severity`) | mốc riêng của tool, không có nguồn công bố |
+| Hairpin | chỉ F | **Tm hairpin ≥ 47 °C** (`HAIRPIN_TM_HARD_MAX`, từ 3.7.0) | Mặc định `PRIMER_MAX_HAIRPIN_TH` = 47.0 của Primer3 (Untergasser 2012). Tài liệu Primer3 ghi: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (57.0). Đến 3.6.0 quy tắc này là ΔG ở Ta ≤ −6 kcal/mol, một mốc riêng không có nguồn và không bao giờ kích hoạt (AUDIT REV-20) |
 
 **Ghi chú về Kang 2017** (đối chiếu đoạn Methods ngày 2026-11-11). Ở bước xác nhận, miPrimer xét self-dimer của mồi xuôi và hetero-dimer giữa mồi xuôi với mồi ngược phổ quát bằng ΔG (theo Shen et al. 2010). Nếu ΔG lớn hơn *"−9.0 ± 1 kcal/mol"* thì giữ nguyên. Nếu nhỏ hơn thì đổi đuôi 5′ sang biến thể IUPAC khác hoặc bỏ các nucleotide tạo dimer, rồi lặp lại đến khi đạt. Phạm vi này trùng với quy tắc 1. Có ba khác biệt:
 - Kang **sửa** mồi, còn tool **loại** ứng viên và chọn ứng viên khác.
@@ -999,7 +1012,7 @@ Khi dùng primer3 ở 60 °C, mốc −9 là con số của Kang đặt lên m�
 
 Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câu này trước đây có trong chú thích code và phần giải thích điểm, nay đã bỏ.
 
-**Điều kiện tính (quy tắc 2–3):** primer3 thal (tham số nearest-neighbor SantaLucia 2004) ở nhiệt độ gắn mồi Ta (mặc định 60 °C); Na⁺ tương đương 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM, trừ khi người dùng đổi.
+**Điều kiện tính (quy tắc 2–3):** primer3 thal (tham số nearest-neighbor SantaLucia 2004) với Na⁺ tương đương 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM, trừ khi người dùng đổi. Quy tắc 2 tính ΔG ở Ta (mặc định 60 °C). Quy tắc 3 so **Tm** của hairpin (`calc_hairpin().tm`) với mốc cố định 47 °C. Mốc này không thay đổi theo Ta, giống mặc định của Primer3. Hairpin là cấu trúc một phân tử nên Tm không phụ thuộc nồng độ mồi.
 
 **Không áp dụng:**
 - **Mồi RT stem-loop:** cố ý là một hairpin; cấu trúc của nó được chấm qua `mfe_stemloop`.
@@ -1008,7 +1021,7 @@ Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câ
 
 **Dự phòng:** nếu mọi ứng viên đều bị loại, tool trả về các ứng viên tốt nhất kèm cảnh báo `hard_filter_fallback`.
 
-**Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Ngưỡng ΔG của tool vì vậy không tương đương trực tiếp với Primer3.
+**Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Từ 3.7.0, quy tắc hairpin dùng đúng tiêu chí Tm này. Quy tắc 1 vẫn dùng ΔG (theo Kang). Quy tắc 2 vẫn dùng ΔG ở Ta, và trên 9.268 ứng viên của 150 miRNA hsa nó không loại ứng viên nào (AUDIT REV-21, còn mở).
 
 ### SCORING_WEIGHTS_V4 (Phase 3 v4.1) — 15 tiêu chí, ACTIVE
 

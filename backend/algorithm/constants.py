@@ -54,7 +54,12 @@
 #   primer3 thal at Ta. primer3 was ~5.4 kcal/mol less negative, so the −9 limit
 #   was much looser than Kang's (AUDIT REV-19). Primers that now fail are
 #   replaced by the next-ranked candidate.
-ALGORITHM_VERSION = "3.6.0"
+#   3.7.0 (2026-11-11) — hard-filter rule 3 (forward-primer hairpin) rejects on the
+#   hairpin's melting temperature, Tm ≥ HAIRPIN_TM_HARD_MAX (47 °C, the Primer3
+#   default PRIMER_MAX_HAIRPIN_TH), instead of ΔG at Ta ≤ −6 kcal/mol. The ΔG rule
+#   never fired (0 of 9268 candidates for 150 hsa miRNAs; the lowest ΔG at 60 °C was
+#   −2.36), while 9.1 % of those candidates had a hairpin Tm > 47 °C (AUDIT REV-20).
+ALGORITHM_VERSION = "3.7.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -214,6 +219,14 @@ GC_SKEW_WARNING_THRESHOLD = 0.2
 # ----------------------------------------------------------------
 
 HAIRPIN_DG_MAX_INTERNAL = -3.0    # kcal/mol [ResearchGate qPCR]
+# Hard-filter rule 3 (since 3.7.0): reject a forward primer whose most stable hairpin
+# has Tm ≥ 47 °C. Primer3 manual (primer3.org/manual.html), PRIMER_MAX_HAIRPIN_TH,
+# default 47.0: "The default value is 10 degrees lower than the default value of
+# PRIMER_MIN_TM" (57.0). A fixed value, as Primer3's default is — it does not follow
+# the user's Ta. The Tm comes from primer3 calc_hairpin (thermodynamic alignment) at
+# the design's salts; a hairpin is unimolecular, so primer concentration does not
+# change it. [Untergasser 2012, DOI 10.1093/nar/gks596]
+HAIRPIN_TM_HARD_MAX = 47.0        # °C
 HAIRPIN_DG_MAX_3PRIME = -2.0      # kcal/mol — 3' end stricter
 
 SELF_DIMER_DG_MAX = -6.0           # kcal/mol [ResearchGate]

@@ -27,7 +27,7 @@ Set it to enable side-by-side column. Results below show this tool only.
 - **Total miRNAs:** 50
 - **Primer design success:** 50/50 (100.0%)
 - **Failures / no candidate:** 0
-- **Forward Tm range:** 60.0–60.1 °C (mean 60.0 °C)
+- **Forward Tm range:** 59.9–60.1 °C (mean 60.0 °C)
 - **Forward GC range:** 44.0–57.1%
 - **Dimer risk distribution:** {'LOW': 50}
 
@@ -45,7 +45,7 @@ Set it to enable side-by-side column. Results below show this tool only.
 | hsa-let-7c-5p | 22 | 36.4 | OK | 60.0 | 52.2 | 23 | — | 50 | LOW | 95.600 |
 | hsa-let-7d-5p | 22 | 36.4 | OK | 60.0 | 50.0 | 24 | — | 50 | LOW | 90.900 |
 | hsa-let-7e-5p | 22 | 36.4 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 95.200 |
-| hsa-let-7f-1-5p | 22 | 31.8 | OK | 60.0 | 50.0 | 24 | — | 50 | LOW | 95.700 |
+| hsa-let-7f-1-5p | 22 | 31.8 | OK | 59.9 | 50.0 | 22 | — | 50 | LOW | 94.800 |
 | hsa-let-7g-5p | 22 | 31.8 | OK | 60.0 | 47.8 | 23 | — | 50 | LOW | 95.400 |
 | hsa-let-7i-5p | 22 | 36.4 | OK | 60.0 | 47.8 | 23 | — | 50 | LOW | 95.400 |
 | hsa-miR-200a-3p | 22 | 40.9 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 96.300 |
@@ -61,17 +61,17 @@ Set it to enable side-by-side column. Results below show this tool only.
 | hsa-miR-133a-3p | 22 | 50.0 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 95.700 |
 | hsa-miR-206 | 22 | 45.5 | OK | 60.0 | 45.8 | 24 | — | 50 | LOW | 96.200 |
 | hsa-miR-9-5p | 23 | 34.8 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 98.800 |
-| hsa-miR-181a-5p | 23 | 47.8 | OK | 60.0 | 50.0 | 20 | — | 50 | LOW | 97.300 |
+| hsa-miR-181a-5p | 23 | 47.8 | OK | 60.0 | 47.8 | 23 | — | 50 | LOW | 97.000 |
 | hsa-miR-181b-5p | 22 | 50.0 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 98.800 |
 | hsa-miR-221-3p | 23 | 47.8 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 97.100 |
 | hsa-miR-222-3p | 21 | 52.4 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 97.700 |
-| hsa-miR-17-5p | 23 | 47.8 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 93.200 |
+| hsa-miR-17-5p | 23 | 47.8 | OK | 60.0 | 47.8 | 23 | — | 50 | LOW | 92.800 |
 | hsa-miR-18a-5p | 23 | 43.5 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 97.900 |
 | hsa-miR-19a-3p | 23 | 39.1 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 92.800 |
 | hsa-miR-20a-5p | 23 | 39.1 | OK | 60.0 | 45.8 | 24 | — | 50 | LOW | 93.400 |
 | hsa-miR-92a-3p | 22 | 54.5 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 96.200 |
 | hsa-miR-93-5p | 23 | 52.2 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 98.700 |
-| hsa-miR-106b-5p | 21 | 42.9 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 96.800 |
+| hsa-miR-106b-5p | 21 | 42.9 | OK | 60.0 | 47.8 | 23 | — | 50 | LOW | 96.100 |
 | hsa-miR-23a-3p | 21 | 47.6 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 96.100 |
 | hsa-miR-23b-3p | 21 | 47.6 | OK | 60.0 | 50.0 | 22 | — | 50 | LOW | 96.100 |
 | hsa-miR-24-3p | 22 | 54.5 | OK | 60.0 | 52.4 | 21 | — | 50 | LOW | 96.700 |
