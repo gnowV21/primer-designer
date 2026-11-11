@@ -24,19 +24,12 @@ import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_saf
 
 # ViennaRNA — optional, fallback to primer3 MFE estimate when unavailable.
 # The RT primer is DNA, so it is folded with the DNA energy set (Mathews 2004).
-# The parameter object is built once and substituted per fold_compound, so the
-# global RNA parameters used elsewhere (template_structure) are never changed.
-_MFE_TEMP_C = 37.0
-try:
-    import RNA as _RNA
-    _RNA.params_load_DNA_Mathews2004()
-    _DNA_MD = _RNA.md()
-    _DNA_MD.temperature = _MFE_TEMP_C
-    _DNA_PARAMS = _RNA.param(_DNA_MD)
-    _RNA.params_load_RNA_Turner2004()          # restore the library default
-    _VIENNARNA = True
-except Exception:
-    _VIENNARNA = False
+# vienna_dna builds the parameter object once and substitutes it per
+# fold_compound, so the global RNA parameters used elsewhere
+# (template_structure) are never changed.
+from . import vienna_dna as _vienna
+_MFE_TEMP_C = _vienna.DNA_TEMP_C
+_VIENNARNA = _vienna.AVAILABLE
 
 MFE_METHOD_VIENNA = "ViennaRNA (DNA, Mathews 2004, 37 °C)"
 MFE_METHOD_RNAFOLD = "RNAfold (DNA, Mathews 2004, 37 °C)"
@@ -289,9 +282,7 @@ def _compute_mfe(primer_seq: str, params: dict) -> tuple:
     # ── 1. ViennaRNA Python bindings (DNA parameters) ────────────────────────
     if _VIENNARNA:
         try:
-            fc = _RNA.fold_compound(seq, _DNA_MD)
-            fc.params_subst(_DNA_PARAMS)
-            structure, mfe = fc.mfe()
+            structure, mfe = _vienna.fold_compound(seq).mfe()
             return round(float(mfe), 2), structure, MFE_METHOD_VIENNA
         except Exception:
             pass

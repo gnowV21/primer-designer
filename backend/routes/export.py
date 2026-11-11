@@ -574,6 +574,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
                                      + (f" — {_selection_note(s)}" if _selection_note(s) else "")),
         ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
         ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg_overall")),
+        ("Dimer ΔG (RNAcofold, 37 °C)", lambda s: _cofold_dimer_dg(s)),
         ("Cycle-1 occupancy % (Ta)", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding_pct'))}"),
     ]
     cmp_data = [cmp_header] + [
@@ -1025,3 +1026,12 @@ def _dg(s: dict, *keys) -> str:
     if isinstance(obj, (int, float)):
         return f"{obj:.2f}"
     return ""
+
+
+def _cofold_dimer_dg(s: dict) -> str:
+    """Worst RNAcofold (DNA, 37 °C) dimer ΔG — the hard-filter rule 1 value [Kang17]."""
+    sc = s.get("structure_checks", {}) or {}
+    vals = [(sc.get(k) or {}).get("dg_cofold") for k in ("self_dimer", "hetero_dimer")]
+    if any(v is None for v in vals):
+        return ""
+    return f"{min(vals):.2f}"

@@ -30,6 +30,20 @@
 
 ---
 
+### 2026-11-11 — Algorithm 3.6.0: ΔG dimer toàn cấu trúc tính bằng RNAcofold (DNA), như Kang 2017
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-19 | `algorithm/vienna_dna.py` (mới), `structure_check/__init__.py`, `hard_filters.py`, `scoring.py` | Correctness | Lọc cứng quy tắc 1 và phần toàn cấu trúc của `dimer_penalty` so ΔG RNAcofold (tham số DNA Mathews 2004, 37 °C, Na⁺ 1,021 M) với −9 kcal/mol, thay cho primer3 thal ở Ta. Trường mới `dg_cofold`, `dg_cofold_structure`; `full_dimer_dg()` quay về primer3 khi thiếu ViennaRNA (§12 "Lọc cứng") |
+| — | `stemloop_rt.py` | Refactor | Dùng chung bộ tham số DNA của `vienna_dna`; MFE stem-loop không đổi |
+| REV-17/18 | `hard_filters.py`, `constants.py`, `scoring.py` | Đính chính nguồn | Bỏ câu trích sai Busk 2014 và câu "qPCR inhibition" gán cho Kang 2017 |
+| — | `ThermoTable.jsx`, `routes/export.py` | UI/Export | Thêm dòng "Dimer ΔG (RNAcofold, 37 °C)" |
+| — | `scripts/dimer_dg_method_compare.py` | Benchmark | So hai thang ΔG trên 2253 mồi hsa của 3.5.0 |
+
+Tác động trên validation (201 target, 2439/2439 vẫn đạt): 32/193 target đổi điểm. 10 target không còn ứng viên nào qua quy tắc 1 nên dùng `hard_filter_fallback` (mồi giữ nguyên, điểm −8,4). Ví dụ cel-miR-39-3p: dimer nằm trong vùng đặc hiệu CACCGGGTG, đổi đuôi không gỡ được. Khoảng 23 target đổi mồi xuôi. Các phép so khớp với mồi công bố không đổi.
+
+Benchmark 50 miRNA (`benchmark/compare_tools.md`, tạo lại; bản cũ có từ 2026-07-04): 50/50 OK. So với 3.5.0 trong validation, chỉ cel-miR-39-3p đổi (95,7 → 87,3, `hard_filter_fallback`). `benchmark_results.json` được dựng lại khối validation bằng `validation/build_benchmark_validation.py --in-place`.
+
 ### 2026-11-10 — BLAST classifier v7 + ma trận phản ứng chéo (algorithm 3.5.0 không đổi)
 
 | Mã | File | Loại | Mô tả |
@@ -941,6 +955,61 @@ condition: complement(seq1[-i]) == seq2[-i] cho i = 1..k
 
 ## §12 Module 6: Scoring Engine (scoring.py) [Phase 2 → Phase 3]
 
+### Lọc cứng trước khi chấm điểm (`hard_filters.py`, `HARD_FILTER_ENABLED = True`)
+
+**Lý do (lập luận của tool, không phải trích dẫn).** Khi cộng điểm có trọng số, một cấu trúc thứ cấp nghiêm trọng có thể bị các tiêu chí khác bù lại. Vì vậy tool loại hẳn những trường hợp nặng nhất thay vì chỉ trừ điểm.
+
+**So sánh với Busk 2014 (PMC3922658).** Busk **nhân** các điểm thành phần: *"all the scores for each parameter are multiplied"*, và điểm của cặp = forward × reverse × hai hạng anneal × primer dimer. Busk chỉ **phạt** cấu trúc, không loại:
+- tự bắt cặp hoặc dimer ở đầu 3′ dài 5 nt nhân 0,1, dài 4 nt nhân 0,2;
+- bên trong dài 8 / 7 / 6 nt nhân 0,1 / 0,3 / 0,8 (Table 1).
+
+Mồi có điểm 0,2 *"will not be designed in practice if alternatives with more optimal 3′-ends are available"*, tức là chỉ bị xếp hạng thấp. Loại cứng duy nhất trong bài là không ghép cặp mồi xuôi và mồi ngược chồng nhau từ 2 nt trở lên ở đầu 3′. Bài không có từ "hairpin" và không có câu nào nói một lỗi làm hỏng cả assay. Như vậy Busk chỉ ủng hộ một phần: cách nhân điểm khiến một thừa số nhỏ kéo điểm tổng xuống mạnh, còn cộng có trọng số thì không.
+
+**Quy tắc** (đúng giá trị trong code, chỉ áp dụng cho ứng viên mồi xuôi F; URP = mồi ngược phổ quát):
+
+| Quy tắc | Áp dụng cho | Ngưỡng loại | Nguồn |
+|---|---|---|---|
+| Dimer bền nhất, ở bất kỳ vị trí nào | F tự bắt cặp; F × URP | ΔG < −9,0 kcal/mol (`DIMER_FULL_DG_CRITICAL`), tính bằng **RNAcofold, tham số DNA, 37 °C** (`structure_check.full_dimer_dg`, từ 3.6.0) | Kang 2017 (miPrimer, RNA 24:304): cùng ngưỡng, cùng phạm vi, cùng cách tính ΔG — xem ghi chú dưới bảng |
+| Dimer đầu 3′ | 8 nt cuối của F tự bắt cặp; 8 nt cuối F × 8 nt cuối URP | ΔG ≤ −5,0 kcal/mol (`END_DIMER_DG_CRITICAL`) | Premier Biosoft (trang hướng dẫn, không phải bài báo). Đây là phép xấp xỉ: không kiểm tra base cuối 3′ có thật sự bắt cặp |
+| Hairpin | chỉ F | ΔG ≤ −6,0 kcal/mol (mức "critical" của `_hairpin_severity`) | mốc riêng của tool, không có nguồn công bố |
+
+**Ghi chú về Kang 2017** (đối chiếu đoạn Methods ngày 2026-11-11). Ở bước xác nhận, miPrimer xét self-dimer của mồi xuôi và hetero-dimer giữa mồi xuôi với mồi ngược phổ quát bằng ΔG (theo Shen et al. 2010). Nếu ΔG lớn hơn *"−9.0 ± 1 kcal/mol"* thì giữ nguyên. Nếu nhỏ hơn thì đổi đuôi 5′ sang biến thể IUPAC khác hoặc bỏ các nucleotide tạo dimer, rồi lặp lại đến khi đạt. Phạm vi này trùng với quy tắc 1. Có ba khác biệt:
+- Kang **sửa** mồi, còn tool **loại** ứng viên và chọn ứng viên khác.
+- Kang ghi ngưỡng kèm dung sai ± 1 kcal/mol, còn tool dùng mốc cứng −9,0.
+- Kang tính ΔG bằng RNAcofold với tham số DNA (Gruber et al. 2008), và kiểm lại thủ công bằng OligoAnalyzer 3.1 các mồi ở sát ngưỡng (ví dụ hsa-miR-18b-5p-F, −8,95 kcal/mol). Từ 3.6.0, tool cũng tính bằng RNAcofold (`vienna_dna.cofold_dg`), nhưng **không** có bước kiểm lại bằng OligoAnalyzer (công cụ web, không có API cục bộ).
+
+**Vì sao đổi: độ lệch giữa hai thang, đo trên thiết kế của 3.5.0** (`backend/scripts/dimer_dg_method_compare.py` → `benchmark/dimer_dg_method_compare.json`). Chỉ số so sánh là ΔG nhỏ nhất giữa F tự bắt cặp và F × URP, đo trên 2253 mồi xuôi (bộ #1 của mọi miRNA hsa):
+
+| Cách tính | Trung vị | Số mồi < −9 |
+|---|---|---|
+| primer3 thal, 60 °C (tool đến 3.5.0) | −1,84 | 0 (đã qua lọc cứng) |
+| primer3 thal, 37 °C | −5,10 | 93 |
+| RNAcofold, tham số DNA Mathews 2004, 37 °C, Na⁺ 1,021 M | −7,50 | 534 (23,7 %) |
+
+RNAcofold âm hơn primer3 ở 60 °C trung vị 5,44 kcal/mol (P10–P90: −8,24 đến −3,78). Đoạn Methods không nêu nhiệt độ và nồng độ muối, nên dòng RNAcofold dùng giá trị mặc định của ViennaRNA. Đó là giả định, không phải điều kiện của Kang.
+
+Khi dùng primer3 ở 60 °C, mốc −9 là con số của Kang đặt lên một thang ΔG khác, và lỏng hơn nhiều so với tiêu chí của miPrimer. Vì vậy từ 3.6.0, quy tắc 1 tính bằng RNAcofold (AUDIT REV-19).
+
+**Cách tính RNAcofold trong tool** (`algorithm/vienna_dna.py`):
+- Bộ tham số DNA Mathews 2004 được dựng một lần và gắn vào từng `fold_compound` bằng `params_subst`. Tham số RNA dùng chung (cho `template_structure.py`) không bị đổi.
+- Nhiệt độ và muối cố định ở mặc định RNAcofold (37 °C, Na⁺ 1,021 M), không theo điều kiện phản ứng người dùng nhập, vì mốc −9 được đặt trên thang này.
+- Nếu cấu trúc MFE không có cặp base nào **giữa** hai mạch, ΔG dimer = 0. Trường hợp này chưa gặp trên 4506 cặp mồi hsa.
+- Không có ViennaRNA thì quay về primer3 `dg_overall` ở Ta, và phần giải thích điểm ghi rõ là cách tính lỏng hơn.
+- Kết quả trả về: `structure_checks.self_dimer.dg_cofold`, `hetero_dimer.dg_cofold` (kèm `dg_cofold_structure`). `dg_overall` (primer3 ở Ta) vẫn được giữ cho cảnh báo −6 kcal/mol và để hiển thị.
+
+Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câu này trước đây có trong chú thích code và phần giải thích điểm, nay đã bỏ.
+
+**Điều kiện tính (quy tắc 2–3):** primer3 thal (tham số nearest-neighbor SantaLucia 2004) ở nhiệt độ gắn mồi Ta (mặc định 60 °C); Na⁺ tương đương 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM, trừ khi người dùng đổi.
+
+**Không áp dụng:**
+- **Mồi RT stem-loop:** cố ý là một hairpin; cấu trúc của nó được chấm qua `mfe_stemloop`.
+- **URP:** cố định, được kiểm tra tự bắt cặp một lần mỗi bản thiết kế và chỉ cảnh báo.
+- **Cặp F × mồi RT:** tính ở `heterodimer.py` nhưng không nằm trong lọc cứng.
+
+**Dự phòng:** nếu mọi ứng viên đều bị loại, tool trả về các ứng viên tốt nhất kèm cảnh báo `hard_filter_fallback`.
+
+**Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Ngưỡng ΔG của tool vì vậy không tương đương trực tiếp với Primer3.
+
 ### SCORING_WEIGHTS_V4 (Phase 3 v4.1) — 15 tiêu chí, ACTIVE
 
 | # | Tiêu chí | Weight | Nguồn | Notes |
@@ -1366,8 +1435,8 @@ CRITICAL → HIGH → MEDIUM → SAFE (worst-case wins)
     "tm_full": 60.1, "tm_binding": 34.8, "amplicon_size": 68,
     "structure_checks": {
       "hairpin": {"dg": -1.2, "severity": "safe", "pass": true},
-      "self_dimer": {"dg_overall": -3.1, "dg_3prime": -2.0, "pass_overall": true, "critical_3prime": false},
-      "hetero_dimer": {"dg_overall": -4.2, "dg_3prime": -1.8, "pass_overall": true, "critical_3prime": false},
+      "self_dimer": {"dg_overall": -3.1, "dg_3prime": -2.0, "dg_cofold": -5.4, "dg_cofold_structure": "…", "pass_overall": true, "critical_3prime": false},
+      "hetero_dimer": {"dg_overall": -4.2, "dg_3prime": -1.8, "dg_cofold": -6.1, "dg_cofold_structure": "…", "pass_overall": true, "critical_3prime": false},
       "end_stability": {"last_5_bases": "TGATG", "stability_kcal_mol": 4.2, "pass": true},
       "overall_pass": true
     },

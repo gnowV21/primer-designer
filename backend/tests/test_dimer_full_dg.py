@@ -1,7 +1,8 @@
 # ================================================================
 # tests/test_dimer_full_dg.py — Unit tests for full-structure dimer
 # threshold in scoring.py (PROMPT 2).
-# Kang 2017 (DOI 10.1261/rna.061150.117): ΔG_total < -9 → critical.
+# Kang 2017 (DOI 10.1261/rna.061150.117): dimer limit −9.0 ± 1 kcal/mol; this
+# tool treats ΔG_total < -9 as critical.
 # ================================================================
 
 import sys, os
@@ -14,6 +15,8 @@ from algorithm.constants import DIMER_FULL_DG_CRITICAL
 def _build_forward(seq: str, sd_full: float, hd_full: float,
                    sd_3prime: float = -2.0, hd_3prime: float = -2.0,
                    has_critical_flag: bool = False) -> dict:
+    # No dg_cofold key → full_dimer_dg() uses the primer3 dg_overall fallback
+    # (ViennaRNA unavailable). The RNAcofold path is in test_dimer_cofold.py.
     return {
         "sequence": seq,
         "tm_full": 60.0, "tm_binding": 45.0, "gc_percent": 50.0,

@@ -48,7 +48,13 @@
 #   miRBase entries) — categories renamed same_sequence / shifted_5p / shifted_3p.
 #   (c) New qualitative fold-change-bias warning when a large 3'-isoform pool also
 #   varies widely between samples [Nejad18]. No scoring change.
-ALGORITHM_VERSION = "3.5.0"
+#   3.6.0 (2026-11-11) — the full-structure dimer ΔG behind hard-filter rule 1 and
+#   the dimer_penalty full-structure check is computed by RNAcofold with DNA
+#   parameters (37 °C, ViennaRNA defaults), Kang 2017's own method, instead of
+#   primer3 thal at Ta. primer3 was ~5.4 kcal/mol less negative, so the −9 limit
+#   was much looser than Kang's (AUDIT REV-19). Primers that now fail are
+#   replaced by the next-ranked candidate.
+ALGORITHM_VERSION = "3.6.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -221,7 +227,17 @@ END_STABILITY_MAX = 9.0            # kcal/mol [P3P PRIMER_MAX_END_STABILITY]
 
 # Full-structure (global) dimer ΔG threshold (Kang 2017 DOI 10.1261/rna.061150.117)
 # Distinct from END_DIMER_DG_CRITICAL (3'-end only).
-# Kang: ΔG_total > -9 kcal/mol → OK for qPCR; < -9 → significant qPCR inhibition.
+# Kang 2017 (Methods, checked 2026-11-11): the self-dimer and the forward ×
+# universal-reverse hetero-dimer are judged by ΔG (after Shen et al. 2010); above
+# "−9.0 ± 1 kcal/mol" no change is needed, below it the 5' tail is swapped for
+# another IUPAC alternative or the dimer-forming bases are removed, iterated until
+# it passes. Kang redesigns the primer — it does not state a qPCR-inhibition
+# outcome. Kang computes ΔG with RNAcofold, DNA parameters (Gruber 2008), and
+# confirms borderline cases in OligoAnalyzer 3.1. Since 3.6.0 this tool does the
+# same (algorithm/vienna_dna.cofold_dg, 37 °C, 1.021 M Na⁺; no OligoAnalyzer
+# step). Before, it used primer3 thal at Ta (60 °C): on the 2253 hsa forward
+# primers of 3.5.0 that let through 534 that RNAcofold puts below −9 (median
+# shift −5.4 kcal/mol; benchmark/dimer_dg_method_compare.json; AUDIT REV-19).
 DIMER_FULL_DG_CRITICAL = -9.0     # kcal/mol — full-structure self/hetero-dimer [Kang17]
 
 

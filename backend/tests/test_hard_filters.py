@@ -14,6 +14,8 @@ from algorithm.constants import DIMER_FULL_DG_CRITICAL
 
 def _candidate(sd_full=0.0, hd_full=0.0, has_critical_flag=False, hairpin_severity="safe"):
     """Build a minimal candidate dict with the required structure_checks keys."""
+    # No dg_cofold key → full_dimer_dg() uses the primer3 dg_overall fallback
+    # (ViennaRNA unavailable). The RNAcofold path is in test_dimer_cofold.py.
     return {
         "sequence": "ATCGATCGATCGATCGATCGACG",
         "structure_checks": {
