@@ -2,6 +2,13 @@
 # HG Lab Stem-loop RT-qPCR Primer Designer · v1.0 — 2026-07-02
 # Nguồn: khai thác full-text PubMed Central (miRprimer/Busk 2014, miPrimer/Kang 2017, + Chen05, Wang17, Fan19, Andreasen10, MIQE09)
 
+> **Đính chính 2026-11-11** (đối chiếu toàn văn Busk 2014 PMC3922658 và đoạn Methods của Kang 2017; chi tiết: AUDIT_REPORT REV-17…19, SPEC_algorithm §12 "Lọc cứng"). Tài liệu này được giữ làm lưu trữ, các chỗ sai được đánh dấu **[ĐC]** ngay tại chỗ.
+> 1. Ngưỡng dimer −9 kcal/mol chỉ có trong **Kang 2017**. Busk 2014 không dùng ngưỡng ΔG; bài phạt dimer theo số nt bắt cặp (Table 1). Vì vậy không có chuyện "hai nhóm độc lập đồng thuận".
+> 2. Kang **không** nói dimer < −9 "gây hỏng qPCR". Khi vượt ngưỡng, Kang sửa mồi (đổi đuôi 5′ IUPAC hoặc bỏ base tạo dimer) và lặp lại.
+> 3. Kang tính ΔG bằng RNAcofold, tham số DNA (Gruber 2008), và kiểm lại ca sát ngưỡng bằng OligoAnalyzer 3.1. Tool tính bằng primer3 thal ở 60 °C, **không** dùng công cụ của Kang. Trên 2253 mồi hsa, RNAcofold cho 534 mồi dưới −9, còn tool cho 0 (`benchmark/dimer_dg_method_compare.json`).
+> 4. Cách nhân điểm của Busk chỉ **phạt** cấu trúc chứ không loại. Loại cứng duy nhất trong Busk là cặp F/R chồng ≥ 2 nt ở đầu 3′ (I8). Busk không phải bằng chứng trực tiếp cho tầng lọc cứng.
+> 5. Việc ghi [Kang17] cho luật "phạt CCC / G-run ở 3′" (I3) **chưa được đối chiếu** với toàn văn Kang.
+
 > Mục đích: rút insight định lượng từ các công cụ/protocol đã được kiểm nghiệm thực nghiệm, **ánh xạ vào 15 tiêu chí scoring hiện có** (SCORING_WEIGHTS_V4) và các hằng số, để tăng độ chính xác. Mỗi insight ghi rõ nguồn + DOI + mức độ áp dụng cho phương pháp Chen stem-loop mà tool đang dùng.
 >
 > *Lưu ý phương pháp:* tool của ta dùng **Chen-2005 stem-loop** (universal body cố định + overhang 6 nt + universal reverse `CCAGTGCAGGGTCCGAGGTA`). miRprimer/miPrimer dùng hệ universal khác (poly-T tag / tail riêng), nên **trình tự primer của họ KHÔNG so trực tiếp** với tool; nhưng **nguyên lý thiết kế (Tm, 3′-end, dimer, tail, scoring) là method-agnostic** và chuyển được. Chỗ nào method-specific sẽ ghi rõ.
@@ -12,11 +19,11 @@
 
 | # | Insight (có bằng chứng) | Nguồn | Tiêu chí tool liên quan | Hành động đề xuất |
 |---|---|---|---|---|
-| I1 | **Ngưỡng dimer ΔG = −9.0 ± 1 kcal/mol**: self-/hetero-dimer ΔG > −9 ⇒ OK; < −9 ⇒ gây hỏng qPCR. Tính bằng RNAcofold (DNA params). | [Kang17] | `dimer_penalty` | Đặt/hiệu chỉnh **biên critical = −9 kcal/mol** trong constants; ta đã có ViennaRNA → dùng đúng công cụ họ dùng. Là ngưỡng hội tụ từ thực nghiệm, đáng tin. |
+| I1 | **Ngưỡng dimer ΔG = −9.0 ± 1 kcal/mol**: self-/hetero-dimer ΔG > −9 ⇒ OK; < −9 ⇒ gây hỏng qPCR. Tính bằng RNAcofold (DNA params). **[ĐC] Kang không nói "gây hỏng qPCR": dưới ngưỡng thì sửa mồi. Tool tính bằng primer3 thal ở 60 °C, không phải RNAcofold (REV-19).** | [Kang17] | `dimer_penalty` | Đặt/hiệu chỉnh **biên critical = −9 kcal/mol** trong constants; ta đã có ViennaRNA → dùng đúng công cụ họ dùng. Là ngưỡng hội tụ từ thực nghiệm, đáng tin. **[ĐC] Chưa làm: tool không dùng RNAcofold. Ngưỡng chỉ có một nguồn.** |
 | I2 | **Tm forward đích = 59 °C** (nearest-neighbor, NaCl 115 mM); < 57 °C thì kéo dài 5′-tail tới khi đạt 59 °C; > 59 °C thì cắt bớt. | [Busk14],[Kang17] | `tm_accuracy` | Kiểm lại target Tm (tool ~60 °C) và **salt setting**; cân nhắc chuẩn 59 °C. Xác nhận NaCl/Mg²⁺ trong mô hình Tm (Phase5 PART C). |
 | I3 | **3′-end thành phần GC — trade-off hai nguồn:** (a) [IDT] khuyến nghị G/C ở 3′ để anchor polymerase & tăng hiệu suất khuếch đại chung (PCR thường, amplicon dài). (b) [Busk14] ưu tiên **1–2 A/T ở 3′** (= 1–2 G/C) để tăng đặc hiệu phân biệt mismatch 1 nt trong ngữ cảnh miRNA; 3 G/C = kém (quá chặt); **3 C liên tiếp** = phạt nặng. Hai luật tối ưu hai mục tiêu khác nhau: IDT→hiệu suất/anchor, Busk→đặc hiệu miRNA. Tool ưu tiên đặc hiệu → nghiêng Busk, nhưng là trade-off có ý thức. *Phân tầng mức tin:* "Phạt CCC / G-run ở 3′" = **đa-nguồn** [Busk14]+[Kang17]+anti-homopolymer chung → **chốt được**. "Nâng 1 G/C = tối ưu ngang 2 G/C" = **đơn-nguồn** [Busk14], heuristic, Busk tự thừa nhận sampling bias → **tạm thời, chờ calibration** (chi tiết xem mục D). | [Busk14]+[IDT] | `gc_clamp` | Đã sửa theo PROMPT 1: (a) phần multi-source (phạt CCC, run G-C ở 3′) **đã chốt** trong scoring. (b) phần đơn-nguồn (1 G/C = optimal ngang 2 G/C) đặt sau constant `GC_CLAMP_1GC_AS_OPTIMAL` mặc định **False** (hành vi thận trọng: 2 G/C > 1 G/C) — chỉ bật khi calibration xác nhận cải thiện. Explanation cite kép [Busk14]+[IDT]. |
 | I4 | **Kéo dài 5′-tail để đạt Tm**: thêm nucleotide theo thứ tự **G, A, C, G, C**, tối đa G/C nhưng **tránh poly(C)/poly(G)** (homopolymer). | [Busk14] | edge E4/E6, `gc_skew` | Cụ thể hoá luật tail adaptive (SPEC_phase5 PART D §12.4): dùng chuỗi tail G,A,C,G,C tránh run. Có bằng chứng. |
-| I5 | **Chấm điểm dạng NHÂN (multiplicative)**: pair_score = Fscore × Rscore × Fanneal × Ranneal × dimer. Một yếu tố kém → kéo tụt cả cặp (giống soft-AND / hard-filter). | [Busk14] | toàn scoring engine | Hậu thuẫn mạnh cho **hard-filter gates** (SPEC_phase4 §12.1): weighted-SUM hiện có thể bù trừ lỗi chí mạng. Cân nhắc nhân/loại thẳng ứng viên vi phạm ngưỡng cứng (I1) trước khi xếp hạng. |
+| I5 | **Chấm điểm dạng NHÂN (multiplicative)**: pair_score = Fscore × Rscore × Fanneal × Ranneal × dimer. Một yếu tố kém → kéo tụt cả cặp (giống soft-AND / hard-filter). | [Busk14] | toàn scoring engine | Hậu thuẫn mạnh cho **hard-filter gates** (SPEC_phase4 §12.1): weighted-SUM hiện có thể bù trừ lỗi chí mạng. Cân nhắc nhân/loại thẳng ứng viên vi phạm ngưỡng cứng (I1) trước khi xếp hạng. **[ĐC] Busk chỉ phạt (×0,1–0,2), không loại; đây chỉ là hậu thuẫn một phần. Lý do lọc cứng là lập luận riêng của tool.** |
 | I6 | **Length score forward = (độ dài phần specific)² / 400**; reverse **không** phạt độ dài (không thấy tương quan với hiệu năng). | [Busk14] | `primer_size` | Đối chiếu công thức `primer_size` với dạng bậc hai này. Reverse của ta là universal cố định → phù hợp việc "không phạt reverse". |
 | I7 | **Đặc hiệu 3′-end**: mismatch càng gần 3′ càng phân biệt tốt; off-target đồng loại chỉ 0.1–1% target đúng. | [Busk14] | `family_discrimination`, isoMiR, Kwok (Phase3) | Củng cố việc **ưu tiên mismatch gần 3′** (Phase3 §8.6 Kwok đã làm). Xác nhận trọng số family_discrimination hợp lý. |
 | I8 | **Loại cặp F/R chồng ≥ 2 nt ở 3′-end** (tránh primer-dimer 3′). | [Busk14] | heterodimer 3′ | Bổ sung/loại ứng viên có 3′-overlap ≥2 nt (một dạng hard-filter). |
@@ -62,7 +69,7 @@ Busk 2014 (Methods, tr. 4) thừa nhận: "We cannot exclude that some primers w
 
 ### D.3 Đơn lab / đơn tác giả — chưa replicate độc lập
 
-Toàn bộ rule-set Busk14 xuất phát từ 164 cặp primer của **một nhóm** (Busk PK, DTU Denmark). Không có bài độc lập replicate xác nhận rằng quy tắc "1–2 A/T ở 3′ cho đặc hiệu miRNA" tốt hơn IDT clamp cho stem-loop RT-qPCR cụ thể. So sánh: ngưỡng dimer −9 kcal/mol (I1) được **cả [Busk14] lẫn [Kang17]** (hai nhóm độc lập, hai hệ primer khác nhau) đồng thuận → mức tin cao hơn nhiều. I3b chưa có đối trọng đó.
+Toàn bộ rule-set Busk14 xuất phát từ 164 cặp primer của **một nhóm** (Busk PK, DTU Denmark). Không có bài độc lập replicate xác nhận rằng quy tắc "1–2 A/T ở 3′ cho đặc hiệu miRNA" tốt hơn IDT clamp cho stem-loop RT-qPCR cụ thể. ~~So sánh: ngưỡng dimer −9 kcal/mol (I1) được **cả [Busk14] lẫn [Kang17]** (hai nhóm độc lập, hai hệ primer khác nhau) đồng thuận → mức tin cao hơn nhiều.~~ **[ĐC] Sai: Busk 2014 không có ngưỡng ΔG. −9 kcal/mol là đơn nguồn [Kang17], và tool đặt nó trên thang ΔG khác (REV-19).** I3b chưa có đối trọng đó.
 
 ### D.4 IDT cũng không trung lập
 
@@ -72,7 +79,7 @@ IDT (Integrated DNA Technologies) là nhà cung cấp thương mại. Hướng d
 
 | Mức hội tụ | Ví dụ | Hành động |
 |---|---|---|
-| **Đa nguồn độc lập** (≥2 bài, lab khác nhau) | I1: dimer −9 kcal/mol [Busk14]+[Kang17] | **Chốt** — constant cứng |
+| **Đa nguồn độc lập** (≥2 bài, lab khác nhau) | ~~I1: dimer −9 kcal/mol [Busk14]+[Kang17]~~ **[ĐC] I1 là đơn nguồn [Kang17], không phải ví dụ của mức này** | **Chốt** — constant cứng |
 | **Đơn nguồn, cơ sở lý thuyết rõ** | I9: template hairpin [Fan19], cơ học phân tử rõ ràng | **Chốt** — nhưng chỉ cảnh báo, không phạt scoring cho đến khi calibration |
 | **Đơn nguồn, heuristic / bias đã biết** | I3b: 1 G/C = optimal [Busk14 đơn lab, sampling bias] | **Tạm thời**: constant bật/tắt, mặc định **False** (thận trọng), chờ calibration |
 | **Tương quan từ calibrate_weights.py** | bất kỳ tiêu chí nào | Association không phải causation — không quy công riêng một tiêu chí khi các tiêu chí đồng biến qua Tm/GC/dimer |

@@ -31,6 +31,7 @@ Nhưng [Busk14] (miRNA-specific, DOI 10.1186/1471-2105-15-29) đề xuất khác
 
 ═══════════════════════════════════════════════════════════════════════
 PHẦN (a) — ĐÃ CHỐT (đa-nguồn: [Busk14]+[Kang17]+anti-homopolymer)
+[ĐC 2026-11-11] Phần [Kang17] cho luật CCC/G-run chưa được đối chiếu với toàn văn Kang.
 ═══════════════════════════════════════════════════════════════════════
 Hành vi chốt — implement cứng, không cần feature-flag:
    - 3 C liên tiếp ở 3' (last3 == "CCC"): score = GC_CLAMP_SCORE_TRIPLE_C = 25  [Busk14]
@@ -115,6 +116,8 @@ backend/algorithm/structure_check/ (self_dimer/hetero_dimer, các key dg / dg_3p
 
 Bằng chứng: miPrimer/Kang 2017 (DOI 10.1261/rna.061150.117): ΔG self-/hetero-dimer TOÀN CẤU TRÚC
 > -9.0 ± 1 kcal/mol = OK; < -9 = hỏng qPCR (tính bằng RNAcofold DNA params — ta có ViennaRNA).
+[ĐC 2026-11-11] Kang không nói "hỏng qPCR": dưới ngưỡng thì sửa mồi. Code đã triển khai bằng primer3 thal ở Ta,
+KHÔNG phải RNAcofold; hai thang lệch trung vị 5,4 kcal/mol — xem AUDIT_REPORT REV-19.
 Lưu ý: đây là ΔG TOÀN cấu trúc, KHÁC ngưỡng 3'-end (-5) hiện có — giữ cả hai, bổ sung không thay thế.
 
 Nhiệm vụ:
@@ -139,6 +142,8 @@ Bối cảnh: đọc RESEARCH_INSIGHTS.md (I5, I8, I1), routes/design.py (luồn
 prefilter/rejection_log → structure_checks → heterodimer_checks → score → rank top_n),
 scoring.py, constants.py.
 
+[ĐC 2026-11-11] Busk chỉ phạt (×0,1–0,2), không loại; loại cứng duy nhất là F/R chồng ≥2 nt ở 3′. Không phải
+bằng chứng cho tầng lọc cứng — xem AUDIT_REPORT REV-17.
 Bằng chứng: Busk 2014 chấm điểm dạng NHÂN (pair = F×R×anneal×dimer) — một yếu tố chí mạng kéo tụt cả
 cặp (soft-AND). Weighted-SUM hiện tại có thể bù trừ lỗi chí mạng. Bổ sung tầng hard-filter loại thẳng
 ứng viên vi phạm ngưỡng cứng TRƯỚC khi xếp hạng bằng weighted-sum (giữ nguyên weighted-sum để xếp hạng

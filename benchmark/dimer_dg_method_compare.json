@@ -1,0 +1,98 @@
+{
+  "source": "outputs\\crossreactivity_cache\\designs_hsa.jsonl",
+  "n_forward_primers": 2253,
+  "metric": "min(self-dimer ΔG, forward × universal-reverse ΔG), kcal/mol",
+  "methods": {
+    "p3_60": "primer3 thal, 60 °C, mv 50 mM, Mg 1.5 mM, dNTP 0.8 mM, 200 nM (the tool)",
+    "p3_37": "primer3 thal, same salts, 37 °C",
+    "cofold": "RNAcofold, DNA Mathews 2004, 37.0 °C, Na 1.021 M (ViennaRNA 2.7.2 defaults)"
+  },
+  "p3_60": {
+    "median": -1.84,
+    "min": -9.0,
+    "below_-8": 3,
+    "below_-9": 0,
+    "below_-10": 0
+  },
+  "p3_37": {
+    "median": -5.1,
+    "min": -15.79,
+    "below_-8": 187,
+    "below_-9": 93,
+    "below_-10": 53
+  },
+  "cofold": {
+    "median": -7.5,
+    "min": -19.6,
+    "below_-8": 900,
+    "below_-9": 534,
+    "below_-10": 302
+  },
+  "cofold_minus_p3_60": {
+    "median": -5.44,
+    "p10": -8.24,
+    "p90": -3.78
+  },
+  "most_negative_cofold": [
+    {
+      "mirna": "hsa-miR-4757-5p",
+      "forward": "GACAACAGAGGCCTCTGTGAC",
+      "p3_60": -9.0,
+      "cofold": -19.6
+    },
+    {
+      "mirna": "hsa-miR-548k",
+      "forward": "ACCGCAAAAGTACTTGCGGA",
+      "p3_60": -6.01,
+      "cofold": -17.8
+    },
+    {
+      "mirna": "hsa-miR-4430",
+      "forward": "TCCAATCCAGGCTGGAGTGA",
+      "p3_60": -7.6,
+      "cofold": -17.0
+    },
+    {
+      "mirna": "hsa-miR-10397-5p",
+      "forward": "CATCAAGGAGTCCTTGACCTGATG",
+      "p3_60": -6.47,
+      "cofold": -16.9
+    },
+    {
+      "mirna": "hsa-miR-195-3p",
+      "forward": "TCCTACGCCAATATTGGCTGTG",
+      "p3_60": -5.7,
+      "cofold": -16.8
+    },
+    {
+      "mirna": "hsa-miR-151b",
+      "forward": "GACTTCTCCTCGAGGAGCTCA",
+      "p3_60": -6.86,
+      "cofold": -16.6
+    },
+    {
+      "mirna": "hsa-miR-518f-5p",
+      "forward": "GATCACCCTCTAGAGGGAAGCA",
+      "p3_60": -8.56,
+      "cofold": -16.6
+    },
+    {
+      "mirna": "hsa-miR-30c-2-3p",
+      "forward": "CCTTCTCTCTGGGAGAAGGCT",
+      "p3_60": -5.0,
+      "cofold": -16.0
+    },
+    {
+      "mirna": "hsa-miR-1271-3p",
+      "forward": "CCAATAGCAGTGCCTGCTATGT",
+      "p3_60": -2.86,
+      "cofold": -15.8
+    },
+    {
+      "mirna": "hsa-miR-519e-5p",
+      "forward": "ATCGCGATTCTCCAAAAGGGAG",
+      "p3_60": -3.64,
+      "cofold": -15.2
+    }
+  ]
+}
