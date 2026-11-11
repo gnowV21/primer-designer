@@ -1,6 +1,6 @@
 # Đính chính và cập nhật nội dung slide backend — 2026-11-11
 
-> **Dành cho Claude (phiên sửa slide).** Tài liệu này là nguồn chuẩn để sửa bộ slide backend của khóa luận "Stem-loop RT-qPCR primer designer". Mọi con số được đọc từ code **algorithm 3.7.0** (nhánh `fix/hairpin-tm-rule`, PR #7; bản trước đó trên `master` là 3.6.0, commit `626c362`) hoặc từ file kết quả có ghi đường dẫn. Mọi trích dẫn có PMID đã được đối chiếu với bản ghi PubMed qua NCBI E-utilities ngày 2026-11-11.
+> **Dành cho Claude (phiên sửa slide).** Tài liệu này là nguồn chuẩn để sửa bộ slide backend của khóa luận "Stem-loop RT-qPCR primer designer". Mọi con số được đọc từ code **algorithm 3.7.0** tại commit `9206669` (nhánh `master`, merge PR #7) hoặc từ file kết quả có ghi đường dẫn. Mọi trích dẫn có PMID đã được đối chiếu với bản ghi PubMed qua NCBI E-utilities ngày 2026-11-11.
 >
 > **Quy tắc khi sửa slide:**
 > 1. Không thêm con số, ngưỡng hay trích dẫn không có trong tài liệu này.
@@ -18,7 +18,7 @@
 | #4 (`715d854`) | **BLAST classifier v7**: thêm bước RT cho hit của mồi xuôi; tính các mục miRBase trùng/lệch đầu vào `overall_risk`. **Ma trận phản ứng chéo cấp assay** cho toàn bộ miRNA người. | Có thể thêm slide mới (mục 4.3, 4.4) |
 | #5 (`61e44f4`) | **Algorithm 3.6.0**: ΔG dimer toàn cấu trúc (quy tắc lọc cứng 1) tính bằng **RNAcofold, tham số DNA**, đúng phương pháp của Kang et al. Đính chính trích dẫn Busk 2014 và Kang. | Sửa slide 1.4, 2.1, 2.2, 3.2, 3.4 |
 | #6 (`626c362`) | Dựng lại ma trận phản ứng chéo bằng 3.6.0; sửa lỗi bộ đệm không theo phiên bản thuật toán. | Số liệu ma trận (mục 4.4) |
-| #7 (nhánh `fix/hairpin-tm-rule`) | **Algorithm 3.7.0**: lọc cứng hairpin theo **Tm hairpin ≥ 47 °C** (mặc định Primer3), thay cho ΔG ≤ −6 kcal/mol, vốn không bao giờ kích hoạt. Dựng lại ma trận bằng 3.7.0. | Sửa slide 2.1, 2.2 (mục 3.1, 3.2) |
+| #7 (`9206669`) | **Algorithm 3.7.0**: lọc cứng hairpin theo **Tm hairpin ≥ 47 °C** (mặc định Primer3), thay cho ΔG ≤ −6 kcal/mol, vốn không bao giờ kích hoạt. Dựng lại ma trận bằng 3.7.0. | Sửa slide 2.1, 2.2 (mục 3.1, 3.2) |
 
 ---
 
