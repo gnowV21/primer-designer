@@ -85,7 +85,7 @@ Kết quả ghi ở `validation/crossreactivity_validation_report.{md,json}`.
 
 **Tiêu chí chấp nhận (đề xuất, chưa chốt):** với nguồn độc lập, ρ ≥ 0,6 và AUC ≥ 0,8. Nguồn vòng tròn (Chen 2005) chỉ dùng làm kiểm tra cài đặt.
 
-**Kiểm tra hợp lý** (đã chạy, đạt): các cặp miRNA cùng độ dài chỉ khác 1–2 vị trí phải có R trung bình lớn hơn 10 lần cặp ngẫu nhiên. Kết quả (algorithm 3.6.0): 322 cặp có thứ tự, R trung bình 0,14 (trung vị 0,0083; 20,8 % trên 10 %; 3.5.0: 0,0089 và 21,1 %), so với 20.000 cặp ngẫu nhiên có R trung bình 0,000011 (0 % trên 10 %).
+**Kiểm tra hợp lý** (đã chạy, đạt): các cặp miRNA cùng độ dài chỉ khác 1–2 vị trí phải có R trung bình lớn hơn 10 lần cặp ngẫu nhiên. Kết quả (algorithm 3.7.0): 322 cặp có thứ tự, R trung bình 0,1445 (trung vị 0,0083; 22,7 % trên 10 %; 3.6.0: 0,1408 và 20,8 %; 3.5.0: 0,1414, trung vị 0,0089, 21,1 %), so với 20.000 cặp ngẫu nhiên có R trung bình 0,000011 (0 % trên 10 %).
 
 **Wet-lab đề xuất** (oligo RNA tổng hợp cùng nồng độ, đo cả SYBR và TaqMan):
 - let-7a ↔ let-7c (rG·dT, dự đoán R 3,7 % — điểm hiệu chỉnh);

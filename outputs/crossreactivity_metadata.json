@@ -1,7 +1,7 @@
 {
- "run_date": "2026-11-11T10:50:16",
- "tool_version": "3.6.0",
- "git_commit": "e81f1d14fd236d569e97b486be08ca99db37fc72",
+ "run_date": "2026-11-11T11:58:20",
+ "tool_version": "3.7.0",
+ "git_commit": "d26c64a4227bdf905c1f48a98163c3ded7f47744",
  "species": "hsa",
  "mirbase": {
   "mirbase_release": "22.1",
@@ -41,14 +41,14 @@
  "n_assays": 2253,
  "n_failed_designs": 403,
  "n_pairs": 5983968,
- "n_pairs_stored": 23274,
+ "n_pairs_stored": 23267,
  "pairs_by_level": {
-  "LOW": 20710,
-  "HIGH": 2461,
-  "MEDIUM": 103,
-  "NONE": 5960694
+  "LOW": 20700,
+  "HIGH": 2467,
+  "MEDIUM": 100,
+  "NONE": 5960701
  },
- "n_pairs_screened_out": 5401601,
+ "n_pairs_screened_out": 5402659,
  "diagonal_check": {
   "passed": true,
   "failing_assays": []
@@ -61,5 +61,5 @@
   "crossreactivity_failed_designs.csv",
   "crossreactivity_top30_offdiagonal.csv"
  ],
- "seconds": 0.7
+ "seconds": 65.1
 }

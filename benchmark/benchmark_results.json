@@ -791,9 +791,9 @@
         "rt_overhang_expected": "AACTAT",
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.0,
+        "forward_tm_c": 59.9,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "amplicon_bp": 65
       },
       {
         "id": "hsa-miR-16-5p",
@@ -855,8 +855,8 @@
         "rt_overhang_actual": "ACTCAC",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 69
       },
       {
         "id": "hsa-miR-181b-5p",
@@ -1025,7 +1025,7 @@
         "rt_overhang_expected": "GGGGAA",
         "rt_overhang_actual": "GGGGAA",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.0,
+        "forward_tm_c": 60.2,
         "forward_gc_pct": 60.0,
         "amplicon_bp": 66
       },
@@ -1430,9 +1430,9 @@
         "rt_overhang_expected": "AACTAT",
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.0,
+        "forward_tm_c": 59.9,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "amplicon_bp": 65
       },
       {
         "id": "hsa-let-7g-5p",
@@ -1602,7 +1602,7 @@
         "rt_overhang_actual": "GGTCCA",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 55.0,
+        "forward_gc_pct": 52.4,
         "amplicon_bp": 67
       },
       {
@@ -1745,9 +1745,9 @@
         "rt_overhang_expected": "AACTAT",
         "rt_overhang_actual": "AACTAT",
         "rt_overhang_match": true,
-        "forward_tm_c": 60.0,
+        "forward_tm_c": 59.9,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "amplicon_bp": 65
       },
       {
         "id": "ssc-miR15a (Busk 2014)",
@@ -1764,8 +1764,8 @@
         "rt_overhang_actual": "CTACCT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 50.0,
-        "amplicon_bp": 66
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-17-3p (Busk 2014)",
@@ -1908,8 +1908,8 @@
         "rt_overhang_actual": "TTCAGT",
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
-        "forward_gc_pct": 44.0,
-        "amplicon_bp": 70
+        "forward_gc_pct": 47.8,
+        "amplicon_bp": 67
       },
       {
         "id": "ssc-miR-103 (Busk 2014)",
@@ -2125,7 +2125,7 @@
         "rt_overhang_match": true,
         "forward_tm_c": 60.0,
         "forward_gc_pct": 50.0,
-        "amplicon_bp": 67
+        "amplicon_bp": 69
       },
       {
         "id": "mmu-miR-182 (Busk 2014)",
@@ -2595,7 +2595,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AAGCGCAACATTCAACGCTG",
+        "forward_tool": "CACTAGGCAAACATTCAACGCTG",
         "forward_published": "GGAACATTCAACGCTGTCG",
         "forward_tool_specific": "AACATTCAACGCTG",
         "forward_pub_specific": "AACATTCAACGCTGTCG",
@@ -2621,7 +2621,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AGCCAGGTAACATTCAACCTGTC",
+        "forward_tool": "AGGAGAGCAACATTCAACCTGTC",
         "forward_published": "GGGAACATTCAACCTGTCG",
         "forward_tool_specific": "AACATTCAACCTGTC",
         "forward_pub_specific": "AACATTCAACCTGTCG",
@@ -2842,7 +2842,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTATAGCCTCGGACCAGGCT",
+        "forward_tool": "CTAGGTGATCGGACCAGGCT",
         "forward_published": "TCGCTTCGGACCAGGCTTCA",
         "forward_tool_specific": "TCGGACCAGGCT",
         "forward_pub_specific": "TCGGACCAGGCTTCA",
@@ -3076,7 +3076,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CTATGCCTAACCGGCTCGTG",
+        "forward_tool": "GAGTCCATAACCGGCTCGTG",
         "forward_published": "ACACTCCAGCTGGGAACCGGCTCGTGGCTC",
         "forward_tool_specific": "AACCGGCTCGTG",
         "forward_pub_specific": "AACCGGCTCGTGGCTC",
@@ -3102,7 +3102,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCACCGTCAGTGGTTTTGTT",
+        "forward_tool": "ACACCGGTCAGTGGTTTTGTT",
         "forward_published": "ACACTCCAGCTGGGGTCAGTGGTTTTGTTT",
         "forward_tool_specific": "GTCAGTGGTTTTGTT",
         "forward_pub_specific": "GTCAGTGGTTTTGTTT",
@@ -3427,7 +3427,7 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTCGTCCTGAGGTAGTAGATTGT",
+        "forward_tool": "ACCGCCTGAGGTAGTAGATTGT",
         "forward_published": "CCAGCTGGGTGAGGTAGTAGATTGT",
         "forward_tool_specific": "TGAGGTAGTAGATTGT",
         "forward_pub_specific": "TGAGGTAGTAGATTGT",
@@ -3674,11 +3674,11 @@
         "rt_overhang_match": "PASS",
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TAGGCGATACCATCGACCGT",
+        "forward_tool": "GATTGACCACCATCGACCGTT",
         "forward_published": "CAAGAGCACCATCGACCGTT",
-        "forward_tool_specific": "ACCATCGACCGT",
+        "forward_tool_specific": "ACCATCGACCGTT",
         "forward_pub_specific": "ACCATCGACCGTT",
-        "forward_specific_overlap_nt": 12,
+        "forward_specific_overlap_nt": 13,
         "source": "Cao Y, Zhao F, Feng P, Hong Y, Zhang Y, Zhang Z, Zhu Y, Song X. 'Stem-loop RT-qPCR system for multiplex miRNA profiling and its application in wound healing-specific biomarker identification.' Anal Biochem 2023;678:115267. DOI 10.1016/j.ab.2023.115267, Table 2. DIFFERENT body (stem-loop 3: GACACAAGAGTCAGCTGTGCTAACTGGTGATGTGACTCTTGTGTC) + 6-nt overhang; forward = 12-nt random tail + ~10-nt miRNA prefix. MOUSE miRNA."
       },
       {
@@ -3882,7 +3882,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CCTCGTCCTGAGGTAGTAGATTGT",
+        "forward_tool": "ACCGCCTGAGGTAGTAGATTGT",
         "forward_published": "CGCAGTGAGGTAGTAGATTG",
         "forward_tool_specific": "TGAGGTAGTAGATTGT",
         "forward_pub_specific": "TGAGGTAGTAGATTG",
@@ -3908,7 +3908,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "CACACGCAAAGTGCTTACAGTG",
+        "forward_tool": "AGCTCTCCAAAGTGCTTACAGTG",
         "forward_published": "CAAAGTGCTTACAGTGCAG",
         "forward_tool_specific": "CAAAGTGCTTACAGTG",
         "forward_pub_specific": "CAAAGTGCTTACAGTGCAG",
@@ -4051,7 +4051,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "ACCGCGTAGCACCATTTGAA",
+        "forward_tool": "ACGCCGTAGCACCATTTGAA",
         "forward_published": "GCAGTAGCACCATTTGAAATC",
         "forward_tool_specific": "TAGCACCATTTGAA",
         "forward_pub_specific": "TAGCACCATTTGAAATC",
@@ -4116,11 +4116,11 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "TACAGTGCTCAGTACAGTACTGTGA",
+        "forward_tool": "ACACCGACCTACAGTACTGTGAT",
         "forward_published": "CGCAGTACAGTACTGTGATAAC",
-        "forward_tool_specific": "TACAGTACTGTGA",
+        "forward_tool_specific": "TACAGTACTGTGAT",
         "forward_pub_specific": "TACAGTACTGTGATAAC",
-        "forward_specific_overlap_nt": 13,
+        "forward_specific_overlap_nt": 14,
         "source": "Busk PK. 'A tool for design of primers for microRNA-specific quantitative RT-qPCR.' BMC Bioinformatics 2014;15:29. DOI 10.1186/1471-2105-15-29, Additional file 5 (82 validated assays, wet-lab functional). DIFFERENT CHEMISTRY: miR-specific RT-qPCR (poly(A) tailing + poly(T) RT primer, two miRNA-specific PCR primers); no stem-loop RT primer exists, so only the forward miRNA-specific core is scored. Reverse primer and failed primers recorded, not scored. Sequence used inline as printed in the table."
       },
       {
@@ -4428,7 +4428,7 @@
         "rt_overhang_match": null,
         "forward_shares_specific": "PASS",
         "forward_exact_note": "FAIL",
-        "forward_tool": "AAGCGCAACATTCAACGCTG",
+        "forward_tool": "GATACCGCAACATTCAACGCTG",
         "forward_published": "CATTCAACGCTGTCGGT",
         "forward_tool_specific": "AACATTCAACGCTG",
         "forward_pub_specific": "CATTCAACGCTGTCGGT",
