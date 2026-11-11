@@ -10,7 +10,10 @@ pair whose lower bound already reaches the NONE level (≥ 10 Cq) is NONE for ce
 and needs no primer3 call. Only the remaining pairs are scored exactly, with ΔG.
 
 Resumable: each worker writes one JSON-lines file per block of assays to the cache;
-blocks already present are skipped.
+blocks already present are skipped. A block file is named after a digest of its
+assays (miRNA, primers) and the algorithm version, so a block is never reused after
+the designs or the algorithm change. Designs made by another algorithm version are
+refused — run design_all again.
 
 Usage (repo root):
     python -m crossreactivity.build_matrix [--workers 14]
@@ -23,7 +26,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import glob
+import hashlib
 import json
 import multiprocessing as mp
 import os
@@ -55,12 +58,20 @@ def _init_worker(cfg: dict):
     _W["release"] = cfg["mirbase_release"]
 
 
+def block_filename(block_id: int, assays: list[dict], tool_version: str) -> str:
+    """Cache file name tied to the block's content and the algorithm version."""
+    key = json.dumps([tool_version] + [[a["mirna"], a["sequence"], a["rt_primer"],
+                                        a["forward_primer"], a["fwd_specific_len"]]
+                                       for a in assays])
+    return f"block_{block_id:04d}_{hashlib.sha256(key.encode()).hexdigest()[:12]}.jsonl"
+
+
 def score_block(job: tuple[int, list[dict], str, str]) -> str:
     """Score a block of assays against every miRNA; write the block's cache file."""
     block_id, assays, cache_dir, tool_version = job
     cfg, mature = _W["cfg"], _W["mature"]
     none_at = cfg["levels"]["low_below_delta_cq"]
-    path = os.path.join(cache_dir, f"block_{block_id:04d}.jsonl")
+    path = os.path.join(cache_dir, block_filename(block_id, assays, tool_version))
     tmp = path + ".part"
     with open(tmp, "w", encoding="utf-8") as out:
         for a in assays:
@@ -125,14 +136,21 @@ def main(argv=None) -> int:
     if missing:
         print(f"{len(missing)} miRNAs not designed yet — run design_all again first")
         return 1
+    stale = sorted(n for n, d in designs.items() if d.get("algorithm_version") != ALGORITHM_VERSION)
+    if stale:
+        print(f"{len(stale)} designs were made by another algorithm version than "
+              f"{ALGORITHM_VERSION} — run python -m crossreactivity.design_all again first")
+        return 1
     ok = [d for _, d in sorted(designs.items()) if d["status"] == "ok"]
     failed = [d for _, d in sorted(designs.items()) if d["status"] != "ok"]
 
     block_dir = os.path.join(args.cache, f"matrix_{species}")
     os.makedirs(block_dir, exist_ok=True)
     blocks = [ok[i:i + BLOCK] for i in range(0, len(ok), BLOCK)]
+    block_paths = [os.path.join(block_dir, block_filename(b, blk, ALGORITHM_VERSION))
+                   for b, blk in enumerate(blocks)]
     jobs = [(b, blk, block_dir, ALGORITHM_VERSION) for b, blk in enumerate(blocks)
-            if not os.path.exists(os.path.join(block_dir, f"block_{b:04d}.jsonl"))]
+            if not os.path.exists(block_paths[b])]
     print(f"{len(ok)} assays × {len(mature)} miRNAs; {len(blocks) - len(jobs)} blocks cached, "
           f"{len(jobs)} to score ({workers} workers)", flush=True)
     t0 = time.time()
@@ -143,7 +161,7 @@ def main(argv=None) -> int:
                     print(f"  {i}/{len(jobs)} blocks  {time.time() - t0:.0f}s", flush=True)
 
     pairs, rows = [], []
-    for path in sorted(glob.glob(os.path.join(block_dir, "block_*.jsonl")))[: len(blocks)]:
+    for path in block_paths:
         with open(path, encoding="utf-8") as f:
             for line in f:
                 rec = json.loads(line)

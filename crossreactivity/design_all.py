@@ -6,8 +6,10 @@ test client, so the request is exactly what a user (or validation/validate_prime
 sends — same parsing, same defaults. Every process has its own primer3 state: the
 process-wide lock in primer3_safe.py only serializes threads inside one process.
 
-Resumable: one JSON line per miRNA in <cache>/designs.jsonl; names already there are
-skipped on the next run. Failures are kept with their reason.
+Resumable: one JSON line per miRNA in <cache>/designs_<species>.jsonl; names already
+there are skipped on the next run, unless the record was made by a different
+algorithm version (ALGORITHM_VERSION) — those are designed again. Failures are kept
+with their reason. The file is compacted to one line per miRNA at the end.
 
 Usage (repo root):
     python -m crossreactivity.design_all [--species hsa] [--workers 14] [--limit N]
@@ -30,10 +32,19 @@ STEMLOOP_BODY_LEN = 44
 
 _client = None
 _request = None
+_version = None
+
+
+def current_algorithm_version() -> str:
+    backend = os.path.join(_ROOT, "backend")
+    if backend not in sys.path:
+        sys.path.insert(0, backend)
+    from algorithm.constants import ALGORITHM_VERSION
+    return ALGORITHM_VERSION
 
 
 def _init_worker(design_request: dict):
-    global _client, _request
+    global _client, _request, _version
     backend = os.path.join(_ROOT, "backend")
     sys.path.insert(0, backend)
     os.chdir(backend)                         # the app resolves data paths from here
@@ -41,6 +52,7 @@ def _init_worker(design_request: dict):
     app.config["TESTING"] = True
     _client = app.test_client()
     _request = {k: v for k, v in design_request.items() if not k.startswith("_")}
+    _version = current_algorithm_version()
 
 
 def design_one(item: tuple[str, str]) -> dict:
@@ -53,8 +65,10 @@ def design_one(item: tuple[str, str]) -> dict:
         data = r.get_json(silent=True) or {}
     except Exception as e:                     # a crash must not stop the batch
         return {"mirna": name, "sequence": seq_dna, "status": "failed",
-                "reason": f"exception: {e!r}", "seconds": round(time.time() - t0, 2)}
-    rec = {"mirna": name, "sequence": seq_dna, "seconds": round(time.time() - t0, 2)}
+                "reason": f"exception: {e!r}", "seconds": round(time.time() - t0, 2),
+                "algorithm_version": _version}
+    rec = {"mirna": name, "sequence": seq_dna, "seconds": round(time.time() - t0, 2),
+           "algorithm_version": _version}
     top = (data.get("top3") or [None])[0]
     if r.status_code != 200 or not top:
         reason = data.get("error") or f"HTTP {r.status_code}"
@@ -73,7 +87,7 @@ def design_one(item: tuple[str, str]) -> dict:
         "tail_length": top.get("tail_length"),
         "total_score": top.get("total_score"),
         "grade": top.get("grade"),
-        "algorithm_version": meta.get("algorithm_version"),
+        "algorithm_version": meta.get("algorithm_version") or _version,
     }
 
 
@@ -87,6 +101,22 @@ def read_done(path: str) -> dict[str, dict]:
                     rec = json.loads(line)
                     done[rec["mirna"]] = rec
     return done
+
+
+def select_todo(mature: dict[str, str], done: dict[str, dict], version: str) -> list:
+    """miRNAs to design: not cached, or cached by another algorithm version."""
+    return [(n, s) for n, s in sorted(mature.items())
+            if n not in done or done[n].get("algorithm_version") != version]
+
+
+def compact(path: str) -> None:
+    """Rewrite the cache with the latest record per miRNA (later lines win)."""
+    latest = read_done(path)
+    tmp = path + ".part"
+    with open(tmp, "w", encoding="utf-8") as f:
+        for name in sorted(latest):
+            f.write(json.dumps(latest[name], ensure_ascii=False) + "\n")
+    os.replace(tmp, path)
 
 
 def main(argv=None) -> int:
@@ -105,11 +135,14 @@ def main(argv=None) -> int:
     os.makedirs(args.cache, exist_ok=True)
     out_path = os.path.join(args.cache, f"designs_{species}.jsonl")
 
+    version = current_algorithm_version()
     done = read_done(out_path)
-    todo = [(n, s) for n, s in sorted(mature.items()) if n not in done]
+    todo = select_todo(mature, done, version)
+    n_stale = sum(1 for n, _ in todo if n in done)
     if args.limit is not None:
-        todo = todo[: max(0, args.limit - len(done))]
-    print(f"{species}: {len(mature)} miRNAs, {len(done)} cached, {len(todo)} to design "
+        todo = todo[: max(0, args.limit - (len(mature) - len(todo)))]
+    print(f"{species}: {len(mature)} miRNAs, {len(done) - n_stale} cached at {version}, "
+          f"{n_stale} cached by another version, {len(todo)} to design "
           f"({workers} workers)", flush=True)
 
     t0 = time.time()
@@ -121,6 +154,7 @@ def main(argv=None) -> int:
             if i % 100 == 0 or i == len(todo):
                 print(f"  {i}/{len(todo)}  {time.time() - t0:.0f}s", flush=True)
 
+    compact(out_path)
     done = read_done(out_path)
     n_ok = sum(r["status"] == "ok" for r in done.values())
     print(f"done: {n_ok} designed, {len(done) - n_ok} failed -> {out_path}")

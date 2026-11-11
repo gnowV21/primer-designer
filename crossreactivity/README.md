@@ -16,7 +16,7 @@ python -m pytest crossreactivity/tests -q
 ```
 
 - **Cấu hình** nằm ở `config.json`: phiên bản và đường dẫn miRBase, loài, ngưỡng các mức, điều kiện tính ΔG.
-- **Bộ nhớ đệm** ở `outputs/crossreactivity_cache/` (không commit); xóa thư mục này để tính lại từ đầu.
+- **Bộ nhớ đệm** ở `outputs/crossreactivity_cache/` (không commit); xóa thư mục này để tính lại từ đầu. Bộ đệm gắn với `ALGORITHM_VERSION`: sau khi đổi thuật toán, `design_all` thiết kế lại các miRNA cũ, còn `build_matrix` từ chối chạy cho tới khi thiết kế cùng phiên bản và không dùng lại block cũ.
 
 ## Đầu ra (`outputs/`)
 
