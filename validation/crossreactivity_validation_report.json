@@ -1,6 +1,6 @@
 {
  "matrix": "outputs\\crossreactivity_long.parquet",
- "tool_version": "3.5.0",
+ "tool_version": "3.6.0",
  "mirbase_release": "22.1",
  "threshold_R": 0.01,
  "sources": [
@@ -24,9 +24,9 @@
  "sanity": {
   "n_close_pairs": 322,
   "n_random_pairs": 20000,
-  "close_mean_R": 0.14141854031487877,
-  "close_median_R": 0.00893363460994308,
-  "close_frac_above_10pct": 0.2111801242236025,
+  "close_mean_R": 0.1407517069690778,
+  "close_median_R": 0.008344311113240833,
+  "close_frac_above_10pct": 0.2080745341614907,
   "random_mean_R": 1.0918917894338314e-05,
   "random_frac_above_10pct": 0.0,
   "passes": true

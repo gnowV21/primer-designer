@@ -1229,27 +1229,28 @@ Các tính chất:
 3. **Tính chính xác** các cặp còn lại (có hạng Tm và ΔG); mỗi block 32 assay một file cache.
 4. **Kiểm tra bắt buộc**: R(i, i) là cực đại của hàng; chạy dừng với mã 2 nếu sai.
 
-**Kết quả lần chạy 2026-11-10** (commit `d0c43f1`, `outputs/crossreactivity_metadata.json`):
+**Kết quả lần chạy 2026-11-11** (algorithm 3.6.0, commit `e81f1d1`, `outputs/crossreactivity_metadata.json`). Lần chạy 2026-11-10 dùng 3.5.0 (commit `d0c43f1`); chênh lệch nằm ở cột cuối:
 
-| | |
-|---|---|
-| miRNA trưởng thành hsa | 2656 |
-| Assay thiết kế được | **2253** (overhang 6 nt cho cả 2253) |
-| Độ dài vùng đặc hiệu xuôi 12 / 13 / 14 / 15 / 16 / 17 nt | 392 / 450 / 490 / 480 / 385 / 56 assay |
-| Thiết kế thất bại | **403** — đều do "no valid forward primer candidates" với tham số mặc định; trung vị GC 70 % (so với 50 % ở nhóm thành công); có 66 miRNA số < 1000, ví dụ miR-1-5p, miR-23a-5p, miR-210-5p, miR-326, miR-375-5p, miR-663a. Danh sách: `outputs/crossreactivity_failed_designs.csv` |
-| Số cặp | 5.983.968; loại bằng sàng lọc 5.960.694; thời gian 62 giây với 14 tiến trình |
-| Ngoài đường chéo | **211 HIGH**, **102 MEDIUM**, **20.708 LOW**; còn lại NONE |
-| HIGH ngoài đường chéo theo loại | other 106, same_sequence 74, shifted_3p 22, shifted_5p 9 |
-| Assay có ≥ 1 cặp HIGH / MEDIUM ngoài đường chéo | 86 / 78 |
-| Kiểm tra đường chéo | **đạt** cho cả 2253 assay |
+| | 3.6.0 | so với 3.5.0 |
+|---|---|---|
+| miRNA trưởng thành hsa | 2656 | = |
+| Assay thiết kế được | **2253** (overhang 6 nt cho cả 2253) | = (không miRNA nào đổi trạng thái); 434 mồi xuôi đổi, mồi RT không đổi |
+| Độ dài vùng đặc hiệu xuôi 12 / 13 / 14 / 15 / 16 / 17 nt | 404 / 455 / 474 / 484 / 380 / 56 assay | 392 / 450 / 490 / 480 / 385 / 56 |
+| Mồi xuôi có dimer RNAcofold < −9 (dùng `hard_filter_fallback`) | 123 (5,5 %) | 534 mồi của 3.5.0 có dimer < −9 khi tính bằng RNAcofold |
+| Thiết kế thất bại | **403** — đều do "no valid forward primer candidates" với tham số mặc định; trung vị GC 70 % (so với 50 % ở nhóm thành công); có 66 miRNA số < 1000, ví dụ miR-1-5p, miR-23a-5p, miR-210-5p, miR-326, miR-375-5p, miR-663a. Danh sách: `outputs/crossreactivity_failed_designs.csv` | = |
+| Số cặp | 5.983.968; NONE 5.960.694; thời gian 67 giây với 14 tiến trình | = (62 giây) |
+| Ngoài đường chéo | **208 HIGH**, **103 MEDIUM**, **20.710 LOW**; còn lại NONE | 211 / 102 / 20.708; 6 cặp đổi mức, ví dụ miR-548ah-3p → 548o-3p HIGH → MEDIUM |
+| HIGH ngoài đường chéo theo loại | other 104, same_sequence 74, shifted_3p 22, shifted_5p 8 | 106 / 74 / 22 / 9 |
+| Assay có ≥ 1 cặp HIGH / MEDIUM ngoài đường chéo | 84 / 77 | 86 / 78 |
+| Kiểm tra đường chéo | **đạt** cho cả 2253 assay | = |
 
 **Các cặp rủi ro cao nhất giữa hai phân tử khác nhau** (`outputs/crossreactivity_top30_offdiagonal.csv`):
-- R = 1: miR-100 → 99a; miR-106a → 17; miR-1269a → 1269b; miR-30b ↔ 30c; cụm C19MC (miR-518/519/520/522/523/526a); miR-548ad → 548ay/548d.
+- R = 1 (51 cặp): miR-100 → 99a; miR-106a → 17; miR-1269a → 1269b; miR-30b ↔ 30c; miR-487a-5p → 487b-5p; cụm C19MC (miR-518/519/520/522/523/526a); miR-548ad → 548ay/548d.
 - Kế tiếp: miR-103a-2 → 103a-1 (0,85), miR-374b → 374c (0,79), miR-376c → 376a (0,72).
 - Đa số là vùng mù giữa trình tự: hai miRNA chỉ khác nhau ở đoạn không phủ bởi cả overhang lẫn vùng xuôi, giống let-7a ↔ 7d trong §8.16.
 
 **Đỉnh R ≈ 0,32 % trong histogram (D-4).**
-- 20.105 / 20.708 cặp LOW là cặp mà RT primer bắt được (overhang trùng, có thể lệch) nhưng mồi xuôi không bám.
+- 20.108 / 20.710 cặp LOW (R = 2^−8,3 đúng bằng trần) là cặp mà RT primer bắt được (overhang trùng, có thể lệch) nhưng mồi xuôi không bám.
 - ΔCq_FWD bị chặn ở 8,3, mức "không khuếch đại" của Stadhouders 2010, nên R của nhóm này không thấp hơn 2^−8,3.
 - Nếu coi nhóm này là NONE thì LOW còn khoảng 600 cặp. Ngưỡng gộp mặc định là HIGH, nên kết quả ML không bị ảnh hưởng.
 

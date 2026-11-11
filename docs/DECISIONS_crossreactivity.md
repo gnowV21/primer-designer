@@ -43,7 +43,7 @@ Mỗi mục gồm: lựa chọn, lý do và các phương án thay thế. Mục 
 
 ### D-4 · Trần 8,3 Cq của trục FWD tạo đỉnh R ≈ 0,32 % — ⚠ cần duyệt
 - **Quan sát:**
-  - Có 20.105 / 20.708 cặp LOW mà mồi RT bắt được (overhang trùng, có thể lệch) nhưng mồi forward không bám.
+  - Có 20.108 / 20.710 cặp LOW (3.6.0, đếm các cặp có R = 2^−8,3; 3.5.0 theo cùng cách đếm: 20.106 / 20.708) mà mồi RT bắt được (overhang trùng, có thể lệch) nhưng mồi forward không bám.
   - ΔCq_FWD bị chặn ở 8,3, là mức "không khuếch đại" của Stadhouders 2010. Vì vậy R của nhóm này không bao giờ thấp hơn 2^−8,3 ≈ 0,32 %.
   - Histogram có chú thích cho đỉnh này.
 - **Lý do giữ:** đây là hành vi của mô hình webtool, và 8,3 Cq là cận dưới có trong tài liệu.
@@ -65,11 +65,12 @@ Mỗi mục gồm: lựa chọn, lý do và các phương án thay thế. Mục 
 
 ### D-7 · Mồi #1 thiết kế qua `/api/design` với tham số mặc định của backend
 - **Cách gửi:** thân request giống `validation/validate_primers.py`: các nhóm tham số rỗng, kèm `mirnaId`. Tham số mặc định gồm Ta 60 °C, overhang 6 nt, SYBR/TaqMan theo mặc định của API.
-- **Hệ quả:** toàn bộ 2253 assay có overhang 6 nt. Độ dài vùng đặc hiệu forward phân bố như sau:
+- **Hệ quả:** toàn bộ 2253 assay có overhang 6 nt. Độ dài vùng đặc hiệu forward phân bố như sau (algorithm 3.6.0):
 
 | Độ dài (nt) | 12 | 13 | 14 | 15 | 16 | 17 |
 |---|---|---|---|---|---|---|
-| Số assay | 392 | 450 | 490 | 480 | 385 | 56 |
+| Số assay | 404 | 455 | 474 | 484 | 380 | 56 |
+| (3.5.0) | 392 | 450 | 490 | 480 | 385 | 56 |
 
 - **Thay thế:** dùng mặc định của frontend (SYBR). Mồi sẽ không đổi, vì giới hạn amplicon ≤ 120 bp không bị chạm tới.
 
@@ -96,6 +97,7 @@ Mỗi mục gồm: lựa chọn, lý do và các phương án thay thế. Mục 
 - Bộ nhớ đệm:
   - `outputs/crossreactivity_cache/designs_hsa.jsonl`: mỗi miRNA một dòng.
   - `matrix_hsa/block_*.jsonl`: mỗi block 32 assay; file chỉ được đổi tên khi ghi xong.
+  - Cả hai gắn với phiên bản thuật toán (từ 2026-11-11). Bản thiết kế của phiên bản khác được thiết kế lại. Tên file block chứa mã băm của các assay trong block và phiên bản, nên block cũ không bao giờ bị dùng lại. Trước đó bộ đệm chỉ theo tên, nên dựng lại sau khi đổi thuật toán sẽ trả về ma trận cũ.
 - Bị ngắt thì chạy lại sẽ tiếp tục từ chỗ dừng.
 
 ### D-11 · Đường chéo
