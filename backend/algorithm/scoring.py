@@ -11,7 +11,7 @@ from .constants import (
     TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
     TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
-    HAIRPIN_DG_MAX_INTERNAL, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
+    HAIRPIN_DG_MAX_INTERNAL, HAIRPIN_TM_HARD_MAX, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR, AMPLICON_IDEAL,
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
     GC_CLAMP_SCORE_OPTIMAL, GC_CLAMP_SCORE_1GC_CONSERVATIVE,
@@ -142,11 +142,18 @@ def score_candidate(
     hp = sc.get("hairpin", {})
     hp_dg  = hp.get("dg", 0.0)
     sev    = hp.get("severity", "safe")
+    hp_tm  = hp.get("tm") or 0.0
+    # Hard-filter rule 3 (Tm ≥ 47 °C) normally removes such a candidate; it is scored
+    # only under hard_filter_fallback, and then gets 0 — as a full-structure dimer does.
+    hp_tm_critical = hp_tm >= HAIRPIN_TM_HARD_MAX
     hp_map = {"safe": 100, "acceptable": 80, "warning": 40, "critical": 0}
-    scores["hairpin_penalty"] = hp_map.get(sev, 50)
+    scores["hairpin_penalty"] = 0 if hp_tm_critical else hp_map.get(sev, 50)
     explanations["hairpin_penalty"] = (
-        f"Hairpin ΔG = {hp_dg:.2f} kcal/mol (threshold: > {HAIRPIN_DG_MAX_INTERNAL} kcal/mol). "
-        f"Severity: {sev}. Primer3Plus thermodynamic alignment enabled."
+        f"Hairpin ΔG at Ta = {hp_dg:.2f} kcal/mol (threshold: > {HAIRPIN_DG_MAX_INTERNAL} kcal/mol), "
+        f"severity {sev}; hairpin Tm = {hp_tm:.1f} °C (hard-filter limit: < {HAIRPIN_TM_HARD_MAX:g} °C, "
+        f"Primer3 default PRIMER_MAX_HAIRPIN_TH). "
+        + ("CRITICAL: hairpin Tm at or above the limit. " if hp_tm_critical else "")
+        + "primer3 thermodynamic alignment."
     )
 
     # ── 7. Dimer penalty (0.10 V3 / 0.08 V4) ────────────────────
