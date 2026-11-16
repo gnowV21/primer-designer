@@ -1,7 +1,8 @@
 # ================================================================
 # scoring.py — Module 6: weighted scoring
 # V3 (12 criteria, SCORING_WEIGHTS_V3) — Phase 2, kept as reference.
-# V4 (15 criteria, SCORING_WEIGHTS_V4) — Phase 3 default.
+# V4 (14 criteria, 13 scored, SCORING_WEIGHTS_V4) — Phase 3 default; gc_skew
+#    dropped and gc_clamp 0.04 → 0.06 in algorithm 3.8.0.
 # Total score 0–100. Grade: Excellent(≥80), Good(65–79), Acceptable(50–64), Poor(<50).
 # ================================================================
 
@@ -41,7 +42,7 @@ def score_candidate(
 ) -> dict:
     """
     Score a complete primer set.
-    use_v4=True (default): 15 criteria (SCORING_WEIGHTS_V4, Phase 3).
+    use_v4=True (default): 14 criteria, 13 scored (SCORING_WEIGHTS_V4, Phase 3).
     use_v4=False: 12 criteria (SCORING_WEIGHTS_V3, Phase 2 compat).
     cross_reactivity: seed-family output (kept for the biological-context panel; NOT scored).
     overhang_collision: primer-axis output from check_overhang_collision — drives the
@@ -89,21 +90,17 @@ def score_candidate(
         f"Source: IDT guidelines, PrimerAST 2024."
     )
 
-    # ── 4. GC-skew (0.02 V3 / 0.02 V4) [PAST24] ─────────────────
-    skew = calculate_gc_skew(forward["sequence"])
-    if skew <= 0:
-        skew_score = 100
-    elif skew <= 0.1:
-        skew_score = 85
-    elif skew <= GC_SKEW_WARNING_THRESHOLD:
-        skew_score = 70
-    else:
-        skew_score = max(0, 70 - (skew - GC_SKEW_WARNING_THRESHOLD) * 200)
-    scores["gc_skew"] = round(skew_score, 1)
-    explanations["gc_skew"] = (
-        f"GC-skew = {skew:.3f}. Optimal: ≤ 0 (more C than G). "
-        f"Positive skew (more G) risks G-quadruplex formation. Source: PrimerAST 2026."
-    )
+    # ── 4. GC-skew (0.02, V3 only) [PAST24] ─────────────────────
+    # Not a V4 criterion since algorithm 3.8.0: unsourced cut-offs, and the
+    # G-quadruplex risk it stood for is essentially absent from real candidates
+    # (constants.py ALGORITHM_VERSION changelog). Kept for the legacy V3 score.
+    if not use_v4:
+        skew = calculate_gc_skew(forward["sequence"])
+        scores["gc_skew"] = gc_skew_score(forward["sequence"])
+        explanations["gc_skew"] = (
+            f"GC-skew = {skew:.3f}. Optimal: ≤ 0 (more C than G). "
+            f"Positive skew (more G) risks G-quadruplex formation. Source: PrimerAST [PAST24]."
+        )
 
     # ── 5. Stem-loop MFE (0.15) ──────────────────────────────────
     mfe        = stemloop.get("mfe")
@@ -250,7 +247,7 @@ def score_candidate(
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). Source: PrimerAST 2024."
     )
 
-    # ── 12. GC clamp at 3' end (0.03 V3 / 0.04 V4) [Busk14+IDT] ───
+    # ── 12. GC clamp at 3' end (0.03 V3 / 0.06 V4) [Busk14+IDT] ───
     # Two-tier logic (PROMPT 1):
     # (a) LOCKED multi-source: CCC→25, 3 G/C→50, 0 G/C→50, 2 G/C→100.
     # (b) PENDING single-source: 1 G/C → 75 (conservative, GC_CLAMP_1GC_AS_OPTIMAL=False)
@@ -362,6 +359,21 @@ def score_candidate(
         "pass_all_structure_checks": sc.get("overall_pass", False),
         "has_critical_flag": sc.get("has_critical_flag", False),
     }
+
+
+def gc_skew_score(sequence: str) -> float:
+    """Legacy V3 gc_skew criterion (0–100). Not part of V4 since algorithm 3.8.0;
+    kept for use_v4=False and for scripts/scoring_weight_sensitivity.py."""
+    skew = calculate_gc_skew(sequence)
+    if skew <= 0:
+        s = 100
+    elif skew <= 0.1:
+        s = 85
+    elif skew <= GC_SKEW_WARNING_THRESHOLD:
+        s = 70
+    else:
+        s = max(0, 70 - (skew - GC_SKEW_WARNING_THRESHOLD) * 200)
+    return round(s, 1)
 
 
 def _extract_worst_assay_label(overhang_collision: dict | None) -> str:

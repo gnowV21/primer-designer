@@ -106,6 +106,32 @@ def test_explanation_cites_busk14_and_idt():
     assert "IDT" in expl
 
 
+def test_v4_has_no_gc_skew_and_weights_gc_clamp_at_006():
+    """Algorithm 3.8.0: V4 neither scores nor weights gc_skew; gc_clamp carries 0.06
+    nominal weight. V3 (legacy) still scores gc_skew."""
+    fwd = _make_forward("ACG")
+    stemloop = {"mfe": -11.5, "mfe_method": "primer3-py", "gc_percent": 55, "tm_full": 70.0}
+    v4 = score_candidate(fwd, stemloop, {"tm": 60.4}, {}, cross_reactivity=None, use_v4=True)
+    assert "gc_skew" not in v4["scores"]
+    assert "gc_skew" not in v4["weights"]
+    assert "gc_skew" not in v4["explanations"]
+    assert v4["weights_nominal"]["gc_clamp"] == 0.06
+    v3 = score_candidate(fwd, stemloop, {"tm": 60.4}, {}, cross_reactivity=None, use_v4=False)
+    assert "gc_skew" in v3["scores"]
+
+
+def test_v4_bad_3prime_end_costs_more_than_before():
+    """A 'CCC' 3' end (score 25 vs 100) now costs 0.06/Σw of 75 points in V4."""
+    stemloop = {"mfe": -11.5, "mfe_method": "primer3-py", "gc_percent": 55, "tm_full": 70.0}
+    good = score_candidate(_make_forward("ACG"), stemloop, {"tm": 60.4}, {}, use_v4=True)
+    bad = score_candidate(_make_forward("CCC"), stemloop, {"tm": 60.4}, {}, use_v4=True)
+    w = good["weights"]["gc_clamp"]                     # renormalised weight
+    assert abs(w - 0.06 / 0.95) < 1e-3                  # 0.95 = 1 − unscored binding occupancy
+    others = {k for k in good["scores"] if k in good["weights"] and k != "gc_clamp"}
+    assert all(good["scores"][k] == bad["scores"][k] for k in others)   # only the 3' end differs
+    assert abs((good["total_score"] - bad["total_score"]) - 75 * w) <= 0.11
+
+
 if __name__ == "__main__":
     test_2gc_optimal()
     test_3gc_weak()

@@ -505,7 +505,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
             "algorithm_version": ALGORITHM_VERSION,
-            "scoring_version": "V4 (14 scored + 1 informational)",
+            "scoring_version": "V4 (13 scored + 1 informational)",
             # Reproducibility (MIQE 2.0 §1, audit ENG-01): engines and the exact
             # weight table behind this result.
             "provenance": _provenance(),
