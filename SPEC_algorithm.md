@@ -30,6 +30,25 @@
 
 ---
 
+### 2026-11-16 — Algorithm 3.8.0: bỏ `gc_skew` khỏi chấm điểm, `gc_clamp` 0,04 → 0,06
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-22 | `constants.py`, `scoring.py` | Scoring | `SCORING_WEIGHTS_V4` bỏ `gc_skew` (0,02) và dồn phần này cho `gc_clamp` (0,04 → 0,06). V4 còn 14 tiêu chí, 13 được chấm. Bảng V3 cũ giữ nguyên; `scoring.gc_skew_score()` chỉ dùng cho V3 và script đo. `/api/analyze` vẫn báo giá trị GC skew |
+| — | `scripts/scoring_weight_sensitivity.py` (mới) | Benchmark | Ghi lại toàn bộ ứng viên đã chấm của mọi thiết kế hsa, xếp hạng lại theo các bảng trọng số khác → `benchmark/scoring_weight_sensitivity.json` |
+
+Đây là quyết định của chủ dự án, mở lại quyết định "khóa trọng số V4" trong HANDOFF.
+
+**Vì sao đổi.**
+- `gc_skew` dùng ngưỡng không có nguồn, nhằm báo nguy cơ G-quadruplex. Nhưng trong 131.039 ứng viên của 2253 miRNA hsa, chỉ 1 ứng viên có motif G-quadruplex, và ứng viên đó không bao giờ đứng #1.
+- Phần trọng số giải phóng được dồn cho `gc_clamp`. Đây là tiêu chí vừa có khác biệt giữa các ứng viên, vừa có quy tắc từ tài liệu. Các tiêu chí giống nhau ở mọi ứng viên (`mfe_stemloop`, `end_stability`, `bound_fraction_full`, `family_discrimination`) thì tăng trọng số cũng không đổi được thứ hạng.
+- Bảng so sánh các phương án: SPEC_phase3 §7.1.
+
+**Tác động:**
+- **Validation:** 2439/2439 vẫn đạt. Có 111/193 dòng đổi điểm (|Δ| ≤ 2,1, trung bình +0,08), khoảng 56 dòng đổi mồi xuôi. Không target nào đổi xếp loại (grade), và các phép so khớp với mồi công bố (RT, overhang, forward) không đổi.
+- **Benchmark:** 50/50 OK. 29 target đổi điểm (≤ 1,1), 15 target đổi mồi xuôi.
+- **Ma trận hsa:** 863/2253 mồi xuôi đổi, mồi RT không đổi. Số mồi có 3 G/C hoặc CCC ở 3 nt cuối giảm từ 85 xuống 49. Ngoài đường chéo, HIGH / MEDIUM / LOW đổi từ 214 / 100 / 20.700 thành 208 / 107 / 20.700.
+
 ### 2026-11-11 — Algorithm 3.7.0: lọc cứng hairpin theo Tm ≥ 47 °C (mặc định Primer3)
 
 | Mã | File | Loại | Mô tả |
@@ -87,7 +106,7 @@ Validation 2439/2439 (`results.csv` không đổi), backend 692 test, e2e 74/74.
 
 ### Phase 3 thay đổi gì so với Phase 2 (summary)
 
-1. **Scoring**: V3 (12 tiêu chí) → **V4.1 (15 tiêu chí)** bằng cách thêm `bound_fraction_binding`, `bound_fraction_full`, `family_discrimination`. V3 được đánh dấu **DEPRECATED** nhưng giữ trong `constants.py` làm reference.
+1. **Scoring**: V3 (12 tiêu chí) → **V4.1 (15 tiêu chí; 14 từ algorithm 3.8.0, bỏ `gc_skew`)** bằng cách thêm `bound_fraction_binding`, `bound_fraction_full`, `family_discrimination`. V3 được đánh dấu **DEPRECATED** nhưng giữ trong `constants.py` làm reference.
 2. **Structure checks**: Phase 3 §5/§6 (family + isoMiR) mở rộng §30/§31 của Phase 2 với data thật (không còn PLACEHOLDER).
 3. **BLAST off-target**: Module hoàn toàn mới, endpoint riêng `/api/blast-check`, không ảnh hưởng pipeline `/api/design`.
 4. **Bound fraction**: Phase 3 implement công thức [SL04] với 2 bước (binding tại 42°C và full tại 55°C), không còn là "để dành Phase 3" như Phase 2.
@@ -153,7 +172,7 @@ Stem-loop RT-qPCR (Chen et al. 2005): thiết kế 3 primer cho định lượng
         Hairpin ΔG, self-dimer ΔG (overall + 3'), hetero-dimer ΔG (fwd×stemloop RT buffer,
         fwd×reverse PCR buffer), 3' end stability ΔG
         ↓
-[§1.7. score_candidates()]        [Phase 2 V3 → Phase 3 V4.1 — 15 tiêu chí]
+[§1.7. score_candidates()]        [Phase 2 V3 → Phase 3 V4.1 — 14 tiêu chí từ 3.8.0]
         + bound_fraction_binding (0.05)  [Phase 3]
         + bound_fraction_full    (0.03)  [Phase 3]
         + family_discrimination  (0.05)  [Phase 3]
@@ -642,7 +661,7 @@ SCORING_WEIGHTS_V3 = {
 }  # tổng = 1.00
 ```
 
-### Section R: SCORING_WEIGHTS_V4 (Phase 3 v4.1 — 15 tiêu chí, ACTIVE)
+### Section R: SCORING_WEIGHTS_V4 (Phase 3 v4.1, sửa ở algorithm 3.8.0 — 14 tiêu chí, ACTIVE)
 
 ```python
 # ACTIVE — dùng trong scoring.py [Phase 3 v1.9 rebalance = v4.1]
@@ -658,10 +677,10 @@ SCORING_WEIGHTS_V4 = {
     "gc_content":              0.08,
     "family_discrimination":   0.05,  # [Phase 3] risk từ miFam.dat/seed-based
     "tm_pair_match":           0.01,  # -0.02: reverse cố định Tm≈60.4°C → redundant
-    "gc_clamp":                0.04,  # +0.02: 3' GC critical cho extension
+    "gc_clamp":                0.06,  # 3.8.0: 0.04 → 0.06 (nhận 0.02 của gc_skew)
     "primer_size":             0.02,
     "amplicon_size":           0.02,
-    "gc_skew":                 0.02,  # +0.01: G-quadruplex risk signal
+    # gc_skew (0.02) bị bỏ ở 3.8.0 — xem changelog "Algorithm 3.8.0"
 }
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001  # = 1.00
 ```
@@ -1023,7 +1042,7 @@ Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câ
 
 **Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Từ 3.7.0, quy tắc hairpin dùng đúng tiêu chí Tm này. Quy tắc 1 vẫn dùng ΔG (theo Kang). Quy tắc 2 vẫn dùng ΔG ở Ta, và trên 9.268 ứng viên của 150 miRNA hsa nó không loại ứng viên nào (AUDIT REV-21, còn mở).
 
-### SCORING_WEIGHTS_V4 (Phase 3 v4.1) — 15 tiêu chí, ACTIVE
+### SCORING_WEIGHTS_V4 (Phase 3 v4.1, sửa ở algorithm 3.8.0) — 14 tiêu chí (13 được chấm), ACTIVE
 
 | # | Tiêu chí | Weight | Nguồn | Notes |
 |---|---|---|---|---|
@@ -1038,10 +1057,10 @@ Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câ
 | 9 | family_discrimination | **0.05** | [Chen05][Schamberger14][Stadhouders10] | **v3.3.0:** nhãn tệ nhất của miRNA khác theo mô hình ΔCq assay (DISCRIMINATED 100 / PARTIAL 70 / CO-AMPLIFIED 0); isomiR và bản trùng trình tự không chấm — SPEC_phase3 §8.16 |
 | 10 | bound_fraction_full | **0.03** | [SL04] | **[Phase 3]** amplicon tại 55°C |
 | 11 | tm_pair_match | 0.01 | [PAST24] | −0.02 từ V3; reverse cố định → redundant |
-| 12 | gc_clamp | 0.04 | [IDT-PQ] | +0.02 từ V3; 3' GC critical cho extension |
+| 12 | gc_clamp | **0.06** | [Busk14][IDT-PQ] | 0,04 → 0,06 ở 3.8.0 (nhận phần của gc_skew); thành phần 3 nt cuối đầu 3′ |
 | 13 | primer_size | 0.02 | [P3P] | len ≈ 22 nt |
 | 14 | amplicon_size | 0.02 | [IDT] | 60–150 bp |
-| 15 | gc_skew | 0.02 | [PAST24] | +0.01 từ V3; G-quadruplex signal |
+| — | ~~gc_skew~~ | ~~0.02~~ | [PAST24] | **Bỏ ở 3.8.0**: ngưỡng 0 / 0,1 / 0,2 không có nguồn; motif G-quadruplex gần như không có trong ứng viên thật. `/api/analyze` vẫn báo giá trị |
 | | **TỔNG** | **1.00** | | verified |
 
 ### Scoring formulas chính
@@ -1458,7 +1477,7 @@ CRITICAL → HIGH → MEDIUM → SAFE (worst-case wins)
       "gc_content": 90.0, "hairpin_penalty": 100, "dimer_penalty": 100,
       "end_stability": 100, "bound_fraction_binding": 80.0, "bound_fraction_full": 68.0,
       "family_discrimination": 100, "tm_pair_match": 97.0, "gc_clamp": 100,
-      "primer_size": 80.0, "amplicon_size": 96.0, "gc_skew": 90.0
+      "primer_size": 80.0, "amplicon_size": 96.0
     }
   }],
   "stemloop_rt": {
@@ -1728,7 +1747,7 @@ def test_normalize_mirna_name():
 
 **Khoa học:**
 - [ ] `bound_fraction.py`: 2 hàm (binding/full), công thức [SL04], test heterodimer workaround
-- [ ] `SCORING_WEIGHTS_V4` = 15 tiêu chí, tổng 1.00, binding (0.05) > full (0.03)
+- [ ] `SCORING_WEIGHTS_V4` = 14 tiêu chí (từ 3.8.0; trước đó 15), tổng 1.00, binding (0.05) > full (0.03)
 - [ ] `family_crossreactivity.py`: seed-based grouping (miFam.dat unavailable)
 - [ ] `mirbase_family_overhangs.json`: build thật từ mature.fa
 - [ ] `isomir_flag.py`: data v1.0.0, key `co_amplification_warning` (không phải `data_warning`)

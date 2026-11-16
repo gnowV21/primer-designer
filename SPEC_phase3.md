@@ -554,6 +554,24 @@ assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001   # = 1.00
 - `gc_clamp` 0.02→0.04: Primer không có GC tại 3' end (score 0) gần như không thể extend. Tác động 2 điểm (0.02×100) quá thấp so với tầm quan trọng sinh học.
 - `gc_skew` 0.01→0.02: Tín hiệu G-quadruplex; tăng nhẹ để có tác động ≥2 điểm.
 
+**Sửa ở algorithm 3.8.0 (2026-11-16) — bỏ `gc_skew`, `gc_clamp` 0,04 → 0,06** (AUDIT REV-22). Chủ dự án mở lại quyết định "khóa" trọng số V4. Bảng trên giữ làm lịch sử. V4 hiện có 14 tiêu chí, trong đó 13 được chấm.
+- **Vì sao bỏ `gc_skew`:** ngưỡng 0 / 0,1 / 0,2 không có nguồn. [PAST24] chỉ dùng GC skew làm một biến đầu vào của mô hình, không đưa ra ngưỡng. Lý do "nguy cơ G-quadruplex" không đứng được trên dữ liệu: trong 131.039 ứng viên đã chấm của 2253 miRNA hsa, chỉ 1 ứng viên mang motif G-quadruplex chuẩn (4 cụm G ≥ 3, vòng 1–7 nt), và ứng viên đó không bao giờ đứng #1. Ngược lại, `gc_skew` kéo #1 ra xa Tm mục tiêu: số mồi #1 có `tm_accuracy` < 100 là 233 khi còn `gc_skew`, 139 khi bỏ đi.
+- **Vì sao dồn phần trọng số cho `gc_clamp`:** tăng trọng số chỉ đổi được #1 nếu tiêu chí có giá trị khác nhau giữa các ứng viên của cùng một thiết kế. `mfe_stemloop`, `end_stability`, `bound_fraction_full` và `family_discrimination` khác nhau ở 0 % thiết kế (`family_discrimination` được chấm một lần, theo độ dài vùng đặc hiệu của mồi thắng; xem AUDIT REV-23). Trong các tiêu chí còn lại, `gc_clamp` có quy tắc từ tài liệu (thành phần 3 nt cuối đầu 3′; Busk 2014, IDT) và cho tác động rõ nhất: số mồi #1 có 3 G/C hoặc CCC ở 3 nt cuối giảm từ 85 xuống 49. Cái giá là `tm_binding_accuracy` trung bình của #1 giảm từ 88,2 xuống 87,4.
+- **Các phương án đã so** (`benchmark/scoring_weight_sensitivity.json`, script `backend/scripts/scoring_weight_sensitivity.py`; thứ hạng tính lại ngoài pipeline trùng #1 của API ở 2253/2253):
+
+| Phương án (sau khi bỏ `gc_skew`) | #1 đổi so với 3.7.0 | #1 có `gc_clamp` ≤ 50 | #1 có vùng đặc hiệu ≥ 15 nt | `tm_binding_accuracy` TB của #1 |
+|---|---|---|---|---|
+| 3.7.0 (còn `gc_skew`) | — | 85 | 913 | 88,2 |
+| Chỉ bỏ `gc_skew` | 819 | 88 | 911 | 88,4 |
+| **`gc_clamp` +0,02 (chọn)** | **863** | **49** | 918 | 87,4 |
+| `primer_size` +0,02 | 850 | 88 | 949 | 88,4 |
+| `primer_size` +0,01, `gc_clamp` +0,01 | 832 | 66 | 924 | 88,0 |
+| `tm_accuracy` +0,02 | 779 | 87 | 906 | 88,4 |
+| `family_discrimination` +0,02 | 777 | 88 | 906 | 88,4 |
+| `dimer_penalty` +0,02 | 782 | 88 | 905 | 88,4 |
+
+Nhiều mồi #1 đổi vì phần lớn thiết kế gần như hòa ở đầu bảng: chênh lệch #1 − #2 có trung vị 0,0 điểm, và 2016/2248 thiết kế chênh ≤ 0,5 điểm. Các phương án tăng một tiêu chí vốn không đổi giữa ứng viên (`family_discrimination`, `end_stability`) vẫn làm khoảng 780 mồi #1 đổi so với 3.7.0. Phần đổi đó đến từ việc bỏ `gc_skew` và từ làm tròn điểm tổng tới 0,1, không đến từ tiêu chí được tăng.
+
 **isomir_flag KHÔNG trong weights** (warning-only §31).
 **BLAST off-target KHÔNG trong weights** (optional, endpoint riêng).
 
@@ -1229,24 +1247,25 @@ Các tính chất:
 3. **Tính chính xác** các cặp còn lại (có hạng Tm và ΔG); mỗi block 32 assay một file cache.
 4. **Kiểm tra bắt buộc**: R(i, i) là cực đại của hàng; chạy dừng với mã 2 nếu sai.
 
-**Kết quả lần chạy 2026-11-11** (algorithm 3.7.0, commit `d26c64a`, `outputs/crossreactivity_metadata.json`), so với hai lần chạy trước: 3.6.0 (commit `e81f1d1`) và 3.5.0 (2026-11-10, commit `d0c43f1`):
+**Kết quả lần chạy 2026-11-16** (algorithm 3.8.0, commit `5c4d352`, `outputs/crossreactivity_metadata.json`), so với các lần chạy trước: 3.7.0 (2026-11-11, commit `d26c64a`), 3.6.0 (commit `e81f1d1`) và 3.5.0 (2026-11-10, commit `d0c43f1`):
 
-| | 3.7.0 | 3.6.0 | 3.5.0 |
-|---|---|---|---|
-| miRNA trưởng thành hsa | 2656 | 2656 | 2656 |
-| Assay thiết kế được | **2253** (overhang 6 nt cho cả 2253) | 2253 | 2253 |
-| Mồi xuôi đổi so với lần trước | 197 (mồi RT không đổi) | 434 (mồi RT không đổi) | — |
-| Độ dài vùng đặc hiệu xuôi 12 / 13 / 14 / 15 / 16 / 17 nt | 402 / 455 / 483 / 476 / 382 / 55 | 404 / 455 / 474 / 484 / 380 / 56 | 392 / 450 / 490 / 480 / 385 / 56 |
-| Mồi xuôi vi phạm lọc cứng, đi qua `hard_filter_fallback` | 119 (dimer RNAcofold < −9 hoặc Tm hairpin ≥ 47 °C) | 123 (dimer RNAcofold < −9) | — (534 mồi có dimer RNAcofold < −9) |
-| Mồi xuôi có Tm hairpin ≥ 47 °C | 19 (đều ở chế độ dự phòng) | 215 | — |
-| Thiết kế thất bại | **403** — đều do "no valid forward primer candidates" với tham số mặc định; trung vị GC 70 % (so với 50 % ở nhóm thành công); có 66 miRNA số < 1000, ví dụ miR-1-5p, miR-23a-5p, miR-210-5p, miR-326, miR-375-5p, miR-663a. Danh sách: `outputs/crossreactivity_failed_designs.csv` | 403 | 403 |
-| Số cặp | 5.983.968; NONE 5.960.701; 65 giây với 14 tiến trình | NONE 5.960.694 | NONE 5.960.694 |
-| Ngoài đường chéo HIGH / MEDIUM / LOW | **214 / 100 / 20.700** | 208 / 103 / 20.710 | 211 / 102 / 20.708 |
-| HIGH ngoài đường chéo theo loại (other / same_sequence / shifted_3p / shifted_5p) | 110 / 74 / 22 / 8 | 104 / 74 / 22 / 8 | 106 / 74 / 22 / 9 |
-| Assay có ≥ 1 cặp HIGH / MEDIUM ngoài đường chéo | 84 / 77 | 84 / 77 | 86 / 78 |
-| Kiểm tra đường chéo | **đạt** cho cả 2253 assay | đạt | đạt |
+| | 3.8.0 | 3.7.0 | 3.6.0 | 3.5.0 |
+|---|---|---|---|---|
+| miRNA trưởng thành hsa | 2656 | 2656 | 2656 | 2656 |
+| Assay thiết kế được | **2253** (overhang 6 nt cho cả 2253) | 2253 | 2253 | 2253 |
+| Mồi xuôi đổi so với lần trước | 863 (mồi RT không đổi; đổi trọng số chấm điểm) | 197 (mồi RT không đổi) | 434 (mồi RT không đổi) | — |
+| Độ dài vùng đặc hiệu xuôi 12 / 13 / 14 / 15 / 16 / 17 nt | 435 / 421 / 479 / 497 / 367 / 54 | 402 / 455 / 483 / 476 / 382 / 55 | 404 / 455 / 474 / 484 / 380 / 56 | 392 / 450 / 490 / 480 / 385 / 56 |
+| Mồi xuôi có 3 G/C hoặc CCC ở 3 nt cuối (`gc_clamp` ≤ 50) | 49 | 85 | — | — |
+| Mồi xuôi vi phạm lọc cứng, đi qua `hard_filter_fallback` | 118 | 119 (dimer RNAcofold < −9 hoặc Tm hairpin ≥ 47 °C) | 123 (dimer RNAcofold < −9) | — (534 mồi có dimer RNAcofold < −9) |
+| Mồi xuôi có Tm hairpin ≥ 47 °C | 19 (đều ở chế độ dự phòng) | 19 | 215 | — |
+| Thiết kế thất bại | **403** — đều do "no valid forward primer candidates" với tham số mặc định; trung vị GC 70 % (so với 50 % ở nhóm thành công); có 66 miRNA số < 1000, ví dụ miR-1-5p, miR-23a-5p, miR-210-5p, miR-326, miR-375-5p, miR-663a. Danh sách: `outputs/crossreactivity_failed_designs.csv` | 403 | 403 | 403 |
+| Số cặp | 5.983.968; NONE 5.960.700; 68 giây với 14 tiến trình | NONE 5.960.701 | NONE 5.960.694 | NONE 5.960.694 |
+| Ngoài đường chéo HIGH / MEDIUM / LOW | **208 / 107 / 20.700** | 214 / 100 / 20.700 | 208 / 103 / 20.710 | 211 / 102 / 20.708 |
+| HIGH ngoài đường chéo theo loại (other / same_sequence / shifted_3p / shifted_5p) | 104 / 74 / 22 / 8 | 110 / 74 / 22 / 8 | 104 / 74 / 22 / 8 | 106 / 74 / 22 / 9 |
+| Assay có ≥ 1 cặp HIGH / MEDIUM ngoài đường chéo | 84 / 79 | 84 / 77 | 84 / 77 | 86 / 78 |
+| Kiểm tra đường chéo | **đạt** cho cả 2253 assay | đạt | đạt | đạt |
 
-So với 3.6.0, có 20 cặp đổi mức, chủ yếu trong họ miR-548 vì mồi xuôi đổi. Ví dụ miR-548am-5p → 548as-5p và 548i lên từ MEDIUM thành HIGH.
+So với 3.7.0, có 42 cặp đổi mức; 13 cặp liên quan đến HIGH hoặc MEDIUM. Phần lớn nằm trong họ miR-548 vì mồi xuôi đổi: miR-548am-5p, 548c-5p và 548o-5p → 548as-5p và 548i giảm từ HIGH xuống MEDIUM; miR-548d-5p → 548as-5p và 548i tăng từ LOW lên MEDIUM. Ngoài họ này: miR-1290 → 1246 và miR-6760-3p → 6819-3p tăng từ LOW lên MEDIUM. 30 cặp R cao nhất và giá trị R của chúng không đổi.
 
 **Các cặp rủi ro cao nhất giữa hai phân tử khác nhau** (`outputs/crossreactivity_top30_offdiagonal.csv`):
 - R = 1 (51 cặp): miR-100 → 99a; miR-106a → 17; miR-1269a → 1269b; miR-30b ↔ 30c; miR-487a-5p → 487b-5p; cụm C19MC (miR-518/519/520/522/523/526a); miR-548ad → 548ay/548d.
@@ -1254,7 +1273,7 @@ So với 3.6.0, có 20 cặp đổi mức, chủ yếu trong họ miR-548 vì m�
 - Đa số là vùng mù giữa trình tự: hai miRNA chỉ khác nhau ở đoạn không phủ bởi cả overhang lẫn vùng xuôi, giống let-7a ↔ 7d trong §8.16.
 
 **Đỉnh R ≈ 0,32 % trong histogram (D-4).**
-- 20.108 / 20.700 cặp LOW (3.7.0; R = 2^−8,3 đúng bằng trần) là cặp mà RT primer bắt được (overhang trùng, có thể lệch) nhưng mồi xuôi không bám.
+- 20.109 / 20.700 cặp LOW (3.8.0; 3.7.0: 20.108; R = 2^−8,3 đúng bằng trần) là cặp mà RT primer bắt được (overhang trùng, có thể lệch) nhưng mồi xuôi không bám.
 - ΔCq_FWD bị chặn ở 8,3, mức "không khuếch đại" của Stadhouders 2010, nên R của nhóm này không thấp hơn 2^−8,3.
 - Nếu coi nhóm này là NONE thì LOW còn khoảng 600 cặp. Ngưỡng gộp mặc định là HIGH, nên kết quả ML không bị ảnh hưởng.
 

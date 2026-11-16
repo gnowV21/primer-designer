@@ -36,8 +36,8 @@ Mã slide theo bản nội dung đã soạn trước đó (Phần 1 – Nguyên 
 | 2.1 | Khung trích: "Lý do (Busk 2014): chỉ một lỗi dimer hay hairpin là cả assay hỏng; tổng có trọng số không bù được." | **Trích sai.** Busk 2014 không có câu này (mục 6.1) | Thay bằng đoạn lý do ở mục 3.1 |
 | 2.2 | Cột "Ngưỡng / mục tiêu" | Nhiều dòng chỉ ghi gần đúng | Thay bằng bảng ở mục 3.2 |
 | 2.2, dòng Dimer | "ΔG đầu 3′ > −5; ΔG toàn phần > −9" | Phần "toàn phần" nay tính bằng RNAcofold, khác thang của primer3 | Xem mục 3.2 |
-| 2.2, dòng GC-skew | "≤ 0 (giảm nguy cơ G-quadruplex)" | Cơ chế G-quadruplex chưa có nguồn đã kiểm; trong code nhãn nguồn còn lệch nhau ("PrimerAST 2024" và "PrimerAST 2026") | Ghi "≤ 0 cho điểm tối đa (heuristic)" và bỏ cơ chế; hoặc kiểm nguồn trước khi giữ |
-| 2.4 | Xếp loại Excellent ≥ 80 | Đúng, nhưng nên biết một giới hạn | Mồi đi qua chế độ dự phòng vẫn có thể đạt Excellent, ví dụ cel-miR-39-3p được 87,3 điểm dù dimer RNAcofold −10,5 kcal/mol. Xem mục 5 |
+| 2.2, dòng GC-skew | "≤ 0 (giảm nguy cơ G-quadruplex)" | **Từ algorithm 3.8.0, GC skew không còn được chấm điểm** (mục 8) | Bỏ dòng này khỏi bảng tiêu chí. Nếu cần nhắc: "GC skew chỉ còn được báo cáo ở trang Analyze" |
+| 2.4 | Xếp loại Excellent ≥ 80 | Đúng, nhưng nên biết một giới hạn | Mồi đi qua chế độ dự phòng vẫn có thể đạt Excellent, ví dụ cel-miR-39-3p được 86,8 điểm (3.8.0; 87,3 ở 3.7.0) dù dimer RNAcofold −10,5 kcal/mol. Xem mục 5 |
 | 3.1 | "algorithm/, ~5.400 dòng, 20+ module" | Đã lỗi thời | "`backend/algorithm/`: 31 file Python, 8.353 dòng (kể cả gói con)" |
 | 3.2 | ViennaRNA: "MFE cấu trúc stem-loop (tham số DNA, Mathews 2004)" | Thiếu vai trò mới | "ViennaRNA 2.7.2, bộ tham số DNA Mathews 2004, 37 °C: (1) MFE của mồi RT stem-loop; (2) ΔG dimer toàn cấu trúc cho lọc cứng (RNAcofold)" |
 | 3.2 | flask-limiter: "BLAST, multiplex: 10 lần/phút" | Không còn multiplex | "Giới hạn `/api/blast-check`: 10 lần/phút/IP" |
@@ -117,9 +117,9 @@ Với cùng một mồi, RNAcofold cho ΔG âm hơn primer3 ở 60 °C, trung v�
 - **Dự phòng:** 10/193 target không còn ứng viên nào qua quy tắc 1 và dùng `hard_filter_fallback`; điểm giảm 8,4 vì tiêu chí dimer bằng 0. Lý do: dimer nằm trong vùng đặc hiệu của miRNA, nên đổi đuôi 5′ không gỡ được. Ví dụ cel-miR-39-3p có self-dimer RNAcofold −10,5 kcal/mol, liên quan đoạn CACCGGGTG.
 - **Toàn bộ miRNA người:** 434/2253 mồi xuôi đổi; 123 mồi (5,5 %) vẫn có dimer < −9 và đi qua chế độ dự phòng.
 
-### 3.2 Mười lăm tiêu chí chấm điểm (thay cột ngưỡng của slide 2.2)
+### 3.2 Mười bốn tiêu chí chấm điểm, 13 được chấm (algorithm 3.8.0; thay cột ngưỡng của slide 2.2)
 
-Trọng số `SCORING_WEIGHTS_V4` có tổng bằng 1,00. Mỗi tiêu chí cho 0–100 điểm.
+Trọng số `SCORING_WEIGHTS_V4` có tổng bằng 1,00. Mỗi tiêu chí cho 0–100 điểm. Từ 3.8.0, GC skew bị bỏ và GC clamp tăng từ 0,04 lên 0,06 (mục 8).
 
 | Tiêu chí | Trọng số | Cách chấm (đúng theo `scoring.py`) | Nguồn ghi trong code |
 |---|---|---|---|
@@ -132,9 +132,8 @@ Trọng số `SCORING_WEIGHTS_V4` có tổng bằng 1,00. Mỗi tiêu chí cho 0
 | %GC | 0,08 | 40–60 %: max(60, 100 − 2·\|GC − 50\|) | Hướng dẫn của IDT |
 | Phân biệt họ miRNA | 0,05 | DISCRIMINATED 100, PARTIAL 70, CO-AMPLIFIED 0 (mô hình ΔCq, mục 4.1) | Chen 2005, Czimmerer 2013, Stadhouders 2010, Kwok 1990 |
 | Tỉ lệ bám, vùng đặc hiệu | 0,05 | **Không chấm, chỉ báo cáo** (chưa có ngưỡng công bố); tổng điểm được chuẩn hóa lại trên các tiêu chí còn lại | SantaLucia & Hicks 2004 |
-| GC clamp (3 nt cuối) | 0,04 | 2 G/C → 100; 1 G/C → 75; 0 hoặc 3 G/C → 50; CCC → 25 | Busk 2014 + IDT |
+| GC clamp (3 nt cuối) | **0,06** (0,04 đến 3.7.0) | 2 G/C → 100; 1 G/C → 75; 0 hoặc 3 G/C → 50; CCC → 25 | Busk 2014 + IDT |
 | Tỉ lệ bám, toàn mồi | 0,03 | Chấm theo phân số mồi bám (bound fraction) của toàn mồi, xem `bound_fraction.py` | SantaLucia & Hicks 2004 |
-| GC-skew | 0,02 | ≤ 0 → 100; ≤ 0,1 → 85; ≤ 0,2 → 70; giảm dần sau đó | Heuristic; nguồn chưa kiểm |
 | Độ dài vùng đặc hiệu | 0,02 | min(100, (L/17)² × 100), với L = 12–17 nt | Dạng bậc hai theo Busk 2014 (hệ số chưa đối chiếu lại) |
 | Kích thước amplicon | 0,02 | 60–150 bp: max(70, 100 − 0,5·\|bp − 80\|) | Hướng dẫn của IDT |
 | Chênh Tm F – URP | 0,01 | ≤ 1 °C → 100 | Trọng số thấp vì URP cố định |
@@ -239,18 +238,18 @@ Kích thước amplicon = độ dài đuôi + độ dài miRNA + 37 bp, với 37
 
 **Định nghĩa:** R(i, j) = 2^−ΔCq_assay = p_RT × p_PCR. Assay i là bộ mồi #1 của miRNA i; j là mọi miRNA trưởng thành người, miRBase 22.1.
 
-| | Algorithm 3.7.0 (2026-11-11) | 3.6.0 (2026-11-11) | 3.5.0 (2026-11-10) |
-|---|---|---|---|
-| miRNA trưởng thành hsa | 2656 | 2656 | 2656 |
-| Thiết kế được / thất bại | 2253 / 403 | 2253 / 403 | 2253 / 403 |
-| Mồi xuôi đổi so với lần trước | 197 | 434 | — |
-| Số cặp | 5.983.968 | 5.983.968 | 5.983.968 |
-| Ngoài đường chéo HIGH / MEDIUM / LOW | 214 / 100 / 20.700 | 208 / 103 / 20.710 | 211 / 102 / 20.708 |
-| Kiểm tra đường chéo (R(i, i) là cực đại của hàng) | đạt | đạt | đạt |
-| Kiểm tra hợp lý: R trung bình của cặp chỉ khác 1–2 vị trí so với cặp ngẫu nhiên | 0,1445 so với 0,000011 | 0,1408 so với 0,000011 | 0,1414 so với 0,000011 |
+| | Algorithm 3.8.0 (2026-11-16) | 3.7.0 (2026-11-11) | 3.6.0 (2026-11-11) | 3.5.0 (2026-11-10) |
+|---|---|---|---|---|
+| miRNA trưởng thành hsa | 2656 | 2656 | 2656 | 2656 |
+| Thiết kế được / thất bại | 2253 / 403 | 2253 / 403 | 2253 / 403 | 2253 / 403 |
+| Mồi xuôi đổi so với lần trước | 863 | 197 | 434 | — |
+| Số cặp | 5.983.968 | 5.983.968 | 5.983.968 | 5.983.968 |
+| Ngoài đường chéo HIGH / MEDIUM / LOW | 208 / 107 / 20.700 | 214 / 100 / 20.700 | 208 / 103 / 20.710 | 211 / 102 / 20.708 |
+| Kiểm tra đường chéo (R(i, i) là cực đại của hàng) | đạt | đạt | đạt | đạt |
+| Kiểm tra hợp lý: R trung bình của cặp chỉ khác 1–2 vị trí so với cặp ngẫu nhiên | 0,1409 so với 0,000011 | 0,1445 so với 0,000011 | 0,1408 so với 0,000011 | 0,1414 so với 0,000011 |
 
 - **403 thiết kế thất bại** đều do không có ứng viên mồi xuôi hợp lệ với tham số mặc định; nhóm này có GC trung vị 70 %.
-- **Đỉnh LOW:** 20.108 cặp LOW có R = 2^−8,3 (≈ 0,32 %). Đó là trần của trục FWD: mồi RT bắt được off-target nhưng mồi xuôi không bám.
+- **Đỉnh LOW:** 20.109 cặp LOW (3.8.0; 3.7.0: 20.108) có R = 2^−8,3 (≈ 0,32 %). Đó là trần của trục FWD: mồi RT bắt được off-target nhưng mồi xuôi không bám.
 - **Mức:** HIGH < 3,3, MEDIUM < 4,3, LOW < 10, NONE ≥ 10 (Cq).
 - **Không hiệu chỉnh bằng thực nghiệm:** dữ liệu đo của Chen 2005 (Fig. 7) và Mestdagh 2014 chưa được nhập, nên các file mẫu để trống.
 
@@ -265,6 +264,7 @@ Kích thước amplicon = độ dài đuôi + độ dài miRNA + 37 bp, với 37
 5. **Các mức điểm hairpin (−2/−3/−6 kcal/mol ở Ta)** và **cửa sổ MFE stem-loop** là mốc riêng của tool. Tiêu chí điểm hairpin gần như luôn cho 100, nên trên thực tế hairpin chỉ được xử lý bằng lọc cứng (Tm ≥ 47 °C).
 7. **Quy tắc 2 (dimer đầu 3′) chưa loại ứng viên nào** trong phép đo trên 9.268 ứng viên (AUDIT REV-21, còn mở).
 6. **Benchmark LNA** là kiểm chứng cài đặt, không phải kiểm chứng độc lập (mục 2).
+8. **Tiêu chí phân biệt họ miRNA (0,05) không ảnh hưởng việc chọn mồi.** Nhãn ΔCq được chấm một lần, theo độ dài vùng đặc hiệu của mồi thắng, nên mọi ứng viên của cùng một miRNA nhận cùng điểm (đo trên 2253 thiết kế hsa: khác nhau ở 0 % thiết kế). Tiêu chí này chỉ làm thay đổi điểm tổng, không đổi thứ hạng (AUDIT REV-23, còn mở). Không nên nói "tool chọn mồi đặc hiệu nhất trong họ".
 
 ---
 
@@ -337,6 +337,31 @@ Chỉ dùng trên slide kèm ghi chú như cột phải:
   - REV-18: nguồn của các ngưỡng lọc cứng;
   - REV-19: chuyển ΔG dimer sang RNAcofold;
   - REV-20: lọc cứng hairpin theo Tm ≥ 47 °C;
-  - REV-21: quy tắc 2 không kích hoạt (còn mở).
+  - REV-21: quy tắc 2 không kích hoạt (còn mở);
+  - REV-22: bỏ GC skew khỏi chấm điểm, GC clamp 0,06 (algorithm 3.8.0);
+  - REV-23: tiêu chí phân biệt họ không phân biệt được các ứng viên (còn mở).
 - `docs/DECISIONS_crossreactivity.md`: các quyết định khoa học của ma trận (D-1 … D-20).
-- `benchmark/dimer_dg_method_compare.json`, `validation/results.csv`, `outputs/crossreactivity_metadata.json`.
+- `benchmark/dimer_dg_method_compare.json`, `benchmark/scoring_weight_sensitivity.json`, `validation/results.csv`, `outputs/crossreactivity_metadata.json`.
+
+---
+
+## 8. Cập nhật 2026-11-16 — algorithm 3.8.0: bỏ GC skew, tăng GC clamp
+
+Mục này bổ sung cho các mục trên; các con số ở mục 3.2, 4.4 và 5 đã được cập nhật theo 3.8.0.
+
+**Thay đổi.** `SCORING_WEIGHTS_V4` bỏ tiêu chí GC skew (0,02) và chuyển phần trọng số này cho GC clamp (0,04 → 0,06). V4 còn 14 tiêu chí, trong đó 13 được chấm (tỉ lệ bám của vùng đặc hiệu chỉ báo cáo). Đây là quyết định của chủ dự án, mở lại bộ trọng số đã khóa.
+
+**Lý do (đưa lên slide được, mọi số từ `benchmark/scoring_weight_sensitivity.json`, 2253 thiết kế hsa, miRBase 22.1):**
+1. Ngưỡng GC skew (0 / 0,1 / 0,2) không có nguồn. Nguồn được ghi trong code (PrimerAST, nhãn `[PAST24]`) chỉ dùng GC skew làm một biến đầu vào, và chưa được đối chiếu (mục 6.3).
+2. Lý do "nguy cơ G-quadruplex" không đứng được trên dữ liệu: trong 131.039 ứng viên đã chấm, chỉ 1 ứng viên có motif G-quadruplex chuẩn (4 cụm G ≥ 3, vòng 1–7 nt), và nó không bao giờ đứng #1.
+3. GC skew kéo mồi #1 ra xa Tm mục tiêu: số mồi #1 có điểm Tm < 100 là 233 khi còn GC skew, 139 khi bỏ.
+4. Phần trọng số được chuyển cho GC clamp vì đây là tiêu chí vừa có khác biệt giữa các ứng viên, vừa có quy tắc từ tài liệu (thành phần 3 nt cuối đầu 3′; Busk 2014, IDT). Số mồi #1 có 3 G/C hoặc CCC ở 3 nt cuối giảm từ 85 xuống 49.
+5. Tăng trọng số cho MFE stem-loop, độ bền đầu 3′, tỉ lệ bám toàn mồi hay phân biệt họ thì không đổi được mồi nào, vì các tiêu chí này giống nhau ở mọi ứng viên của một thiết kế.
+
+**Tác động:**
+- Validation: 2439/2439 vẫn đạt; không mục nào đổi xếp loại; các phép so khớp với mồi công bố không đổi.
+- Benchmark 50 miRNA: 50/50 OK; 29 miRNA đổi điểm (≤ 1,1), 15 miRNA đổi mồi xuôi.
+- Toàn bộ miRNA người: 863/2253 mồi xuôi đổi, mồi RT không đổi. Phần lớn là đổi giữa các ứng viên gần như hòa điểm (chênh lệch #1 − #2 có trung vị 0,0 điểm).
+- Ví dụ trên slide: hsa-miR-21-5p (API, tham số trống) vẫn cho mồi `ACCGCCTAGCTTATCAGACTGA`, điểm 96,2 (3.7.0: 96,8).
+
+**Không được viết trên slide:** "GC skew giảm nguy cơ G-quadruplex", hoặc "tool có 15 tiêu chí".

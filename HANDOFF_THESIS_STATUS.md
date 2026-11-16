@@ -17,7 +17,7 @@
 |---|---|
 | Phase 1 | Setup, form nhập liệu, tra cứu miRBase (`/api/mirbase/<id>`) |
 | Phase 2 | Thuật toán thiết kế mồi, chấm điểm V3 |
-| Phase 3 | Chấm điểm V4 (15 tiêu chí, tổng trọng số = 1.00), bound fraction, hard filters |
+| Phase 3 | Chấm điểm V4 (15 tiêu chí; từ algorithm 3.8.0 còn 14, bỏ `gc_skew`; tổng trọng số = 1.00), bound fraction, hard filters |
 | Phase 4–5 | Probe TaqMan, kiểm tra multiplex, protocol advisor, edge cases (E1–E7), normalization advisor |
 | Phase 6 | BLAST off-target, Family Specificity Map, Tm lai DNA:RNA (Sugimoto 1995) |
 | Phase 7 | Benchmark family 50 miRNA, cờ isomiR, production hardening |
@@ -46,6 +46,7 @@
 | 2026-11-10 | **Rà soát lại A1–A4 + ma trận phản ứng chéo cấp assay** (nhánh `feat/assay-crossreactivity`). BLAST classifier v7 (AUDIT REV-13/14, SPEC §8.19): bước RT cho hit mồi xuôi (`rt_primer`) → stem-loop CRITICAL 65/29 → 16/10; mục lệch đầu 5′/3′ không còn để `overall_risk` = SAFE. Validation vẫn 2439/2439. Module `crossreactivity/`: mồi #1 cho 2253/2656 hsa miRNA (403 thất bại, chủ yếu giàu GC); R(i,j) = 2^−ΔCq_assay trên 5,98 triệu cặp → 211 HIGH / 102 MEDIUM / 20.708 LOW ngoài đường chéo; heatmap 6 họ; API gộp "đơn vị đo được" cho ML TCGA-BRCA. Số liệu kiểm chứng Chen 2005 Fig. 7 / Mestdagh 2014 **chưa có** (template trống). Quyết định cần duyệt: `docs/DECISIONS_crossreactivity.md` |
 | 2026-11-11 | **Algorithm 3.6.0 — ΔG dimer toàn cấu trúc bằng RNAcofold (DNA), đúng cách của Kang 2017** (AUDIT REV-17/18/19, SPEC_algorithm §12 "Lọc cứng"). Đối chiếu nguồn: câu gán cho Busk 2014 là sai (Busk nhân điểm, không loại); Kang không nói dimer gây ức chế qPCR. primer3 ở 60 °C lỏng hơn RNAcofold trung vị 5,4 kcal/mol (534/2253 mồi hsa lọt). Validation 2439/2439; 10/193 target dùng `hard_filter_fallback`. Ma trận phản ứng chéo dựng lại bằng 3.6.0 (434 mồi xuôi đổi; ngoài đường chéo HIGH 211 → 208, MEDIUM 102 → 103, LOW 20.708 → 20.710; bộ đệm giờ gắn với phiên bản thuật toán) |
 | 2026-11-11 | **Algorithm 3.7.0 — lọc cứng hairpin theo Tm ≥ 47 °C (mặc định Primer3)** (AUDIT REV-20). Quy tắc ΔG ≤ −6 cũ không loại ứng viên nào trong 9.268 ứng viên của 150 miRNA hsa. Validation 2439/2439, 9 target đổi điểm, thêm 1 ca dự phòng; ma trận hsa dựng lại (197 mồi đổi; ngoài đường chéo HIGH 214, MEDIUM 100, LOW 20.700). Còn mở: quy tắc 2 (dimer đầu 3′) cũng không kích hoạt (REV-21) |
+| 2026-11-16 | **Algorithm 3.8.0 — bỏ `gc_skew` khỏi chấm điểm, `gc_clamp` 0,04 → 0,06** (AUDIT REV-22; chủ dự án mở lại trọng số V4 đã khóa). Ngưỡng GC skew không có nguồn. Trong 131.039 ứng viên hsa chỉ 1 ứng viên có motif G-quadruplex, và nó không bao giờ đứng #1. `gc_clamp` là tiêu chí vừa khác nhau giữa các ứng viên vừa có quy tắc từ tài liệu: số mồi #1 có 3 G/C hoặc CCC ở đầu 3′ giảm từ 85 xuống 49. Validation 2439/2439 (111/193 dòng đổi điểm, \|Δ\| ≤ 2,1); benchmark 50/50; ma trận hsa dựng lại (863 mồi xuôi đổi; ngoài đường chéo HIGH 208, MEDIUM 107, LOW 20.700). Phát hiện mới: `family_discrimination` chấm chung một giá trị cho mọi ứng viên, nên không ảnh hưởng việc chọn mồi (REV-23, còn mở). Số liệu: `benchmark/scoring_weight_sensitivity.json`. |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -69,7 +70,7 @@
 ## 4. Quyết định khoa học đã chốt (KHÔNG mở lại)
 
 - **Overhang RT: mặc định 6 nt; 5 và 7 nt được hỗ trợ** kèm cảnh báo off-label; ngoài 5–7 → HTTP 400. Độ dài overhang luôn đọc từ mồi (`len(S) − 44`), không giả định 6.
-- `SCORING_WEIGHTS_V4` (15 tiêu chí) **khóa**; RT primer và probe không chấm điểm; LNA chỉ tham khảo. Occupancy forward ở Ta (SCI-02) chỉ hiển thị, không chấm.
+- `SCORING_WEIGHTS_V4` **khóa** — mở lại một lần ngày 2026-11-16 theo quyết định chủ dự án (algorithm 3.8.0: bỏ `gc_skew`, `gc_clamp` 0,06; còn 14 tiêu chí, 13 được chấm); RT primer và probe không chấm điểm; LNA chỉ tham khảo. Occupancy forward ở Ta (SCI-02) chỉ hiển thị, không chấm.
 - MFE stem-loop gấp bằng ViennaRNA **tham số DNA** (Mathews 2004, 37 °C).
 - Hiệu chỉnh muối: giữ primer3 `santalucia` (+ von Ahsen 2001 cho Mg²⁺).
 - Dữ liệu isomiR 3' từ **isomiRdb** (PMID 36243964) — đủ 42.494/42.494 mẫu (từ 2026-10-22; trước đó 20.635 do tải chậm bị server cắt ở ≈1 GiB).
@@ -87,7 +88,7 @@
    - Muốn calibrate trọng số (`calibrate_weights.py`): cần **N ≥ 20 assay**, mồi đúng y trình tự tool xuất ra, **gồm cả mồi hạng #2/#3 điểm thấp** (cần ca thất bại). Không dùng hiệu suất lấy từ bài báo.
    - Đo hiệu suất RT theo overhang 5/6/7 nt; kiểm tra sai số Tm amplicon (≥5 bộ).
    - **Cross-reactivity cho cổng Tm BLAST:** mồi xuôi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C vs 44,3 °C đúng đích; trước v2 bị xếp CRITICAL). < 5 % → bằng chứng trực tiếp cho biên 10 °C.
-4. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 15 tiêu chí V4, nhiệt động học, BLAST 3'-anchoring + cổng Tm duplex, LNA) → Kết quả (validation 2439/2439, so sánh mồi công bố, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155 route miRBase trả biến thể 24 nt, BLAST không mô hình bước RT, dữ liệu miRBase 22.1).
+4. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 14 tiêu chí V4 (13 được chấm), nhiệt động học, BLAST 3'-anchoring + cổng Tm duplex, LNA) → Kết quả (validation 2439/2439, so sánh mồi công bố, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155 route miRBase trả biến thể 24 nt, BLAST không mô hình bước RT, dữ liệu miRBase 22.1).
 5. **Nâng miRBase lên Release 23.1** (mốc riêng, đổi số liệu): build lại DB BLAST (xử lý 10 tên trùng cho `-parse_seqids`), chỉ mục family + overhang; kiểm tra route `/api/mirbase` (API trực tuyến có thể đã trả 23.1 — có thể là nguyên nhân lỗi miR-155 24 nt); chạy lại validation + benchmark + độ nhạy BLAST.
 
 **Ưu tiên thấp / tùy chọn:**
