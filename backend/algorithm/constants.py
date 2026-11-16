@@ -59,7 +59,16 @@
 #   default PRIMER_MAX_HAIRPIN_TH), instead of ΔG at Ta ≤ −6 kcal/mol. The ΔG rule
 #   never fired (0 of 9268 candidates for 150 hsa miRNAs; the lowest ΔG at 60 °C was
 #   −2.36), while 9.1 % of those candidates had a hairpin Tm > 47 °C (AUDIT REV-20).
-ALGORITHM_VERSION = "3.7.0"
+#   3.8.0 (2026-11-16) — gc_skew removed from SCORING_WEIGHTS_V4; its 0.02 goes to
+#   gc_clamp (0.04 → 0.06). GC skew stood for G-quadruplex risk with unsourced cut-offs
+#   (0 / 0.1 / 0.2): among all candidates of the 2253 designable hsa miRNAs one carried a
+#   G-quadruplex motif (four G≥3 tracts), never ranked #1 either way, while the skew
+#   term pulled #1 away from the Tm target (tm_accuracy < 100 at #1: 233 → 139).
+#   gc_clamp is the scored criterion that varies between candidates and has a literature
+#   rule (3'-terminal composition, Busk14/IDT): #1 primers with 0 G/C, 3 G/C or CCC in
+#   the last 3 nt fall from 85 to 49. #1 changes for 863 / 2253 hsa miRNAs, mostly near-
+#   ties (median #1−#2 margin 0.0). GC skew is still reported by /api/analyze (AUDIT REV-22).
+ALGORITHM_VERSION = "3.8.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -210,7 +219,8 @@ GC_CLAMP_1GC_AS_OPTIMAL         = False  # [Busk14 single-source, heuristic] —
 MAX_HOMOPOLYMER_RUN = 5       # [P3P Advanced Settings] Max Poly-X = 5
 GC_MAX_IN_3PRIME_WINDOW = 5   # [P3P Advanced Settings] Max End GC = 5
 
-# GC-skew [PAST24]
+# GC-skew [PAST24] — cut-off without a published source; used only by the legacy V3
+# score (use_v4=False). Not scored in V4 since 3.8.0; /api/analyze still reports the value.
 GC_SKEW_WARNING_THRESHOLD = 0.2
 
 
@@ -522,6 +532,12 @@ SCORING_WEIGHTS_V3 = {
 #   tm_pair_match 0.03→0.01: reverse is universal fixed (Tm≈60.4°C), redundant with tm_accuracy
 #   gc_clamp 0.02→0.04: 3' end GC critical for polymerase extension; prior weight understated impact
 #   gc_skew 0.01→0.02: marginal increase; still minor but measurable G-quadruplex risk signal
+# v3.8.0 (algorithm 3.8.0, project decision 2026-11-16 — reopens the locked weights):
+#   gc_skew removed (0.02 → gc_clamp, 0.04 → 0.06). See the ALGORITHM_VERSION changelog.
+#   Raising a criterion that is equal for every candidate of a design (mfe_stemloop,
+#   end_stability, bound_fraction_full, family_discrimination — family_discrimination
+#   is scored once, on the winner's specific length) changes no ranking, so the weight
+#   went to a criterion that differs between candidates.
 SCORING_WEIGHTS_V4 = {
     "tm_accuracy":             0.20,  # core — unchanged
     "mfe_stemloop":            0.14,  # -0.01 vs v3.0: body fixed, overhang-only variance
@@ -534,12 +550,12 @@ SCORING_WEIGHTS_V4 = {
     "gc_content":              0.08,  # +0.01 vs V3
     "family_discrimination":   0.05,  # NEW — miFam.dat risk [Chen05]
     "tm_pair_match":           0.01,  # -0.02 vs v3.0: reverse is fixed universal primer
-    "gc_clamp":                0.04,  # +0.02 vs v3.0: 3' GC critical for extension initiation
+    "gc_clamp":                0.06,  # +0.02 in 3.8.0 (gc_skew's share): 3'-terminal composition [Busk14][IDT]
     "primer_size":             0.02,  # -0.02 vs V3
     "amplicon_size":           0.02,  # -0.02 vs V3
-    "gc_skew":                 0.02,  # +0.01 vs v3.0: G-quadruplex risk signal
 }
-# Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.04+0.02+0.02+0.02 = 1.00
+# Total: 0.20+0.14+0.10+0.08+0.08+0.08+0.05+0.03+0.08+0.05+0.01+0.06+0.02+0.02 = 1.00
+# 14 criteria; 13 scored (bound_fraction_binding is informational, UNSCORED_CRITERIA_V4).
 assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
 # Criteria kept in SCORING_WEIGHTS_V4 (weights are locked) but NOT scored.

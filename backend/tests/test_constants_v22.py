@@ -126,7 +126,7 @@ def test_overhang_length_default():
     assert OVERHANG_LENGTH_DEFAULT == 6
 
 
-# ── Phase 3: SCORING_WEIGHTS_V4 (15 criteria) ──────────────────────
+# ── Phase 3: SCORING_WEIGHTS_V4 (14 criteria since algorithm 3.8.0) ─
 
 def test_scoring_weights_v3_sum_to_1():
     """SCORING_WEIGHTS_V3: 12 criteria must sum to 1.00."""
@@ -135,12 +135,19 @@ def test_scoring_weights_v3_sum_to_1():
 
 
 def test_scoring_weights_v4_sum_to_1():
-    """SCORING_WEIGHTS_V4: 15 criteria must sum to 1.00."""
+    """SCORING_WEIGHTS_V4: 14 criteria must sum to 1.00."""
     assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 
 
-def test_scoring_weights_v4_has_15_criteria():
-    assert len(SCORING_WEIGHTS_V4) == 15
+def test_scoring_weights_v4_has_14_criteria():
+    assert len(SCORING_WEIGHTS_V4) == 14
+
+
+def test_scoring_weights_v4_gc_skew_dropped_gc_clamp_raised():
+    """3.8.0: gc_skew left V4; its 0.02 went to gc_clamp (0.04 → 0.06)."""
+    assert "gc_skew" not in SCORING_WEIGHTS_V4
+    assert SCORING_WEIGHTS_V4["gc_clamp"] == 0.06
+    assert "gc_skew" in SCORING_WEIGHTS_V3          # legacy table unchanged
 
 
 def test_scoring_weights_v4_bound_fraction_ratio():

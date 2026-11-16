@@ -1,11 +1,11 @@
-// ScoreBreakdown — the scored criteria (V4: 14 scored; cycle-1 occupancy is informational).
+// ScoreBreakdown — the scored criteria (V4: 13 scored; cycle-1 occupancy is informational).
 //
 // Only keys present in `weights` are rendered, so display-only helper keys
 // (e.g. *_pct raw percentages) never leak into the list. Rows stay ordered by
 // weight, because that is what actually drives the total.
 //
 // Design note: on a good design most criteria sit at 100, so drawing
-// 15 identical full-width bars hides the one row that matters. At-target rows
+// 13 identical full-width bars hides the one row that matters. At-target rows
 // are therefore muted and the sub-target ones keep full contrast, with a count
 // in the header and a filter for scanning straight to the exceptions.
 
