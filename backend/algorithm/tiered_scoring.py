@@ -165,7 +165,6 @@ def detailed_score(m: dict) -> float:
     parts = {
         "min_delta_cq": piecewise(dcq, a["min_delta_cq"]),
         "tm_margin": piecewise(margin, a["tm_margin"]),
-        "tm_pair": piecewise(abs(m["tm_full"] - m["tm_reverse"]), a["tm_pair"]),
         "tm_accuracy": v4["tm_accuracy"],
         "tm_binding_accuracy": v4["tm_binding_accuracy"],
         "gc_content": v4["gc_content"],
@@ -195,10 +194,13 @@ def score(m: dict) -> dict:
          "specific_length": f3_specific_length(m["specific_length"]),
          "binding_tm": f4_binding_tm(m["tm_binding"]), "structure": f5["score"]}
     s_parts = [x for x in (s1, s2, s3) if x is not None]
+    # P1 is report-only (constants.py, Tier 2): the fixed universal reverse primer makes it
+    # a function of Tm_forward that opposes P2. PCR tier = P2.
     return {
         "specificity": {"blast": s1, "assay_dcq": s2, "tm_margin": s3,
                         "total": sum(s_parts), "max": 5 * len(s_parts)},
-        "pcr": {"tm_pair": p1, "tm_vs_ta": p2, "total": p1 + p2, "max": 10},
+        "pcr": {"tm_vs_ta": p2, "total": p2, "max": 5,
+                "tm_pair_report_only": p1},
         "flexible": {**f, "total": sum(f.values()), "max": 25,
                      "structure_sub_scores": f5["sub_scores"]},
         "structure_veto": f5["veto"],

@@ -125,7 +125,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict,
 
     # Hand the best few tails of EVERY 3' end to scoring; which sets are returned is
     # decided after scoring by select_diverse_top (v3.2.0).
-    passed = _candidate_pool(passed, target_tm)
+    passed = _candidate_pool(passed, target_tm, gc_first=not gc_prefilter)
     return passed, rejection_log
 
 
@@ -316,7 +316,8 @@ def _prefilter(candidate: dict, params: dict) -> tuple:
 
 
 def _candidate_pool(candidates: list, target_tm: float,
-                    per_length: int = FORWARD_TAILS_PER_LENGTH) -> list:
+                    per_length: int = FORWARD_TAILS_PER_LENGTH,
+                    gc_first: bool = False) -> list:
     """
     Keep the `per_length` tails closest to target_tm for EACH specific length (each
     3' end), so every usable 3' end reaches the 15-criterion score.
@@ -326,10 +327,23 @@ def _candidate_pool(candidates: list, target_tm: float,
     12-nt region won over the 13-nt one just by being generated first — and dropped
     3' ends 1 nt from a kept one before anything was scored. Ties here break on the
     sequence, so the pool never depends on generation order.
+
+    gc_first (tiered, 4.0.0): without the GC pre-filter, tails whose full-primer GC %
+    the tiered F1 criterion will penalise were nearest in Tm and crowded GC-balanced
+    tails out of the 20 kept per length (95/2253 hsa V4 #1 primers missing from the
+    pool). The F1 level is therefore sorted first, then |Tm − Ta|. F2 (G/C in the last
+    5 nt) needs no such step: the 3' end lies in the specific region, so it is the same
+    for every tail of one length.
     """
+    def key(x):
+        k = (abs(x.get("tm_full", 0) - target_tm), x["sequence"])
+        if gc_first:
+            from .tiered_scoring import f1_gc
+            return (-f1_gc(x["gc_percent"]),) + k
+        return k
+
     by_length: dict[int, list] = {}
-    for c in sorted(candidates, key=lambda x: (abs(x.get("tm_full", 0) - target_tm),
-                                               x["sequence"])):
+    for c in sorted(candidates, key=key):
         kept = by_length.setdefault(c["specific_length"], [])
         if len(kept) < per_length:
             kept.append(c)

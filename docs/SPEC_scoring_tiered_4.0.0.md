@@ -43,6 +43,16 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
 15. Ở hệ tiered, GC % và kẹp GC **không còn là bộ lọc sơ bộ** trong `generate_forward_candidates`; chúng chỉ được chấm ở F1/F2. Ràng buộc hình học (độ dài, vị trí) và cửa sổ Tm giữ nguyên. Cách sinh đuôi 5′ giữ nguyên trong 4.0.0 (đuôi giàu AT là việc sau, cần đo riêng). Nhánh V4 giữ nguyên bộ lọc.
 16. Nhãn "equivalent in silico" không làm cho V4. Ở hệ tiered, hai bộ có cùng (S_total, structure_veto, P_total, F_total) là tương đương; cách hiển thị để SPEC UI.
 
+**Bổ sung sau khi duyệt Giai đoạn 1 (2026-11-17; số liệu §9, `benchmark/tiered_scoring_dryrun.json`):**
+
+17. **Tầng PCR chỉ còn P2** (tối đa 5). P1 (ΔTm F–R) chỉ báo cáo, không chấm, và bỏ khỏi điểm chi tiết (trọng số còn lại chuẩn hóa theo tổng 0,85). Lý do: mồi ngược cố định (Tm 62,93 °C ở điều kiện mặc định), nên P1 chỉ là hàm của Tm mồi xuôi và kéo nó về 62,9 °C trong khi P2 kéo về Ta (r = −0,95 trên 217.780 ứng viên). P2 giữ bậc ≤ 1 / 2 / 3 / 5 °C; **không dùng bậc hẹp hơn 1 °C** vì Tm nearest-neighbor có sai số ~±1–2 °C. P2 không hằng số ở các thiết kế fallback của V4 (khác nhau ở 23/115 pool), nên vẫn có tác dụng bảo vệ ở đó.
+18. **S2 giữ ngưỡng.** Mức 4 (7 – < 10 Cq) là mức cao nhất đạt được trên thực tế, nghĩa là "mồi RT bắt được off-target nhưng mồi xuôi không mồi được": ΔCq_FWD chạm trần mô hình 8,3 (DECISIONS D-4). Mức 5 chỉ đạt khi không có off-target nào mà RT bắt được. **Không đặt mốc mức 5 ở 8,3**: trần của mô hình không phải bằng chứng đặc hiệu tối đa. S2 vẫn tham gia xếp hạng vì nó khác nhau giữa các ứng viên ở 5,6 % thiết kế (REV-23) và là căn cứ loại ứng viên (QĐ 4).
+19. **S2 tính cả `shifted_5p` và `shifted_3p`**, chỉ bỏ `same_sequence` (đúng chữ của §3.1). Hai trình tự trùng nhau thì không mồi nào phân biệt được. Còn trình tự lệch đầu là nguy cơ phản ứng chéo có thật: lệch 3′ chạm vùng overhang RT, lệch 5′ chạm mồi xuôi. **Khác V4**: `family_discrimination` của V4 bỏ cả ba loại. Khóa luận phải ghi rõ khác biệt này khi so V4 với tiered. Tác động: 39 thiết kế `specificity_fallback` (28 nếu theo cách của V4), 97 thiết kế có ứng viên bị loại (92). Các thiết kế có off-target lệch đầu nên được ưu tiên kiểm tra phản ứng chéo ở wet-lab.
+20. **S3 lấy khung bền nhất trong ±2 nt** cho Tm_off (trường hợp xấu nhất). S3 là phép phạt off-target: mồi xuôi gắn trên cDNA của một off-target lệch đầu theo khung dịch vẫn kéo dài được. Tm_on vẫn tính ở khung không dịch (r = 0), tức là gắn đúng đích. Phương án chỉ dùng r = 0 được đo nhưng không dùng (`alternative_s3_register_0_only_not_used`).
+21. **F5c (Tm dimer đầu 3′) trên thực tế là veto, không phải tiêu chí chấm theo bậc**: 99,2 % ứng viên ở mức 5. Cả 32 ứng viên ở mức 1 đều cũng có F5a = 1 và F5b = 1 (đầu 3′ tự bổ sung như CTGCAG, GTCGAC). Không thiết kế nào bị veto toàn bộ chỉ vì F5c. Giữ lại vì Primer3 có quy tắc này. F5a (hairpin) cũng gần như nhị phân: 89 % ở mức 5, 11 % ở mức 1, các mức giữa gần như trống.
+22. **QĐ 15, thứ tự cắt pool.** Bỏ cả luật "≥ 5 G/C trong 5 nt cuối" khỏi bộ lọc sơ bộ, vì F2 đã chấm trường hợp này ở mức 1. Khi không còn lọc GC, pool 20 đuôi/độ dài được xếp **theo mức F1 (GC % toàn mồi) trước**, rồi mới theo |Tm − Ta|. Không cần xếp theo F2 trước: 5 nt cuối nằm trong vùng đặc hiệu nên F2 giống nhau với mọi đuôi cùng độ dài. Trước khi sửa, 95/2253 mồi #1 của V4 không có trong pool tiered (các đuôi GC lệch có Tm gần hơn đã chiếm chỗ); sau khi sửa: 0/2253. Có test hồi quy (`test_forward_gc_prefilter_flag.py`).
+23. **Nguyên tắc chỉnh ngưỡng** (áp cho mọi lần sửa sau): không chỉnh ngưỡng chỉ để phân bố "trải đều"; mỗi ngưỡng cần lý do sinh học hoặc lý do về độ chính xác của mô hình, nếu không có thì ghi "own threshold". Vai trò của từng thành phần do **độ biến thiên trong cùng thiết kế** quyết định: bằng 0 thì chỉ báo cáo; chỉ tách mức 1 thì là bộ lọc/veto; còn lại thì xếp hạng. Bảng chẩn đoán này (§9) là luận cứ cho cấu trúc hàm điểm trong khóa luận.
+
 ## 3. Tiêu chí và ngưỡng đề xuất (chờ duyệt ở Giai đoạn 1)
 Quy ước:
 - L = độ dài vùng đặc hiệu của ứng viên (12–17 nt).
@@ -84,8 +94,8 @@ Quy ước:
 | 2 | 5 – < 7,5 | `BLAST_TM_CRITICAL_MARGIN` |
 | 1 | < 5 | (không loại; QĐ 4 chỉ áp cho S1, S2) |
 
-### 3.2 Tầng 2 — PCR (tối đa 10)
-**P1 · ΔTm F–R** = |Tm(mồi xuôi đầy đủ) − Tm(mồi ngược universal)|, cùng điều kiện.
+### 3.2 Tầng 2 — PCR (tối đa 5 từ QĐ 17; trước đó 10)
+**P1 · ΔTm F–R** = |Tm(mồi xuôi đầy đủ) − Tm(mồi ngược universal)|, cùng điều kiện. **Chỉ báo cáo (QĐ 17).**
 **P2 · Tm so với Ta** = |Tm(mồi xuôi đầy đủ) − Ta người dùng| (cùng tham chiếu với `tm_accuracy` hiện tại).
 
 | Điểm | P1 | P2 |
@@ -97,6 +107,7 @@ Quy ước:
 | 1 | > 5 | > 5 |
 
 Cần đo: mồi ngược là cố định, nên nếu Tm_rev ≈ Ta thì P1 ≈ P2 (đếm đôi). Báo Tm_rev và tương quan P1–P2.
+**Đã đo:** Tm_rev = 62,93 °C; r(|F − R|, |F − Ta|) = −0,95 → P1 bỏ khỏi xếp hạng (QĐ 17).
 
 ### 3.3 Tầng 3 — Linh hoạt (tối đa 25)
 Thứ tự mốc trong mỗi ô: 5 / 4 / 3 / 2 / 1.
@@ -127,7 +138,7 @@ Mỗi thành phần là sub-score liên tục 0–100. Dùng hàm sub-score hi�
 |---|---|
 | min ΔCq_assay (chặn trên ở 10) | 0,25 |
 | Biên Tm đặc hiệu (chặn trên ở 20 °C) | 0,15 |
-| ΔTm F–R | 0,15 |
+| ~~ΔTm F–R~~ | ~~0,15~~ → bỏ (QĐ 17) |
 | Tm so với Ta (`tm_accuracy`) | 0,15 |
 | Tm vùng bám (`tm_binding_accuracy`) | 0,08 |
 | GC % | 0,05 |
@@ -136,12 +147,12 @@ Mỗi thành phần là sub-score liên tục 0–100. Dùng hàm sub-score hi�
 | Cấu trúc (trung bình 3 sub-score) | 0,05 |
 | Amplicon | 0,02 |
 
-Tổng 1,00, trong đó đặc hiệu 0,40, Tm 0,38, cấu trúc 0,05.
+Tổng 1,00 ban đầu; sau QĐ 17 còn 0,85 và được chuẩn hóa theo tổng đó (trước chuẩn hóa: đặc hiệu 0,40, Tm 0,23, cấu trúc 0,05).
 Chỉ báo cáo, không chấm (gom vào `assay_qc`): `mfe_stemloop`, `end_stability`, bound fraction (cả 2 vòng), `family_discrimination` của V4, `tm_pair_match` của V4 (đã thay bằng P1).
 
 ### 3.5 Khóa xếp hạng
 1. Loại ứng viên theo QĐ 4.
-2. `key = (−S_total, structure_veto, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`.
+2. `key = (−S_total, structure_veto, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với P_total = P2 (QĐ 17).
 3. Chọn top 3 bằng `select_diverse_top(ranked, CANDIDATES_TOP_N)`, giữ nguyên logic đa dạng.
 4. Hệ mới bỏ vòng fixpoint `family_discrimination` trong `design_pipeline.py` (không cần nữa vì S2 đã tính theo từng ứng viên).
 
@@ -248,3 +259,33 @@ Mỗi bộ mồi trong `POST /api/design` có thêm:
 
 ## 8. Báo cáo cuối mỗi giai đoạn
 Viết bằng tiếng Việt, gồm: việc đã làm; lệnh đã chạy + output rút gọn; file đã đổi; số liệu; vấn đề còn mở.
+
+## 9. Kết quả Giai đoạn 1 (dry run, 2026-11-17, sau QĐ 17–22)
+Nguồn: `benchmark/tiered_scoring_dryrun.json` (`backend/scripts/tiered_scoring_dryrun.py`). 2656 miRNA hsa, miRBase 22.1, mặc định backend. S2/S3/P/F tính trên mọi ứng viên của 2472 thiết kế có ứng viên. S1 (BLAST, classifier v7) chỉ chạy trên mẫu 309 miRNA (300 ngẫu nhiên seed 2026 + 7 ca của mục 8 + ứng viên wet-lab), 31.049 lần gọi, vì một lần BLAST ≈ 1,1 s.
+
+**Bảng chẩn đoán: độ biến thiên trong cùng thiết kế** (% thiết kế mà tiêu chí khác nhau giữa các ứng viên; SD trung bình của mức trong một thiết kế):
+
+| Tiêu chí | Khác nhau | SD | Vai trò |
+|---|---|---|---|
+| S1 BLAST (mẫu) | 52,8 % | 0,21 | xếp hạng + loại CRITICAL |
+| S2 ΔCq | 5,6 % | 0,04 | xếp hạng (ít) + loại CO-AMPLIFIED |
+| S3 biên Tm | 14,9 % | 0,09 | xếp hạng |
+| P1 ΔTm F–R | 78,2 % | 0,28 | **chỉ báo cáo** (đối nghịch P2) |
+| P2 Tm − Ta | 12,1 % | 0,05 | xếp hạng (ít) |
+| F1 GC % | 21,2 % | 0,12 | xếp hạng |
+| F2 kẹp GC | 85,1 % | 0,71 | xếp hạng |
+| F3 độ dài | 96,6 % | 1,20 | xếp hạng |
+| F4 Tm vùng bám | 92,6 % | 1,14 | xếp hạng |
+| F5 cấu trúc | 95,0 % | 0,95 | xếp hạng + veto |
+| F5a hairpin | 92,6 % | 1,02 | gần như bộ lọc (99 % số thiết kế có biến thiên chỉ tách mức 1) |
+| F5c dimer đầu 3′ | 19,0 % | 0,04 | veto (QĐ 21) |
+
+**Số liệu chính** (không BLAST, 2472 thiết kế; trong ngoặc: mẫu có BLAST, 309 thiết kế):
+- Có ứng viên bị loại: 97 (54); `specificity_fallback`: 39 (7); trả < 3 bộ: 2 (0); #1 bị veto mềm: 118 (13).
+- #1 khác #1 của V4 3.8.2: 1659/2253 (73,6 %); trong đó ΔS = 0 ở 1487 ca, ΔL > 0 ở 781 ca, ΔTm trung vị 0. Mẫu có BLAST: 204/277.
+- #1 so với #2 trong bảng xếp hạng được phân định bởi: điểm chi tiết 1124, trình tự 1195 (đa số là biến thể đuôi có cùng mọi chỉ số), F 138, |Tm − Ta| 13, veto 1.
+- Mức chiếm > 90 %: P2 = 5 (97,3 %), F5c = 5 (99,2 %). S2 = 4 chiếm 89,4 % (QĐ 18).
+- 403 miRNA V4 không thiết kế được: 219 có ứng viên ở hệ tiered (#1: F1 mức 5/4/3/2 = 34/70/69/46; F2 = 1 ở 31 ca; veto 43); 184 vẫn không có (cửa sổ Tm, độ dài, homopolymer).
+- 115 thiết kế V4 `hard_filter_fallback`: #1 của hệ tiered bị veto ở 72 ca (F5 = 1 ở 72, = 2 ở 41).
+- **Thời gian:** BLAST trung vị 1,11 s/ứng viên (2 subprocess: `blastn`, `blastdbcmd`); pool trung vị 100 ứng viên → ước tính ~113 s/thiết kế, vượt xa 15 s (QĐ 12). Giai đoạn 2 phải gộp truy vấn BLAST (§5).
+- Nhánh V4 sinh đúng tập ứng viên như 3.8.2 ở 2656/2656 miRNA.

@@ -925,14 +925,23 @@ TIERED_S3_MARGIN_C = (
 )
 TIERED_RT_CAPTURE_BELOW = ASSAY_DCQ_DISCRIMINATED_AT   # ΔCq_RT < 4.3 → the RT primer captures it
 
-# Tier 2 — PCR (max 10); lower is better, |ΔT| in °C
-TIERED_P1_TM_PAIR_C = (1.0, TM_PAIR_DIFF_MAX, 3.0, 5.0)   # 4: 2 °C [PAST24]; others own thresholds
-TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds
+# Tier 2 — PCR (max 5 since the Giai đoạn 1 review, 2026-11-17); lower is better, °C.
+# P2 |Tm_forward − Ta| is the only scored PCR criterion. Edges no tighter than 1 °C:
+# nearest-neighbour Tm predictions carry ~±1–2 °C error, so finer steps would rank noise.
+# P1 |Tm_forward − Tm_reverse| is REPORT-ONLY: the universal reverse primer is fixed
+# (Tm 62.93 °C at the design defaults), so P1 is a function of Tm_forward alone and
+# pulls it towards 62.9 °C while P2 pulls it towards Ta (r = −0.96 over 217,780 hsa
+# candidates; P1 level 3 for 88 %). benchmark/tiered_scoring_dryrun.json.
+TIERED_P1_TM_PAIR_C = (1.0, TM_PAIR_DIFF_MAX, 3.0, 5.0)   # report only; 4: 2 °C [PAST24]
+TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds (≥ 1 °C steps)
 
 # Tier 3 — flexible (max 25)
 TIERED_F3_LENGTH = {17: 5, 16: 5, 15: 4, 14: 3, 13: 2, 12: 1}   # own threshold (longer = more 3'-mismatch room)
 TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING_TARGET|, own thresholds
-# F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8)
+# F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
+# F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
+# 99.2 % of hsa candidates; the 31 candidates at level 1 all also fail F5a and F5b
+# (self-complementary 3' ends such as CTGCAG, GTCGAC). Kept because Primer3 has the rule.
 TIERED_F5_HAIRPIN_TM_C   = (30.0, 37.0, 42.0, HAIRPIN_TM_HARD_MAX)    # level 1 at ≥ 47 °C [P3 PRIMER_MAX_HAIRPIN_TH]
 TIERED_F5_DIMER_DG       = (-5.0, -7.0, -9.0, -10.0)                  # kcal/mol RNAcofold; ≤ −10 → 1 [Kang17 −9 ± 1]
 TIERED_F5_END_DIMER_TM_C = (30.0, 37.0, 42.0, END_DIMER_TM_HARD_MAX)  # level 1 at ≥ 47 °C [P3 *_END_TH]
@@ -940,8 +949,10 @@ TIERED_F5_END_DIMER_TM_C = (30.0, 37.0, 42.0, END_DIMER_TM_HARD_MAX)  # level 1 
 # Detailed score (0–100), tie-break only (SPEC §3.4). Sub-scores without an existing
 # V4 function are piecewise-linear through these (value, sub-score) anchors — own choice,
 # chosen so each table edge of levels 2…5 maps to 25/50/75/100 (or 20…100).
+# tm_pair (0.15) removed with P1 (same conflict with tm_accuracy); the rest is
+# renormalised by its sum (0.85).
 TIERED_DETAIL_WEIGHTS = {
-    "min_delta_cq": 0.25, "tm_margin": 0.15, "tm_pair": 0.15, "tm_accuracy": 0.15,
+    "min_delta_cq": 0.25, "tm_margin": 0.15, "tm_accuracy": 0.15,
     "tm_binding_accuracy": 0.08, "gc_content": 0.05, "gc_clamp": 0.05,
     "primer_size": 0.05, "structure": 0.05, "amplicon_size": 0.02,
 }

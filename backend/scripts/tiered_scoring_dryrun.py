@@ -207,16 +207,30 @@ def blast(a):
             r = json.loads(line)
             recs[r["mirna"]] = r
     names = blast_sample([n for n, r in recs.items() if r["candidates"]])
+    # Incremental: a BLAST result depends only on (miRNA, primer, RT primer), so results
+    # of an earlier run are reused and only new candidate sequences are BLASTed.
+    done = {}
+    if os.path.exists(BLASTS):
+        with gzip.open(BLASTS, "rt", encoding="utf-8") as f:
+            for line in f:
+                r = json.loads(line)
+                done[r["mirna"]] = {k: v for k, v in r["results"].items() if v.get("risk")}
     items = [(n, recs[n]["rna"], recs[n]["rt_primer"],
-              [c["sequence"] for c in recs[n]["candidates"]]) for n in names]
-    print(f"BLAST: {len(items)} miRNAs, {sum(len(i[3]) for i in items)} candidates", flush=True)
+              [c["sequence"] for c in recs[n]["candidates"]
+               if c["sequence"] not in done.get(n, {})]) for n in names]
+    print(f"BLAST: {len(items)} miRNAs, {sum(len(i[3]) for i in items)} new candidates "
+          f"({sum(len(v) for v in done.values())} reused)", flush=True)
     t0, n = time.time(), 0
-    with gzip.open(BLASTS, "wt", encoding="utf-8") as f, mp.Pool(a.workers, initializer=_init) as p:
+    merged = {nm: dict(done.get(nm, {})) for nm in names}
+    with mp.Pool(a.workers, initializer=_init) as p:
         for name, res in p.imap_unordered(_blast_one, items):
-            f.write(json.dumps({"mirna": name, "results": res}) + "\n")
+            merged[name].update(res)
             n += 1
             if n % 25 == 0 or n == len(items):
                 print(f"  {n}/{len(items)}  {time.time() - t0:.0f}s", flush=True)
+    with gzip.open(BLASTS, "wt", encoding="utf-8") as f:
+        for name in names:
+            f.write(json.dumps({"mirna": name, "results": merged[name]}) + "\n")
     print(f"wrote {BLASTS}")
     return 0
 
@@ -246,7 +260,7 @@ def _pearson(x, y):
 LEVEL_KEYS = [("S1 blast", lambda r: r["specificity"]["blast"]),
               ("S2 assay_dcq", lambda r: r["specificity"]["assay_dcq"]),
               ("S3 tm_margin", lambda r: r["specificity"]["tm_margin"]),
-              ("P1 tm_pair", lambda r: r["pcr"]["tm_pair"]),
+              ("P1 tm_pair (report only)", lambda r: r["pcr"]["tm_pair_report_only"]),
               ("P2 tm_vs_ta", lambda r: r["pcr"]["tm_vs_ta"]),
               ("F1 gc", lambda r: r["flexible"]["gc"]),
               ("F2 gc_clamp", lambda r: r["flexible"]["gc_clamp"]),
@@ -307,6 +321,7 @@ def analyse(a):
         lv_all = defaultdict(Counter)
         lv_v4top5 = defaultdict(Counter)
         varies = Counter()
+        sd_sum, sd_n, filter_only = Counter(), Counter(), Counter()
         elim_designs = fb = fewer3 = veto1 = 0
         ties = Counter()
         changed, dS, dL, dTm = [], [], [], []
@@ -330,7 +345,13 @@ def analyse(a):
                     for k, fn in LEVEL_KEYS:
                         lv_v4top5[k][fn(by_seq[v["seq"]][1])] += 1
             for k, fn in LEVEL_KEYS:
-                varies[k] += len({fn(r) for _, r in pool}) > 1
+                vals = [fn(r) for _, r in pool]
+                varies[k] += len(set(vals)) > 1
+                if all(v is not None for v in vals) and len(vals) > 1:
+                    sd_sum[k] += st.pstdev(vals)
+                    sd_n[k] += 1
+                    if len(set(vals)) > 1 and 1 in vals and len({v for v in vals if v != 1}) == 1:
+                        filter_only[k] += 1
             elim_designs += res["eliminated"] > 0
             fb += res["specificity_fallback"]
             fewer3 += len(top) < CANDIDATES_TOP_N
@@ -387,6 +408,14 @@ def analyse(a):
                 for k, c in lv_all.items() if sum(c.values()) and
                 c.most_common(1)[0][1] / sum(c.values()) > 0.9},
             "pools_where_criterion_varies_pct": {k: _pct(varies[k], n) for k, _ in LEVEL_KEYS},
+            "within_design_diagnostic": {
+                k: {"varies_pct": _pct(varies[k], n),
+                    "mean_within_design_sd": round(sd_sum[k] / sd_n[k], 3) if sd_n[k] else None,
+                    "designs_where_it_only_separates_level_1": filter_only[k],
+                    "role": ("constant: report only" if not varies[k] else
+                             "filter: only separates level 1" if filter_only[k] == varies[k] else
+                             "ranks candidates")}
+                for k, _ in LEVEL_KEYS},
             "designs_with_eliminated_candidates": elim_designs,
             "specificity_fallback": fb,
             "fewer_than_3_sets": fewer3,
@@ -449,6 +478,44 @@ def analyse(a):
            "tiered_top1_structure_veto": sum(full["per_design"][r["mirna"]]["tiered_top3"][0]["veto"] for r in fbk),
            "tiered_top1_F5": dict(Counter(full["per_design"][r["mirna"]]["tiered_top3"][0]["levels"]["F5 structure"] for r in fbk))}
 
+    # checks asked in the Giai đoạn 1 review (2026-11-17)
+    chk = {"p_in_specificity_fallback_designs": Counter(), "p_varies_in_specificity_fallback": 0,
+           "n_specificity_fallback": 0, "p_in_v4_fallback_designs": Counter(),
+           "p_varies_in_v4_fallback": 0, "f5c_level1": [], "designs_all_vetoed": 0,
+           "designs_all_vetoed_only_by_f5c": 0, "v4_top1_in_tiered_pool": 0, "v4_designs": 0}
+    for rec in ok:
+        sc = scored(rec, False)
+        pool = [c for c in sc if c[0]["in_tiered_pool"]]
+        if not pool:
+            continue
+        res = ts.rank(pool)
+        ps = [r["pcr"]["total"] for _, r in pool]
+        if res["specificity_fallback"]:
+            chk["n_specificity_fallback"] += 1
+            chk["p_varies_in_specificity_fallback"] += len(set(ps)) > 1
+            chk["p_in_specificity_fallback_designs"].update(ps)
+        if rec["v4"]["fallback"]:
+            chk["p_varies_in_v4_fallback"] += len(set(ps)) > 1
+            chk["p_in_v4_fallback_designs"].update(ps)
+        subs = [r["flexible"]["structure_sub_scores"] for _, r in pool]
+        for (m, r), sub in zip(pool, subs):
+            if sub["end_dimer_tm"] == 1:
+                chk["f5c_level1"].append({"mirna": rec["mirna"], "sequence": m["sequence"],
+                                          "end_dimer_tm": m["end_dimer_tm"],
+                                          "hairpin_tm": m["hairpin_tm"], "dimer_dg": m["dimer_dg"],
+                                          "other_sub_indices": [sub["hairpin_tm"], sub["dimer_dg"]]})
+        if all(r["structure_veto"] for _, r in pool):
+            chk["designs_all_vetoed"] += 1
+            chk["designs_all_vetoed_only_by_f5c"] += all(
+                x["hairpin_tm"] > 1 and x["dimer_dg"] > 1 for x in subs)
+        if rec["v4"]["top3"]:
+            chk["v4_designs"] += 1
+            chk["v4_top1_in_tiered_pool"] += any(
+                m["sequence"] == rec["v4"]["top3"][0] for m, _ in pool)
+    chk["f5c_level1_alone"] = sum(1 for x in chk["f5c_level1"] if min(x["other_sub_indices"]) > 1)
+    for k in ("p_in_specificity_fallback_designs", "p_in_v4_fallback_designs"):
+        chk[k] = dict(chk[k])
+
     def strip(s):
         return {k: v for k, v in s.items() if k != "per_design"}
 
@@ -468,7 +535,8 @@ def analyse(a):
         "alternative_s2_other_category_only": {k: alt_s2[k] for k in (
             "designs_with_eliminated_candidates", "specificity_fallback", "fewer_than_3_sets",
             "level_distribution_all_candidates")},
-        "alternative_s3_register_0_only": {k: alt_s3[k] for k in ("level_distribution_all_candidates",)},
+        "alternative_s3_register_0_only_not_used": {k: alt_s3[k] for k in ("level_distribution_all_candidates",)},
+        "review_checks": chk,
         "timing": timing,
         "v4_failed_designs": t9,
         "v4_hard_filter_fallback": t10,

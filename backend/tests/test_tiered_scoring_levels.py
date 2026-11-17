@@ -156,3 +156,9 @@ def test_ties_fall_to_detail_then_tm_then_sequence():
     rc = ts.score(c)
     assert rc["detailed_score"] < ra["detailed_score"]
     assert ts.rank([(c, rc), (a, ra)])["ranked"][0][0]["sequence"] == "TTTT"
+
+
+def test_pcr_tier_is_p2_only_and_p1_is_reported():
+    r = ts.score(_m(tm_full=60.0, tm_reverse=62.9))
+    assert r["pcr"]["total"] == r["pcr"]["tm_vs_ta"] == 5 and r["pcr"]["max"] == 5
+    assert r["pcr"]["tm_pair_report_only"] == 3

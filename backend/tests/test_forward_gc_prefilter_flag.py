@@ -33,3 +33,27 @@ def test_other_prefilter_rules_still_apply():
     for c in cands:
         assert 58.0 <= c["tm_full"] <= 62.0
         assert 18 <= c["length"] <= 27
+
+
+# hsa-miR-1269a: without the GC pre-filter, GC-unbalanced tails nearest in Tm used to
+# push its V4 #1 (3.8.2) out of the 20 tails kept for its specific length.
+_MIR1269A = "CUGGACUGAGCCGUGCUACUGG"
+_MIR1269A_V4_TOP1 = "GACGTCAACTGGACTGAGCC"
+
+
+def test_tiered_pool_sorts_gc_level_first_and_keeps_the_v4_primer():
+    from algorithm.tiered_scoring import f1_gc
+    cands, _ = generate_forward_candidates(_MIR1269A, {}, gc_prefilter=False)
+    v4, _ = generate_forward_candidates(_MIR1269A, {})
+    assert _MIR1269A_V4_TOP1 in {c["sequence"] for c in cands}
+    by_len = {}
+    for c in cands:
+        by_len.setdefault(c["specific_length"], []).append(f1_gc(c["gc_percent"]))
+    for levels in by_len.values():
+        assert levels == sorted(levels, reverse=True)
+    # where 20 GC-balanced tails exist, the tiered pool of that length is the V4 pool
+    for L in {c["specific_length"] for c in v4}:
+        t = [c["sequence"] for c in cands if c["specific_length"] == L]
+        v = [c["sequence"] for c in v4 if c["specific_length"] == L]
+        if len(v) == 20:
+            assert sorted(t) == sorted(v)
