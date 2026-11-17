@@ -90,6 +90,23 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
 31. **Giai đoạn 3 mở PR vào `master` nhưng KHÔNG merge cho tới khi xong SPEC UI.** Lý do: frontend (ScoreGauge, RerunBar, History, ThermoTable, export CSV, `rankReason`) hiển thị `total_score` / `grade`, nên ở 444 thiết kế bộ #1 trông kém hơn #2. Ghi điều này trong mô tả PR.
 32. **Chờ số liệu:** cách xử lý các bộ #1 vi phạm luật V4 trong khi V4 có mồi tuân thủ. Chưa đổi luật; số đo ở Giai đoạn 2b mục 4.
 
+**Sau khi duyệt Giai đoạn 2b (2026-11-18; số liệu §11):**
+
+33. **Duyệt QĐ 29, kèm chỉnh cho các ca dưới sàn.** `tm_binding_accuracy` trong điểm chi tiết: tuyến tính một phía, 0 điểm tại 25 °C, 100 điểm tại ≥ 45 °C (25 °C ≈ Tm vùng bám thấp nhất quan sát được; own threshold). Giữ trọng số 0,10 sau chuẩn hóa.
+    - Nghiệm thu, trên bộ #1 của 2472 thiết kế: số thiết kế có F4 = 1 ≤ 179, và % có Tm vùng bám < 45 °C ≤ 39,0.
+    - Nếu chưa đạt: thử trọng số 0,15 (chuẩn hóa lại tổng) rồi đo lại. Vẫn chưa đạt → DỪNG, báo cả hai phương án.
+34. **Giải quyết QĐ 32.** Khóa xếp hạng tiered thành `(−S_total, structure_veto, has_v4_violation, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với `has_v4_violation = len(v4_rule_violations) > 0`.
+    - Luật này chỉ phân định khi tổng đặc hiệu bằng nhau. Ở Giai đoạn 2b nó không làm giảm S1 hay S3 của #1 ở ca nào.
+    - F2 giữ nguyên (xem giới hạn).
+    - Nghiệm thu: so với cấu hình không có QĐ 34, ở mọi thiết kế S1, S2, S3 của #1 không đổi (từng thành phần, không chỉ tổng).
+    - Cờ: `TIERED_V4_COMPLIANT_FIRST`.
+35. **Mặc định của hệ tiered: bật QĐ 29 (+33), QĐ 30, QĐ 34.** Giữ các cờ (`TIERED_F4_FLOOR`, `TIERED_GRADE_BY_TIERS`, `TIERED_V4_COMPLIANT_FIRST`) để script so sánh vẫn tắt được. Cập nhật test và `openapi.yaml`.
+
+**Giới hạn đã biết (ghi vào khóa luận):**
+- F2 đếm G/C trong 5 nt cuối, không xét vị trí: …GCAAT được 5 điểm, trong khi V4 loại vì 3 nt cuối không có G/C. QĐ 34 xử lý phần lớn các ca cùng S.
+- Mốc 45 °C của Tm vùng bám là mức sàn rút từ giả thuyết chu kỳ 1 của khóa luận, không phải đích tối ưu.
+- Các ngưỡng ghi "own threshold" chưa được hiệu chỉnh bằng wet-lab.
+
 ## 3. Tiêu chí và ngưỡng đề xuất (chờ duyệt ở Giai đoạn 1)
 Quy ước:
 - L = độ dài vùng đặc hiệu của ứng viên (12–17 nt).
@@ -284,6 +301,16 @@ Cài QĐ 29 và QĐ 30 sau cờ, đo trên hệ có BLAST đầy đủ (2472 thi
 
 Mọi test pass; hồi quy V4 vẫn trùng 3.8.2. ⛔ DỪNG: chờ duyệt QĐ 29 (theo số đo) và QĐ 32.
 
+### Giai đoạn 2c — đo cấu hình cuối (QĐ 33–35), dùng lại cache BLAST
+- A. Trước khi chạy: working tree sạch, test pass, hồi quy V4 trùng 3.8.2. Ghi provenance vào đầu log (git SHA, `ALGORITHM_VERSION`, giá trị mọi cờ, phiên bản `blastn`, metadata + sha256 của BLAST DB, số dòng `blast_cache.sqlite`, giờ bắt đầu). Sao lưu `blast_cache.sqlite` → `blast_cache.<yyyymmdd-hhmm>.bak` (gitignore; không xóa, không ghi đè, không `BLAST_CACHE_DISABLED`). Chỉ một tiến trình ghi cache. Chạy thử 20 miRNA của phép đo thời gian: cache hit ≥ 90 % và S1 của mọi ứng viên trùng Giai đoạn 2. Không đạt → DỪNG, báo thành phần khóa cache đã đổi.
+- B. Chạy đủ 2472 thiết kế, thứ tự theo tên, JSONL theo miRNA, có `--resume`, log ở `benchmark/logs/`. Mỗi 100 miRNA một dòng tiến độ. DỪNG nếu sau 200 miRNA cache hit < 90 % hoặc ước tính tổng > 2 giờ. Lỗi BLAST: chạy lại 1 lần cuối lượt; còn > 1 % (24) → DỪNG.
+- C. Kiểm tra:
+  - tắt QĐ 29/33/34 thì tái tạo Giai đoạn 2 (#1 trùng 2472/2472, fallback 54, có ứng viên bị loại 383);
+  - nghiệm thu QĐ 33, QĐ 34;
+  - tất định trên 20 miRNA;
+  - JSONL không trùng, số dòng = 2472 − số lỗi.
+- D. Báo cáo 4 cột (V4 3.8.2 | tiered Giai đoạn 2 | QĐ 29 | cấu hình cuối) → `benchmark/tiered_stage2c_report.json`, SPEC §12, HANDOFF. Đạt hết thì sang Giai đoạn 3 không cần chờ; có mục không đạt → DỪNG.
+
 ### Giai đoạn 3 — Số liệu, tài liệu, PR
 - (QĐ 31) Mở PR vào `master`, **không merge** cho tới khi xong SPEC UI; ghi lý do trong mô tả PR. `docs/SCORING_TIERED_COMPARISON.md` thêm: S1 của #1 V4 so với tiered (Giai đoạn 2b mục 3) và danh sách fallback kèm gợi ý ưu tiên kiểm phản ứng chéo ở wet-lab (mục 5).
 - Chạy lại pipeline theo HANDOFF §7 (backend tắt auto-reloader): validation + report, benchmark export, `blast_tm_gate_sensitivity.py`, benchmark 50, ma trận hsa; chạy e2e Playwright.
@@ -447,3 +474,26 @@ Nguồn: `benchmark/tiered_stage2b_report.json`, `benchmark/tiered_fallback_list
 - Họ seed: miR-548 (11 + 5 họ con), miR-5 (9), miR-1 (3), miR-378 (3), let-7, miR-103, miR-30, miR-376, miR-302, miR-520, miR-5692 (mỗi họ 2), …
 - Nguyên nhân bị loại: cả S1 và S2 ở 48 thiết kế; chỉ S1 ở 3; chỉ S2 ở 3.
 - Off-target chính của S2: `other` 35, `shifted_3p` 13, `shifted_5p` 3. Có 16 thiết kế fallback do mục nhập lệch đầu (QĐ 19).
+
+## 12. Giai đoạn 2c — DỪNG ở nghiệm thu QĐ 33 (2026-11-18)
+QĐ 33–35 đã cài; mặc định theo QĐ 35 (cờ bật). Nghiệm thu đo offline trên pool đã ghi và kết quả BLAST của §10 (`benchmark/tiered_stage2c_offline.json`, `backend/scripts/tiered_stage2c.py offline`).
+
+| #1 | F4 = 1 / % < 45 °C (2472) | F4 = 1 / % < 45 °C (2253) | #1 vi phạm luật V4 (2472) |
+|---|---|---|---|
+| V4 3.8.2 | — | 201 / 59,5 | — |
+| tiered Giai đoạn 2 | 197 / 42,8 | 179 / 45,5 | 555 |
+| QĐ 29 (mốc 35 °C) | 237 / 36,4 | 211 / 38,4 | 519 |
+| QĐ 29 + 33, chưa QĐ 34 | 243 / 36,8 | 217 / 38,8 | 510 |
+| **cấu hình cuối (QĐ 29 + 33 + 34), trọng số 0,10** | **262 / 38,3** | 236 / 40,5 | 389 |
+| cấu hình cuối, trọng số 0,15 | 260 / 38,1 | 234 / 40,3 | 389 |
+
+- **QĐ 33: không đạt** (F4 = 1 ≤ 179) ở cả trọng số 0,10 và 0,15. Điều kiện % < 45 °C ≤ 39,0 thì đạt trên 2472 thiết kế.
+- Chẩn đoán 262 #1 có F4 = 1 (cấu hình cuối):
+  - **226 ca không có ứng viên nào cùng S, veto và QĐ 34 đạt F4 ≥ 2.** Không có QĐ 34 là 196 ca.
+  - 32 ca thua ở tầng F, vì F1/F2/F5 lấn át F4 khi không còn F3.
+  - 4 ca thua ở điểm chi tiết.
+
+  → Trọng số của điểm chi tiết không thể đưa con số về 179. Mức tối thiểu khi giữ S trước rồi veto là 196 ca, và 226 ca nếu có QĐ 34. Mốc 179 được đọc trên 2253 thiết kế; trên 2472 thiết kế, tiered Giai đoạn 2 là 197.
+- **QĐ 34: đạt.** #1 đổi ở 121 thiết kế; S1, S2, S3 của #1 không đổi ở thiết kế nào. Số #1 vi phạm luật V4 giảm 510 → 389.
+- **Bước A5 chưa chạy:** `blast_cache.sqlite` chỉ có 425 dòng (5 thiết kế, từ test). Lượt BLAST toàn bộ ở §10 gọi thẳng `check_offtarget_batch` và lưu tóm tắt S1 vào `outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`, không qua cache SQLite. Vì vậy cache hit sẽ ≈ 0 % dù khóa cache không đổi.
+

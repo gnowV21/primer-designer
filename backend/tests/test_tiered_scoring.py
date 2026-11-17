@@ -86,7 +86,8 @@ def test_tiered_sets_carry_ranking_and_v4_compatible_fields(monkeypatch):
         assert s["total_score"] == rk["detailed_score"]
         assert set(s["weights"]) == set(s["scores"])          # frontend breakdown
         assert abs(sum(s["weights"].values()) - 1.0) < 0.01
-        assert rk["specificity"]["max"] == 15 and rk["pcr"]["max"] == 5 and rk["flexible"]["max"] == 25
+        assert rk["specificity"]["max"] == 15 and rk["pcr"]["max"] == 5 and rk["flexible"]["max"] == 20
+        assert s["grade"] in ("A", "B") and s["grade_basis"] == "tiers (QD 30)"   # QD 35 defaults
         assert rk["pcr"]["tm_pair"]["report_only"] is True
         assert rk["pcr"]["total"] == rk["pcr"]["tm_vs_ta"]["score"]
         assert rk["specificity"]["blast"]["overall_risk"] == "SAFE"
@@ -279,10 +280,17 @@ def test_export_carries_scoring_system_thresholds_and_v4_rules(monkeypatch):
 live = pytest.mark.skipif(not bo.blast_available()[0], reason="BLAST+ or the miRBase DB missing")
 
 
+def _flags(monkeypatch, on: bool):
+    from algorithm import constants as K
+    for f in ("TIERED_F4_FLOOR", "TIERED_GRADE_BY_TIERS", "TIERED_V4_COMPLIANT_FIRST"):
+        monkeypatch.setattr(K, f, on)
+
+
 @live
-def test_live_design_matches_the_giai_doan_1_dry_run():
-    """hsa-miR-21-5p with real BLAST: the top 3 of the dry run
-    (benchmark/tiered_scoring_dryrun.json, cases) — pipeline and dry run agree."""
+def test_live_design_matches_the_giai_doan_1_dry_run(monkeypatch):
+    """hsa-miR-21-5p with real BLAST, QD 29/30/34 off (the configuration of Giai đoạn
+    1–2): the top 3 of the dry run (benchmark/tiered_scoring_dryrun.json, cases)."""
+    _flags(monkeypatch, False)
     d = _run(MIR21, MIR21_ID)
     assert [s["sequence"] for s in d["top3"]] == [
         "ACCGCCTAGCTTATCAGACTGA", "CTAGCCGTCCTATAGCTTATCAGACT", "ACCGAGTGAGTGTAGCTTATCAGA"]
@@ -350,7 +358,22 @@ def test_grade_c_on_fallback_and_b_without_blast(monkeypatch):
 
 
 def test_flags_off_keep_the_giai_doan_2_output(monkeypatch):
+    _flags(monkeypatch, False)
     _stub_blast(monkeypatch, lambda s: "SAFE")
     s = _run()["top3"][0]
     assert s["ranking"]["flexible"]["max"] == 25 and "primer_size" in s["scores"]
     assert s["grade_basis"] == "detailed score" and s["grade_reasons"] is None
+
+
+
+def test_v4_compliant_set_preferred_at_equal_specificity(monkeypatch):
+    """QD 34 in the pipeline: with BLAST stubbed SAFE, the #1 breaks a V4 rule only if
+    every candidate with its S total and veto does."""
+    _stub_blast(monkeypatch, lambda s: "SAFE")
+    top = _run()["top3"][0]
+    if top["v4_rule_violations"]:
+        d = _run()
+        same = [c for c in d["top3"]
+                if c["ranking"]["specificity"]["total"] == top["ranking"]["specificity"]["total"]
+                and c["ranking"]["structure_veto"] == top["ranking"]["structure_veto"]]
+        assert all(c["v4_rule_violations"] for c in same)

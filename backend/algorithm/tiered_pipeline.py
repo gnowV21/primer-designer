@@ -84,6 +84,7 @@ def _metrics(c: dict, v4_scores: dict, screen_l: dict, ta: float, tm_rev: float)
         "tm_margin": screen_l["tm_margin"], "tm_margin_worst": screen_l["tm_margin_worst"],
         "tm_on": screen_l.get("tm_on"),
         "blast_risk": None, "blast_medium_hits": 0, "blast_worst": None,
+        "v4_violation": bool(c.get("v4_rule_violations")),   # QD 34 rank step
         "v4_scores": {k: v4_scores[k] for k in _V4_SUBSCORES},
     }
 

@@ -198,7 +198,7 @@ def test_floor_drops_f3_from_the_flexible_tier():
 def test_floor_detailed_score_is_one_sided_without_primer_size():
     hi, at, lo, low = (_m(tm_binding=t) for t in (55.0, 45.0, 40.0, 30.0))
     p = [ts.detailed_parts(x, f4_floor=True)["tm_binding_accuracy"] for x in (hi, at, lo, low)]
-    assert p == [100.0, 100.0, 50.0, 0.0]
+    assert p == [100.0, 100.0, 75.0, 25.0]                 # QD 33: 0 at 25 °C, 100 at 45 °C
     assert "primer_size" not in ts.detailed_parts(hi, f4_floor=True)
     w = ts.detailed_weights(f4_floor=True)
     assert "primer_size" not in w and abs(sum(w.values()) - 1) < 0.01
@@ -245,3 +245,22 @@ def test_grade_a_allows_medium_with_one_hit():
 def test_grade_c_is_the_fallback_whatever_the_levels():
     assert _graded(fallback=True)["grade"] == "C"
     assert _graded(fallback=True, blast_risk="CRITICAL")["grade"] == "C"
+
+
+
+# ── QD 34: V4-compliant first, only within the same S total and veto ──
+
+def test_v4_compliant_first_only_within_same_specificity():
+    # same last 5 nt (same F2) so only the V4 step and the sequence differ
+    bad = _m(seq="ATTTAAGCA", v4_violation=True)                  # better sequence, breaks a V4 rule
+    ok = _m(seq="CTTTAAGCA", v4_violation=False)
+    rb, ro = ts.score(bad), ts.score(ok)
+    assert ts.rank([(bad, rb), (ok, ro)], v4_compliant_first=True)["ranked"][0][0]["sequence"] == "CTTTAAGCA"
+    assert ts.rank([(bad, rb), (ok, ro)], v4_compliant_first=False)["ranked"][0][0]["sequence"] == "ATTTAAGCA"
+    better_s = _m(seq="GTTTAAGCA", v4_violation=True)              # S 15 vs ok's S 13
+    weaker = _m(seq="TTTTAAGCA", v4_violation=False, min_delta_cq=8.0)
+    out = ts.rank([(weaker, ts.score(weaker)), (better_s, ts.score(better_s))], v4_compliant_first=True)
+    assert out["ranked"][0][0]["sequence"] == "GTTTAAGCA"
+    vetoed = _m(seq="AATTAAGCA", v4_violation=False, hairpin_tm=50.0)   # veto comes before the V4 step
+    out = ts.rank([(vetoed, ts.score(vetoed)), (bad, rb)], v4_compliant_first=True)
+    assert out["ranked"][0][0]["sequence"] == "ATTTAAGCA"

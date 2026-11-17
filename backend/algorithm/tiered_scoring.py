@@ -288,21 +288,25 @@ def grade_tiers(r: dict, specificity_fallback: bool) -> dict:
     return {"grade": "B" if reasons else "A", "reasons": reasons}
 
 
-def rank_key(m: dict, r: dict) -> tuple:
-    """SPEC §3.5: (−S, veto, −P, −F, −detailed, |Tm − Ta|, sequence). The veto only
-    reorders candidates with the same S total, because S comes first (QD 8)."""
-    return (-r["specificity"]["total"], r["structure_veto"], -r["pcr"]["total"],
-            -r["flexible"]["total"], -r["detailed_score"], abs(m["tm_full"] - m["ta"]),
-            m["sequence"])
+def rank_key(m: dict, r: dict, v4_compliant_first: bool | None = None) -> tuple:
+    """SPEC §3.5: (−S, veto, [has_v4_violation,] −P, −F, −detailed, |Tm − Ta|, sequence).
+    The veto and the QD 34 V4-rule step only reorder candidates with the same S total,
+    because S comes first (QD 8). has_v4_violation = bool(m["v4_violation"]) (the
+    candidate's v4_rule_violations); the step is on with TIERED_V4_COMPLIANT_FIRST."""
+    on = _K.TIERED_V4_COMPLIANT_FIRST if v4_compliant_first is None else v4_compliant_first
+    return (-r["specificity"]["total"], r["structure_veto"],
+            bool(m.get("v4_violation")) if on else False,
+            -r["pcr"]["total"], -r["flexible"]["total"], -r["detailed_score"],
+            abs(m["tm_full"] - m["ta"]), m["sequence"])
 
 
-def rank(candidates: list[tuple[dict, dict]]) -> dict:
+def rank(candidates: list[tuple[dict, dict]], v4_compliant_first: bool | None = None) -> dict:
     """candidates: [(metrics, score(metrics))]. Drops eliminated candidates (SPEC QD 4);
     if all are eliminated keeps all and flags specificity_fallback. Returns the
     ranked list and the flags; top-N selection (select_diverse_top) is the caller's."""
     kept = [c for c in candidates if not c[1]["eliminated"]]
     fallback = not kept and bool(candidates)
     pool = candidates if fallback else kept
-    ranked = sorted(pool, key=lambda c: rank_key(*c))
+    ranked = sorted(pool, key=lambda c: rank_key(*c, v4_compliant_first))
     return {"ranked": ranked, "specificity_fallback": fallback,
             "eliminated": len(candidates) - len(kept)}

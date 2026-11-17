@@ -963,15 +963,22 @@ TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING
 # tier S. So F4 becomes a one-sided floor and F3 (length) leaves the flexible tier
 # (report only; F max 20); the detailed score drops primer_size and scores the binding
 # Tm one-sided (100 at ≥ 45 °C, linear to 0 at 35 °C).
-TIERED_F4_FLOOR = False
+TIERED_F4_FLOOR = True    # default since QD 35 (approved 2026-11-18)
 TIERED_F4_FLOOR_C = (45.0, 43.0, 41.0, 39.0)   # own threshold; floor = thesis cycle-1 hypothesis (let-7a 33.6 vs 46.2 °C)
-TIERED_DETAIL_TM_BINDING_FLOOR = ((35.0, 0.0), (45.0, 100.0))   # own anchors (QD 29)
+# QD 33: 0 at 25 °C (≈ lowest binding Tm observed), 100 at ≥ 45 °C, so the detailed score
+# still prefers a higher binding Tm among candidates below the floor (all F4 = 1). Own
+# threshold. Its weight stays 0.10 after normalisation (raw 0.08 of 0.80).
+TIERED_DETAIL_TM_BINDING_FLOOR = ((25.0, 0.0), (45.0, 100.0))
 # SPEC QD 30 (behind TIERED_GRADE_BY_TIERS): tiered grade from the tiers, not the
 # detailed score. A: no fallback, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4, no veto; B: passed the
 # elimination with a weakness (S1 2–3, S2 2, S3 ≤ 3, veto) or without BLAST (no A
 # without S1); C: specificity_fallback.
-TIERED_GRADE_BY_TIERS = False
+TIERED_GRADE_BY_TIERS = True    # default since QD 35
 TIERED_GRADE_A_MIN = {"blast": 4, "assay_dcq": 3, "tm_margin": 4}
+# SPEC QD 34: within the same specificity total and veto, a candidate that breaks no V4
+# rule (v4_rule_violations empty) ranks first. Giai đoạn 2b: it never lowered S1 or S3 of
+# the #1 set. Key: (−S, veto, has_v4_violation, −P, −F, −detailed, |Tm − Ta|, sequence).
+TIERED_V4_COMPLIANT_FIRST = True    # default since QD 35
 # F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
 # F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
 # 99.2 % of hsa candidates; the 32 candidates at level 1 all also fail F5a and F5b

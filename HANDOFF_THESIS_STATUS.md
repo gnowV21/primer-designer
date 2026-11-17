@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); **Giai đoạn 2b (đo QĐ 29/30 sau cờ) xong, chờ duyệt QĐ 29 và QĐ 32** trước Giai đoạn 3. QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). **Giai đoạn 2c DỪNG ở nghiệm thu QĐ 33** (F4 = 1 của #1: 262 > 179; SPEC §12) — chờ quyết định trước Giai đoạn 3. QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)

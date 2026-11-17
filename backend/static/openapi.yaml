@@ -520,8 +520,9 @@ components:
           default: tiered
           description: >
             Ranking of the forward candidates (algorithm 4.0.0). "tiered": specificity
-            first (BLAST S1, assay ΔCq S2, Tm margin S3) → structure veto → PCR (Tm vs Ta)
-            → flexible (GC, clamp, length, binding Tm, structure) → detailed score;
+            first (BLAST S1, assay ΔCq S2, Tm margin S3) → structure veto → breaks no V4
+            rule (QD 34) → PCR (Tm vs Ta) → flexible (GC, clamp, binding-Tm floor,
+            structure) → detailed score;
             docs/SPEC_scoring_tiered_4.0.0.md. "v4": the weighted 14-criterion score of
             3.8.x, kept for comparison. May also be sent inside any parameter group.
 
@@ -569,7 +570,7 @@ components:
         system:         { type: string, enum: [tiered] }
         specificity:    { type: object, description: "blast {score, overall_risk, medium_hits, worst_hit}, assay_dcq {score, min_delta_cq, worst_target, label}, tm_margin {score, tm_on, tm_off_max, margin, worst_target}, total, max (15, or 10 without BLAST)" }
         pcr:            { type: object, description: "tm_vs_ta {score, tm, ta, diff}, tm_pair {score, report_only, tm_forward, tm_reverse, diff}, total, max (5)" }
-        flexible:       { type: object, description: "gc, gc_clamp, specific_length, binding_tm, structure {score, hairpin_tm, dimer_dg, end_dimer_tm, sub_scores}, total, max (25)" }
+        flexible:       { type: object, description: "gc, gc_clamp, specific_length (report_only since QD 29), binding_tm (one-sided floor ≥ 45 °C, QD 29), structure {score, hairpin_tm, dimer_dg, end_dimer_tm, sub_scores}, total, max (20; 25 with QD 29 off)" }
         structure_veto: { type: boolean, description: A structure sub-index at level 1; ranks after non-vetoed sets of the same specificity total }
         eliminated:     { type: boolean, description: true only inside a specificity_fallback design }
         detailed_score: { type: number, description: 0–100 tie-break; also returned as total_score }
@@ -600,8 +601,9 @@ components:
               grade:
                 type: string
                 description: >
-                  V4: Excellent/Good/Acceptable/Poor from total_score. Tiered: A/B/C by tiers
-                  when TIERED_GRADE_BY_TIERS (QD 30), else as V4 from the detailed score.
+                  V4: Excellent/Good/Acceptable/Poor from total_score. Tiered (default since
+                  QD 35): A/B/C from the tiers (QD 30; A = no fallback, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4,
+                  no veto; B = a weakness or no BLAST; C = specificity_fallback).
               grade_basis:   { type: string, description: "Tiered only: 'tiers (QD 30)' or 'detailed score'" }
               grade_reasons: { type: array, nullable: true, items: { type: string }, description: Tiered QD 30 grade only — why not A }
         ranking_summary:     { $ref: "#/components/schemas/RankingSummary" }
