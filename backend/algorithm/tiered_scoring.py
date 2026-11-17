@@ -261,6 +261,9 @@ def score(m: dict, f4_floor: bool | None = None) -> dict:
                      # QD 29: length (F3) is reported, not scored
                      **({"specific_length_report_only": f3} if floor else {})},
         "structure_veto": f5["veto"],
+        # QD 36: binding Tm below the one-sided floor (< 39 °C); ranked as a soft veto
+        # when TIERED_BINDING_FLOOR_VETO (and only meaningful with the floor, QD 29).
+        "binding_floor_fail": floor and f["binding_tm"] == 1,
         "eliminated": (s1 == 1) or (s2 == 1),
         "detailed_score": detailed_score(m, floor),
     }
@@ -285,28 +288,36 @@ def grade_tiers(r: dict, specificity_fallback: bool) -> dict:
             reasons.append(f"{names[k]} level {sp[k]} (< {lo})")
     if r["structure_veto"]:
         reasons.append("structure veto (a structure sub-index at level 1)")
+    if r.get("binding_floor_fail") and _K.TIERED_BINDING_FLOOR_VETO:
+        reasons.append("binding Tm below the 39 °C floor (F4 level 1)")
     return {"grade": "B" if reasons else "A", "reasons": reasons}
 
 
-def rank_key(m: dict, r: dict, v4_compliant_first: bool | None = None) -> tuple:
-    """SPEC §3.5: (−S, veto, [has_v4_violation,] −P, −F, −detailed, |Tm − Ta|, sequence).
-    The veto and the QD 34 V4-rule step only reorder candidates with the same S total,
-    because S comes first (QD 8). has_v4_violation = bool(m["v4_violation"]) (the
-    candidate's v4_rule_violations); the step is on with TIERED_V4_COMPLIANT_FIRST."""
+def rank_key(m: dict, r: dict, v4_compliant_first: bool | None = None,
+             binding_floor_veto: bool | None = None) -> tuple:
+    """SPEC §3.5: (−S, structure_veto, [binding_floor_fail,] [has_v4_violation,] −P, −F,
+    −detailed, |Tm − Ta|, sequence). The soft vetoes and the QD 34 V4-rule step only
+    reorder candidates with the same S total, because S comes first (QD 8).
+    binding_floor_fail (QD 36) is on with TIERED_BINDING_FLOOR_VETO; has_v4_violation =
+    bool(m["v4_violation"]) (the candidate's v4_rule_violations), on with
+    TIERED_V4_COMPLIANT_FIRST."""
     on = _K.TIERED_V4_COMPLIANT_FIRST if v4_compliant_first is None else v4_compliant_first
+    fv = _K.TIERED_BINDING_FLOOR_VETO if binding_floor_veto is None else binding_floor_veto
     return (-r["specificity"]["total"], r["structure_veto"],
+            bool(r.get("binding_floor_fail")) if fv else False,
             bool(m.get("v4_violation")) if on else False,
             -r["pcr"]["total"], -r["flexible"]["total"], -r["detailed_score"],
             abs(m["tm_full"] - m["ta"]), m["sequence"])
 
 
-def rank(candidates: list[tuple[dict, dict]], v4_compliant_first: bool | None = None) -> dict:
+def rank(candidates: list[tuple[dict, dict]], v4_compliant_first: bool | None = None,
+         binding_floor_veto: bool | None = None) -> dict:
     """candidates: [(metrics, score(metrics))]. Drops eliminated candidates (SPEC QD 4);
     if all are eliminated keeps all and flags specificity_fallback. Returns the
     ranked list and the flags; top-N selection (select_diverse_top) is the caller's."""
     kept = [c for c in candidates if not c[1]["eliminated"]]
     fallback = not kept and bool(candidates)
     pool = candidates if fallback else kept
-    ranked = sorted(pool, key=lambda c: rank_key(*c, v4_compliant_first))
+    ranked = sorted(pool, key=lambda c: rank_key(*c, v4_compliant_first, binding_floor_veto))
     return {"ranked": ranked, "specificity_fallback": fallback,
             "eliminated": len(candidates) - len(kept)}

@@ -102,6 +102,20 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
     - Cờ: `TIERED_V4_COMPLIANT_FIRST`.
 35. **Mặc định của hệ tiered: bật QĐ 29 (+33), QĐ 30, QĐ 34.** Giữ các cờ (`TIERED_F4_FLOOR`, `TIERED_GRADE_BY_TIERS`, `TIERED_V4_COMPLIANT_FIRST`) để script so sánh vẫn tắt được. Cập nhật test và `openapi.yaml`.
 
+**Sau Giai đoạn 2c lần 1 (2026-11-18; §12):** bỏ mốc nghiệm thu "F4 = 1 ≤ 179" của QĐ 33. Mốc đó lấy từ tập 2253 thiết kế mà áp lên 2472, và không trừ các ca không thể tránh.
+
+36. **F4 = 1 (Tm vùng bám < 39 °C) thành veto mềm**, giống mức 1 của cấu trúc.
+    - Khóa xếp hạng: `(−S_total, structure_veto, binding_floor_fail, has_v4_violation, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với `binding_floor_fail = (F4 == 1)`.
+    - Lý do: dưới 39 °C là vùng mà giả thuyết chu kỳ 1 của khóa luận cho rằng mồi gần như không gắn được (let-7a 33,6 °C), tức lỗi chức năng. Còn vi phạm luật V4 ở đây chủ yếu là `gc_clamp_fail`, chỉ là khuyến nghị mềm.
+    - Không loại ứng viên. Giữ QĐ 33 (0 điểm tại 25 °C, trọng số 0,10) để xếp thứ tự trong nhóm vẫn dưới sàn.
+    - Grade (QĐ 30): `binding_floor_fail` là một lý do của mức B, giống `structure_veto`.
+    - Cờ `TIERED_BINDING_FLOOR_VETO`. Test: veto này đứng sau `structure_veto`, trước `has_v4_violation`, và chỉ phân định khi cùng tổng S.
+    - Nghiệm thu (offline, bộ #1, 2472 thiết kế):
+      - số #1 có F4 = 1 phải bằng số thiết kế mà nhóm (S_total, structure_veto) cao nhất không có ứng viên nào F4 ≥ 2, tức 0 ca tránh được;
+      - S1, S2, S3 của #1 không đổi so với cấu hình không có QĐ 36, ở mọi thiết kế;
+      - báo kèm: số #1 vi phạm luật V4, % < 45 °C, grade A/B/C, số #1 đổi. Báo trên cả 2253 và 2472 thiết kế.
+37. **Cache.** Giai đoạn 2c dùng dữ liệu offline (`outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`), kiểm tra bằng pipeline thật trên 20 miRNA (top 3 trùng 20/20, tất định). Giai đoạn 3 nạp cache SQLite bằng lượt dựng ma trận hsa: lượt này là BLAST mới nên không áp ngưỡng cache hit, nhưng số lần ghi cache thất bại phải bằng 0. Sau đó kiểm tra S1 của mọi ứng viên trong cache so với dữ liệu offline; các lượt sau áp ngưỡng cache hit ≥ 90 % cho thiết kế hsa.
+
 **Giới hạn đã biết (ghi vào khóa luận):**
 - F2 đếm G/C trong 5 nt cuối, không xét vị trí: …GCAAT được 5 điểm, trong khi V4 loại vì 3 nt cuối không có G/C. QĐ 34 xử lý phần lớn các ca cùng S.
 - Mốc 45 °C của Tm vùng bám là mức sàn rút từ giả thuyết chu kỳ 1 của khóa luận, không phải đích tối ưu.
@@ -475,25 +489,36 @@ Nguồn: `benchmark/tiered_stage2b_report.json`, `benchmark/tiered_fallback_list
 - Nguyên nhân bị loại: cả S1 và S2 ở 48 thiết kế; chỉ S1 ở 3; chỉ S2 ở 3.
 - Off-target chính của S2: `other` 35, `shifted_3p` 13, `shifted_5p` 3. Có 16 thiết kế fallback do mục nhập lệch đầu (QĐ 19).
 
-## 12. Giai đoạn 2c — DỪNG ở nghiệm thu QĐ 33 (2026-11-18)
-QĐ 33–35 đã cài; mặc định theo QĐ 35 (cờ bật). Nghiệm thu đo offline trên pool đã ghi và kết quả BLAST của §10 (`benchmark/tiered_stage2c_offline.json`, `backend/scripts/tiered_stage2c.py offline`).
+## 12. Kết quả Giai đoạn 2c (cấu hình cuối, 2026-11-18)
+Lần 1 dừng ở mốc nghiệm thu cũ của QĐ 33 (262 bộ #1 có F4 = 1; 226 ca không có ứng viên nào cùng S, veto và QĐ 34 đạt F4 ≥ 2). Mốc đó bỏ, thay bằng QĐ 36.
 
-| #1 | F4 = 1 / % < 45 °C (2472) | F4 = 1 / % < 45 °C (2253) | #1 vi phạm luật V4 (2472) |
-|---|---|---|---|
-| V4 3.8.2 | — | 201 / 59,5 | — |
-| tiered Giai đoạn 2 | 197 / 42,8 | 179 / 45,5 | 555 |
-| QĐ 29 (mốc 35 °C) | 237 / 36,4 | 211 / 38,4 | 519 |
-| QĐ 29 + 33, chưa QĐ 34 | 243 / 36,8 | 217 / 38,8 | 510 |
-| **cấu hình cuối (QĐ 29 + 33 + 34), trọng số 0,10** | **262 / 38,3** | 236 / 40,5 | 389 |
-| cấu hình cuối, trọng số 0,15 | 260 / 38,1 | 234 / 40,3 | 389 |
+- Nguồn: `benchmark/tiered_stage2c_report.json` (`backend/scripts/tiered_stage2c.py offline`). Pool đã ghi + BLAST đầy đủ của Giai đoạn 2 (`outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`, QĐ 37 cách a).
+- Cấu hình cuối = QĐ 29 + 33 + 34 + 36. Cột "tiered G2" là tiered của Giai đoạn 2.
 
-- **QĐ 33: không đạt** (F4 = 1 ≤ 179) ở cả trọng số 0,10 và 0,15. Điều kiện % < 45 °C ≤ 39,0 thì đạt trên 2472 thiết kế.
-- Chẩn đoán 262 #1 có F4 = 1 (cấu hình cuối):
-  - **226 ca không có ứng viên nào cùng S, veto và QĐ 34 đạt F4 ≥ 2.** Không có QĐ 34 là 196 ca.
-  - 32 ca thua ở tầng F, vì F1/F2/F5 lấn át F4 khi không còn F3.
-  - 4 ca thua ở điểm chi tiết.
+**Nghiệm thu QĐ 36 (đạt)**, trên 2472 thiết kế:
+- 196 bộ #1 có F4 = 1, bằng đúng số thiết kế mà nhóm (S_total, structure_veto) cao nhất không có ứng viên nào F4 ≥ 2. Tức là **0 ca tránh được**.
+- S1, S2, S3 của #1 không đổi so với cấu hình không có QĐ 36 ở mọi thiết kế; #1 đổi ở 66 thiết kế.
+- QĐ 34 (Giai đoạn 2c lần 1): S1, S2, S3 không đổi ở mọi thiết kế; #1 đổi ở 121 thiết kế.
 
-  → Trọng số của điểm chi tiết không thể đưa con số về 179. Mức tối thiểu khi giữ S trước rồi veto là 196 ca, và 226 ca nếu có QĐ 34. Mốc 179 được đọc trên 2253 thiết kế; trên 2472 thiết kế, tiered Giai đoạn 2 là 197.
-- **QĐ 34: đạt.** #1 đổi ở 121 thiết kế; S1, S2, S3 của #1 không đổi ở thiết kế nào. Số #1 vi phạm luật V4 giảm 510 → 389.
-- **Bước A5 chưa chạy:** `blast_cache.sqlite` chỉ có 425 dòng (5 thiết kế, từ test). Lượt BLAST toàn bộ ở §10 gọi thẳng `check_offtarget_batch` và lưu tóm tắt S1 vào `outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`, không qua cache SQLite. Vì vậy cache hit sẽ ≈ 0 % dù khóa cache không đổi.
+**Pipeline thật** (`tiered_stage2c.py pipeline-check`, 20 miRNA, `random.Random(2026)`): top 3 trùng offline 20/20; chạy hai lần giống hệt 20/20 (lần 2 cache hit 1875/1875).
 
+**Bảng so sánh.** Mẫu số: 2253 = các thiết kế mà V4 có mồi; 2472 = mọi thiết kế có ứng viên.
+
+| Bộ #1 | V4 3.8.2 (2253) | tiered G2 (2253) | QĐ 29 (2253) | **cuối (2253)** | **cuối (2472)** |
+|---|---|---|---|---|---|
+| #1 khác V4 | — | 1670 | 1764 | 1723 | — |
+| L trung bình | 14,05 | 14,59 | 14,68 | 14,65 | 14,57 |
+| Tm vùng bám trung vị (p05–p95), °C | 44,4 (36,8–47,8) | 45,2 (37,4–52,2) | 45,9 (34,9–53,5) | 45,7 (35,8–53,4) | 46,0 (35,6–54,6) |
+| % < 45 °C | 59,5 | 45,5 | 38,4 | 40,3 | 38,1 |
+| Mức F4 thang sàn 1/2/3/4/5 | 201/178/311/651/912 | 179/148/233/465/1228 | 211/134/207/314/1387 | 178/190/225/316/1344 | 196/195/231/321/1529 |
+| #1 vi phạm luật V4 | 115 | 336 | 300 | 200 | 419 |
+| S1 của #1, mức 1/2/3/4/5 | 67/18/34/115/2019 | 38/17/23/68/2107 | như G2 | như G2 | 39/18/24/72/2319 |
+| Grade A/B/C | — | 2023/177/53 | 2023/177/53 | 1881/319/53 | 2032/386/54 |
+
+- **#1 so với #2 được phân định bởi** (cuối, 2472 thiết kế): trình tự 1232, điểm chi tiết 1088, F 134, \|Tm − Ta\| 10, S 3, luật V4 2, P 1, veto cấu trúc 1.
+- **Lý do của mức B** (cuối, 2472 thiết kế): dưới sàn 39 °C 185, `structure_veto` 118, S2 = 2: 44, S3 = 3: 33, S3 = 2: 28, S1 = 3: 24, S1 = 2: 6.
+- **S1 so với #1 V4:** 85 thiết kế có #1 V4 với S1 ≤ 2. #1 tiered có S1 cao hơn ở 34 ca, giống nhau ở mọi cấu hình tiered.
+- **#1 vi phạm luật V4 trong khi #1 V4 không vi phạm** (2253 thiết kế): G2 221 → QĐ 29 185 → cuối không QĐ 36: 55 → **cuối 85**.
+  - ΔS > 0: 57 ca. Luật: `gc_clamp_fail` 28, `gc_out_of_range` 24, `hard_hairpin_tm` 3, `hard_dimer_full_dg` 2, `gc_end_window_fail` 1.
+  - ΔS = 0: 28 ca, đều do veto sàn 39 °C quyết định. Luật: `gc_clamp_fail` 22, `hard_dimer_full_dg` 6.
+- **Giới hạn:** 196 thiết kế (2472) không thể đạt sàn 39 °C với bất kỳ ứng viên nào trong nhóm đặc hiệu cao nhất.

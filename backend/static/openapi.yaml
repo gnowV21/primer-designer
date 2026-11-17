@@ -520,8 +520,8 @@ components:
           default: tiered
           description: >
             Ranking of the forward candidates (algorithm 4.0.0). "tiered": specificity
-            first (BLAST S1, assay ΔCq S2, Tm margin S3) → structure veto → breaks no V4
-            rule (QD 34) → PCR (Tm vs Ta) → flexible (GC, clamp, binding-Tm floor,
+            first (BLAST S1, assay ΔCq S2, Tm margin S3) → structure veto → binding-Tm
+            floor veto (QD 36) → breaks no V4 rule (QD 34) → PCR (Tm vs Ta) → flexible (GC, clamp, binding-Tm floor,
             structure) → detailed score;
             docs/SPEC_scoring_tiered_4.0.0.md. "v4": the weighted 14-criterion score of
             3.8.x, kept for comparison. May also be sent inside any parameter group.
@@ -572,6 +572,7 @@ components:
         pcr:            { type: object, description: "tm_vs_ta {score, tm, ta, diff}, tm_pair {score, report_only, tm_forward, tm_reverse, diff}, total, max (5)" }
         flexible:       { type: object, description: "gc, gc_clamp, specific_length (report_only since QD 29), binding_tm (one-sided floor ≥ 45 °C, QD 29), structure {score, hairpin_tm, dimer_dg, end_dimer_tm, sub_scores}, total, max (20; 25 with QD 29 off)" }
         structure_veto: { type: boolean, description: A structure sub-index at level 1; ranks after non-vetoed sets of the same specificity total }
+        binding_floor_fail: { type: boolean, description: "QD 36: binding Tm below the 39 °C floor (F4 level 1); soft veto after structure_veto, same specificity total only" }
         eliminated:     { type: boolean, description: true only inside a specificity_fallback design }
         detailed_score: { type: number, description: 0–100 tie-break; also returned as total_score }
 

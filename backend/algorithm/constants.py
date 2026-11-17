@@ -979,6 +979,12 @@ TIERED_GRADE_A_MIN = {"blast": 4, "assay_dcq": 3, "tm_margin": 4}
 # rule (v4_rule_violations empty) ranks first. Giai đoạn 2b: it never lowered S1 or S3 of
 # the #1 set. Key: (−S, veto, has_v4_violation, −P, −F, −detailed, |Tm − Ta|, sequence).
 TIERED_V4_COMPLIANT_FIRST = True    # default since QD 35
+# SPEC QD 36: binding Tm below the floor (F4 = 1, < 39 °C) is a soft veto like a
+# structure sub-index at level 1 — below 39 °C the thesis cycle-1 hypothesis expects
+# the primer to barely bind (let-7a 33.6 °C): a functional failure, whereas the V4 rule
+# broken here is mostly gc_clamp_fail, a soft recommendation. Not eliminated. Key:
+# (−S, structure_veto, binding_floor_fail, has_v4_violation, −P, −F, −detailed, |Tm − Ta|, seq).
+TIERED_BINDING_FLOOR_VETO = True
 # F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
 # F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
 # 99.2 % of hsa candidates; the 32 candidates at level 1 all also fail F5a and F5b

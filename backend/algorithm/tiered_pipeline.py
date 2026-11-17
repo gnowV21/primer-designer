@@ -311,6 +311,7 @@ def _set_fields(m: dict, r: dict, c: dict, specificity_fallback: bool = False) -
                               "sub_scores": fx["structure_sub_scores"]},
                 "total": fx["total"], "max": fx["max"]},
             "structure_veto": r["structure_veto"],
+            "binding_floor_fail": r["binding_floor_fail"],
             "eliminated": r["eliminated"],
             "detailed_score": r["detailed_score"],
         },

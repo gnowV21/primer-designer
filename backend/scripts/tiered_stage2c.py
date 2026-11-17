@@ -1,46 +1,43 @@
 """
-scripts/tiered_stage2c.py — Giai đoạn 2c of docs/SPEC_scoring_tiered_4.0.0.md (QD 33–35).
+scripts/tiered_stage2c.py — Giai đoạn 2c of docs/SPEC_scoring_tiered_4.0.0.md (QD 33–37).
 
-    python backend/scripts/tiered_stage2c.py offline [--out benchmark/tiered_stage2c_offline.json]
-    python backend/scripts/tiered_stage2c.py trial   [--log benchmark/logs/stage2c_trial.log]
+    python backend/scripts/tiered_stage2c.py offline         [--out benchmark/tiered_stage2c_report.json]
+    python backend/scripts/tiered_stage2c.py pipeline-check  [--log benchmark/logs/stage2c_pipeline_check.log]
 
-offline — acceptance of QD 33 and QD 34 and the 4-column comparison (V4 3.8.2 |
-          tiered Giai đoạn 2 | QD 29 | final = QD 29 + 33 + 34), ranking the recorded
-          pools with algorithm/tiered_scoring.py and the S1 of every candidate from the
-          Giai đoạn 2 BLAST run (outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz).
-          The pipeline reproduces this offline ranking (20/20 designs, SPEC §10).
-trial   — step A5: the 20 miRNAs of tiered_design_timing.json through the real
-          pipeline WITH the BLAST sqlite cache: cache hit rate (≥ 90 % required) and
-          S1 of every BLASTed candidate vs the Giai đoạn 2 run. Writes provenance first.
+offline — QD 36 acceptance and the 4-column comparison (V4 3.8.2 | tiered Giai đoạn 2 |
+          QD 29 | final = QD 29 + 33 + 34 + 36), plus "final without QD 36" for the
+          acceptance. Ranks the recorded pools (outputs/freeze_cache/tiered_pools_hsa.jsonl.gz)
+          with algorithm/tiered_scoring.py, S1 of every candidate from the Giai đoạn 2
+          BLAST run (outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz; QD 37 way a).
+          Every table is given on all 2472 designs and on the 2253 V4 also designed.
+pipeline-check — the 20 miRNAs of benchmark/tiered_design_timing.json (random.Random(2026))
+          through the real pipeline (real BLAST, sqlite cache on), twice: the top 3 must
+          equal the offline final top 3 (20/20), and the two runs must be identical.
 """
 import argparse
 import datetime as dt
 import gzip
-import hashlib
 import json
 import os
-import sqlite3
+import statistics as st
 import subprocess
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 BACKEND = os.path.join(ROOT, "backend")
 sys.path.insert(0, BACKEND)
 sys.path.insert(0, os.path.join(BACKEND, "scripts"))
-CACHE_DB = os.path.join(BACKEND, "data", "blast_cache.sqlite")
-LOGS = os.path.join(ROOT, "benchmark", "logs")
+OUT = os.path.join(ROOT, "benchmark", "tiered_stage2c_report.json")
 
-# system → (F4 floor, detailed binding-Tm anchors, V4-compliant-first, normalised
-# weight of tm_binding_accuracy or None = constants)
-_A25 = ((25.0, 0.0), (45.0, 100.0))
+_A25, _A35 = ((25.0, 0.0), (45.0, 100.0)), ((35.0, 0.0), (45.0, 100.0))
+# system → F4 floor (QD 29), detailed binding-Tm anchors (QD 33), V4-compliant first
+# (QD 34), binding-floor veto (QD 36)
 SYSTEMS = {
-    "tiered_g2": (False, None, False, None),
-    "qd29": (True, ((35.0, 0.0), (45.0, 100.0)), False, None),
-    "final_without_qd34": (True, _A25, False, None),
-    "final": (True, _A25, True, None),
-    "final_w015_without_qd34": (True, _A25, False, 0.15),
-    "final_w015": (True, _A25, True, 0.15),
+    "tiered_g2":          dict(floor=False, anchors=_A35, v4first=False, floorveto=False),
+    "qd29":               dict(floor=True, anchors=_A35, v4first=False, floorveto=False),
+    "final_without_qd36": dict(floor=True, anchors=_A25, v4first=True, floorveto=False),
+    "final":              dict(floor=True, anchors=_A25, v4first=True, floorveto=True),
 }
 
 
@@ -50,38 +47,15 @@ def _setup():
     warnings.filterwarnings("ignore")
 
 
-def provenance() -> dict:
-    from algorithm import constants as K
-    from algorithm.specificity_check import blast_offtarget as bo
-    sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
-    dirty = bool(subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, cwd=ROOT).stdout.strip())
-    blastn = subprocess.run(["blastn", "-version"], capture_output=True, text=True).stdout.splitlines()[:1]
-    meta = json.load(open(bo._METADATA, encoding="utf-8"))
-    h = hashlib.sha256()
-    for ext in sorted(e for e in os.listdir(os.path.dirname(bo._MIRBASE_DB))
-                      if e.startswith(os.path.basename(bo._MIRBASE_DB) + ".")):
-        with open(os.path.join(os.path.dirname(bo._MIRBASE_DB), ext), "rb") as f:
-            h.update(ext.encode()); h.update(f.read())
-    rows = sqlite3.connect(CACHE_DB).execute("select count(*) from blast_cache").fetchone()[0] \
-        if os.path.exists(CACHE_DB) else 0
-    return {"git_sha": sha, "working_tree_dirty": dirty, "algorithm_version": K.ALGORITHM_VERSION,
-            "flags": {f: getattr(K, f) for f in ("SCORING_SYSTEM_DEFAULT", "TIERED_F4_FLOOR",
-                                                 "TIERED_GRADE_BY_TIERS", "TIERED_V4_COMPLIANT_FIRST",
-                                                 "BLAST_BATCH_PROCESSES")},
-            "detail_tm_binding_anchors": K.TIERED_DETAIL_TM_BINDING_FLOOR,
-            "env_BLAST_CACHE_DISABLED": os.environ.get("BLAST_CACHE_DISABLED"),
-            "blastn": blastn[0] if blastn else None, "blast_db_metadata": meta,
-            "blast_db_files_sha256": h.hexdigest(), "blast_cache_rows": rows,
-            "started": dt.datetime.now().isoformat(timespec="seconds")}
-
-
-# ── offline ───────────────────────────────────────────────────────
 def offline(a):
     _setup()
     import tiered_stage2_report as S2
+    from algorithm import constants as K
     from algorithm import tiered_scoring as ts
     from algorithm.forward_primer import select_diverse_top
     from algorithm.constants import CANDIDATES_TOP_N, TM_BINDING_TARGET
+    dist, v4rules = S2._dist, S2._v4_rules
+
     bl = {}
     with gzip.open(S2.BLAST_FULL, "rt", encoding="utf-8") as f:
         for line in f:
@@ -90,189 +64,220 @@ def offline(a):
                 raise SystemExit(f"BLAST failed for {r['mirna']} (QD 24e)")
             bl[r["mirna"]] = r["results"]
     recs = [r for r in S2._load_pools() if any(m["in_tiered_pool"] for m in r["candidates"])]
-    v4rules = S2._v4_rules
     pools = {}
     for rec in recs:
         ms = []
         for m in rec["candidates"]:
-            if not m["in_tiered_pool"]:
-                continue
-            mm = dict(m)
-            x = bl[rec["mirna"]][m["sequence"]]
-            mm.update(blast_risk=x["risk"], blast_medium_hits=x["n_medium"], blast_worst=x["worst"],
-                      v4_violation=bool(v4rules(m)))
-            ms.append(mm)
+            if m["in_tiered_pool"]:
+                x = bl[rec["mirna"]][m["sequence"]]
+                ms.append({**m, "blast_risk": x["risk"], "blast_medium_hits": x["n_medium"],
+                           "blast_worst": x["worst"], "v4_violation": bool(v4rules(m))})
         pools[rec["mirna"]] = ms
-    v4_top1 = {r["mirna"]: next(c for c in r["candidates"] if c["sequence"] == r["v4"]["top3"][0])
-               for r in recs if r["v4"]["top3"]}
+    v4_top1 = {}
+    for rec in recs:
+        if rec["v4"]["top3"]:
+            m = next(c for c in rec["candidates"] if c["sequence"] == rec["v4"]["top3"][0])
+            x = bl[rec["mirna"]].get(m["sequence"])
+            v4_top1[rec["mirna"]] = {**m, "blast_risk": x["risk"], "blast_medium_hits": x["n_medium"],
+                                     "v4_violation": bool(v4rules(m))}
+    ALL, V4SET = sorted(pools), sorted(v4_top1)
 
-    real_anchor, real_w = ts.TIERED_DETAIL_TM_BINDING_FLOOR, dict(ts.TIERED_DETAIL_WEIGHTS)
-    out = {"designs": len(recs), "designs_with_v4": len(v4_top1)}
-    tops, why = {}, {}
-    for name, (floor, anchor, v4first, wnorm) in SYSTEMS.items():
-        ts.TIERED_DETAIL_TM_BINDING_FLOOR = anchor or real_anchor
-        w = dict(real_w)
-        if wnorm:
-            # raw weight x with x / (rest + x) = wnorm, rest = the other floor weights
-            rest = sum(v for k, v in w.items() if k not in ("tm_binding_accuracy", "primer_size"))
-            w["tm_binding_accuracy"] = wnorm * rest / (1 - wnorm)
-        ts.TIERED_DETAIL_WEIGHTS = w
-        lost = Counter()
-        t = {}
+    real = (ts.TIERED_DETAIL_TM_BINDING_FLOOR, K.TIERED_BINDING_FLOOR_VETO)
+    R = {}
+    for name, cfg in SYSTEMS.items():
+        ts.TIERED_DETAIL_TM_BINDING_FLOOR = cfg["anchors"]
+        K.TIERED_BINDING_FLOOR_VETO = cfg["floorveto"]           # grade reason follows the system
+        per = {}
         for n, ms in pools.items():
-            sc = [(m, ts.score(m, floor)) for m in ms]
-            res = ts.rank(sc, v4_compliant_first=v4first)
+            sc = [(m, ts.score(m, cfg["floor"])) for m in ms]
+            res = ts.rank(sc, v4_compliant_first=cfg["v4first"], binding_floor_veto=cfg["floorveto"])
             pseudo = [{"specific_length": m["specific_length"], "sequence": m["sequence"], "_m": m, "_r": r}
                       for m, r in res["ranked"]]
-            t[n] = (select_diverse_top(pseudo, CANDIDATES_TOP_N)[0], res)
-            # diagnosis: #1 at F4 floor level 1 although a candidate of the same S, veto
-            # (and V4 step) has a higher F4 — which tier made it lose?
-            m1, r1 = res["ranked"][0]
-            if floor and ts.f4_binding_tm_floor(m1["tm_binding"]) == 1:
-                g = lambda m, r: (r["specificity"]["total"], r["structure_veto"],   # noqa: E731
-                                  bool(m["v4_violation"]) and v4first)
-                alt = [(m, r) for m, r in res["ranked"]
-                       if g(m, r) == g(m1, r1) and ts.f4_binding_tm_floor(m["tm_binding"]) > 1]
-                if not alt:
-                    lost["no_higher_f4_candidate_in_group"] += 1
-                else:
-                    m2, r2 = alt[0]
-                    if r1["pcr"]["total"] != r2["pcr"]["total"]:
-                        lost["P"] += 1
-                    elif r1["flexible"]["total"] != r2["flexible"]["total"]:
-                        lost["F (F1/F2/F5 outweigh F4)"] += 1
-                    else:
-                        lost["detailed_or_later"] += 1
-        tops[name] = t
-        if floor:
-            why[name] = dict(lost.most_common())
-    ts.TIERED_DETAIL_TM_BINDING_FLOOR = real_anchor
-    ts.TIERED_DETAIL_WEIGHTS = real_w
-    out["diagnosis_top1_f4_level_1"] = why
+            top = select_diverse_top(pseudo, CANDIDATES_TOP_N)
+            per[n] = {"res": res, "top": top, "grade": ts.grade_tiers(top[0]["_r"], res["specificity_fallback"]),
+                      "by_seq": {m["sequence"]: (m, r) for m, r in sc}}
+        R[name] = (cfg, per)
+        # the V4 #1 scored under this system (for ΔS)
+    ts.TIERED_DETAIL_TM_BINDING_FLOOR, K.TIERED_BINDING_FLOOR_VETO = real
 
-    def tm_stats(names, get):
-        tb = [get(n)["tm_binding"] for n in names]
-        lv = Counter(ts.f4_binding_tm_floor(x) for x in tb)
-        return {"f4_floor_level_1": lv[1], "f4_floor_levels": dict(sorted(lv.items())),
-                "pct_binding_tm_below_45": round(100 * sum(x < TM_BINDING_TARGET for x in tb) / len(tb), 2)}
+    def t1(name, n):
+        return R[name][1][n]["top"][0]
 
-    acc = {}
-    for name in SYSTEMS:
-        acc[name] = {"all_2472": tm_stats(pools, lambda n: tops[name][n][0]["_m"]),
-                     "v4_2253": tm_stats(v4_top1, lambda n: tops[name][n][0]["_m"])}
-    acc["v4_382"] = {"v4_2253": tm_stats(v4_top1, lambda n: v4_top1[n])}
-    f = acc["final"]["all_2472"]
-    f15 = acc["final_w015"]["all_2472"]
-    out["qd33_acceptance"] = {
-        "criteria": "top1 over 2472 designs: F4 = 1 count ≤ 179 and % binding Tm < 45 °C ≤ 39.0",
-        "final_all_2472": f, "pass": f["f4_floor_level_1"] <= 179 and f["pct_binding_tm_below_45"] <= 39.0,
-        "final_w015_all_2472": f15,
-        "pass_w015": f15["f4_floor_level_1"] <= 179 and f15["pct_binding_tm_below_45"] <= 39.0,
-        "by_system": acc,
-        "note": ("179 and 38.4 % were read on the 2253 designs V4 designs (SPEC §11); on all "
-                 "2472 the Giai đoạn 2 tiered #1 has F4 = 1 in "
-                 f"{acc['tiered_g2']['all_2472']['f4_floor_level_1']} designs — the criterion "
-                 "is applied on 2472 as written (stricter)."),
-    }
-    diff = Counter()
-    for n in pools:
-        a_ = tops["final_without_qd34"][n][0]["_r"]["specificity"]
-        b_ = tops["final"][n][0]["_r"]["specificity"]
+    def key_parts(m, r, cfg):
+        return {"S": r["specificity"]["total"], "structure_veto": r["structure_veto"],
+                "binding_floor_veto": bool(r["binding_floor_fail"]) and cfg["floorveto"],
+                "v4_rule": bool(m["v4_violation"]) and cfg["v4first"],
+                "P": r["pcr"]["total"], "F": r["flexible"]["total"], "detail": r["detailed_score"],
+                "tm": abs(m["tm_full"] - m["ta"])}
+
+    def decided(a_, b_):
+        for k in a_:
+            if a_[k] != b_[k]:
+                return k
+        return "sequence"
+
+    def column(name, names):
+        """One column of the comparison, over `names` (denominator = len(names))."""
+        if name == "v4_382":
+            ms = [v4_top1[n] for n in names]
+        else:
+            ms = [t1(name, n)["_m"] for n in names]
+        tb = [m["tm_binding"] for m in ms]
+        L = [m["specific_length"] for m in ms]
+        col = {"denominator": len(names),
+               "mean_specific_length": round(st.mean(L), 2),
+               "specific_length": dict(sorted(Counter(L).items())),
+               "binding_tm_median": round(st.median(tb), 1),
+               "binding_tm_p05_p95": [dist(tb)["p05"], dist(tb)["p95"]],
+               "pct_binding_tm_below_45": round(100 * sum(x < TM_BINDING_TARGET for x in tb) / len(tb), 1),
+               "f4_floor_level": dict(sorted(Counter(ts.f4_binding_tm_floor(x) for x in tb).items())),
+               "top1_breaks_v4_rule": sum(bool(v4rules(m)) for m in ms)}
+        s1 = ([ts.s1_blast(m["blast_risk"], m["blast_medium_hits"]) for m in ms] if name == "v4_382"
+              else [t1(name, n)["_r"]["specificity"]["blast"] for n in names])
+        col["top1_s1_level"] = dict(sorted(Counter(s1).items()))
+        if name != "v4_382":
+            cfg, per = R[name]
+            col["top1_changed_vs_v4"] = sum(t1(name, n)["_m"]["sequence"] != v4_top1[n]["sequence"]
+                                            for n in names if n in v4_top1)
+            col["top1_changed_vs_final_without_qd36"] = sum(
+                t1(name, n)["_m"]["sequence"] != t1("final_without_qd36", n)["_m"]["sequence"] for n in names)
+            dec = Counter()
+            for n in names:
+                rk = per[n]["res"]["ranked"]
+                if len(rk) > 1:
+                    dec[decided(key_parts(*rk[0], cfg), key_parts(*rk[1], cfg))] += 1
+            col["top1_vs_top2_decided_by"] = dict(dec.most_common())
+            g = Counter(per[n]["grade"]["grade"] for n in names)
+            col["grade"] = dict(sorted(g.items()))
+            col["grade_reasons"] = dict(Counter(x.split(" (")[0] for n in names
+                                                for x in per[n]["grade"]["reasons"]).most_common())
+            col["specificity_fallback"] = sum(per[n]["res"]["specificity_fallback"] for n in names)
+            col["designs_with_eliminated"] = sum(per[n]["res"]["eliminated"] > 0 for n in names)
+            col["top1_structure_veto"] = sum(t1(name, n)["_r"]["structure_veto"] for n in names)
+            col["top1_binding_floor_fail"] = sum(bool(t1(name, n)["_r"]["binding_floor_fail"]) for n in names)
+            # S1 improvement over the V4 #1
+            low = [n for n in names if n in v4_top1
+                   and (ts.s1_blast(v4_top1[n]["blast_risk"], v4_top1[n]["blast_medium_hits"]) or 9) <= 2]
+            col["v4_top1_s1_le_2"] = len(low)
+            col["of_which_top1_s1_higher"] = sum(
+                (t1(name, n)["_r"]["specificity"]["blast"] or 0)
+                > ts.s1_blast(v4_top1[n]["blast_risk"], v4_top1[n]["blast_medium_hits"]) for n in low)
+            # QD 32: #1 breaks a V4 rule while the V4 #1 does not (V4-failed designs excluded)
+            rows = []
+            for n in names:
+                if n not in v4_top1:
+                    continue
+                tm, tr = t1(name, n)["_m"], t1(name, n)["_r"]
+                if v4rules(tm) and not v4rules(v4_top1[n]):
+                    vr = per[n]["by_seq"][v4_top1[n]["sequence"]][1]
+                    rows.append((tr["specificity"]["total"] - vr["specificity"]["total"], v4rules(tm),
+                                 decided(key_parts(tm, tr, cfg), key_parts(v4_top1[n], vr, cfg))))
+            col["v4_rule_breaks_vs_v4_top1"] = {
+                "n": len(rows),
+                "by_delta_S": {f"{k:+d}" if k else "0": c for k, c in sorted(Counter(x[0] for x in rows).items())},
+                "rules_delta_S_gt_0": dict(Counter(r for x in rows if x[0] > 0 for r in x[1]).most_common()),
+                "rules_delta_S_eq_0": dict(Counter(r for x in rows if x[0] == 0 for r in x[1]).most_common()),
+                "delta_S_eq_0_decided_by": dict(Counter(x[2] for x in rows if x[0] == 0).most_common()),
+            }
+        return col
+
+    out = {"spec": "docs/SPEC_scoring_tiered_4.0.0.md Giai đoạn 2c (QD 33–37)",
+           "source": {"pools": "outputs/freeze_cache/tiered_pools_hsa.jsonl.gz",
+                      "blast": "outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz (Giai đoạn 2, "
+                               "batched BLAST of every pool candidate; QD 37 way a)",
+                      "v4": "outputs/freeze_cache/pools_hsa_3.8.2.jsonl.gz (3.8.2 API #1)"},
+           "configs": {k: {**v, "anchors": list(v["anchors"])} for k, v in SYSTEMS.items()}}
+    cols = ("v4_382", "tiered_g2", "qd29", "final_without_qd36", "final")
+    out["table_2472"] = {c: column(c, ALL) for c in cols if c != "v4_382"}
+    out["table_2253"] = {c: column(c, V4SET) for c in cols}
+
+    # QD 36 acceptance
+    unavoidable = 0
+    for n in ALL:
+        cfg, per = R["final"]
+        rk = per[n]["res"]["ranked"]
+        g0 = (rk[0][1]["specificity"]["total"], rk[0][1]["structure_veto"])
+        grp = [(m, r) for m, r in rk if (r["specificity"]["total"], r["structure_veto"]) == g0]
+        unavoidable += not any(ts.f4_binding_tm_floor(m["tm_binding"]) >= 2 for m, _ in grp)
+    f4_1 = sum(bool(t1("final", n)["_r"]["binding_floor_fail"]) for n in ALL)
+    comp = Counter()
+    for n in ALL:
+        a_ = t1("final_without_qd36", n)["_r"]["specificity"]
+        b_ = t1("final", n)["_r"]["specificity"]
         for k in ("blast", "assay_dcq", "tm_margin"):
-            diff[k] += a_[k] != b_[k]
-    changed = sum(tops["final_without_qd34"][n][0]["_m"]["sequence"] != tops["final"][n][0]["_m"]["sequence"]
-                  for n in pools)
-    out["qd34_acceptance"] = {
-        "criteria": "S1, S2, S3 of #1 unchanged vs the configuration without QD 34, every design",
-        "top1_changed_by_qd34": changed,
-        "designs_where_component_changed": dict(diff),
-        "pass": not any(diff.values()),
+            comp[k] += a_[k] != b_[k]
+    out["qd36_acceptance"] = {
+        "denominator": len(ALL),
+        "top1_f4_level_1": f4_1,
+        "designs_best_S_veto_group_without_f4_ge_2": unavoidable,
+        "avoidable": f4_1 - unavoidable,
+        "s1_s2_s3_of_top1_changed_vs_without_qd36": dict(comp),
+        "top1_changed_vs_without_qd36": sum(t1("final", n)["_m"]["sequence"]
+                                            != t1("final_without_qd36", n)["_m"]["sequence"] for n in ALL),
+        "pass": f4_1 == unavoidable and not any(comp.values()),
     }
-    out["top1_changed"] = {
-        name: {"vs_v4": sum(tops[name][n][0]["_m"]["sequence"] != v4_top1[n]["sequence"] for n in v4_top1),
-               "vs_tiered_g2": sum(tops[name][n][0]["_m"]["sequence"] != tops["tiered_g2"][n][0]["_m"]["sequence"]
-                                   for n in pools),
-               "top1_breaks_v4_rule": sum(bool(v4rules(tops[name][n][0]["_m"])) for n in pools)}
-        for name in SYSTEMS}
-    out["top3_final"] = {n: tops["final"][n][0]["_m"]["sequence"] for n in sorted(pools)}
+    out["final_top3"] = {n: [c["sequence"] for c in R["final"][1][n]["top"]] for n in ALL}
     with open(a.out, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(out, fh, indent=1, ensure_ascii=False)
         fh.write("\n")
-    print(json.dumps({k: v for k, v in out.items() if k != "top3_final"}, indent=1, ensure_ascii=False))
-    return 0 if out["qd33_acceptance"]["pass"] and out["qd34_acceptance"]["pass"] else 1
+    print(json.dumps(out["qd36_acceptance"], indent=1, ensure_ascii=False))
+    return 0 if out["qd36_acceptance"]["pass"] else 1
 
 
-# ── trial (step A5) ───────────────────────────────────────────────
-def trial(a):
+def pipeline_check(a):
     _setup()
+    from algorithm import constants as K
+    from algorithm.design_pipeline import run
+    from algorithm.specificity_check.overhang_collision import _load_index
     os.makedirs(os.path.dirname(a.log), exist_ok=True)
     log = open(a.log, "a", encoding="utf-8")
 
     def say(x):
         print(x, flush=True)
         log.write(x + "\n"); log.flush()
-    prov = provenance()
-    say("PROVENANCE " + json.dumps(prov, ensure_ascii=False))
-    if os.environ.get("BLAST_CACHE_DISABLED"):
-        raise SystemExit("BLAST_CACHE_DISABLED is set — not allowed in Giai đoạn 2c")
-    import tiered_stage2_report as S2
-    from algorithm.design_pipeline import run
-    from algorithm import tiered_pipeline as tp
-    from algorithm import tiered_scoring as ts
-    from algorithm.specificity_check.blast_cache import BlastCache
-    from algorithm.specificity_check.overhang_collision import _load_index
-    timing = json.load(open(os.path.join(ROOT, "benchmark", "tiered_design_timing.json"), encoding="utf-8"))
-    names = [r["mirna"] for r in timing["designs"]]
-    stored = {}
-    with gzip.open(S2.BLAST_FULL, "rt", encoding="utf-8") as f:
-        for line in f:
-            r = json.loads(line)
-            if r["mirna"] in names:
-                stored[r["mirna"]] = r["results"]
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
+    say(f"START {dt.datetime.now().isoformat(timespec='seconds')} git {sha} algorithm {K.ALGORITHM_VERSION} "
+        f"flags " + json.dumps({f: getattr(K, f) for f in dir(K) if f.startswith("TIERED_") and isinstance(getattr(K, f), bool)}))
+    rep = json.load(open(OUT, encoding="utf-8"))["final_top3"]
+    names = [r["mirna"] for r in json.load(open(os.path.join(ROOT, "benchmark", "tiered_design_timing.json"),
+                                                 encoding="utf-8"))["designs"]]
     hsa = _load_index()["mature"]["hsa"]
-    # capture the cache key context of each design
-    seen = {}
-    real = tp.blast_candidates
 
-    def spy(seqs, target_rna, mirna_name, reverse_seq, rt_seq, p3, species):
-        out = real(seqs, target_rna, mirna_name, reverse_seq, rt_seq, p3, species)
-        seen.setdefault(mirna_name, []).append((list(seqs), out, (target_rna, reverse_seq, rt_seq, p3, species)))
-        return out
-    tp.blast_candidates = spy
-    hits = blasted = 0
-    s1_diff, s1_n = [], 0
-    for n in names:
-        run(hsa[n].upper().replace("T", "U"), {}, n)
-        for seqs, out, ctx in seen.get(n, []):
-            hits += out["cache_hits"]
-            blasted += len(seqs)
-            for s, res in out["results"].items():
-                risk, n_med, _ = ts.blast_s1_inputs(res)
-                old = stored.get(n, {}).get(s)
-                if old is None:
-                    continue
-                s1_n += 1
-                if ts.s1_blast(risk, n_med) != ts.s1_blast(old["risk"], old["n_medium"]):
-                    s1_diff.append((n, s, risk, old["risk"]))
-    rate = hits / blasted if blasted else 0.0
-    rows = sqlite3.connect(CACHE_DB).execute("select count(*) from blast_cache").fetchone()[0]
-    res = {"designs": len(names), "candidates_blasted": blasted, "cache_hits": hits,
-           "cache_hit_rate": round(rate, 4), "s1_compared": s1_n, "s1_different": len(s1_diff),
-           "s1_differences": s1_diff[:20], "cache_rows_after": rows,
-           "pass": rate >= 0.90 and not s1_diff}
-    say("TRIAL " + json.dumps(res, ensure_ascii=False))
-    return 0 if res["pass"] else 1
+    def strip(d):
+        rs = {k: v for k, v in (d.get("ranking_summary") or {}).items()
+              if k not in ("timing_ms", "blast_cache_hits")}
+        return json.dumps({"top3": d["top3"], "ranking_summary": rs, "warnings": d["global_warnings"],
+                           "overhang_suggestion": d.get("overhang_suggestion")}, sort_keys=True, default=str)
+    runs = []
+    for i in (1, 2):
+        res, hits, cands = {}, 0, 0
+        for n in names:
+            d = run(hsa[n].upper().replace("T", "U"), {}, n)
+            res[n] = d
+            hits += d["ranking_summary"]["blast_cache_hits"]
+            cands += d["ranking_summary"]["blast_candidates"]
+        say(f"run {i}: cache hits {hits}/{cands}")
+        runs.append(res)
+    match = [n for n in names if [s["sequence"] for s in runs[0][n]["top3"]] == rep[n]]
+    same = [n for n in names if strip(runs[0][n]) == strip(runs[1][n])]
+    out = {"designs": len(names), "top3_equal_offline": len(match),
+           "mismatch": {n: {"pipeline": [s["sequence"] for s in runs[0][n]["top3"]], "offline": rep[n]}
+                        for n in names if n not in match},
+           "deterministic_identical": len(same),
+           "pass": len(match) == len(names) and len(same) == len(names)}
+    say("RESULT " + json.dumps(out, ensure_ascii=False))
+    return 0 if out["pass"] else 1
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     o = sub.add_parser("offline")
-    o.add_argument("--out", default=os.path.join(ROOT, "benchmark", "tiered_stage2c_offline.json"))
-    t = sub.add_parser("trial")
-    t.add_argument("--log", default=os.path.join(LOGS, "stage2c_trial.log"))
+    o.add_argument("--out", default=OUT)
+    p = sub.add_parser("pipeline-check")
+    p.add_argument("--log", default=os.path.join(ROOT, "benchmark", "logs", "stage2c_pipeline_check.log"))
     a = ap.parse_args(argv)
-    return {"offline": offline, "trial": trial}[a.cmd](a)
+    return {"offline": offline, "pipeline-check": pipeline_check}[a.cmd](a)
 
 
 if __name__ == "__main__":

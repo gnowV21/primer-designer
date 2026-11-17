@@ -264,3 +264,40 @@ def test_v4_compliant_first_only_within_same_specificity():
     vetoed = _m(seq="AATTAAGCA", v4_violation=False, hairpin_tm=50.0)   # veto comes before the V4 step
     out = ts.rank([(vetoed, ts.score(vetoed)), (bad, rb)], v4_compliant_first=True)
     assert out["ranked"][0][0]["sequence"] == "ATTTAAGCA"
+
+
+
+# ── QD 36: binding-Tm floor veto ──────────────────────────────────
+
+def _r(m, **kw):
+    return ts.score(m, f4_floor=True)
+
+
+def test_binding_floor_fail_is_f4_level_1_with_the_floor_only():
+    low = _m(tm_binding=38.9)
+    assert ts.score(low, f4_floor=True)["binding_floor_fail"] is True
+    assert ts.score(_m(tm_binding=39.0), f4_floor=True)["binding_floor_fail"] is False
+    assert ts.score(low, f4_floor=False)["binding_floor_fail"] is False
+
+
+def test_floor_veto_after_structure_veto_before_v4_step_same_s_only():
+    tail = "TTTAAGCA"                       # same last 5 nt → same F2
+    low = _m(seq="A" + tail, tm_binding=35.0)                       # floor fail, best sequence
+    ok = _m(seq="C" + tail, tm_binding=46.0, v4_violation=True)    # above floor, breaks a V4 rule
+    rl, ro = _r(low), _r(ok)
+    key = dict(v4_compliant_first=True, binding_floor_veto=True)
+    # before the V4 step: the V4-breaking candidate above the floor wins
+    assert ts.rank([(low, rl), (ok, ro)], **key)["ranked"][0][0]["sequence"] == "C" + tail
+    assert ts.rank([(low, rl), (ok, ro)], v4_compliant_first=True,
+                   binding_floor_veto=False)["ranked"][0][0]["sequence"] == "A" + tail
+    # after the structure veto: a structure-vetoed candidate above the floor loses
+    hp = _m(seq="G" + tail, tm_binding=46.0, hairpin_tm=50.0)
+    assert ts.rank([(hp, _r(hp)), (low, rl)], **key)["ranked"][0][0]["sequence"] == "A" + tail
+    # only within the same S total: a higher-S candidate below the floor still wins
+    weaker = _m(seq="T" + tail, tm_binding=46.0, min_delta_cq=8.0)
+    assert ts.rank([(weaker, _r(weaker)), (low, rl)], **key)["ranked"][0][0]["sequence"] == "A" + tail
+
+
+def test_grade_b_reason_binding_floor():
+    g = ts.grade_tiers(_r(_m(tm_binding=35.0)), False)
+    assert g["grade"] == "B" and any(x.startswith("binding Tm below") for x in g["reasons"])

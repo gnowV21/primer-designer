@@ -282,7 +282,8 @@ live = pytest.mark.skipif(not bo.blast_available()[0], reason="BLAST+ or the miR
 
 def _flags(monkeypatch, on: bool):
     from algorithm import constants as K
-    for f in ("TIERED_F4_FLOOR", "TIERED_GRADE_BY_TIERS", "TIERED_V4_COMPLIANT_FIRST"):
+    for f in ("TIERED_F4_FLOOR", "TIERED_GRADE_BY_TIERS", "TIERED_V4_COMPLIANT_FIRST",
+              "TIERED_BINDING_FLOOR_VETO"):
         monkeypatch.setattr(K, f, on)
 
 
