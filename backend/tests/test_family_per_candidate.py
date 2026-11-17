@@ -29,7 +29,7 @@ def test_label_depends_on_specific_length():
 
 
 def test_each_returned_set_is_scored_on_its_own_length():
-    res = run(_MIR100, {}, mirna_name=_NAME)
+    res = run(_MIR100, {"scoringSystem": "v4"}, mirna_name=_NAME)   # V4 criterion
     sets = res["top3"]
     assert sets
     for p in sets:
@@ -38,6 +38,7 @@ def test_each_returned_set_is_scored_on_its_own_length():
 
 
 def test_design_level_collision_is_the_top_set_length():
-    res = run(_MIR100, {}, mirna_name=_NAME)
-    oc = res["specificity_warnings"]["overhang_collision"]
-    assert oc["forward_specific_len"] == res["top3"][0]["specific_length"]
+    for system in ("v4", "tiered"):
+        res = run(_MIR100, {"scoringSystem": system}, mirna_name=_NAME)
+        oc = res["specificity_warnings"]["overhang_collision"]
+        assert oc["forward_specific_len"] == res["top3"][0]["specific_length"], system

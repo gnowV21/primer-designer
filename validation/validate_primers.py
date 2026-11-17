@@ -165,9 +165,12 @@ def get(d, *keys, default=None):
     return cur
 
 
+SCORING_SYSTEM = None   # --scoring-system; None = the backend default (tiered since 4.0.0)
+
+
 def default_payload(mature_seq: str, mirna_id: str = "") -> dict:
     """Minimal /api/design body; empty param groups let backend apply its own defaults."""
-    return {
+    body = {
         "sequence": {"matureSequence": mature_seq, "mirnaId": mirna_id},
         "thermodynamic": {},
         "primerConstraints": {},
@@ -175,6 +178,9 @@ def default_payload(mature_seq: str, mirna_id: str = "") -> dict:
         "detectionMethod": {},
         "experimentalContext": {},
     }
+    if SCORING_SYSTEM:
+        body["scoringSystem"] = SCORING_SYSTEM
+    return body
 
 
 def fetch_sequence(base, mirna_id):
@@ -189,8 +195,22 @@ def fetch_sequence(base, mirna_id):
 
 
 def run_design(base, mature_seq, mirna_id=""):
-    r = requests.post(f"{base}/api/design", json=default_payload(mature_seq, mirna_id), timeout=60)
+    r = requests.post(f"{base}/api/design", json=default_payload(mature_seq, mirna_id), timeout=120)
+    if r.status_code == 200:
+        require_blast(r.json())
     return r
+
+
+def require_blast(data: dict) -> dict:
+    """Thesis data must not silently lose S1 (SPEC_scoring_tiered_4.0.0 QD 24e): a
+    tiered design without BLAST stops the run."""
+    rs = (data or {}).get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        raise SystemExit("BLAST unavailable on the backend ("
+                         f"{rs.get('blast_unavailable_reason')}) — tiered specificity "
+                         "ranking would be S2 + S3 only. Fix BLAST+ / the DB and re-run.")
+    return data
+
 
 
 def validate_one(base, entry, consts, windows):
@@ -323,7 +343,11 @@ def main():
     ap.add_argument("--out", default="validation/results.csv")
     ap.add_argument("--json-out", default="validation/results.json",
                     help="machine-readable summary (mergeable into benchmark_results.json)")
+    ap.add_argument("--scoring-system", choices=["tiered", "v4"], default=None,
+                    help="ranking system sent as scoringSystem (default: the backend's)")
     args = ap.parse_args()
+    global SCORING_SYSTEM
+    SCORING_SYSTEM = args.scoring_system
 
     with open(args.dataset, encoding="utf-8") as f:
         ds = json.load(f)

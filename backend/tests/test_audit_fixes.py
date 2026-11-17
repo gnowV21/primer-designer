@@ -85,7 +85,9 @@ def test_cycle1_occupancy_uses_annealing_temp():
 
 
 def test_binding_occupancy_not_scored_and_total_renormalised(client):
-    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16}})
+    # V4 weighted score (the tiered total is its detailed score, tested elsewhere).
+    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16},
+                                         "scoringSystem": "v4"})
     top = r.get_json()["top3"][0]
     assert "bound_fraction_binding" not in top["scores"]
     assert "bound_fraction_binding_pct" in top["scores"]

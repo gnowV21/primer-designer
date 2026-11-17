@@ -180,7 +180,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/DesignResponse" }
         "400":
-          description: Invalid mature sequence
+          description: Invalid mature sequence, RT overhang or scoringSystem
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -514,6 +514,65 @@ components:
         qpcr:                { type: object, description: qPCR conditions (annealing temp, etc.) }
         detectionMethod:     { type: object, description: e.g. signalMethod sybr|probe }
         experimentalContext: { type: object }
+        scoringSystem:
+          type: string
+          enum: [tiered, v4]
+          default: tiered
+          description: >
+            Ranking of the forward candidates (algorithm 4.0.0). "tiered": specificity
+            first (BLAST S1, assay ΔCq S2, Tm margin S3) → structure veto → PCR (Tm vs Ta)
+            → flexible (GC, clamp, length, binding Tm, structure) → detailed score;
+            docs/SPEC_scoring_tiered_4.0.0.md. "v4": the weighted 14-criterion score of
+            3.8.x, kept for comparison. May also be sent inside any parameter group.
+
+    RankingSummary:
+      type: object
+      nullable: true
+      description: Tiered system only (null for v4). Design-level ranking facts.
+      properties:
+        system:                 { type: string, enum: [tiered] }
+        candidates_scored:      { type: integer }
+        eliminated_specificity: { type: integer, description: Candidates removed for BLAST CRITICAL or assay ΔCq CO-AMPLIFIED }
+        specificity_fallback:   { type: boolean, description: Every candidate was eliminated; all were ranked anyway }
+        blast_available:        { type: boolean, description: false → S1 not scored, ranking on S2 + S3 (warning blast_unavailable) }
+        blast_unavailable_reason: { type: string, nullable: true }
+        blast_candidates:       { type: integer, description: Candidates with a BLAST result (all that S2 did not eliminate) }
+        blast_cache_hits:       { type: integer }
+        returned_sets:          { type: integer }
+        timing_ms:
+          type: object
+          properties:
+            blast: { type: integer }
+            total: { type: integer }
+
+    OverhangSuggestion:
+      type: object
+      nullable: true
+      description: >
+        Tiered system only: another supported RT overhang (5–7 nt) that gives the #1
+        set's specific region a higher S2 level. Suggestion only; the design is unchanged.
+      properties:
+        length:            { type: integer }
+        min_delta_cq:      { type: number, nullable: true }
+        worst_target:      { type: string, nullable: true }
+        s2_level:          { type: integer }
+        s2_level_current:  { type: integer }
+        specific_length:   { type: integer }
+        note:              { type: string }
+
+    PrimerSetRanking:
+      type: object
+      description: >
+        Tiered system only (top3[].ranking). Levels are integers 1–5; tier totals are
+        their sums. pcr.tm_pair is reported, not scored (SPEC QD 17).
+      properties:
+        system:         { type: string, enum: [tiered] }
+        specificity:    { type: object, description: "blast {score, overall_risk, medium_hits, worst_hit}, assay_dcq {score, min_delta_cq, worst_target, label}, tm_margin {score, tm_on, tm_off_max, margin, worst_target}, total, max (15, or 10 without BLAST)" }
+        pcr:            { type: object, description: "tm_vs_ta {score, tm, ta, diff}, tm_pair {score, report_only, tm_forward, tm_reverse, diff}, total, max (5)" }
+        flexible:       { type: object, description: "gc, gc_clamp, specific_length, binding_tm, structure {score, hairpin_tm, dimer_dg, end_dimer_tm, sub_scores}, total, max (25)" }
+        structure_veto: { type: boolean, description: A structure sub-index at level 1; ranks after non-vetoed sets of the same specificity total }
+        eliminated:     { type: boolean, description: true only inside a specificity_fallback design }
+        detailed_score: { type: number, description: 0–100 tie-break; also returned as total_score }
 
     DesignResponse:
       type: object
@@ -523,8 +582,23 @@ components:
       properties:
         top3:
           type: array
-          description: Ranked forward-primer candidates with sub-scores and structure checks.
-          items: { type: object }
+          description: >
+            Ranked forward-primer candidates with sub-scores and structure checks. Every
+            set carries v4_rule_violations; tiered sets also carry ranking, and their
+            total_score / scores / weights are the detailed (tie-break) score.
+          items:
+            type: object
+            properties:
+              v4_rule_violations:
+                type: array
+                description: >
+                  V4 rules this set breaks — gc_out_of_range, gc_clamp_fail,
+                  gc_end_window_fail, hard_dimer_full_dg, hard_dimer_3prime_critical,
+                  hard_hairpin_tm. Empty when V4 would have accepted it.
+                items: { type: string }
+              ranking: { $ref: "#/components/schemas/PrimerSetRanking" }
+        ranking_summary:     { $ref: "#/components/schemas/RankingSummary" }
+        overhang_suggestion: { $ref: "#/components/schemas/OverhangSuggestion" }
         stemloop_rt:
           type: object
           description: Deterministic RT primer (fixed universal body + 6-nt overhang).
@@ -533,7 +607,10 @@ components:
           description: Fixed universal reverse primer.
         metadata:
           type: object
-          description: mirna_sequence, mirna_id, timing, versions, forward_axis_refined.
+          description: >
+            mirna_sequence, mirna_id, timing, versions, forward_axis_refined,
+            scoring_system (tiered | v4), provenance (engine versions, V4 weights and
+            tiered thresholds sha256, miRBase release).
         specificity_warnings:
           type: object
           description: >

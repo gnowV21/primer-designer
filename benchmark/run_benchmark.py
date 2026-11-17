@@ -67,12 +67,23 @@ def _call_design(base_url: str, mirna_seq: str, mirna_id: str = "") -> dict | No
         },
     }
     try:
-        resp = requests.post(f"{base_url}/api/design", json=payload, timeout=30)
+        resp = requests.post(f"{base_url}/api/design", json=payload, timeout=120)
         if resp.status_code == 200:
-            return resp.json()
+            return require_blast(resp.json())
         return {"error": f"HTTP {resp.status_code}: {resp.text[:120]}"}
     except Exception as exc:
         return {"error": str(exc)}
+
+
+def require_blast(data: dict) -> dict:
+    """Thesis data must not silently lose S1 (SPEC_scoring_tiered_4.0.0 QD 24e): a
+    tiered design without BLAST stops the run."""
+    rs = (data or {}).get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        raise SystemExit("BLAST unavailable on the backend ("
+                         f"{rs.get('blast_unavailable_reason')}) — tiered specificity "
+                         "ranking would be S2 + S3 only. Fix BLAST+ / the DB and re-run.")
+    return data
 
 
 def _call_mirprimer(mirprimer_bin: str, mirna_seq: str) -> dict | None:

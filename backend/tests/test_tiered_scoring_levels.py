@@ -162,3 +162,15 @@ def test_pcr_tier_is_p2_only_and_p1_is_reported():
     r = ts.score(_m(tm_full=60.0, tm_reverse=62.9))
     assert r["pcr"]["total"] == r["pcr"]["tm_vs_ta"] == 5 and r["pcr"]["max"] == 5
     assert r["pcr"]["tm_pair_report_only"] == 3
+
+
+def test_tie_on_tiers_and_detail_falls_to_tm_then_sequence():
+    """Same S/P/F totals and detailed score (V4 sub-scores fixed by _m): |Tm − Ta|
+    decides, then the sequence (QD 27: arbitrary but deterministic)."""
+    near = _m(seq="TTTT", tm_full=60.2)
+    far = _m(seq="AAAA", tm_full=60.6)              # both P2 level 5
+    rn, rf = ts.score(near), ts.score(far)
+    assert rn["detailed_score"] == rf["detailed_score"]
+    assert ts.rank([(far, rf), (near, rn)])["ranked"][0][0]["sequence"] == "TTTT"
+    same = _m(seq="AAAA", tm_full=60.2)
+    assert ts.rank([(near, rn), (same, ts.score(same))])["ranked"][0][0]["sequence"] == "AAAA"

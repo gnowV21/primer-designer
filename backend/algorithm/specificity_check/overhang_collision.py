@@ -383,6 +383,7 @@ def assay_screen(
                                   same_sequence) of Tm_on − Tm_off, the most stable
                                   register of the ±2-nt shifts; None = none captured
       tm_margin_r0              — the same at the unshifted register only
+      tm_on                     — on-target duplex Tm of the specific region
     """
     target_dna = _dna((mature_seq or "").upper().strip())
     prefix = _resolve_species_prefix(mirna_name, species)
@@ -441,5 +442,7 @@ def assay_screen(
             "tm_margin": round(margin, 1) if margin is not None else None,
             "tm_margin_worst": margin_worst,
             "tm_margin_r0": round(margin_r0, 1) if margin_r0 is not None else None,
+            # On-target duplex Tm of the specific region (Tm_off = tm_on − tm_margin).
+            "tm_on": round(_duplex_tm(region, target_dna[:L + 1], p3), 1),
         }
     return out

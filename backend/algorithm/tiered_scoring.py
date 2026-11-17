@@ -153,6 +153,19 @@ def f5_structure(hairpin_tm: float | None, dimer_dg: float | None,
 def detailed_score(m: dict) -> float:
     """0–100 tie-break (SPEC §3.4). m carries the raw metrics and the V4 sub-scores
     tm_accuracy, tm_binding_accuracy, gc_content, gc_clamp, primer_size, amplicon_size."""
+    parts = detailed_parts(m)
+    w = TIERED_DETAIL_WEIGHTS
+    return round(sum(parts[k] * w[k] for k in w) / sum(w.values()), 1)
+
+
+def detailed_weights() -> dict:
+    """Effective weights of the detailed score (TIERED_DETAIL_WEIGHTS / their sum)."""
+    total = sum(TIERED_DETAIL_WEIGHTS.values())
+    return {k: round(v / total, 4) for k, v in TIERED_DETAIL_WEIGHTS.items()}
+
+
+def detailed_parts(m: dict) -> dict:
+    """The 0–100 sub-scores of the detailed score (see detailed_score)."""
     a = TIERED_DETAIL_ANCHORS
     v4 = m["v4_scores"]
     dcq = 10.0 if m.get("min_delta_cq") is None else min(m["min_delta_cq"], 10.0)
@@ -173,8 +186,21 @@ def detailed_score(m: dict) -> float:
         "structure": sum(struct) / 3.0,
         "amplicon_size": v4["amplicon_size"],
     }
-    w = TIERED_DETAIL_WEIGHTS
-    return round(sum(parts[k] * w[k] for k in w) / sum(w.values()), 1)
+    return {k: float(v) for k, v in parts.items()}   # unrounded: the tie-break uses them
+
+
+def blast_s1_inputs(result: dict) -> tuple[str, int, str | None]:
+    """(overall_risk, MEDIUM-hit count, worst hit) from a check_offtarget result — the
+    inputs of s1_blast. MEDIUM counts classified hits and same-molecule variants."""
+    summ = result["summary"]
+    n_med = sum(h.get("risk") == "MEDIUM" for h in result["forward_primer_hits"]) + sum(
+        v["risk"] == "MEDIUM" for v in result.get("identical_sequence_risk", {}).values())
+    worst = next((h.get("subject_id") for h in result["forward_primer_hits"]
+                  if h.get("risk") == summ["overall_risk"]), None)
+    if worst is None and summ["overall_risk"] != "SAFE":
+        worst = next((sid for sid, v in result.get("identical_sequence_risk", {}).items()
+                      if v["risk"] == summ["overall_risk"]), None)
+    return summ["overall_risk"], n_med, worst
 
 
 def score(m: dict) -> dict:

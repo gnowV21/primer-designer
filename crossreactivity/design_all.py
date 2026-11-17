@@ -75,8 +75,14 @@ def design_one(item: tuple[str, str]) -> dict:
         if data.get("rejection_summary"):
             reason += f" — rejections: {data['rejection_summary']}"
         return {**rec, "status": "failed", "reason": reason}
-    rt = (data.get("stemloop_rt") or {}).get("sequence", "")
     meta = data.get("metadata") or {}
+    rs = data.get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        # Tiered #1 without S1 is not the tool's real choice (SPEC_scoring_tiered_4.0.0
+        # QD 24e): not cached as a design, and main() fails the run.
+        return {**rec, "status": "failed",
+                "reason": f"blast_unavailable: {rs.get('blast_unavailable_reason')}"}
+    rt = (data.get("stemloop_rt") or {}).get("sequence", "")
     return {
         **rec,
         "status": "ok",
@@ -88,6 +94,7 @@ def design_one(item: tuple[str, str]) -> dict:
         "total_score": top.get("total_score"),
         "grade": top.get("grade"),
         "algorithm_version": meta.get("algorithm_version") or _version,
+        "scoring_system": meta.get("scoring_system"),
     }
 
 
@@ -104,9 +111,11 @@ def read_done(path: str) -> dict[str, dict]:
 
 
 def select_todo(mature: dict[str, str], done: dict[str, dict], version: str) -> list:
-    """miRNAs to design: not cached, or cached by another algorithm version."""
+    """miRNAs to design: not cached, cached by another algorithm version, or failed
+    only because BLAST was unavailable."""
     return [(n, s) for n, s in sorted(mature.items())
-            if n not in done or done[n].get("algorithm_version") != version]
+            if n not in done or done[n].get("algorithm_version") != version
+            or str(done[n].get("reason", "")).startswith("blast_unavailable")]
 
 
 def compact(path: str) -> None:
@@ -158,6 +167,11 @@ def main(argv=None) -> int:
     done = read_done(out_path)
     n_ok = sum(r["status"] == "ok" for r in done.values())
     print(f"done: {n_ok} designed, {len(done) - n_ok} failed -> {out_path}")
+    n_blast = sum(str(r.get("reason", "")).startswith("blast_unavailable") for r in done.values())
+    if n_blast:
+        print(f"ERROR: {n_blast} designs ran without BLAST — fix BLAST+ / the DB and re-run "
+              "(they will be redesigned).", file=sys.stderr)
+        return 1
     return 0
 
 

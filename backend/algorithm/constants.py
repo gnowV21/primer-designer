@@ -90,7 +90,14 @@
 #   of the mature.fa behind the BLAST DB and overhang index; sequences outside it get
 #   a `sequence_not_in_mirbase_release` warning; online lookups are labelled and no
 #   longer cached.
-ALGORITHM_VERSION = "3.8.2"
+# 4.0.0 (docs/SPEC_scoring_tiered_4.0.0.md): tiered, specificity-first ranking of the
+#   forward candidates (algorithm/tiered_pipeline.py) is the default; V4 stays
+#   available (scoringSystem = "v4") and unchanged. Tiered: no GC % / G-C clamp
+#   pre-filter and no structural hard filters (scored F1/F2/F5 + soft veto instead);
+#   BLAST (batched: one multi-FASTA blastn split over parallel processes + one
+#   blastdbcmd per design) scores every candidate S2 does not eliminate; each set
+#   lists the V4 rules it breaks (v4_rule_violations).
+ALGORITHM_VERSION = "4.0.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -614,6 +621,12 @@ BLAST_MAX_TARGET_SEQS  = 50000   # [Ye12] — vs standard 250
 BLAST_REWARD           = 1       # [Ye12] — match reward
 BLAST_PENALTY          = -1      # [Ye12] — mismatch penalty, ratio 1:1
 BLAST_TASK             = "blastn-short"  # for queries <30 nt
+# Batched BLAST (tiered 4.0.0, SPEC QD 24b): the forward candidates of one design
+# go to blastn as multi-FASTA, split over this many parallel blastn processes.
+# Performance only — blastn scores each query on its own, so the hits are the same
+# for any split (benchmark/blast_batch_equivalence.json). hsa-miR-21-5p, 100
+# candidates: 1 process 8.5 s, 4 → 3.4 s, 8 → 2.5 s, 12 → 2.5 s.
+BLAST_BATCH_PROCESSES  = 8
 
 # [Ye12] Primer-BLAST default specificity thresholds
 PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specific enough"
@@ -897,13 +910,18 @@ TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; N
 
 # ================================================================
 # TIERED SCORING (4.0.0) — docs/SPEC_scoring_tiered_4.0.0.md §3
-# Proposed thresholds, pending approval after the Giai đoạn 1 dry run
-# (backend/scripts/tiered_scoring_dryrun.py). Pure functions: algorithm/tiered_scoring.py.
+# Thresholds approved 2026-11-17 after the Giai đoạn 1 dry run (SPEC QD 17–23;
+# backend/scripts/tiered_scoring_dryrun.py). Pure functions: algorithm/tiered_scoring.py;
+# pipeline: algorithm/tiered_pipeline.py.
 # Each table lists the lower edge of levels 5, 4, 3, 2 ("higher is better") or the
 # upper edge ("lower is better"); anything beyond is level 1.
 # "own threshold" = a value of this tool, no published source, not wet-lab calibrated.
 # ================================================================
-SCORING_SYSTEM_DEFAULT = "v4"   # becomes "tiered" in Giai đoạn 2 (SPEC QD 11)
+# Ranking system of /api/design: "tiered" (4.0.0 default) or "v4" (weighted sum, kept
+# for the thesis comparison; SPEC QD 11). Per request: scoringSystem; per process: the
+# SCORING_SYSTEM environment variable.
+SCORING_SYSTEM_DEFAULT = "tiered"
+SCORING_SYSTEMS = ("tiered", "v4")
 
 # Tier 1 — specificity (max 15)
 # S1 BLAST (classifier v7, same species + virus host): SAFE 5, MEDIUM with 1 hit 4,
@@ -930,7 +948,7 @@ TIERED_RT_CAPTURE_BELOW = ASSAY_DCQ_DISCRIMINATED_AT   # ΔCq_RT < 4.3 → the R
 # nearest-neighbour Tm predictions carry ~±1–2 °C error, so finer steps would rank noise.
 # P1 |Tm_forward − Tm_reverse| is REPORT-ONLY: the universal reverse primer is fixed
 # (Tm 62.93 °C at the design defaults), so P1 is a function of Tm_forward alone and
-# pulls it towards 62.9 °C while P2 pulls it towards Ta (r = −0.96 over 217,780 hsa
+# pulls it towards 62.9 °C while P2 pulls it towards Ta (r = −0.95 over 217,780 hsa
 # candidates; P1 level 3 for 88 %). benchmark/tiered_scoring_dryrun.json.
 TIERED_P1_TM_PAIR_C = (1.0, TM_PAIR_DIFF_MAX, 3.0, 5.0)   # report only; 4: 2 °C [PAST24]
 TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds (≥ 1 °C steps)
@@ -940,7 +958,7 @@ TIERED_F3_LENGTH = {17: 5, 16: 5, 15: 4, 14: 3, 13: 2, 12: 1}   # own threshold 
 TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING_TARGET|, own thresholds
 # F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
 # F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
-# 99.2 % of hsa candidates; the 31 candidates at level 1 all also fail F5a and F5b
+# 99.2 % of hsa candidates; the 32 candidates at level 1 all also fail F5a and F5b
 # (self-complementary 3' ends such as CTGCAG, GTCGAC). Kept because Primer3 has the rule.
 TIERED_F5_HAIRPIN_TM_C   = (30.0, 37.0, 42.0, HAIRPIN_TM_HARD_MAX)    # level 1 at ≥ 47 °C [P3 PRIMER_MAX_HAIRPIN_TH]
 TIERED_F5_DIMER_DG       = (-5.0, -7.0, -9.0, -10.0)                  # kcal/mol RNAcofold; ≤ −10 → 1 [Kang17 −9 ± 1]

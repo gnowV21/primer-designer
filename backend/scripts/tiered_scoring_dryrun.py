@@ -201,6 +201,10 @@ def _blast_one(item):
 
 def blast(a):
     _setup()
+    from algorithm.specificity_check.blast_offtarget import blast_available
+    ok, why = blast_available()
+    if not ok:
+        raise SystemExit(f"BLAST not available: {why} (QD 24e)")
     recs = {}
     with gzip.open(POOLS, "rt", encoding="utf-8") as f:
         for line in f:
@@ -288,11 +292,16 @@ def analyse(a):
     with gzip.open(POOLS, "rt", encoding="utf-8") as f:
         recs = sorted((json.loads(x) for x in f), key=lambda r: r["mirna"])
     blast_res = {}
-    if os.path.exists(BLASTS):
-        with gzip.open(BLASTS, "rt", encoding="utf-8") as f:
-            for line in f:
-                r = json.loads(line)
-                blast_res[r["mirna"]] = r["results"]
+    if not os.path.exists(BLASTS):
+        raise SystemExit(f"{BLASTS} missing — run the blast step first (QD 24e: no S1, no data)")
+    with gzip.open(BLASTS, "rt", encoding="utf-8") as f:
+        for line in f:
+            r = json.loads(line)
+            blast_res[r["mirna"]] = r["results"]
+    n_err = sum(v.get("risk") is None for d in blast_res.values() for v in d.values())
+    if n_err:
+        raise SystemExit(f"{n_err} BLAST calls failed — re-run the blast step (it retries "
+                         "only the failed ones) before analysing (QD 24e)")
 
     def scored(rec, with_blast, s2_key="min_delta_cq", s3_key="tm_margin"):
         out = []

@@ -30,6 +30,7 @@ from algorithm.template_structure import check_template_structure
 from algorithm.probe_design import design_probe
 from algorithm.normalization_advisor import advise_normalization
 from algorithm.controls_advisor import advise_controls
+from algorithm import tiered_pipeline
 from algorithm.constants import (
     CANDIDATES_TOP_N, OUTPUT_BASE_INDEX,
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
@@ -55,6 +56,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
     dict matching the /api/design JSON response schema
     """
     start = time.time()
+    # "tiered" (4.0.0 default) or "v4" — ValueError on anything else (route → 400).
+    system = tiered_pipeline.resolve_system(params)
 
     global_warnings = []
 
@@ -136,8 +139,10 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             ),
         })
 
-    # Forward candidates
-    candidates, rejection_log = generate_forward_candidates(seq, params)
+    # Forward candidates. Tiered: no GC % / G-C clamp pre-filter — F1/F2 score them
+    # instead (SPEC QD 15); V4 keeps the pre-filter.
+    candidates, rejection_log = generate_forward_candidates(
+        seq, params, gc_prefilter=(system == "v4"))
 
     if not candidates:
         reasons = {}
@@ -165,9 +170,11 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             params=params,
         )
         c["template_structure"] = check_template_structure(seq, c, params)
+        # V4 rules this set breaks (SPEC QD 25) — reported for both systems.
+        c["v4_rule_violations"] = tiered_pipeline.v4_rule_violations(c, params)
 
-    # Hard-filter gate
-    if HARD_FILTER_ENABLED:
+    # Hard-filter gate (V4 only; the tiered system scores structure instead, QD 7)
+    if HARD_FILTER_ENABLED and system == "v4":
         hard_passed = []
         for c in candidates:
             rejections = apply_hard_filters(c)
@@ -197,43 +204,60 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         overhang_len=binding_len,
         species=params.get("species"),
     )
-    # Assay-level collision (RT overhang + forward prefix) on EACH candidate's own
-    # forward specific length (REV-23, 4.0.0). ΔCq_FWD depends on that length, so
-    # family_discrimination can differ between candidates of one design. Before
-    # 4.0.0 it was scored once, on the winner's length (a fixpoint loop), which gave
-    # every candidate the same value. Cached per length: at most 6 calls.
-    _oc_by_len: dict = {}
-
-    def _collision_for(length):
-        if length not in _oc_by_len:
-            _oc_by_len[length] = check_overhang_collision(
-                mature_seq=seq, mirna_name=mirna_name, params=params,
-                overhang_len=binding_len, forward_specific_len=length,
-                species=params.get("species"),
-            )
-        return _oc_by_len[length]
-
-    scored = []
-    for c in candidates:
-        result = score_candidate(
-            c, stemloop, reverse, params,
-            cross_reactivity=cross_reactivity_shared,
-            overhang_collision=_collision_for(c.get("specific_length")),
-            use_v4=True,
+    ranking_summary = None
+    overhang_suggestion = None
+    if system == "tiered":
+        tiered = tiered_pipeline.rank(seq, params, mirna_name, binding_len, stemloop,
+                                      reverse, candidates)
+        top_n = tiered["top"]
+        global_warnings.extend(tiered["warnings"])
+        ranking_summary = tiered["summary"]
+        overhang_suggestion = tiered["overhang_suggestion"]
+        # Design-level report (warnings, specificity_warnings): the #1 set's own length,
+        # same schema as V4.
+        overhang_collision = check_overhang_collision(
+            mature_seq=seq, mirna_name=mirna_name, params=params,
+            overhang_len=binding_len, forward_specific_len=top_n[0].get("specific_length"),
+            species=params.get("species"),
         )
-        scored.append({**c, **result})
+    else:
+        # Assay-level collision (RT overhang + forward prefix) on EACH candidate's own
+        # forward specific length (REV-23, 4.0.0). ΔCq_FWD depends on that length, so
+        # family_discrimination can differ between candidates of one design. Before
+        # 4.0.0 it was scored once, on the winner's length (a fixpoint loop), which gave
+        # every candidate the same value. Cached per length: at most 6 calls.
+        _oc_by_len: dict = {}
 
-    # Rank by score (ties: closer Tm to Ta, then sequence — never generation order),
-    # then pick the top N with relaxing diversity (v3.2.0; see select_diverse_top).
-    _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
+        def _collision_for(length):
+            if length not in _oc_by_len:
+                _oc_by_len[length] = check_overhang_collision(
+                    mature_seq=seq, mirna_name=mirna_name, params=params,
+                    overhang_len=binding_len, forward_specific_len=length,
+                    species=params.get("species"),
+                )
+            return _oc_by_len[length]
 
-    def _rank_key(x):
-        return (-x["total_score"], abs(x.get("tm_full", 0) - _ta), x["sequence"])
+        scored = []
+        for c in candidates:
+            result = score_candidate(
+                c, stemloop, reverse, params,
+                cross_reactivity=cross_reactivity_shared,
+                overhang_collision=_collision_for(c.get("specific_length")),
+                use_v4=True,
+            )
+            scored.append({**c, **result})
 
-    ranked = sorted(scored, key=_rank_key)
-    top_n = select_diverse_top(ranked, CANDIDATES_TOP_N)
-    # Design-level report (warnings, specificity_warnings): the #1 set's own length.
-    overhang_collision = _collision_for(top_n[0].get("specific_length"))
+        # Rank by score (ties: closer Tm to Ta, then sequence — never generation order),
+        # then pick the top N with relaxing diversity (v3.2.0; see select_diverse_top).
+        _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
+
+        def _rank_key(x):
+            return (-x["total_score"], abs(x.get("tm_full", 0) - _ta), x["sequence"])
+
+        ranked = sorted(scored, key=_rank_key)
+        top_n = select_diverse_top(ranked, CANDIDATES_TOP_N)
+        # Design-level report (warnings, specificity_warnings): the #1 set's own length.
+        overhang_collision = _collision_for(top_n[0].get("specific_length"))
 
     # Amplicon melting Tm + SYBR dimer proximity warning (SPEC_phase5 PART D).
     # The amplicon top strand = tail + miRNA + rc(stem-loop body), cut at the 5' end of
@@ -417,8 +441,15 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "disclaimer": "For research use only. LNA positions require empirical optimisation.",
         }
 
+    if ranking_summary is not None:
+        ranking_summary["timing_ms"]["total"] = round(1000 * (time.time() - start))
+
     return {
         "top3": top_n,
+        # Tiered system only (SPEC §4): design-level ranking facts, and an RT-overhang
+        # suggestion when another supported length separates the #1 set better.
+        "ranking_summary": ranking_summary,
+        "overhang_suggestion": overhang_suggestion,
         "probe": probe_result,
         "probe_note": probe_note,
         "stemloop_rt": stemloop,
@@ -497,10 +528,12 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
             "algorithm_version": ALGORITHM_VERSION,
-            "scoring_version": "V4 (13 scored + 1 informational)",
+            "scoring_system": system,
+            "scoring_version": ("tiered (specificity → structure veto → PCR → flexible → detailed)"
+                                if system == "tiered" else "V4 (13 scored + 1 informational)"),
             # Reproducibility (MIQE 2.0 §1, audit ENG-01): engines and the exact
             # weight table behind this result.
-            "provenance": _provenance(),
+            "provenance": {**_provenance(), "scoring_system": system},
             "output_label": "predicted design quality",
             "output_note": (
                 "Score reflects in-silico design quality (Tm, GC%, structure, specificity). "
@@ -516,7 +549,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
 
 
 def _provenance() -> dict:
-    """Engine versions + scoring-weights fingerprint, computed once per process."""
+    """Engine versions + V4 weights / tiered thresholds fingerprints, computed once
+    per process. run() adds the scoring_system of the design."""
     global _PROVENANCE
     if _PROVENANCE is None:
         import hashlib
@@ -534,11 +568,15 @@ def _provenance() -> dict:
             {"weights": SCORING_WEIGHTS_V4, "unscored": sorted(UNSCORED_CRITERIA_V4)},
             sort_keys=True,
         ).encode()
+        thresholds_blob = json.dumps(tiered_pipeline.thresholds_table(), sort_keys=True,
+                                     default=list).encode()
         _PROVENANCE = {
             "python": platform.python_version(),
             "primer3_py": _ver("primer3-py"),
             "viennarna": _ver("ViennaRNA"),
             "scoring_weights_sha256": hashlib.sha256(weights_blob).hexdigest()[:12],
+            # Every TIERED_* threshold of constants.py (4.0.0, SPEC §4).
+            "tiered_thresholds_sha256": hashlib.sha256(thresholds_blob).hexdigest()[:12],
             # Release + sha256 of the mature.fa behind the BLAST DB, the overhang
             # index and the local lookup database (mirbase_source.py, since 3.8.2).
             **release_info(),

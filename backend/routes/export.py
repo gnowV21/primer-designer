@@ -161,7 +161,10 @@ def _miqe_design_rows(meta, top3):
     engines = " · ".join(filter(None, [
         f"primer3-py {pv['primer3_py']}" if pv.get("primer3_py") else None,
         f"ViennaRNA {pv['viennarna']}" if pv.get("viennarna") else None,
+        f"scoring system {pv['scoring_system']}" if pv.get("scoring_system") else None,
         f"weights #{pv['scoring_weights_sha256']}" if pv.get("scoring_weights_sha256") else None,
+        (f"tiered thresholds #{pv['tiered_thresholds_sha256']}"
+         if pv.get("tiered_thresholds_sha256") else None),
         f"miRBase release {pv.get('mirbase_release', 'unknown')}" if pv else None,
         f"mature.fa sha256 {pv['mature_fa_sha256']}" if pv.get("mature_fa_sha256") else None,
     ])) or "—"
@@ -227,6 +230,8 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
             "; ".join(filter(None, [
                 f"Binding region {s.get('specific_length', '?')} nt",
                 _selection_note(s),
+                _ranking_note(s),
+                _v4_rules_note(s),
                 _isomir_note(s),
             ])),
         ])
@@ -578,6 +583,9 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Dimer ΔG (RNAcofold, 37 °C)", lambda s: _cofold_dimer_dg(s)),
         ("Cycle-1 occupancy % (Ta)", lambda s: _fmt_pct(s.get('scores', {}).get('bound_fraction_binding_pct'))),
     ]
+    if any(s.get("ranking") for s in top3):
+        criteria.insert(1, ("Tiered ranking", lambda s: _ranking_note(s) or "—"))
+    criteria.append(("V4 rules broken", lambda s: ", ".join(s.get("v4_rule_violations") or []) or "none"))
     cmp_data = [cmp_header] + [
         [label] + [fn(s) for s in top3]
         for label, fn in criteria
@@ -919,6 +927,27 @@ def _selection_note(s: dict) -> str:
     if sel == "adjacent_3prime":
         return "3' end 1 nt from a higher-ranked set"
     return ""
+
+
+def _ranking_note(s: dict) -> str:
+    """Tiered tier totals of one set (SPEC §4), '' for a V4 set."""
+    rk = s.get("ranking")
+    if not rk:
+        return ""
+    sp, pcr, fx = rk["specificity"], rk["pcr"], rk["flexible"]
+    note = (f"Tiered S {sp['total']}/{sp['max']} · P {pcr['total']}/{pcr['max']} · "
+            f"F {fx['total']}/{fx['max']}")
+    if rk.get("structure_veto"):
+        note += " · structure veto"
+    if rk.get("eliminated"):
+        note += " · fails specificity (fallback)"
+    return note
+
+
+def _v4_rules_note(s: dict) -> str:
+    """V4 rules this set breaks (SPEC QD 25); '' when none or not reported."""
+    v = s.get("v4_rule_violations")
+    return f"V4 rules broken: {', '.join(v)}" if v else ""
 
 
 def _family_provenance_note(results: dict) -> str:

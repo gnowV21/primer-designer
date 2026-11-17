@@ -46,9 +46,21 @@ def design(mature_seq, mirna_id):
         "thermodynamic": {}, "primerConstraints": {}, "qpcr": {},
         "detectionMethod": {}, "experimentalContext": {},
     }
-    r = requests.post(f"{BASE}/api/design", json=payload, timeout=60)
+    r = requests.post(f"{BASE}/api/design", json=payload, timeout=120)
     r.raise_for_status()
-    return r.json()
+    return require_blast(r.json())
+
+
+def require_blast(data: dict) -> dict:
+    """Thesis data must not silently lose S1 (SPEC_scoring_tiered_4.0.0 QD 24e): a
+    tiered design without BLAST stops the run."""
+    rs = (data or {}).get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        raise SystemExit("BLAST unavailable on the backend ("
+                         f"{rs.get('blast_unavailable_reason')}) — tiered specificity "
+                         "ranking would be S2 + S3 only. Fix BLAST+ / the DB and re-run.")
+    return data
+
 
 
 def main():
