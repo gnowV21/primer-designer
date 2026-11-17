@@ -196,6 +196,8 @@ PENALTY_WT_BOUND_GT = 1.0    # [P3P Penalties]
 - Formula suboptimal: `(fract-50)/40*70` hardcode anchor 50% và range 40 từ threshold cũ → sai sau khi đổi MIN. Mới: `fract/MIN*70` — tuyến tính từ 0%→0 đến MIN%→70, consistent với MIN constant.
 
 ### 4.3 Công thức
+> **[ĐÍNH CHÍNH algorithm 3.8.1, 2026-11-17 — AUDIT REV-24]** Công thức `fract = 1/(1 + √(1/((Ct/4)·K)))` dưới đây **sai**. Nó không phải nghiệm của cân bằng khối lượng; chỉ trùng nghiệm hai trạng thái tại đúng 50 %, còn ở giá trị thấp cho kết quả cao hơn vài chục lần và ở giá trị cao thì thấp hơn. Code dùng: **θ = K·C_P / (1 + K·C_P) × 100**, với K = exp(−ΔG/RT) và C_P = nồng độ mồi (M). Đây là phần trăm sợi khuôn có mồi bám, khi mồi dư rất nhiều so với khuôn (đúng điều kiện PCR). ΔH/ΔS vẫn lấy từ primer3 (SantaLucia 1998 + hiệu chỉnh muối). Giữ đoạn mã cũ dưới đây làm lịch sử.
+
 ```python
 def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> float:
     """
@@ -1247,7 +1249,7 @@ Các tính chất:
 3. **Tính chính xác** các cặp còn lại (có hạng Tm và ΔG); mỗi block 32 assay một file cache.
 4. **Kiểm tra bắt buộc**: R(i, i) là cực đại của hàng; chạy dừng với mã 2 nếu sai.
 
-**Kết quả lần chạy 2026-11-16** (algorithm 3.8.0, commit `5c4d352`, `outputs/crossreactivity_metadata.json`), so với các lần chạy trước: 3.7.0 (2026-11-11, commit `d26c64a`), 3.6.0 (commit `e81f1d1`) và 3.5.0 (2026-11-10, commit `d0c43f1`):
+**Kết quả lần chạy 2026-11-16** (algorithm 3.8.0, commit `5c4d352`). Dựng lại ngày 2026-11-17 bằng 3.8.1 (commit `3340fe4`, `outputs/crossreactivity_metadata.json`): mồi và mọi con số dưới đây giống hệt, vì 3.8.1 chỉ sửa chỉ số tỉ lệ bám hiển thị. So sánh 3.8.0 với các lần chạy trước: 3.7.0 (2026-11-11, commit `d26c64a`), 3.6.0 (commit `e81f1d1`) và 3.5.0 (2026-11-10, commit `d0c43f1`):
 
 | | 3.8.0 | 3.7.0 | 3.6.0 | 3.5.0 |
 |---|---|---|---|---|

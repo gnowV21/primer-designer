@@ -1,7 +1,7 @@
 {
- "run_date": "2026-11-16T20:37:04",
- "tool_version": "3.8.0",
- "git_commit": "5c4d3521a068061870ac0da26d67ef72a6c1f544",
+ "run_date": "2026-11-17T11:59:30",
+ "tool_version": "3.8.1",
+ "git_commit": "3340fe49474c0e55b0f75075d878b5ca5c5cd7ee",
  "species": "hsa",
  "mirbase": {
   "mirbase_release": "22.1",
@@ -61,5 +61,5 @@
   "crossreactivity_failed_designs.csv",
   "crossreactivity_top30_offdiagonal.csv"
  ],
- "seconds": 0.7
+ "seconds": 94.6
 }
