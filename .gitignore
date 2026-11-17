@@ -66,3 +66,6 @@ backend/data/visualize_cache.sqlite
 # Claude Code local settings (per machine)
 .claude/
 outputs/crossreactivity_cache/
+
+# Recorded candidate pools of backend/scripts/thesis_freeze_impact.py (regenerable)
+outputs/freeze_cache/
