@@ -68,7 +68,14 @@
 #   rule (3'-terminal composition, Busk14/IDT): #1 primers with 0 G/C, 3 G/C or CCC in
 #   the last 3 nt fall from 85 to 49. #1 changes for 863 / 2253 hsa miRNAs, mostly near-
 #   ties (median #1−#2 margin 0.0). GC skew is still reported by /api/analyze (AUDIT REV-22).
-ALGORITHM_VERSION = "3.8.0"
+#   3.8.1 (2026-11-17) — bound fraction (bound_fraction.py) uses the mass-action
+#   occupancy of a two-state duplex with the primer in excess, θ = K·C_P/(1 + K·C_P),
+#   instead of 1/(1 + √(1/((C_T/4)·K))), which matches a two-state solution only at
+#   50 % (AUDIT REV-24). Display values change; scores, ranking and primers do not:
+#   the full-primer criterion is 100 for all 131,039 hsa candidates under both
+#   formulas (new θ at 55 °C: 99.66–99.99 %), and the cycle-1 value is unscored
+#   (new median 0.31 % vs 2.71 % before; 12 nt 0.08 %, 17 nt 7.8 %).
+ALGORITHM_VERSION = "3.8.1"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -423,6 +430,9 @@ AMPLICON_TM_MG_SPAN_MM = (1.5, 3.0)
 # (Removed BOUND_FRACTION_RT_TEMP = 42 °C — audit SCI-02, 2026-09-18. The forward
 #  primer is absent from the RT step; round 1 is PCR cycle 1 at the user's Ta.)
 BOUND_FRACTION_ANNEALING_TEMP = 55.0  # °C — Round 2: full primer binds amplicon at Ta=Tm−5°C
+# Score bands for the full-primer occupancy — the tool's own (v1.9), no published
+# source. With the mass-action formula (3.8.1) every hsa candidate is ≥ 99.6 %, so
+# the criterion scores 100 throughout and does not discriminate (as before).
 BOUND_FRACTION_MIN = 60.0
 BOUND_FRACTION_OPT = 80.0
 
@@ -562,9 +572,10 @@ assert abs(sum(SCORING_WEIGHTS_V4.values()) - 1.00) < 0.001
 # The total is renormalised over the criteria actually scored, so the other
 # weights keep their relative proportions.
 #   bound_fraction_binding — audit SCI-02 (project decision 2026-09-18): the
-#   specific region alone binds cDNA only in PCR cycle 1, at Ta (≈2–10 % for
-#   12–17 nt at 60 °C). No published threshold exists for that number, so it
-#   is reported as information, not scored.
+#   specific region alone binds cDNA only in PCR cycle 1, at Ta (median over the
+#   hsa candidates at 60 °C: 0.08 % at 12 nt to 7.8 % at 17 nt, mass action since
+#   3.8.1). No published threshold exists for that number, so it is reported as
+#   information, not scored.
 UNSCORED_CRITERIA_V4 = frozenset({"bound_fraction_binding"})
 
 # (Removed FAMILY_DISCRIMINATION_RISK_SCORE — legacy seed-axis mapping. Family

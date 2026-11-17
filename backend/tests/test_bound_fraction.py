@@ -70,6 +70,52 @@ def test_longer_primer_higher_or_equal_fraction():
     assert fl >= fs, f"Longer primer fraction {fl}% < shorter {fs}%"
 
 
+# ── mass action (AUDIT REV-24, algorithm 3.8.1) ───────────────────
+
+def _theta_by_hand(seq, temp_c, primer_nm=200.0):
+    dH, dS = _get_dh_ds(seq, DEFAULT_PARAMS)
+    T = temp_c + 273.15
+    K = math.exp(-(dH - T * dS) / (1.987 * T))
+    kc = K * primer_nm * 1e-9
+    return 100 * kc / (1 + kc)
+
+
+def test_bound_fraction_is_mass_action_with_primer_in_excess():
+    """θ = K·C_P / (1 + K·C_P): the fraction of template bound by primer."""
+    seq = "TAGCTTATCAGACTGA"
+    for t in (45.0, 50.0, 55.0, 60.0):
+        assert abs(_calculate_bound_fraction(seq, DEFAULT_PARAMS, t)
+                   - _theta_by_hand(seq, t)) < 1e-3
+
+
+def test_half_occupancy_where_k_times_primer_conc_is_one():
+    """θ = 50 % exactly at the temperature where K·C_P = 1, i.e. T = ΔH / (ΔS + R ln C_P)."""
+    seq = "TAGCTTATCAGACTGA"
+    dH, dS = _get_dh_ds(seq, DEFAULT_PARAMS)
+    t_half = dH / (dS + 1.987 * math.log(200e-9)) - 273.15
+    assert abs(_calculate_bound_fraction(seq, DEFAULT_PARAMS, t_half) - 50.0) < 0.01
+
+
+def test_old_sqrt_formula_is_gone():
+    """The pre-3.8.1 formula 1/(1+√(1/((C_T/4)K))) put this region at ~1.5 % at 60 °C;
+    mass action gives an order of magnitude less."""
+    seq = "TAGCTTATCAGACTGA"
+    dH, dS = _get_dh_ds(seq, DEFAULT_PARAMS)
+    T = 333.15
+    K = math.exp(-(dH - T * dS) / (1.987 * T))
+    old = 100 / (1 + math.sqrt(1 / ((200e-9 / 4) * K)))
+    new = calculate_bound_fraction_binding(seq, {"annealingTemp": 60})
+    assert new < old / 5
+
+
+def test_primer_concentration_raises_occupancy():
+    seq = "TAGCTTATCAGACTGA"
+    low = calculate_bound_fraction_binding(seq, {"primerConcentration": 100})
+    high = calculate_bound_fraction_binding(seq, {"primerConcentration": 400})
+    assert high > low
+    assert calculate_bound_fraction_binding(seq, {"primerConcentration": 0}) == 0.0
+
+
 # ── scoring ───────────────────────────────────────────────────────
 
 def test_score_at_opt_is_100():

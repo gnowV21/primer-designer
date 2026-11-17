@@ -284,12 +284,12 @@ def score_candidate(
         bf_binding = calculate_bound_fraction_binding(specific_region, params)
         scores["bound_fraction_binding_pct"] = bf_binding
         explanations["bound_fraction_binding"] = (
-            f"Cycle-1 occupancy = {bf_binding:.1f}% of the specific region "
-            f"({forward.get('specific_length', '?')} nt) bound to first-strand cDNA at "
-            f"Ta = {annealing_temp_c(params):g}°C. In cycle 1 only the specific region has a "
-            f"template (the 5' tail pairs from cycle 2 on), so low values are normal. "
-            f"Shown for information — not scored (no published threshold). "
-            f"Formula: [SL04] SantaLucia & Hicks 2004."
+            f"Cycle-1 occupancy = {bf_binding:.3g}% of first-strand cDNA bound by the specific "
+            f"region ({forward.get('specific_length', '?')} nt) at Ta = {annealing_temp_c(params):g}°C. "
+            f"In cycle 1 only the specific region has a template (the 5' tail pairs from "
+            f"cycle 2 on), so low values are normal. Shown for information — not scored "
+            f"(no published threshold). Two-state mass action, primer in excess: "
+            f"θ = K·C_P/(1 + K·C_P), K from nearest-neighbour ΔH/ΔS [SL98][SL04]."
         )
 
         # ── 14. Bound fraction — full primer (0.03) [SL04] ───────
@@ -298,11 +298,11 @@ def score_candidate(
         scores["bound_fraction_full"] = bf_full_result["score"]
         scores["bound_fraction_full_pct"] = bf_full  # raw % for display
         explanations["bound_fraction_full"] = (
-            f"Full primer bound fraction = {bf_full:.1f}% at Ta=55°C (Tm−5°C qPCR annealing) "
-            f"(optimal ≥ 80%, acceptable ≥ 60%). "
-            f"Round 2: full primer ({forward.get('length', '?')} nt) binds amplicon. "
-            f"Evaluated at Tm−5°C, not Tm — at Tm all primers are 50% unbound by definition. "
-            f"Formula: [SL04] SantaLucia & Hicks 2004."
+            f"Full-primer occupancy = {bf_full:.1f}% of amplicon strands bound by the full "
+            f"primer ({forward.get('length', '?')} nt) at 55°C (optimal ≥ 80%, acceptable ≥ 60%). "
+            f"Round 2: the full primer anneals once the product carries the tail complement. "
+            f"Two-state mass action, primer in excess: θ = K·C_P/(1 + K·C_P), K from "
+            f"nearest-neighbour ΔH/ΔS [SL98][SL04]."
         )
 
         # ── 15. Family discrimination — assay-level ΔCq model (0.05) ──

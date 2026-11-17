@@ -1,6 +1,6 @@
 # Insight cho slide "Tiêu chí nhiệt động học" — nguyên lý thiết kế (đề cương)
 
-> **Dành cho Claude (phiên sửa slide).** Dùng tài liệu này để viết **một slide** về tiêu chí nhiệt động học trong phần nguyên lý thiết kế của đề cương. Số liệu đọc từ code algorithm **3.8.0** (`master`, merge commit `486d5ce`) và từ `calibration/tm_report.md`. Bản 3.8.0 chỉ đổi trọng số chấm điểm (bỏ GC skew, GC clamp 0,06), không đổi tiêu chí nhiệt động học nào ở đây; các mồi ví dụ ở mục 5.1 đã chạy lại và vẫn đúng. Trích dẫn có PMID đã đối chiếu với PubMed qua NCBI E-utilities (2026-11-11 và 2026-11-16).
+> **Dành cho Claude (phiên sửa slide).** Dùng tài liệu này để viết **một slide** về tiêu chí nhiệt động học trong phần nguyên lý thiết kế của đề cương. Số liệu đọc từ code algorithm **3.8.1** và từ `calibration/tm_report.md`. Bản 3.8.0 chỉ đổi trọng số chấm điểm (bỏ GC skew, GC clamp 0,06). Bản 3.8.1 sửa công thức tỉ lệ bám (khối B), không đổi điểm hay mồi. Các mồi ví dụ ở mục 5.1 đã chạy lại và vẫn đúng. Trích dẫn có PMID đã đối chiếu với PubMed qua NCBI E-utilities (2026-11-11 và 2026-11-16).
 >
 > **Quy tắc:**
 > 1. Không thêm con số, ngưỡng hay trích dẫn không có ở đây.
@@ -47,7 +47,10 @@
 | Chu kỳ 2 trở đi | Toàn mồi = đuôi 5′ (3–12 nt) + vùng đặc hiệu | Tm = **Ta** (mặc định 60 °C; 100 điểm khi trùng, giảm 50 điểm mỗi 2 °C lệch) | Sản phẩm đã mang đuôi, nên cả mồi bám |
 
 - Đuôi được chọn sao cho Tm toàn mồi gần Ta nhất. Tool tính Tm thật cho từng tổ hợp đuôi + vùng đặc hiệu, giữ các đuôi trong ±3 °C quanh Ta (nới ra ±6 °C nếu không đủ ứng viên).
-- **Phân số mồi bám** (bound fraction, SantaLucia & Hicks 2004) được tính cho cả hai bước. Chỉ bước toàn mồi được chấm (trọng số 0,03). Bước vùng đặc hiệu chỉ báo cáo, vì chưa có ngưỡng công bố. Theo tính toán của tool, ở 60 °C vùng 12–17 nt chỉ bám khoảng 2–10 % ở chu kỳ 1.
+- **Tỉ lệ bám** (bound fraction) được tính cho cả hai bước theo cân bằng khối lượng hai trạng thái, với mồi dư so với khuôn: θ = K·C_P / (1 + K·C_P). Trong đó K = exp(−ΔG/RT), ΔG tính từ ΔH/ΔS nearest-neighbor (SantaLucia 1998; SantaLucia & Hicks 2004), C_P = 200 nM. θ là phần trăm sợi khuôn có mồi bám.
+  - Chỉ bước toàn mồi được chấm (trọng số 0,03, ở 55 °C). Bước này cho 99,7–100 % ở mọi ứng viên hsa, nên luôn đạt 100 điểm.
+  - Bước vùng đặc hiệu (chu kỳ 1, ở Ta 60 °C) chỉ báo cáo, vì chưa có ngưỡng công bố. Trung vị trên 131.039 ứng viên hsa: 0,08 % (12 nt), 0,30 % (14 nt), 7,8 % (17 nt).
+  - Đến bản 3.8.0, code dùng một công thức sai, chỉ đúng ở mức 50 %. Mọi con số tỉ lệ bám trước 3.8.1 không được dùng (AUDIT REV-24).
 
 ### Khối C — Cấu trúc thứ cấp (lọc cứng + chấm điểm), chỉ cho mồi xuôi
 

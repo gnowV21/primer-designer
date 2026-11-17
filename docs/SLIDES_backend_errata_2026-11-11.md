@@ -1,6 +1,6 @@
 # Đính chính và cập nhật nội dung slide backend — 2026-11-11
 
-> **Dành cho Claude (phiên sửa slide).** Tài liệu này là nguồn chuẩn để sửa bộ slide backend của khóa luận "Stem-loop RT-qPCR primer designer". Mọi con số được đọc từ code **algorithm 3.8.0** tại commit `486d5ce` (nhánh `master`, merge PR #9) hoặc từ file kết quả có ghi đường dẫn. Các mục viết cho 3.7.0 đã được cập nhật; thay đổi của 3.8.0 nằm ở mục 8. Mọi trích dẫn có PMID đã được đối chiếu với bản ghi PubMed qua NCBI E-utilities ngày 2026-11-11.
+> **Dành cho Claude (phiên sửa slide).** Tài liệu này là nguồn chuẩn để sửa bộ slide backend của khóa luận "Stem-loop RT-qPCR primer designer". Mọi con số được đọc từ code **algorithm 3.8.1** (nhánh `master`) hoặc từ file kết quả có ghi đường dẫn. Các mục viết cho 3.7.0 đã được cập nhật; thay đổi của 3.8.0 nằm ở mục 8, của 3.8.1 ở mục 9. Mọi trích dẫn có PMID đã được đối chiếu với bản ghi PubMed qua NCBI E-utilities ngày 2026-11-11.
 >
 > **Quy tắc khi sửa slide:**
 > 1. Không thêm con số, ngưỡng hay trích dẫn không có trong tài liệu này.
@@ -134,7 +134,7 @@ Trọng số `SCORING_WEIGHTS_V4` có tổng bằng 1,00. Mỗi tiêu chí cho 0
 | Phân biệt họ miRNA | 0,05 | DISCRIMINATED 100, PARTIAL 70, CO-AMPLIFIED 0 (mô hình ΔCq, mục 4.1) | Chen 2005, Czimmerer 2013, Stadhouders 2010, Kwok 1990 |
 | Tỉ lệ bám, vùng đặc hiệu | 0,05 | **Không chấm, chỉ báo cáo** (chưa có ngưỡng công bố); tổng điểm được chuẩn hóa lại trên các tiêu chí còn lại | SantaLucia & Hicks 2004 |
 | GC clamp (3 nt cuối) | **0,06** (0,04 đến 3.7.0) | 2 G/C → 100; 1 G/C → 75; 0 hoặc 3 G/C → 50; CCC → 25 | Busk 2014 + IDT |
-| Tỉ lệ bám, toàn mồi | 0,03 | Chấm theo phân số mồi bám (bound fraction) của toàn mồi, xem `bound_fraction.py` | SantaLucia & Hicks 2004 |
+| Tỉ lệ bám, toàn mồi | 0,03 | θ = K·C_P/(1 + K·C_P) ở 55 °C (mục 9); ≥ 80 % → 100. Mọi ứng viên hsa đạt 99,7–100 %, nên luôn 100 điểm | Nhiệt động học SantaLucia 1998; SantaLucia & Hicks 2004. Mốc 60/80 % là mốc riêng của tool |
 | Độ dài vùng đặc hiệu | 0,02 | min(100, (L/17)² × 100), với L = 12–17 nt | Dạng bậc hai theo Busk 2014 (hệ số chưa đối chiếu lại) |
 | Kích thước amplicon | 0,02 | 60–150 bp: max(70, 100 − 0,5·\|bp − 80\|) | Hướng dẫn của IDT |
 | Chênh Tm F – URP | 0,01 | ≤ 1 °C → 100 | Trọng số thấp vì URP cố định |
@@ -340,7 +340,8 @@ Chỉ dùng trên slide kèm ghi chú như cột phải:
   - REV-20: lọc cứng hairpin theo Tm ≥ 47 °C;
   - REV-21: quy tắc 2 không kích hoạt (còn mở);
   - REV-22: bỏ GC skew khỏi chấm điểm, GC clamp 0,06 (algorithm 3.8.0);
-  - REV-23: tiêu chí phân biệt họ không phân biệt được các ứng viên (còn mở).
+  - REV-23: tiêu chí phân biệt họ không phân biệt được các ứng viên (còn mở);
+  - REV-24: công thức tỉ lệ bám theo cân bằng khối lượng (algorithm 3.8.1).
 - `docs/DECISIONS_crossreactivity.md`: các quyết định khoa học của ma trận (D-1 … D-20).
 - `benchmark/dimer_dg_method_compare.json`, `benchmark/scoring_weight_sensitivity.json`, `validation/results.csv`, `outputs/crossreactivity_metadata.json`.
 
@@ -366,3 +367,30 @@ Mục này bổ sung cho các mục trên; các con số ở mục 3.2, 4.4 và 
 - Ví dụ trên slide: hsa-miR-21-5p (API, tham số trống) vẫn cho mồi `ACCGCCTAGCTTATCAGACTGA`, điểm 96,2 (3.7.0: 96,8).
 
 **Không được viết trên slide:** "GC skew giảm nguy cơ G-quadruplex", hoặc "tool có 15 tiêu chí".
+
+---
+
+## 9. Cập nhật 2026-11-17 — algorithm 3.8.1: công thức tỉ lệ bám
+
+**Thay đổi.** Tỉ lệ bám (bound fraction) nay được tính theo cân bằng khối lượng của duplex hai trạng thái, với mồi dư so với khuôn (đúng điều kiện PCR):
+
+θ = K·C_P / (1 + K·C_P) × 100 %,  K = exp(−ΔG / RT),  ΔG = ΔH − T·ΔS
+
+- ΔH, ΔS: nearest-neighbor (SantaLucia 1998; SantaLucia & Hicks 2004), tính bằng primer3 với điều kiện muối của thiết kế.
+- C_P: nồng độ mồi, mặc định 200 nM. R = 1,987 cal·mol⁻¹·K⁻¹.
+- θ là **phần trăm sợi khuôn có mồi bám**, không phải "phần trăm phân tử mồi bám".
+
+Công thức cũ, `1/(1 + √(1/((C_T/4)·K)))`, chỉ trùng nghiệm hai trạng thái tại đúng 50 % (AUDIT REV-24).
+
+**Tác động.**
+- Điểm, mồi và xếp loại **không đổi** (đã thiết kế lại 2656 miRNA người).
+- Tỉ lệ bám toàn mồi ở 55 °C (có chấm, 0,03): 99,66–99,99 % ở mọi ứng viên, nên luôn 100 điểm.
+- Tỉ lệ bám vùng đặc hiệu ở chu kỳ 1 (chỉ báo cáo), Ta 60 °C, trung vị trên 131.039 ứng viên:
+
+| Vùng đặc hiệu | 12 nt | 13 nt | 14 nt | 15 nt | 16 nt | 17 nt |
+|---|---|---|---|---|---|---|
+| Trung vị | 0,08 % | 0,15 % | 0,30 % | 0,86 % | 2,3 % | 7,8 % |
+
+**Không được viết trên slide:**
+- Bất kỳ con số tỉ lệ bám nào lấy từ bản trước 3.8.1.
+- "Tỉ lệ bám tính theo công thức của SantaLucia & Hicks 2004". Bài này là nguồn của mô hình nhiệt động học; công thức θ là cân bằng khối lượng chuẩn, không phải công thức riêng của bài.

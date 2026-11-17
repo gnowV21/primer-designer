@@ -575,7 +575,7 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
         ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg_overall")),
         ("Dimer ΔG (RNAcofold, 37 °C)", lambda s: _cofold_dimer_dg(s)),
-        ("Cycle-1 occupancy % (Ta)", lambda s: f"{_fmt(s.get('scores', {}).get('bound_fraction_binding_pct'))}"),
+        ("Cycle-1 occupancy % (Ta)", lambda s: _fmt_pct(s.get('scores', {}).get('bound_fraction_binding_pct'))),
     ]
     cmp_data = [cmp_header] + [
         [label] + [fn(s) for s in top3]
@@ -1010,6 +1010,15 @@ def _build_fasta(results: dict, filename: str):
 
 
 # ── Helpers ───────────────────────────────────────────────────────
+
+def _fmt_pct(v) -> str:
+    """Occupancy %: cycle 1 is often < 1 %, so keep two decimals there."""
+    if not isinstance(v, (int, float)):
+        return ""
+    if v < 0.01:
+        return "< 0.01"
+    return f"{v:.2f}" if v < 1 else f"{v:.1f}"
+
 
 def _fmt(v) -> str:
     if v is None:

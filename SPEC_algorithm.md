@@ -30,6 +30,16 @@
 
 ---
 
+### 2026-11-17 — Algorithm 3.8.1: tỉ lệ bám tính theo cân bằng khối lượng
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-24 | `bound_fraction.py`, `scoring.py`, `ThermoTable.jsx`, `routes/export.py` | Correctness | Tỉ lệ bám = θ = K·C_P / (1 + K·C_P) × 100: phần trăm sợi khuôn có mồi bám, khi mồi dư so với khuôn. Thay cho `1/(1 + √(1/((C_T/4)·K)))`, công thức chỉ trùng nghiệm hai trạng thái tại 50 %. Giao diện và file xuất hiện 2 chữ số thập phân khi giá trị < 1 %, và "< 0.01" khi nhỏ hơn nữa |
+
+**Tác động.**
+- **Điểm, xếp loại và mồi không đổi.** Thiết kế lại 2656 miRNA hsa: 0 mồi xuôi, 0 mồi RT, 0 điểm tổng đổi. Tiêu chí toàn mồi (55 °C) cho 100 điểm với cả 131.039 ứng viên theo cả hai công thức; theo công thức mới, θ nằm trong 99,66–99,99 %. Tỉ lệ bám chu kỳ 1 không được chấm.
+- **Chỉ số hiển thị đổi.** Tỉ lệ bám chu kỳ 1 ở 60 °C, trung vị trên 131.039 ứng viên: 0,31 % (trước đó 2,71 %). Theo độ dài vùng đặc hiệu: 12 nt 0,08 %, 14 nt 0,30 %, 17 nt 7,8 %. Công thức cũ cho số cao hơn ở vùng thấp và thấp hơn ở vùng cao: giá trị lớn nhất cũ là 55,3 %, mới là 86,0 %.
+
 ### 2026-11-16 — Algorithm 3.8.0: bỏ `gc_skew` khỏi chấm điểm, `gc_clamp` 0,04 → 0,06
 
 | Mã | File | Loại | Mô tả |
@@ -1119,6 +1129,8 @@ Forward primer stem-loop RT-qPCR có 2 vòng binding:
 Dùng `primer3.calc_heterodimer(primer, reverse_complement(primer))` — thermodynamics của primer bind với revcomp của nó = perfect duplex binding. API chính thức primer3-py, có `.dh`, `.ds`, `.dg`, `.tm`.
 
 ### Công thức [SL04]
+
+> **[ĐÍNH CHÍNH algorithm 3.8.1, 2026-11-17 — AUDIT REV-24]** Công thức `fract = 1/(1 + √(1/((Ct/4)·K)))` dưới đây **sai**. Nó không phải nghiệm của cân bằng khối lượng; chỉ trùng nghiệm hai trạng thái tại đúng 50 %, còn ở giá trị thấp cho kết quả cao hơn vài chục lần và ở giá trị cao thì thấp hơn. Code dùng: **θ = K·C_P / (1 + K·C_P) × 100**, với K = exp(−ΔG/RT) và C_P = nồng độ mồi (M). Đây là phần trăm sợi khuôn có mồi bám, khi mồi dư rất nhiều so với khuôn (đúng điều kiện PCR). ΔH/ΔS vẫn lấy từ primer3 (SantaLucia 1998 + hiệu chỉnh muối). Giữ đoạn mã cũ dưới đây làm lịch sử.
 
 ```python
 def _calculate_bound_fraction(sequence, params, temp_c) -> float:

@@ -1,6 +1,6 @@
 # Cross-reactivity matrix — comparison with published data
 
-Matrix: `outputs\crossreactivity_long.parquet` (tool 3.8.0, miRBase 22.1). Cross-reactive = R ≥ 1 %.
+Matrix: `outputs\crossreactivity_long.parquet` (tool 3.8.1, miRBase 22.1). Cross-reactive = R ≥ 1 %.
 
 ## chen2005
 
