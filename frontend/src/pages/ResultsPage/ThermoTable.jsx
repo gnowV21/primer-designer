@@ -16,6 +16,14 @@ function fmt(v, digits = 1) {
   return String(v);
 }
 
+// Small occupancies (cycle 1 is often < 1 %) need more than one decimal.
+function fmtPct(v) {
+  if (v === undefined || v === null) return '—';
+  const n = Number(v);
+  if (n < 0.01) return '< 0.01%';
+  return `${n < 1 ? n.toFixed(2) : n.toFixed(1)}%`;
+}
+
 function fmtDg(v) {
   if (v === undefined || v === null) return '—';
   return `${Number(v).toFixed(2)}`;
@@ -134,13 +142,13 @@ const ROWS = [
     best: 'min_abs',
   },
   {
-    // Informational (not scored, audit SCI-02): % of the specific region bound
-    // to first-strand cDNA in PCR cycle 1 at Ta.
+    // Informational (not scored, audit SCI-02): % of first-strand cDNA bound by
+    // the specific region in PCR cycle 1 at Ta (mass action, AUDIT REV-24).
     label: 'Cycle-1 occupancy (at Ta)',
     extract: (s) => get(s, 'scores', 'bound_fraction_binding_pct'),
     format: (s) => {
       const v = get(s, 'scores', 'bound_fraction_binding_pct');
-      return v !== undefined ? `${fmt(v)}%` : '—';
+      return v !== undefined ? fmtPct(v) : '—';
     },
     best: 'max',
   },
@@ -313,7 +321,7 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <PropRow
             label="Cycle-1 occupancy (Ta, not scored)"
             value={set.scores?.bound_fraction_binding_pct !== undefined
-              ? `${fmt(set.scores.bound_fraction_binding_pct)}%`
+              ? fmtPct(set.scores.bound_fraction_binding_pct)
               : undefined}
           />
           <PropRow

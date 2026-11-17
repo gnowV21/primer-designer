@@ -1,22 +1,34 @@
 # ================================================================
 # bound_fraction.py — Module 7: Bound Fraction 2-step (Phase 3)
 #
-# Calculates the fraction (%) of primer molecules bound to target at Ta.
+# Calculates the percentage of template strands bound by the primer (primer in
+# excess, two-state duplex model).
 # Two-step model mirrors Phase 2's 2-step Tm:
-#   Round 1 — binding region only (specific_region binds first-strand cDNA in
-#             PCR cycle 1, at the user's Ta) — informational, NOT scored
+#   Round 1 — binding region only (specific_region on first-strand cDNA in PCR
+#             cycle 1, at the user's Ta) — informational, NOT scored
 #             (UNSCORED_CRITERIA_V4, audit SCI-02)
-#   Round 2 — full primer binds amplicon (after tail-complement) [weight 0.03]
+#   Round 2 — full primer on the amplicon (after tail-complement) [weight 0.03]
 #
 # dH and dS obtained from primer3.calc_heterodimer(seq, revcomp(seq)):
 #   thermodynamics of perfect duplex == heterodimer with own reverse-complement.
 #   Verified: ThermoResult.dh, .ds, .dg, .tm are all accessible. [spec §4.4]
 #
-# Formula: [SL04] SantaLucia & Hicks 2004, Annual Review of Biophysics 33:415-440
+# Thermodynamics: nearest-neighbour dH/dS [SL98] (primer3, design salts; Mg²⁺ via
+# von Ahsen 2001), two-state duplex model [SL04] SantaLucia & Hicks 2004, Annu Rev
+# Biophys Biomol Struct 33:415-440:
 #   dG  = dH - T * dS          (T in Kelvin, dH/dS in cal/mol and cal/(mol·K))
-#   K   = exp(-dG / (R * T))
-#   f   = 1 / (1 + sqrt(1 / ((Ct/4) * K)))  * 100  (%)
-#   where Ct = total strand concentration = dna_conc / 1e9 (mol/L from nM)
+#   K   = exp(-dG / (R * T))   (association constant, M⁻¹)
+# Occupancy — mass action for P + T ⇌ PT with the primer in large excess over its
+# template (PCR: primer 200 nM, template orders of magnitude lower), so the free
+# primer concentration stays ≈ C_P:
+#   θ   = K·C_P / (1 + K·C_P) × 100   (% of TEMPLATE strands bound by primer)
+#   C_P = primer concentration (nM → M)
+# Since algorithm 3.8.1 (AUDIT REV-24). Until 3.8.0 the code used
+#   f = 1 / (1 + sqrt(1 / ((C_T/4)·K)))
+# which equals the two-state solution only at 50 % and is not a mass-action result:
+# at 60 °C it put the 12–17 nt specific region at a median ~1.5 % where mass action
+# gives ~0.1 %. Not a scoring change: the full-primer criterion scores 100 for every
+# hsa candidate either way, and the cycle-1 value is unscored.
 # ================================================================
 
 import math
@@ -83,37 +95,41 @@ def _get_dh_ds(sequence: str, params: dict) -> tuple[float, float]:
 
 def _calculate_bound_fraction(sequence: str, params: dict, temp_c: float) -> float:
     """
-    [SL04] fraction of primer molecules in duplex at the given temperature.
+    Percentage of template strands bound by the primer at temp_c, two-state
+    model with the primer in excess (see the module header):
 
-    fract = 1 / (1 + sqrt(1 / (Ct/4 * K))) * 100   (%)
+        θ = K·C_P / (1 + K·C_P) × 100   (%)
     where:
-        T  = temp_c + 273.15  (Kelvin)
-        dG = dH - T * dS      (cal/mol)
-        K  = exp(-dG / (R * T))
-        Ct = dna_conc [nM] / 1e9  [mol/L]
+        T   = temp_c + 273.15            (Kelvin)
+        dG  = dH - T * dS                (cal/mol; dH, dS of the perfect duplex)
+        K   = exp(-dG / (R * T))         (M⁻¹)
+        C_P = primerConcentration [nM] / 1e9   [M]
 
     Sequence is normalized to DNA (U→T) before thermodynamic calculation —
     primers are synthesized as DNA regardless of the RNA template.
     """
-    dna_conc_nm = float(params.get("primerConcentration", P3_DEFAULT_DNA_CONC))
+    primer_conc_nm = float(params.get("primerConcentration", P3_DEFAULT_DNA_CONC))
+    if primer_conc_nm <= 0:
+        return 0.0
     dH, dS = _get_dh_ds(_to_dna(sequence), params)
     T = temp_c + 273.15   # Kelvin
     dG = dH - T * dS      # cal/mol
-    K = math.exp(-dG / (_R * T))
-    Ct = dna_conc_nm / 1e9
-    fract = (1 / (1 + math.sqrt(1 / ((Ct / 4) * K)))) * 100
-    return round(min(fract, 100.0), 2)
+    # K·C_P = exp(ln C_P − ΔG/RT), computed in log space so a very stable duplex
+    # cannot overflow math.exp.
+    x = math.log(primer_conc_nm / 1e9) - dG / (_R * T)
+    theta = 1.0 / (1.0 + math.exp(-x)) if x > -700 else 0.0   # = K·C_P / (1 + K·C_P)
+    return round(theta * 100, 3)
 
 
 # ── Public API ────────────────────────────────────────────────────
 
 def calculate_bound_fraction_binding(specific_region: str, params: dict) -> float:
     """
-    Round 1: % specific region (12-17 nt) bound to first-strand cDNA in PCR
-    cycle 1. The forward primer is not present during RT, so this is evaluated
+    Round 1: % of first-strand cDNA bound by the specific region (12-17 nt) in
+    PCR cycle 1. The forward primer is not present during RT, so this is evaluated
     at the qPCR annealing temperature (params["annealingTemp"], default 60 °C).
     Only the specific region can pair in cycle 1 — the 5' tail has no template yet.
-    Concentration: P3_DEFAULT_DNA_CONC = 200 nM (equimolar convention per [SL04]).
+    Primer concentration: params["primerConcentration"], default 200 nM.
     Informational only (audit SCI-02).
     """
     return _calculate_bound_fraction(specific_region, params, annealing_temp_c(params))
@@ -129,7 +145,7 @@ def annealing_temp_c(params: dict) -> float:
 
 def calculate_bound_fraction_full(full_primer: str, params: dict) -> float:
     """
-    Round 2: % full primer bound to amplicon at qPCR annealing temperature.
+    Round 2: % of amplicon strands bound by the full primer.
     Evaluated at BOUND_FRACTION_ANNEALING_TEMP = 55°C = Tm_target − 5°C.
     Evaluating at Tm itself (60°C) gives ~50% by definition of Tm, which is
     uninformative. Ta = Tm−5°C is the effective primer-binding step. [spec §4.5]
