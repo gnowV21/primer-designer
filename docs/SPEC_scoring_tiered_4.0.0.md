@@ -53,6 +53,23 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
 22. **QĐ 15, thứ tự cắt pool.** Bỏ cả luật "≥ 5 G/C trong 5 nt cuối" khỏi bộ lọc sơ bộ, vì F2 đã chấm trường hợp này ở mức 1. Khi không còn lọc GC, pool 20 đuôi/độ dài được xếp **theo mức F1 (GC % toàn mồi) trước**, rồi mới theo |Tm − Ta|. Không cần xếp theo F2 trước: 5 nt cuối nằm trong vùng đặc hiệu nên F2 giống nhau với mọi đuôi cùng độ dài. Trước khi sửa, 95/2253 mồi #1 của V4 không có trong pool tiered (các đuôi GC lệch có Tm gần hơn đã chiếm chỗ); sau khi sửa: 0/2253. Có test hồi quy (`test_forward_gc_prefilter_flag.py`).
 23. **Nguyên tắc chỉnh ngưỡng** (áp cho mọi lần sửa sau): không chỉnh ngưỡng chỉ để phân bố "trải đều"; mỗi ngưỡng cần lý do sinh học hoặc lý do về độ chính xác của mô hình, nếu không có thì ghi "own threshold". Vai trò của từng thành phần do **độ biến thiên trong cùng thiết kế** quyết định: bằng 0 thì chỉ báo cáo; chỉ tách mức 1 thì là bộ lọc/veto; còn lại thì xếp hạng. Bảng chẩn đoán này (§9) là luận cứ cho cấu trúc hàm điểm trong khóa luận.
 
+**Bổ sung khi duyệt ngưỡng, trước Giai đoạn 2 (2026-11-17):** bộ ngưỡng §3 và QĐ 17–23 đã được duyệt.
+
+24. **BLAST là việc đầu tiên của Giai đoạn 2.** Lý do: S1 là thành phần đặc hiệu duy nhất khác nhau giữa các ứng viên ở số đông thiết kế (52,8 % trên mẫu; S2 5,6 %, S3 14,9 %).
+    - a) Profile trước: tách thời gian `blastn`, `blastdbcmd`, NW, thal cho 1 thiết kế.
+    - b) Gộp truy vấn: 1 lần `blastn` multi-FASTA + 1 lần `blastdbcmd` cho mọi entry cần lấy. Test: S1 và từng hit trùng với cách gọi từng mồi trên toàn bộ 31.049 lần gọi của mẫu 309 miRNA.
+    - c) Nghiệm thu: p50 ≤ 15 s, chưa cache, trên 20 miRNA hsa ngẫu nhiên (seed cố định), đo trên máy dự án. Báo cả p90.
+    - d) Nếu chưa đạt: cắt tỉa chính xác — chỉ BLAST ứng viên mà cận trên (S1 = 5) còn có thể vào top 3 sau bước chọn đa dạng. Test: top 3 trùng với BLAST toàn bộ trên mẫu 309. Không đổi CSDL BLAST, không giảm độ nhạy (`word_size`, `evalue`). Nếu vẫn chưa đạt: dừng và hỏi.
+    - e) Thiếu BLAST: cảnh báo `blast_unavailable` ghi rõ "specificity ranking reduced to S2 + S3". Các script số liệu (validation, benchmark, dry run) phải fail nếu BLAST không có.
+25. **`v4_rule_violations`** trên mỗi bộ mồi: danh sách luật V4 mà bộ đó vi phạm (lọc GC %, kẹp GC, 3 luật lọc cứng cấu trúc); mảng rỗng nếu không vi phạm. Có trong API, `openapi.yaml` và export. Mục đích: đánh dấu rõ các bộ của 219 miRNA mà V4 không thiết kế được, và các bộ bị veto.
+26. **Báo cáo cuối Giai đoạn 2 thêm 3 chỉ số:**
+    - (1) tương quan F3–F4 trong cùng thiết kế;
+    - (2) phân bố độ dài vùng đặc hiệu và Tm vùng bám của #1 (V4 3.8.2 so với tiered);
+    - (3) trong 1659 ca đổi #1, Tm vùng bám của #1 mới gần hay xa 45 °C hơn.
+
+    Nếu tương quan > 0,7: đề xuất phương án gộp F3/F4, không tự sửa.
+27. **Hòa hoàn toàn.** Khi mọi chỉ số đều bằng nhau (các biến thể đuôi), thứ tự theo trình tự là tùy ý nhưng tất định (1195 thiết kế ở mức #1 so với #2); bước chọn đa dạng vẫn chọn các đầu 3′ khác nhau (ghi ở §3.5).
+
 ## 3. Tiêu chí và ngưỡng đề xuất (chờ duyệt ở Giai đoạn 1)
 Quy ước:
 - L = độ dài vùng đặc hiệu của ứng viên (12–17 nt).
@@ -155,6 +172,7 @@ Chỉ báo cáo, không chấm (gom vào `assay_qc`): `mfe_stemloop`, `end_stabi
 2. `key = (−S_total, structure_veto, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với P_total = P2 (QĐ 17).
 3. Chọn top 3 bằng `select_diverse_top(ranked, CANDIDATES_TOP_N)`, giữ nguyên logic đa dạng.
 4. Hệ mới bỏ vòng fixpoint `family_discrimination` trong `design_pipeline.py` (không cần nữa vì S2 đã tính theo từng ứng viên).
+5. (QĐ 27) Khi mọi phần tử của khóa trừ `sequence` bằng nhau (thường là các biến thể đuôi 5′ có cùng mọi chỉ số), thứ tự theo trình tự là **tùy ý nhưng tất định**. Ở Giai đoạn 1 điều này quyết định #1 so với #2 ở 1195/2253 thiết kế. Không ảnh hưởng tính đa dạng: `select_diverse_top` vẫn chọn các bộ có đầu 3′ khác nhau.
 
 ### 3.6 Gợi ý overhang (không đổi lựa chọn)
 Với bộ #1, tính S2 khi overhang là 5 nt và 7 nt. Nếu một trong hai cho mức S2 cao hơn 6 nt → thêm `overhang_suggestion` gồm `{length, min_delta_cq, worst_target, note}`, trong đó note ghi rõ off-label, chưa kiểm chứng wet-lab.
@@ -289,3 +307,53 @@ Nguồn: `benchmark/tiered_scoring_dryrun.json` (`backend/scripts/tiered_scoring
 - 115 thiết kế V4 `hard_filter_fallback`: #1 của hệ tiered bị veto ở 72 ca (F5 = 1 ở 72, = 2 ở 41).
 - **Thời gian:** BLAST trung vị 1,11 s/ứng viên (2 subprocess: `blastn`, `blastdbcmd`); pool trung vị 100 ứng viên → ước tính ~113 s/thiết kế, vượt xa 15 s (QĐ 12). Giai đoạn 2 phải gộp truy vấn BLAST (§5).
 - Nhánh V4 sinh đúng tập ứng viên như 3.8.2 ở 2656/2656 miRNA.
+
+## 10. Kết quả Giai đoạn 2 (cài đặt, 2026-11-18)
+Code: `backend/algorithm/tiered_pipeline.py` (tích hợp), `tiered_scoring.py` (hàm thuần), `specificity_check/blast_offtarget.py` (BLAST gộp), `design_pipeline.py` (rẽ nhánh `tiered` / `v4`). Mặc định `scoringSystem = "tiered"`; chọn theo request (`scoringSystem`, trả 400 nếu sai) hoặc biến môi trường `SCORING_SYSTEM`. `ALGORITHM_VERSION = "4.0.0"`.
+
+**QĐ 24 — BLAST**
+- a) Profile hsa-miR-21-5p, 100 ứng viên, gọi từng mồi: 212,7 s, gồm `blastn` 111,1 s (100 lần), `blastdbcmd` 97,0 s (100 lần), thal 1,95 s, NW 1,58 s. Gần như toàn bộ thời gian là khởi động tiến trình và nạp CSDL.
+- b) Gộp: một `blastn` multi-FASTA và một `blastdbcmd` cho mỗi thiết kế (`check_offtarget_batch`). Truy vấn được chia cho `BLAST_BATCH_PROCESSES = 8` tiến trình `blastn` song song. Chỉ đổi hiệu năng: output giống từng dòng với 1 tiến trình; 1 → 8,5 s, 8 → 2,5 s. Phần phân loại hit dùng chung một hàm (`_classify_hits`) với cách gọi từng mồi. **Đối chiếu: 0/31.049 lần gọi khác nhau** (so toàn bộ JSON, 7.585 hit không-SAFE, gồm S1); S1 cũng khớp 31.049/31.049 kết quả đã lưu ở Giai đoạn 1 (`benchmark/blast_batch_equivalence.json`, `scripts/blast_batch_equivalence.py`). Không đổi CSDL, `word_size` hay `evalue`.
+- c) Thời gian, không cache, 20 miRNA hsa có thiết kế (thứ tự `random.Random(2026)`; bỏ hsa-miR-6845-5p vì không có ứng viên), chạy trong tiến trình, tuần tự: **p50 9,78 s, p90 11,89 s**, max 13,38 s. Riêng BLAST: p50 8,07 s, p90 10,04 s (`benchmark/tiered_design_timing.json`). Đạt ≤ 15 s, nên không cần cắt tỉa (d).
+- e) Không có BLAST (thiếu binary/CSDL, hoặc lỗi khi chạy): request vẫn trả kết quả; S1 = null cho **mọi** ứng viên, cảnh báo `blast_unavailable` ghi "specificity ranking reduced to S2 + S3". S1 hoặc có cho mọi ứng viên được xếp hạng, hoặc không có cho ứng viên nào, kể cả khi lần BLAST bổ sung của fallback lỗi. Các script số liệu dừng với lỗi khi không có BLAST: `validate_primers.py`, `run_benchmark.py`, `export_benchmark_primers.py`, `tiered_scoring_dryrun.py`, `crossreactivity/design_all.py`, `blast_batch_equivalence.py`, `tiered_design_timing.py`, `tiered_stage2_report.py`.
+- Cache: dùng bảng `blast_cache.sqlite`, khóa gồm mồi, mồi ngược, ngày dựng CSDL, tên miRNA, cùng ngữ cảnh thiết kế (classifier, trình tự đích, loài, mồi RT, điều kiện muối). Đặt `BLAST_CACHE_DISABLED=1` để tắt. Lỗi SQLite chỉ làm bỏ qua cache.
+
+**Chi tiết cài đặt mà SPEC chưa quy định** (cần duyệt):
+1. BLAST các ứng viên không bị S2 loại (§5). Nếu mọi ứng viên còn lại đều CRITICAL (tức fallback), BLAST thêm các ứng viên đã bị S2 loại, để tổng S so sánh được.
+2. `total_score` = điểm chi tiết; `grade` dùng cùng mốc của V4 (80/65/50) trên điểm chi tiết. `scores` / `weights` = các phần của điểm chi tiết (trọng số đã chuẩn hóa).
+3. `ranking.pcr.tm_pair` có `report_only: true` (QĐ 17); `ranking.eliminated = true` chỉ xuất hiện trong thiết kế fallback.
+4. `overhang_suggestion` xét các độ dài 5–7 nt khác độ dài đang dùng. Chọn mức S2 cao nhất, rồi ΔCq lớn nhất. Bỏ qua độ dài mà vùng đặc hiệu của #1 không còn vừa (L > độ dài miRNA − overhang).
+5. `v4_rule_violations` có ở cả hai hệ, là danh sách mã luật (`gc_out_of_range`, `gc_clamp_fail`, `gc_end_window_fail`, `hard_dimer_full_dg`, `hard_dimer_3prime_critical`, `hard_hairpin_tm`).
+
+**Kiểm chứng**
+- Test backend: 869 pass, 3 skip (gồm `test_tiered_scoring.py`, `test_blast_batch.py`); `crossreactivity/tests` 29 pass.
+- Hồi quy V4: `validate_primers.py --scoring-system v4` cho `results.json` giống bản 3.8.2 đã commit (bỏ qua `run_date`; 2439/2439) và `results.csv` giống từng byte.
+- Pipeline khớp dry run: top 3 của pipeline thật (BLAST thật, không cache) trùng top 3 offline ở 20/20 miRNA của phép đo thời gian; hsa-miR-21-5p trùng bảng ca của Giai đoạn 1.
+
+**Hệ đã cài, BLAST cho cả 2472 thiết kế** (`benchmark/tiered_stage2_report.json`, `scripts/tiered_stage2_report.py`; không BLAST → có BLAST):
+- Có ứng viên bị loại 97 → **383**; `specificity_fallback` 39 → **54**; trả < 3 bộ 2 → 2; #1 bị veto mềm 118 → 120.
+- #1 khác V4 3.8.2: 1659 → **1670**/2253.
+- S1 của #1 (mức 5/4/3/2/1): 2107 / 68 / 23 / 17 / 38. Cả 38 ca mức 1 đều là thiết kế fallback.
+- #1 có `total_score` thấp hơn #2 ở 444 thiết kế; `total_score` không giảm dần theo hạng ở 777 thiết kế. Lý do: điểm chi tiết chỉ là bước phân định cuối, xem mục giới hạn bên dưới.
+
+**QĐ 25 — `v4_rule_violations` của #1 (có BLAST):** 555/2472 bộ #1 vi phạm ít nhất một luật V4: `gc_out_of_range` 225, `gc_clamp_fail` 201, `hard_dimer_full_dg` 165, `hard_hairpin_tm` 46, `gc_end_window_fail` 17. Trong 219 miRNA V4 không thiết kế được, mọi bộ #1 đều vi phạm ít nhất một luật: `gc_out_of_range` 185, `hard_dimer_full_dg` 44, `gc_clamp_fail` 34, `hard_hairpin_tm` 23, `gc_end_window_fail` 11.
+
+**QĐ 26**
+- (1) Tương quan F3–F4 trong cùng thiết kế: r gộp sau khi trừ trung bình từng thiết kế = 0,21. Nhưng |r| tính theo từng thiết kế có trung vị 0,88, và **1664/2290 thiết kế có |r| > 0,7**. Nguyên nhân: vùng đặc hiệu độ dài L luôn là `dna[:L]`, nên F4 là hàm của L ở 2656/2656 thiết kế, đúng như F3. r gộp thấp chỉ vì dấu đổi giữa các thiết kế (F4 đỉnh tại L có Tm ≈ 45 °C). → Đề xuất phương án gộp, **chưa sửa** (bảng dưới).
+- (2) #1, V4 3.8.2 so với tiered có BLAST:
+  - L trung bình 14,05 → 14,59; phân bố L 12…17 từ 433/421/478/499/369/53 thành 244/296/423/562/639/89.
+  - Tm vùng bám: trung vị 44,4 → 45,2 °C, p95 47,8 → 52,2 °C.
+  - |Tm vùng bám − 45|: trung bình 2,53 → 3,17, trung vị 1,6 → 2,1.
+- (3) Trong 1670 ca đổi #1 (có BLAST): #1 mới **gần 45 °C hơn ở 294 ca, xa hơn ở 621 ca, bằng ở 755 ca**. Không BLAST, 1659 ca: 299 / 609 / 751.
+
+Phương án F3/F4, đo trên hệ có BLAST, **chưa áp dụng**:
+
+| Phương án | #1 đổi so với tiered hiện tại | L trung bình | \|Tm vùng bám − 45\| TB / trung vị |
+|---|---|---|---|
+| hiện tại F3 + F4 | — | 14,59 | 3,17 / 2,1 |
+| a) một tiêu chí = min(F3, F4) | 461 | 14,51 | 3,51 / 2,7 |
+| b) bỏ F3, giữ F4 (độ dài còn trong điểm chi tiết) | 639 | 14,11 | 2,75 / 1,6 |
+| c) bỏ F4, giữ F3 | 719 | 14,98 | 4,51 / 3,9 |
+| V4 3.8.2 | — | 14,05 | 2,53 / 1,6 |
+
+**Giới hạn còn mở (cho SPEC UI, ngoài phạm vi QĐ 13):** frontend `rankReason` giải thích "#1 vs #2" bằng hiệu `total_score`. Ở hệ tiered, `total_score` chỉ là bước phân định cuối, nên ở 444/2472 thiết kế hiệu này âm, và câu giải thích sai ("practically tied" hoặc "−x points"). SPEC UI cần giải thích theo tầng quyết định (S → veto → P → F → chi tiết).

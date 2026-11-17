@@ -1,0 +1,13 @@
+{
+ "spec": "docs/SPEC_scoring_tiered_4.0.0.md QD 24b",
+ "comparison": "json.dumps(check_offtarget(primer), sort_keys=True) == json.dumps(check_offtarget_batch(pool)[primer], sort_keys=True) — every hit and every field, incl. S1 (summary.overall_risk)",
+ "mirnas": 309,
+ "calls": 31049,
+ "non_safe_hits_compared": 7585,
+ "calls_different": 0,
+ "stored_giai_doan_1_s1_different": 0,
+ "seconds_single_total": 33220.7,
+ "seconds_batch_total": 3127.3,
+ "note": "12 parallel workers; per-design times include both runs' contention",
+ "differences": []
+}

@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-17)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng (SPEC Giai đoạn 0–1, dừng ở ⛔ đầu tiên). Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); **Giai đoạn 2 (cài đặt) xong 2026-11-18, đang chờ duyệt trước Giai đoạn 3** (số liệu, tài liệu, PR). Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -53,6 +53,7 @@
 | 2026-11-17 | **Algorithm 3.8.1 — tỉ lệ bám theo cân bằng khối lượng** (AUDIT REV-24). θ = K·C_P/(1 + K·C_P) thay cho công thức √ cũ, vốn chỉ đúng tại 50 %. Không đổi điểm, mồi hay xếp loại (thiết kế lại 2656 miRNA hsa: 0 thay đổi). Chỉ số chu kỳ 1 hiển thị đổi: trung vị 0,31 % (trước 2,71 %); 12 nt 0,08 %, 17 nt 7,8 %. |
 | 2026-11-17 | **Bản đóng băng 4.0.0, phần chuẩn bị** (nhánh `release/4.0.0`). `.gitattributes` (LF). Đo tác động offline trên 2656 miRNA hsa bằng cách ghi lại toàn bộ ứng viên rồi xếp hạng lại (`backend/scripts/thesis_freeze_impact.py`, `benchmark/thesis_freeze_impact.json`; tái tạo đúng #1 và top 3 của API ở 2253/2253). Phát hiện: `end_stability` luôn bằng 0 (gấp 5-mer thành hairpin) và kể cả tính đúng cũng không thể fail (tối đa 6,86 < 9,0); **115/2253 thiết kế hsa chạy `hard_filter_fallback`**; 403 ca thất bại đều do lọc sơ bộ GC/kẹp GC, gốc là đuôi 5′ luôn GC ≥ 50 %; miR-155-5p 24 nt là chú giải đúng của miRBase 22.1, route khớp `mature.fa` ở 2656/2656 hsa. Chủ dự án chọn hệ chấm điểm phân tầng cho 4.0.0 (`docs/SPEC_scoring_tiered_4.0.0.md`). |
 | 2026-11-17 | **Algorithm 3.8.2 — mốc V4 cho 4.0.0** (AUDIT §10.5). REV-23: `family_discrimination` chấm theo độ dài vùng đặc hiệu của từng ứng viên (#1 đổi ở 13/2253 hsa, top 3 ở 28; #1 CO-AMPLIFIED 52 → 45). REV-21: lọc cứng dimer đầu 3′ theo Tm ≥ 47 °C của Primer3 (không đổi output). `end_stability` tính đúng định nghĩa Primer3 (điểm không đổi, giá trị hiển thị đổi). Nguồn miRBase: release + sha256 vào provenance và file xuất MIQE; trình tự ngoài 22.1 có cảnh báo `sequence_not_in_mirbase_release`; kết quả tra online gắn nhãn "online, release unknown" và không ghi cache. Validation 2439/2439 (`results.csv` không đổi dòng nào); benchmark 50/50; ma trận hsa ngoài đường chéo HIGH 208 → 195, MEDIUM 107 → 111, LOW 20.700 → 20.709. |
+| 2026-11-17/18 | **Algorithm 4.0.0, hệ phân tầng — Giai đoạn 1–2** (nhánh `feat/tiered-scoring`, SPEC §9–10). Xếp hạng Đặc hiệu (BLAST S1, ΔCq assay S2, biên Tm S3) → veto cấu trúc → PCR (Tm − Ta) → Linh hoạt → điểm chi tiết; mặc định `tiered`, V4 sau cờ `scoringSystem`. BLAST gộp (1 `blastn` multi-FASTA chia 8 tiến trình + 1 `blastdbcmd`/thiết kế): 212 s → ~8 s, giống từng hit trên 31.049 lần gọi. Thiết kế không cache p50 9,8 s / p90 11,9 s. Trên 2472 hsa có BLAST: #1 khác V4 1670/2253, fallback 54, 219/403 miRNA V4 không thiết kế được nay có mồi (`v4_rule_violations` đánh dấu). |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -110,7 +111,7 @@
 **Ưu tiên cao (cho khóa luận):**
 1. **Bản đóng băng 4.0.0** (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026) — các mục còn mở cần xử lý hoặc ghi thành giới hạn trước khi đóng băng:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring` từ `master` sau khi 3.8.2 merge; Giai đoạn 1 (đo ngưỡng) rồi dừng chờ duyệt.
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Chờ duyệt: 5 chi tiết cài đặt (§10) và đề xuất F3/F4 (QĐ 26: F4 là hàm của L, |r| > 0,7 ở 73 % thiết kế). Sau đó Giai đoạn 3.
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.
