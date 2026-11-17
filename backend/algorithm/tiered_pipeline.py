@@ -104,6 +104,14 @@ def _cache_enabled() -> bool:
     return os.environ.get("BLAST_CACHE_DISABLED", "").strip().lower() not in ("1", "true", "yes")
 
 
+def cache_context(target_rna: str, species: str | None, rt_seq: str, p3: dict) -> str:
+    """Design context of a BLAST cache entry (with forward, reverse, DB build date and
+    miRNA name it forms the key): classifier version, target, species, RT primer, salt."""
+    target_dna = target_rna.upper().replace("U", "T")
+    return "|".join([f"design-clf{BLAST_CLASSIFIER_VERSION}", target_dna, species or "", rt_seq]
+                    + [f"{k}={p3[k]:g}" for k in sorted(p3)])
+
+
 def blast_candidates(seqs: list[str], target_rna: str, mirna_name: str, reverse_seq: str,
                      rt_seq: str, p3: dict, species: str | None) -> dict:
     """check_offtarget_batch for the candidate pool, through the BLAST sqlite cache.
@@ -111,15 +119,15 @@ def blast_candidates(seqs: list[str], target_rna: str, mirna_name: str, reverse_
     "cache_hits": int, "ms": int}. Any failure → available False and no results, so
     S1 is either known for every candidate or for none (comparable totals)."""
     t0 = time.perf_counter()
-    out = {"results": {}, "available": False, "reason": None, "cache_hits": 0, "ms": 0}
+    out = {"results": {}, "available": False, "reason": None, "cache_hits": 0, "ms": 0,
+           "cache_write_error": None}
     ok, why = bo.blast_available()
     if not ok:
         out["reason"] = why
         return out
     from .specificity_check.blast_cache import BlastCache
     target_dna = target_rna.upper().replace("U", "T")
-    context = "|".join([f"design-clf{BLAST_CLASSIFIER_VERSION}", target_dna, species or "", rt_seq]
-                       + [f"{k}={p3[k]:g}" for k in sorted(p3)])
+    context = cache_context(target_rna, species, rt_seq, p3)
     db_version = _blast_db_version()
     # The cache is optional: a locked / unreadable sqlite file only skips it.
     cache, cached = None, {}
@@ -141,8 +149,8 @@ def blast_candidates(seqs: list[str], target_rna: str, mirna_name: str, reverse_
     if cache and fresh:
         try:
             cache.set_results(fresh, reverse_seq, db_version, mirna_name, context)
-        except Exception:   # noqa: BLE001
-            pass
+        except Exception as e:   # noqa: BLE001 — reported, never fails the design
+            out["cache_write_error"] = f"{type(e).__name__}: {e}"
     out.update(results={**cached, **fresh}, available=True, cache_hits=len(cached),
                ms=round(1000 * (time.perf_counter() - t0)))
     return out
@@ -200,6 +208,7 @@ def rank(seq: str, params: dict, mirna_name: str, binding_len: int, stemloop: di
         if more["available"]:
             _apply_blast(metrics, more["results"])
             blast["cache_hits"] += more["cache_hits"]
+            blast["cache_write_error"] = blast.get("cache_write_error") or more.get("cache_write_error")
         else:
             # S1 must be known for every ranked candidate or for none (comparable totals).
             for m in metrics:
@@ -239,6 +248,8 @@ def rank(seq: str, params: dict, mirna_name: str, binding_len: int, stemloop: di
         "blast_unavailable_reason": blast["reason"],
         "blast_candidates": sum(m["blast_risk"] is not None for m in metrics),
         "blast_cache_hits": blast["cache_hits"],
+        # set when results could not be written to the sqlite cache (counted by batch runs)
+        "blast_cache_write_error": blast.get("cache_write_error"),
         "returned_sets": len(top),
         "timing_ms": {"blast": blast["ms"]},   # design_pipeline adds "total"
     }

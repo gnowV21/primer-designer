@@ -83,7 +83,34 @@ def require_blast(data: dict) -> dict:
         raise SystemExit("BLAST unavailable on the backend ("
                          f"{rs.get('blast_unavailable_reason')}) — tiered specificity "
                          "ranking would be S2 + S3 only. Fix BLAST+ / the DB and re-run.")
+    if rs:
+        sp = ((data or {}).get("metadata") or {}).get("species_code") or "?"
+        s = BLAST_STATS.setdefault(sp, {"designs": 0, "blast_candidates": 0, "cache_hits": 0,
+                                        "cache_write_errors": 0})
+        s["designs"] += 1
+        s["blast_candidates"] += rs.get("blast_candidates") or 0
+        s["cache_hits"] += rs.get("blast_cache_hits") or 0
+        s["cache_write_errors"] += bool(rs.get("blast_cache_write_error"))
     return data
+
+
+BLAST_STATS: dict = {}   # species code → designs / BLASTed candidates / cache hits
+
+
+def write_blast_stats(name: str) -> None:
+    """Per-species BLAST cache use of this run → benchmark/logs/<name>_blast_stats.json
+    (SPEC_scoring_tiered_4.0.0 Giai đoạn 3: cache hit ≥ 90 % for hsa designs)."""
+    import json as _j
+    import os as _o
+    for s in BLAST_STATS.values():
+        s["new_blast_calls"] = s["blast_candidates"] - s["cache_hits"]
+        s["cache_hit_rate"] = round(s["cache_hits"] / s["blast_candidates"], 4) if s["blast_candidates"] else None
+    root = _o.path.normpath(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), *([".."] * 1)))
+    path = _o.path.join(root, "benchmark", "logs", f"{name}_blast_stats.json")
+    _o.makedirs(_o.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        _j.dump(BLAST_STATS, f, indent=1, sort_keys=True)
+    print(f"BLAST stats ({path}): " + _j.dumps(BLAST_STATS, sort_keys=True))
 
 
 def _call_mirprimer(mirprimer_bin: str, mirna_seq: str) -> dict | None:
@@ -310,6 +337,7 @@ def main():
 
     ok_count = sum(1 for r in rows if r["tool_status"] == "OK")
     print(f"Success rate: {ok_count}/{len(rows)} ({ok_count/len(rows)*100:.1f}%)")
+    write_blast_stats("benchmark50")
 
 
 if __name__ == "__main__":

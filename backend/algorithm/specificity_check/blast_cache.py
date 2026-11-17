@@ -14,6 +14,8 @@
 import hashlib
 import json
 import os
+import sqlite3
+import time
 from typing import Optional
 
 from utils.sqlite_kv_cache import SQLiteKVCache
@@ -25,12 +27,23 @@ _DB_PATH = os.path.join(
 
 
 class BlastCache(SQLiteKVCache):
+    # Many processes write this file at once in batch runs (crossreactivity/design_all.py,
+    # one pipeline per worker): WAL lets readers and one writer proceed together, and a
+    # 60-s busy timeout makes a writer wait for the lock instead of failing at once.
+    _BUSY_TIMEOUT_S = 60.0
+
     def __init__(self, db_path: str = _DB_PATH):
         super().__init__(
             db_path=db_path,
             table_name="blast_cache",
             default_ttl_days=BLAST_CACHE_TTL_DAYS,
         )
+
+    def _conn(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self.db_path, timeout=self._BUSY_TIMEOUT_S)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        return conn
 
     def get_result(self, fwd: str, rev: str, db_version: str, mirna_id: str = "",
                    context: str = "") -> Optional[dict]:
@@ -93,11 +106,19 @@ class BlastCache(SQLiteKVCache):
                  json.dumps({"forward": f, "reverse": rev, "db_version": db_version,
                              "mirna_id": mirna_id, "context": context}), expires_at)
                 for f, r in results.items()]
-        with self._conn() as c:
-            c.executemany(
-                f"INSERT OR REPLACE INTO {self.table} "
-                f"(key, value, metadata, created_at, expires_at) "
-                f"VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), ?)", rows)
+        # Retried: a lock held past the busy timeout raises OperationalError.
+        for attempt in range(3):
+            try:
+                with self._conn() as c:
+                    c.executemany(
+                        f"INSERT OR REPLACE INTO {self.table} "
+                        f"(key, value, metadata, created_at, expires_at) "
+                        f"VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%SZ','now'), ?)", rows)
+                return
+            except sqlite3.OperationalError:
+                if attempt == 2:
+                    raise
+                time.sleep(1.0 + attempt)
 
     @staticmethod
     def _compute_key(fwd: str, rev: str, db_version: str, mirna_id: str = "",

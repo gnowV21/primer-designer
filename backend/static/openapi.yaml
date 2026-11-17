@@ -539,6 +539,7 @@ components:
         blast_unavailable_reason: { type: string, nullable: true }
         blast_candidates:       { type: integer, description: Candidates with a BLAST result (all that S2 did not eliminate) }
         blast_cache_hits:       { type: integer }
+        blast_cache_write_error: { type: string, nullable: true, description: The results could not be written to the BLAST cache (the design itself is unaffected) }
         returned_sets:          { type: integer }
         timing_ms:
           type: object

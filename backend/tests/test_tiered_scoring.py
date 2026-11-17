@@ -316,7 +316,7 @@ def test_a_broken_blast_cache_does_not_fail_the_design(monkeypatch):
 
     def locked(*a, **k):
         raise sqlite3.OperationalError("database is locked")
-    monkeypatch.setattr(blast_cache.BlastCache, "get_results", locked)
+    monkeypatch.setattr(blast_cache.BlastCache, "get_results", lambda *a, **k: {})
     monkeypatch.setattr(blast_cache.BlastCache, "set_results", locked)
     monkeypatch.setattr(bo, "blast_available", lambda: (True, None))
     monkeypatch.setattr(bo, "check_offtarget_batch",
@@ -325,6 +325,7 @@ def test_a_broken_blast_cache_does_not_fail_the_design(monkeypatch):
     d = _run()
     assert d["ranking_summary"]["blast_available"] is True
     assert d["ranking_summary"]["blast_cache_hits"] == 0
+    assert "database is locked" in d["ranking_summary"]["blast_cache_write_error"]   # counted
 
 
 # ── QD 29 / QD 30 behind their flags ─────────────────────────────
@@ -378,3 +379,13 @@ def test_v4_compliant_set_preferred_at_equal_specificity(monkeypatch):
                 if c["ranking"]["specificity"]["total"] == top["ranking"]["specificity"]["total"]
                 and c["ranking"]["structure_veto"] == top["ranking"]["structure_veto"]]
         assert all(c["v4_rule_violations"] for c in same)
+
+
+
+def test_blast_cache_uses_wal_and_a_busy_timeout(tmp_path):
+    from algorithm.specificity_check.blast_cache import BlastCache
+    c = BlastCache(str(tmp_path / "c.sqlite"))
+    with c._conn() as conn:
+        assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+    c.set_results({"ACGT": {"x": 1}}, "REV", "db", "hsa-miR-1-3p", "ctx")
+    assert c.get_results(["ACGT", "TTTT"], "REV", "db", "hsa-miR-1-3p", "ctx") == {"ACGT": {"x": 1}}
