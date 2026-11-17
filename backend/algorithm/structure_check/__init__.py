@@ -16,7 +16,7 @@ from ..constants import (
     HAIRPIN_DG_MAX_INTERNAL,
     SELF_DIMER_DG_MAX, SELF_DIMER_DG_3PRIME_MAX,
     HETERO_DIMER_DG_MAX, HETERO_DIMER_DG_3PRIME_MAX,
-    END_DIMER_DG_CRITICAL, END_STABILITY_MAX,
+    END_DIMER_TM_HARD_MAX, END_STABILITY_MAX,
 )
 from ..thermodynamics import _get_p3_params, calculate_end_stability
 
@@ -113,19 +113,22 @@ def _check_self_dimer(seq: str, p3: dict, temp_c: float) -> dict:
     except Exception:
         dg_end = 0.0
 
+    # 3'-anchored dimer Tm, Primer3 PRIMER_MAX_SELF_END_TH (since 3.8.2, REV-21)
+    end_tm = _end_tm(seq, seq, p3)
+
     pass_overall    = dg_any > SELF_DIMER_DG_MAX
     pass_3prime     = dg_end > SELF_DIMER_DG_3PRIME_MAX
-    critical_3prime = dg_end <= END_DIMER_DG_CRITICAL
+    critical_3prime = end_tm is not None and end_tm >= END_DIMER_TM_HARD_MAX
 
     return {
-        "dg_overall": dg_any, "dg_3prime": dg_end,
+        "dg_overall": dg_any, "dg_3prime": dg_end, "end_tm": end_tm,
         **_cofold_fields(seq, seq),
         "pass_overall": pass_overall, "pass_3prime": pass_3prime,
         "critical_3prime": critical_3prime,
         "threshold_overall": SELF_DIMER_DG_MAX,
         "threshold_3prime": SELF_DIMER_DG_3PRIME_MAX,
         "note": _dimer_note("Self-dimer", dg_any, dg_end, critical_3prime,
-                            pass_overall, SELF_DIMER_DG_MAX),
+                            pass_overall, SELF_DIMER_DG_MAX, end_tm),
     }
 
 
@@ -160,20 +163,41 @@ def _check_hetero_dimer(seq1: str, seq2: str, p3: dict, temp_c: float,
     except Exception:
         dg_end = 0.0
 
+    # 3'-anchored dimer Tm in both orientations, Primer3 PRIMER_PAIR_MAX_COMPL_END_TH
+    # (since 3.8.2, REV-21): either primer's 3' end can be the extendable one.
+    _tms = [t for t in (_end_tm(seq1, seq2, p3), _end_tm(seq2, seq1, p3)) if t is not None]
+    end_tm = max(_tms) if _tms else None
+
     pass_overall    = dg_any > HETERO_DIMER_DG_MAX
     pass_3prime     = dg_end > HETERO_DIMER_DG_3PRIME_MAX
-    critical_3prime = dg_end <= END_DIMER_DG_CRITICAL
+    critical_3prime = end_tm is not None and end_tm >= END_DIMER_TM_HARD_MAX
 
     return {
-        "dg_overall": dg_any, "dg_3prime": dg_end,
+        "dg_overall": dg_any, "dg_3prime": dg_end, "end_tm": end_tm,
         **_cofold_fields(seq1, seq2),
         "pass_overall": pass_overall, "pass_3prime": pass_3prime,
         "critical_3prime": critical_3prime,
         "threshold_overall": HETERO_DIMER_DG_MAX,
         "threshold_3prime": HETERO_DIMER_DG_3PRIME_MAX,
         "note": _dimer_note(label, dg_any, dg_end, critical_3prime,
-                            pass_overall, HETERO_DIMER_DG_MAX),
+                            pass_overall, HETERO_DIMER_DG_MAX, end_tm),
     }
+
+
+def _end_tm(seq1: str, seq2: str, p3: dict) -> float:
+    """Tm (°C) of the most stable dimer with the 3' end of seq1 anchored on seq2 —
+    primer3 calc_end_stability, the quantity Primer3 compares with
+    PRIMER_MAX_SELF_END_TH / PRIMER_PAIR_MAX_COMPL_END_TH. Very negative values mean
+    no 3'-anchored duplex forms. On error returns None (never critical)."""
+    try:
+        r = primer3.calc_end_stability(
+            seq1, seq2,
+            mv_conc=p3["mv_conc"], dv_conc=p3["dv_conc"],
+            dntp_conc=p3["dntp_conc"], dna_conc=p3["dna_conc"],
+        )
+        return round(float(r.tm), 1)
+    except Exception:
+        return None
 
 
 def _check_end_stability(seq: str, p3: dict) -> dict:
@@ -258,9 +282,11 @@ def _hairpin_note(dg: float, severity: str) -> str:
 
 
 def _dimer_note(label: str, dg_any: float, dg_end: float, critical: bool,
-                pass_overall: bool = True, threshold_overall: float = 0.0) -> str:
+                pass_overall: bool = True, threshold_overall: float = 0.0,
+                end_tm: float | None = None) -> str:
     if critical:
-        return (f"{label}: 3'-end ΔG = {dg_end:.2f} kcal/mol — CRITICAL. "
+        return (f"{label}: 3'-anchored dimer Tm = {end_tm:.1f} °C (limit < "
+                f"{END_DIMER_TM_HARD_MAX:g} °C, Primer3 *_END_TH default) — CRITICAL. "
                 "Polymerase can extend this dimer, generating primer-dimer artifacts.")
     elif dg_end <= SELF_DIMER_DG_3PRIME_MAX:
         return f"{label}: 3'-end ΔG = {dg_end:.2f} kcal/mol — WARNING. Close to the acceptable limit."

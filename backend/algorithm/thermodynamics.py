@@ -169,22 +169,36 @@ def calc_dimer_tm(seq1: str, seq2: str | None, params: dict) -> float | None:
         return None
 
 
+# SantaLucia 1998 unified nearest-neighbour ΔG°37 (kcal/mol, 1 M NaCl), keyed by the
+# 5'→3' dinucleotide of one strand. [SL98] Table 1 (PNAS 95:1460).
+_NN_DG37_SL98 = {
+    "AA": -1.00, "TT": -1.00, "AT": -0.88, "TA": -0.58,
+    "CA": -1.45, "TG": -1.45, "GT": -1.44, "AC": -1.44,
+    "CT": -1.28, "AG": -1.28, "GA": -1.30, "TC": -1.30,
+    "CG": -2.17, "GC": -2.24, "GG": -1.84, "CC": -1.84,
+}
+_NN_INIT_DG37_SL98 = 1.96           # initiation, kcal/mol [SL98]
+_NN_TERMINAL_AT_DG37_SL98 = 0.05    # per terminal A·T pair, kcal/mol [SL98]
+
+
 def calculate_end_stability(last_5_bases: str, params: dict) -> float:
     """
-    Stability of the last 5 bases at 3' end (|ΔG| at 37°C).
-    Mapping: Primer3Plus PRIMER_MAX_END_STABILITY = 9.0 kcal/mol. [P3P]
-    Returns absolute value (positive kcal/mol).
+    3' end stability as Primer3 defines it for PRIMER_MAX_END_STABILITY: the ΔG
+    (kcal/mol, positive = more stable) needed to disrupt the last 5 bases paired as a
+    perfect duplex with their complement, nearest-neighbour SantaLucia 1998 at 37 °C
+    (primer3 oligotm.c end_oligodg with the santalucia table: initiation 1.96, +0.05
+    per terminal A·T). Primer3Plus limit: 9.0 kcal/mol. [P3P][SL98]
+
+    Since algorithm 3.8.2 (AUDIT §10.5). Before, primer3 calc_hairpin on the 5-mer —
+    a 5-nt sequence cannot fold, so the value was 0.00 for every primer. On the
+    SantaLucia scale the largest possible 5-mer value is 6.86 (GCGCG/CGCGC), so the
+    9.0 limit is never reached; the criterion still scores 100 for every candidate.
+    Salts do not enter this definition (Primer3 uses the 1 M table), so `params` is
+    unused and kept for the call signature.
     """
-    p3 = _get_p3_params(params)
-    try:
-        result = primer3.calc_hairpin(
-            seq=last_5_bases,
-            mv_conc=p3["mv_conc"],
-            dv_conc=p3["dv_conc"],
-            dntp_conc=p3["dntp_conc"],
-            dna_conc=p3["dna_conc"],
-            temp_c=37.0,
-        )
-        return round(abs(float(result.dg) / 1000), 2)
-    except Exception:
+    s = (last_5_bases or "").upper()
+    if len(s) < 2 or any(b not in "ACGT" for b in s):
         return 0.0
+    dg = sum(_NN_DG37_SL98[s[i:i + 2]] for i in range(len(s) - 1))
+    dg += _NN_INIT_DG37_SL98 + _NN_TERMINAL_AT_DG37_SL98 * ((s[0] in "AT") + (s[-1] in "AT"))
+    return round(-dg, 2)

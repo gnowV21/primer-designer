@@ -163,6 +163,7 @@ def _miqe_design_rows(meta, top3):
         f"ViennaRNA {pv['viennarna']}" if pv.get("viennarna") else None,
         f"weights #{pv['scoring_weights_sha256']}" if pv.get("scoring_weights_sha256") else None,
         f"miRBase release {pv.get('mirbase_release', 'unknown')}" if pv else None,
+        f"mature.fa sha256 {pv['mature_fa_sha256']}" if pv.get("mature_fa_sha256") else None,
     ])) or "—"
     return [
         ("Design tool + version + settings", tool),

@@ -25,6 +25,7 @@ from algorithm.thermodynamics import predicted_amplicon_tm, calc_dimer_tm, _get_
 from algorithm.edge_cases import detect_edge_cases
 from algorithm.protocol_advisor import advise_protocol
 from algorithm.hard_filters import apply_hard_filters
+from algorithm.mirbase_source import release_info, sequence_warning
 from algorithm.template_structure import check_template_structure
 from algorithm.probe_design import design_probe
 from algorithm.normalization_advisor import advise_normalization
@@ -89,6 +90,11 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 "severity": "critical",
                 "message": ec["message"],
             })
+
+    # Sequence outside the miRBase release of the BLAST DB / overhang index (3.8.2)
+    _src_warn = sequence_warning(seq, mirna_name)
+    if _src_warn:
+        global_warnings.append(_src_warn)
 
     # Stem-loop RT primer
     stemloop = design_stemloop_rt(seq, params, mirna_name=mirna_name)
@@ -533,9 +539,9 @@ def _provenance() -> dict:
             "primer3_py": _ver("primer3-py"),
             "viennarna": _ver("ViennaRNA"),
             "scoring_weights_sha256": hashlib.sha256(weights_blob).hexdigest()[:12],
-            # The local miRBase cache does not record its release — reported as
-            # unknown rather than guessed.
-            "mirbase_release": "unknown",
+            # Release + sha256 of the mature.fa behind the BLAST DB, the overhang
+            # index and the local lookup database (mirbase_source.py, since 3.8.2).
+            **release_info(),
         }
     return _PROVENANCE
 

@@ -126,7 +126,11 @@ paths:
     get:
       tags: [mirbase]
       summary: Resolve a miRNA id / accession to its mature sequence
-      description: Local SQLite first (offline), then miRBase REST fallback for names/accessions.
+      description: >-
+        Local SQLite first (offline) — mature.fa of the miRBase release behind the BLAST
+        database and the overhang index (release + sha256 returned). Names missing locally
+        fall back to the miRBase REST API, then RNAcentral; those results are labelled
+        `source: online`, `mirbase_release: unknown` and are not cached.
       parameters:
         - name: mirna_id
           in: path
@@ -146,7 +150,12 @@ paths:
                   family:    { type: string }
                   species:   { type: string }
                   length:    { type: integer }
-                  source:    { type: string, enum: [local, mirbase] }
+                  source:    { type: string, enum: [local, online] }
+                  source_service: { type: string, description: "online only — mirbase.org API or RNAcentral" }
+                  mirbase_release: { type: string, description: "e.g. 22.1 (local); unknown (online)" }
+                  mature_fa_sha256: { type: string, description: local only }
+                  mature_fa_build_date: { type: string, description: local only }
+                  note:      { type: string, description: online only }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404":
           description: miRNA not found

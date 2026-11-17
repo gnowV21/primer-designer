@@ -33,5 +33,6 @@ calc_tm          = _locked(_primer3.calc_tm)
 calc_hairpin     = _locked(_primer3.calc_hairpin)
 calc_homodimer   = _locked(_primer3.calc_homodimer)
 calc_heterodimer = _locked(_primer3.calc_heterodimer)
+calc_end_stability = _locked(_primer3.calc_end_stability)
 
 __version__ = _primer3.__version__
