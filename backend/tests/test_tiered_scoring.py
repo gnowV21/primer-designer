@@ -316,3 +316,41 @@ def test_a_broken_blast_cache_does_not_fail_the_design(monkeypatch):
     d = _run()
     assert d["ranking_summary"]["blast_available"] is True
     assert d["ranking_summary"]["blast_cache_hits"] == 0
+
+
+# ── QD 29 / QD 30 behind their flags ─────────────────────────────
+
+def test_flags_qd29_qd30_in_the_api(monkeypatch):
+    from algorithm import constants as K
+    _stub_blast(monkeypatch, lambda s: "SAFE")
+    monkeypatch.setattr(K, "TIERED_F4_FLOOR", True)
+    monkeypatch.setattr(K, "TIERED_GRADE_BY_TIERS", True)
+    d = _run()
+    for s in d["top3"]:
+        fx = s["ranking"]["flexible"]
+        assert fx["max"] == 20 and fx["specific_length"]["report_only"] is True
+        assert fx["binding_tm"]["mode"] == "floor (QD 29)"
+        assert "primer_size" not in s["scores"] and set(s["weights"]) == set(s["scores"])
+        assert set(s["explanations"]) == set(s["scores"])
+        assert s["grade"] in ("A", "B") and s["grade_basis"] == "tiers (QD 30)"
+        assert (s["grade"] == "A") == (s["grade_reasons"] == [])
+
+
+def test_grade_c_on_fallback_and_b_without_blast(monkeypatch):
+    from algorithm import constants as K
+    monkeypatch.setattr(K, "TIERED_GRADE_BY_TIERS", True)
+    _stub_blast(monkeypatch, lambda s: "CRITICAL")
+    assert {s["grade"] for s in _run()["top3"]} == {"C"}
+    monkeypatch.setattr(tiered_pipeline, "blast_candidates",
+                        lambda *a, **k: {"results": {}, "available": False, "reason": "test",
+                                         "cache_hits": 0, "ms": 0})
+    top = _run()["top3"]
+    assert {s["grade"] for s in top} <= {"B"}
+    assert all(any("BLAST unavailable" in r for r in s["grade_reasons"]) for s in top)
+
+
+def test_flags_off_keep_the_giai_doan_2_output(monkeypatch):
+    _stub_blast(monkeypatch, lambda s: "SAFE")
+    s = _run()["top3"][0]
+    assert s["ranking"]["flexible"]["max"] == 25 and "primer_size" in s["scores"]
+    assert s["grade_basis"] == "detailed score" and s["grade_reasons"] is None

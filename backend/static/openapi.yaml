@@ -597,6 +597,13 @@ components:
                   hard_hairpin_tm. Empty when V4 would have accepted it.
                 items: { type: string }
               ranking: { $ref: "#/components/schemas/PrimerSetRanking" }
+              grade:
+                type: string
+                description: >
+                  V4: Excellent/Good/Acceptable/Poor from total_score. Tiered: A/B/C by tiers
+                  when TIERED_GRADE_BY_TIERS (QD 30), else as V4 from the detailed score.
+              grade_basis:   { type: string, description: "Tiered only: 'tiers (QD 30)' or 'detailed score'" }
+              grade_reasons: { type: array, nullable: true, items: { type: string }, description: Tiered QD 30 grade only — why not A }
         ranking_summary:     { $ref: "#/components/schemas/RankingSummary" }
         overhang_suggestion: { $ref: "#/components/schemas/OverhangSuggestion" }
         stemloop_rt:

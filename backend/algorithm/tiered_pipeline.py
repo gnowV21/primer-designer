@@ -210,7 +210,7 @@ def rank(seq: str, params: dict, mirna_name: str, binding_len: int, stemloop: di
     ranked = []
     for m, r in res["ranked"]:
         c = by_seq[m["sequence"]]
-        c.update(_set_fields(m, r, c))
+        c.update(_set_fields(m, r, c, res["specificity_fallback"]))
         ranked.append(c)
     top = select_diverse_top(ranked, CANDIDATES_TOP_N)
 
@@ -246,21 +246,31 @@ def rank(seq: str, params: dict, mirna_name: str, binding_len: int, stemloop: di
                                                         top[0], species) if top else None)}
 
 
-def _set_fields(m: dict, r: dict, c: dict) -> dict:
+def _set_fields(m: dict, r: dict, c: dict, specificity_fallback: bool = False) -> dict:
     """API fields of one ranked candidate (SPEC §4). total_score / scores / weights /
-    explanations keep the V4 shape so the current frontend still renders them."""
+    explanations keep the V4 shape so the current frontend still renders them.
+    grade: by tiers (QD 30) when TIERED_GRADE_BY_TIERS, else from the detailed score."""
+    from . import constants as K
     parts = ts.detailed_parts(m)
     weights = ts.detailed_weights()
+    if K.TIERED_GRADE_BY_TIERS:
+        g = ts.grade_tiers(r, specificity_fallback)
+        grade, grade_reasons = g["grade"], g["reasons"]
+    else:
+        grade, grade_reasons = _grade(r["detailed_score"]), None
+    f3 = r["flexible"].get("specific_length", r["flexible"].get("specific_length_report_only"))
     sp, pcr, fx = r["specificity"], r["pcr"], r["flexible"]
     margin = m["tm_margin"]
     dcq = m["min_delta_cq"]
     sc = c.get("structure_checks", {})
     return {
         "total_score": r["detailed_score"],
-        "grade": _grade(r["detailed_score"]),
+        "grade": grade,
+        "grade_basis": "tiers (QD 30)" if K.TIERED_GRADE_BY_TIERS else "detailed score",
+        "grade_reasons": grade_reasons,
         "scores": {k: round(v, 1) for k, v in parts.items()},
         "weights": weights,
-        "weights_nominal": dict(TIERED_DETAIL_WEIGHTS),
+        "weights_nominal": {k: v for k, v in TIERED_DETAIL_WEIGHTS.items() if k in weights},
         "unscored_criteria": [],
         "explanations": _explanations(m, parts),
         "scoring_version": "tiered",
@@ -290,9 +300,11 @@ def _set_fields(m: dict, r: dict, c: dict) -> dict:
             "flexible": {
                 "gc": {"score": fx["gc"], "gc_percent": m["gc_percent"]},
                 "gc_clamp": {"score": fx["gc_clamp"], "last5": m["sequence"][-5:]},
-                "specific_length": {"score": fx["specific_length"], "length": m["specific_length"]},
+                "specific_length": {"score": f3, "length": m["specific_length"],
+                                    "report_only": "specific_length" not in fx},
                 "binding_tm": {"score": fx["binding_tm"], "tm_binding": m["tm_binding"],
-                               "target": TM_BINDING_TARGET},
+                               "target": TM_BINDING_TARGET,
+                               "mode": "floor (QD 29)" if K.TIERED_F4_FLOOR else "two-sided"},
                 "structure": {"score": fx["structure"], "hairpin_tm": m["hairpin_tm"],
                               "dimer_dg": m["dimer_dg"], "end_dimer_tm": m["end_dimer_tm"],
                               "sub_scores": fx["structure_sub_scores"]},
@@ -309,8 +321,9 @@ def _fmt(x, unit=""):
 
 
 def _explanations(m: dict, parts: dict) -> dict:
+    from . import constants as K
     dcq, margin = m["min_delta_cq"], m["tm_margin"]
-    return {
+    out = {
         "min_delta_cq": (
             "No same-species miRNA within 10 Cq of the target (assay ΔCq model)."
             if dcq is None else
@@ -332,6 +345,11 @@ def _explanations(m: dict, parts: dict) -> dict:
                       f"{_fmt(m['end_dimer_tm'], ' °C')} sub-scores."),
         "amplicon_size": "Amplicon length (V4 sub-score).",
     }
+    if K.TIERED_F4_FLOOR:
+        out["tm_binding_accuracy"] = (
+            f"Specific-region (cycle-1) Tm {m['tm_binding']:g} °C; floor {TM_BINDING_TARGET:g} °C "
+            "(100 at or above, linear to 0 at 35 °C; QD 29).")
+    return {k: v for k, v in out.items() if k in parts}
 
 
 # ── overhang suggestion (SPEC §3.6) ──────────────────────────────

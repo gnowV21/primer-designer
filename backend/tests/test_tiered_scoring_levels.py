@@ -174,3 +174,74 @@ def test_tie_on_tiers_and_detail_falls_to_tm_then_sequence():
     assert ts.rank([(far, rf), (near, rn)])["ranked"][0][0]["sequence"] == "TTTT"
     same = _m(seq="AAAA", tm_full=60.2)
     assert ts.rank([(near, rn), (same, ts.score(same))])["ranked"][0][0]["sequence"] == "AAAA"
+
+
+# ── QD 29: one-sided F4 floor, F3 report-only (behind TIERED_F4_FLOOR) ──
+
+@pytest.mark.parametrize("tm, lvl", [(60.0, 5), (45.0, 5), (44.9, 4), (43.0, 4), (42.9, 3),
+                                     (41.0, 3), (40.9, 2), (39.0, 2), (38.9, 1), (30.0, 1)])
+def test_f4_floor_levels(tm, lvl):
+    assert ts.f4_binding_tm_floor(tm) == lvl
+
+
+def test_floor_drops_f3_from_the_flexible_tier():
+    m = _m(specific_length=12, tm_binding=50.0)
+    old, new = ts.score(m, f4_floor=False), ts.score(m, f4_floor=True)
+    assert old["flexible"]["max"] == 25 and "specific_length" in old["flexible"]
+    assert old["flexible"]["binding_tm"] == 3              # |50 − 45| = 5 → two-sided level 3
+    assert new["flexible"]["max"] == 20 and "specific_length" not in new["flexible"]
+    assert new["flexible"]["specific_length_report_only"] == 1
+    assert new["flexible"]["binding_tm"] == 5              # above the floor
+    assert new["flexible"]["total"] == old["flexible"]["total"] - 1 + 5 - 3
+
+
+def test_floor_detailed_score_is_one_sided_without_primer_size():
+    hi, at, lo, low = (_m(tm_binding=t) for t in (55.0, 45.0, 40.0, 30.0))
+    p = [ts.detailed_parts(x, f4_floor=True)["tm_binding_accuracy"] for x in (hi, at, lo, low)]
+    assert p == [100.0, 100.0, 50.0, 0.0]
+    assert "primer_size" not in ts.detailed_parts(hi, f4_floor=True)
+    w = ts.detailed_weights(f4_floor=True)
+    assert "primer_size" not in w and abs(sum(w.values()) - 1) < 0.01
+    assert "primer_size" in ts.detailed_weights(f4_floor=False)
+
+
+def test_flag_default_reads_the_constant(monkeypatch):
+    from algorithm import constants as K
+    m = _m(tm_binding=50.0)
+    monkeypatch.setattr(K, "TIERED_F4_FLOOR", True)
+    assert ts.score(m)["flexible"]["max"] == 20
+    monkeypatch.setattr(K, "TIERED_F4_FLOOR", False)
+    assert ts.score(m)["flexible"]["max"] == 25
+
+
+# ── QD 30: grade by tiers ────────────────────────────────────────
+
+def _graded(fallback=False, **kw):
+    return ts.grade_tiers(ts.score(_m(**kw)), fallback)
+
+
+def test_grade_a_needs_every_specificity_level_and_no_veto():
+    g = _graded(min_delta_cq=4.3, tm_margin=10.0)          # S1 5, S2 3, S3 4
+    assert g == {"grade": "A", "reasons": []}
+
+
+@pytest.mark.parametrize("kw, reason", [
+    (dict(blast_risk="MEDIUM", blast_medium_hits=2), "S1 BLAST level 3"),
+    (dict(blast_risk="HIGH"), "S1 BLAST level 2"),
+    (dict(min_delta_cq=3.5), "S2 assay ΔCq level 2"),
+    (dict(tm_margin=9.0), "S3 Tm margin level 3"),
+    (dict(hairpin_tm=50.0), "structure veto"),
+    (dict(blast_risk=None), "BLAST unavailable"),
+])
+def test_grade_b_names_the_weakness(kw, reason):
+    g = _graded(**kw)
+    assert g["grade"] == "B" and any(r.startswith(reason) for r in g["reasons"]), g
+
+
+def test_grade_a_allows_medium_with_one_hit():
+    assert _graded(blast_risk="MEDIUM", blast_medium_hits=1)["grade"] == "A"
+
+
+def test_grade_c_is_the_fallback_whatever_the_levels():
+    assert _graded(fallback=True)["grade"] == "C"
+    assert _graded(fallback=True, blast_risk="CRITICAL")["grade"] == "C"

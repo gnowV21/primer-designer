@@ -70,6 +70,26 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
     Nếu tương quan > 0,7: đề xuất phương án gộp F3/F4, không tự sửa.
 27. **Hòa hoàn toàn.** Khi mọi chỉ số đều bằng nhau (các biến thể đuôi), thứ tự theo trình tự là tùy ý nhưng tất định (1195 thiết kế ở mức #1 so với #2); bước chọn đa dạng vẫn chọn các đầu 3′ khác nhau (ghi ở §3.5).
 
+**Sau khi duyệt Giai đoạn 2 (2026-11-18; số liệu §10):**
+
+28. **Duyệt 4/5 chi tiết cài đặt ở §10:** (1) chỉ BLAST các ứng viên S2 không loại (BLAST thêm phần còn lại khi fallback); (3) cờ `report_only` / `eliminated`; (4) cách chọn overhang để gợi ý; (5) `v4_rule_violations` ở cả hai hệ. Riêng (2) (`grade` theo điểm chi tiết) được thay bằng QĐ 30.
+29. **Gộp F3/F4 theo phương án (d), không theo (b) — chờ duyệt lại sau số đo của Giai đoạn 2b.**
+    - Lý do: `TM_BINDING_TARGET = 45 °C` là trung vị Tm của các vùng 12–17 nt (`SPEC_algorithm.md`, sửa ở v2.8.1), không phải mức tối ưu sinh học. Ở chu kỳ 1, Tm vùng bám càng cao thì gắn càng tốt: cân bằng khối lượng 3.8.1 cho 0,08 % ở 12 nt, 7,8 % ở 17 nt, tại 60 °C. Khả năng phân biệt mismatch đã được đo trực tiếp ở tầng S. Giả thuyết ~45 °C của khóa luận là **mức sàn**, không phải đích hai phía.
+    - Bỏ F3 khỏi tầng Linh hoạt (tối đa còn 20).
+    - F4 thành sàn một phía: Tm vùng bám ≥ 45 → 5; 43–< 45 → 4; 41–< 43 → 3; 39–< 41 → 2; < 39 → 1. Ghi "own threshold; floor = thesis cycle-1 hypothesis (let-7a 33,6 vs 46,2 °C)".
+    - Điểm chi tiết: `tm_binding_accuracy` cũng một phía (100 khi ≥ 45 °C, giảm tuyến tính về 0 tại 35 °C). Bỏ `primer_size` (cùng lý do bỏ F3); chuẩn hóa lại trọng số.
+    - L vẫn có trong API, chỉ để báo cáo.
+    - Cài sau cờ `TIERED_F4_FLOOR` (mặc định tắt cho tới khi duyệt).
+30. **Ở hệ tiered, `grade` tính theo tầng, không theo điểm chi tiết.**
+    - A: không `specificity_fallback`, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4, không `structure_veto`.
+    - B: qua bước loại nhưng có ít nhất một điểm yếu (S1 = 2–3, S2 = 2, S3 ≤ 3, hoặc `structure_veto`).
+    - C: `specificity_fallback`.
+    - Khi `blast_unavailable`: không cho A; cao nhất là B, ghi lý do.
+    - Có test cho từng mức. `total_score` giữ = điểm chi tiết; cách hiển thị để SPEC UI.
+    - Cài sau cờ `TIERED_GRADE_BY_TIERS`.
+31. **Giai đoạn 3 mở PR vào `master` nhưng KHÔNG merge cho tới khi xong SPEC UI.** Lý do: frontend (ScoreGauge, RerunBar, History, ThermoTable, export CSV, `rankReason`) hiển thị `total_score` / `grade`, nên ở 444 thiết kế bộ #1 trông kém hơn #2. Ghi điều này trong mô tả PR.
+32. **Chờ số liệu:** cách xử lý các bộ #1 vi phạm luật V4 trong khi V4 có mồi tuân thủ. Chưa đổi luật; số đo ở Giai đoạn 2b mục 4.
+
 ## 3. Tiêu chí và ngưỡng đề xuất (chờ duyệt ở Giai đoạn 1)
 Quy ước:
 - L = độ dài vùng đặc hiệu của ứng viên (12–17 nt).
@@ -254,7 +274,18 @@ Mỗi bộ mồi trong `POST /api/design` có thêm:
   - Nếu đã gộp BLAST: kết quả trùng từng hit với cách gọi từng mồi.
 - Toàn bộ test hiện có phải pass: `cd backend && python -m pytest tests visualization -q --ignore=tests/smoke`.
 
+### Giai đoạn 2b — đo QĐ 29/30, rồi DỪNG (2026-11-18)
+Cài QĐ 29 và QĐ 30 sau cờ, đo trên hệ có BLAST đầy đủ (2472 thiết kế, dùng cache BLAST của §10), chưa chạy lại số liệu Giai đoạn 3:
+1. QĐ 29 so với tiered hiện tại và V4 3.8.2: số #1 đổi; phân bố L và Tm vùng bám của #1; % #1 có Tm vùng bám < 45 °C; phân bố mức F4 của #1; % thiết kế mà F4 khác nhau giữa các ứng viên; bảng "#1 so với #2 được phân định bởi tầng nào".
+2. QĐ 30: phân bố A/B/C của #1; số ca grade cũ khác grade mới (đặc biệt cũ cao nhất mà nay là C).
+3. S1 của #1 V4 3.8.2 (cùng classifier, cùng mồi RT): phân bố mức 1–5; số thiết kế mà #1 V4 có S1 ≤ 2 và #1 tiered có S1 cao hơn (số chính cho chương Kết quả).
+4. QĐ 32: các thiết kế mà #1 tiered vi phạm luật V4 còn #1 V4 thì không (trừ 219 ca V4 không thiết kế được), tách theo ΔS_total (tiered − V4): ΔS > 0 (số ca, luật); ΔS = 0 (tầng quyết định, luật; riêng `hard_dimer_full_dg`: phân bố ΔG). Mô phỏng, không áp dụng: "cùng S_total thì mồi không vi phạm luật V4 xếp trước (sau veto)" — số #1 đổi, S1/S3 của #1 đổi thế nào.
+5. Danh sách các thiết kế `specificity_fallback`: miRNA, họ seed, off-target gây loại (tên, loại `shifted_5p` / `shifted_3p` / `other`, ΔCq hoặc mức BLAST) → `benchmark/tiered_fallback_list.csv`.
+
+Mọi test pass; hồi quy V4 vẫn trùng 3.8.2. ⛔ DỪNG: chờ duyệt QĐ 29 (theo số đo) và QĐ 32.
+
 ### Giai đoạn 3 — Số liệu, tài liệu, PR
+- (QĐ 31) Mở PR vào `master`, **không merge** cho tới khi xong SPEC UI; ghi lý do trong mô tả PR. `docs/SCORING_TIERED_COMPARISON.md` thêm: S1 của #1 V4 so với tiered (Giai đoạn 2b mục 3) và danh sách fallback kèm gợi ý ưu tiên kiểm phản ứng chéo ở wet-lab (mục 5).
 - Chạy lại pipeline theo HANDOFF §7 (backend tắt auto-reloader): validation + report, benchmark export, `blast_tm_gate_sensitivity.py`, benchmark 50, ma trận hsa; chạy e2e Playwright.
 - Check validation nào fail: không sửa check cho pass. Liệt kê từng check fail, lý do và đề xuất.
 - Viết `docs/SCORING_TIERED_COMPARISON.md` so V4 với hệ tiered trên 2656 hsa và trên bộ validation. Gồm các chỉ số 3–6 của Giai đoạn 1, cộng thêm cho bộ #1: phân bố S1 (SAFE/MEDIUM/HIGH/CRITICAL), phân bố min ΔCq, L trung bình, số bộ có `structure_veto`.
@@ -357,3 +388,62 @@ Phương án F3/F4, đo trên hệ có BLAST, **chưa áp dụng**:
 | V4 3.8.2 | — | 14,05 | 2,53 / 1,6 |
 
 **Giới hạn còn mở (cho SPEC UI, ngoài phạm vi QĐ 13):** frontend `rankReason` giải thích "#1 vs #2" bằng hiệu `total_score`. Ở hệ tiered, `total_score` chỉ là bước phân định cuối, nên ở 444/2472 thiết kế hiệu này âm, và câu giải thích sai ("practically tied" hoặc "−x points"). SPEC UI cần giải thích theo tầng quyết định (S → veto → P → F → chi tiết).
+
+## 11. Kết quả Giai đoạn 2b (QĐ 29/30 sau cờ, 2026-11-18)
+Nguồn: `benchmark/tiered_stage2b_report.json`, `benchmark/tiered_fallback_list.csv` (`backend/scripts/tiered_stage2b_report.py`). Dữ liệu là 2472 thiết kế hsa có BLAST đầy đủ (cache của §10); bảng so với V4 dùng 2253 thiết kế mà V4 có mồi. Cờ `TIERED_F4_FLOOR` và `TIERED_GRADE_BY_TIERS` đang tắt; tiered ở đây là bản 4.0.0 của Giai đoạn 2.
+
+**1. QĐ 29 (F4 sàn, bỏ F3)**
+
+| #1 | V4 3.8.2 | tiered | QĐ 29 |
+|---|---|---|---|
+| #1 đổi so với V4 | — | 1670 | 1764 |
+| #1 đổi so với tiered | — | — | 560 |
+| L 12/13/14/15/16/17 | 433/421/478/499/369/53 | 244/296/423/562/639/89 | 256/249/382/586/642/138 |
+| L trung bình | 14,05 | 14,59 | 14,68 |
+| Tm vùng bám, trung vị (p05–p95) | 44,4 (36,8–47,8) | 45,2 (37,4–52,2) | 45,9 (34,9–53,5) |
+| % #1 có Tm vùng bám < 45 °C | 59,5 | 45,5 | **38,4** |
+| Mức F4 thang sàn 1/2/3/4/5 | 201/178/311/651/912 | 179/148/233/465/1228 | **211**/134/207/314/1387 |
+| % thiết kế F4 khác nhau giữa ứng viên | — | 92,6 | 80,8 |
+| #1 so với #2 phân định bởi: trình tự / chi tiết / F / Tm / S / veto (2472) | — | 1179/1134/142/12/3/1 | 1226/1098/134/9/3/1 |
+
+- QĐ 29 giảm số #1 dưới 45 °C (45,5 → 38,4 %).
+- Nhưng số #1 dưới 39 °C lại tăng (mức 1: 179 → 211). Ở các thiết kế mà mọi vùng đều dưới 39 °C, F4 bằng 1 cho tất cả. Khi đó F3 không còn kéo về vùng dài hơn, và điểm chi tiết của Tm vùng bám (trọng số 0,10 sau chuẩn hóa) không đủ để quyết định.
+
+**2. QĐ 30 (grade theo tầng)** — #1 (tiered và QĐ 29 cho cùng kết quả): A 2190, B 228, C 54.
+- Lý do của mức B:
+  - `structure_veto`: 118;
+  - S2 = 2: 44;
+  - S3 = 3: 33;
+  - S3 = 2: 28;
+  - S1 = 3: 24;
+  - S1 = 2: 6.
+- So với grade cũ (theo điểm chi tiết), trên hệ tiered:
+  - Excellent → A 2089, → B 102;
+  - Good → A 101, → B 72, → C 4;
+  - Acceptable → B 53, → C 31;
+  - Poor → B 1, → C 19.
+- Không có bộ nào từ Excellent xuống C.
+
+**3. S1 của #1 V4 3.8.2** (cùng classifier v7, cùng mồi RT):
+- Mức 5/4/3/2/1: 2019 / 115 / 34 / 18 / **67**. Tức là 67 CRITICAL và 18 HIGH.
+- **85 thiết kế có #1 V4 với S1 ≤ 2.** Trong đó, #1 tiered có S1 cao hơn ở **34 ca**:
+  - từ CRITICAL lên 2/3/4/5: 4/9/9/7;
+  - từ HIGH lên 5: 5.
+- 51 ca còn lại không cải thiện được. Gồm 38 ca CRITICAL → CRITICAL, đều là thiết kế fallback, và 13 ca HIGH → HIGH.
+- #1 của V4 bị hệ tiered loại ở 78 thiết kế. #1 tiered có S_total cao hơn #1 V4 ở 227 thiết kế.
+
+**4. QĐ 32** — thiết kế mà #1 tiered vi phạm luật V4 trong khi #1 V4 thì không (đã trừ 219 ca V4 không thiết kế được). Số ngoài ngoặc là tiered, trong ngoặc là QĐ 29: 221 (185).
+- ΔS > 0: 75 (68). Hệ mới chấp nhận vi phạm để được đặc hiệu cao hơn; ΔS = 1 ở 35 ca.
+  - Luật bị vi phạm: `gc_clamp_fail` 39, `gc_out_of_range` 25, `hard_dimer_full_dg` 8 (ΔG −9,4…−12,8), `hard_hairpin_tm` 3, `gc_end_window_fail` 1.
+- ΔS = 0: 146 (117). Tầng quyết định là F ở 141 ca (111), điểm chi tiết 4 (6), trình tự 1 (0).
+  - Luật bị vi phạm: `gc_clamp_fail` 118 (78), `hard_dimer_full_dg` 15 (15; ΔG −9,1…−9,9, tức F5b mức 2, sát ngưỡng), `gc_out_of_range` 12 (24), `gc_end_window_fail` 3.
+  - `gc_clamp_fail` chiếm đa số vì F2 chấm số G/C trong 5 nt cuối, không xét vị trí. Một đầu 3′ như …GCAAT (2 G/C trong 5 nt, 0 G/C trong 3 nt cuối) được F2 = 5, trong khi V4 loại.
+- ΔS < 0: 0.
+- Mô phỏng, không áp dụng: "cùng S_total thì mồi không vi phạm luật V4 xếp trước (sau veto)".
+  - #1 đổi ở 166 thiết kế (130 với QĐ 29), và cả 166 (130) #1 mới đều tuân thủ luật V4.
+  - **S1 và S3 của #1 không đổi ở ca nào** (ΔS1 = ΔS3 = 0).
+
+**5. Fallback:** 54 thiết kế, giống nhau dưới QĐ 29 (`benchmark/tiered_fallback_list.csv`).
+- Họ seed: miR-548 (11 + 5 họ con), miR-5 (9), miR-1 (3), miR-378 (3), let-7, miR-103, miR-30, miR-376, miR-302, miR-520, miR-5692 (mỗi họ 2), …
+- Nguyên nhân bị loại: cả S1 và S2 ở 48 thiết kế; chỉ S1 ở 3; chỉ S2 ở 3.
+- Off-target chính của S2: `other` 35, `shifted_3p` 13, `shifted_5p` 3. Có 16 thiết kế fallback do mục nhập lệch đầu (QĐ 19).

@@ -956,6 +956,22 @@ TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds (≥ 
 # Tier 3 — flexible (max 25)
 TIERED_F3_LENGTH = {17: 5, 16: 5, 15: 4, 14: 3, 13: 2, 12: 1}   # own threshold (longer = more 3'-mismatch room)
 TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING_TARGET|, own thresholds
+# SPEC QD 29 (behind TIERED_F4_FLOOR until approved on the Giai đoạn 2b numbers):
+# TM_BINDING_TARGET (45 °C) is the median Tm of 12–17-nt regions, not a biological
+# optimum — at cycle 1 a higher binding Tm only binds better (3.8.1 mass balance at
+# 60 °C: 0.08 % at 12 nt, 7.8 % at 17 nt), and mismatch discrimination is measured in
+# tier S. So F4 becomes a one-sided floor and F3 (length) leaves the flexible tier
+# (report only; F max 20); the detailed score drops primer_size and scores the binding
+# Tm one-sided (100 at ≥ 45 °C, linear to 0 at 35 °C).
+TIERED_F4_FLOOR = False
+TIERED_F4_FLOOR_C = (45.0, 43.0, 41.0, 39.0)   # own threshold; floor = thesis cycle-1 hypothesis (let-7a 33.6 vs 46.2 °C)
+TIERED_DETAIL_TM_BINDING_FLOOR = ((35.0, 0.0), (45.0, 100.0))   # own anchors (QD 29)
+# SPEC QD 30 (behind TIERED_GRADE_BY_TIERS): tiered grade from the tiers, not the
+# detailed score. A: no fallback, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4, no veto; B: passed the
+# elimination with a weakness (S1 2–3, S2 2, S3 ≤ 3, veto) or without BLAST (no A
+# without S1); C: specificity_fallback.
+TIERED_GRADE_BY_TIERS = False
+TIERED_GRADE_A_MIN = {"blast": 4, "assay_dcq": 3, "tm_margin": 4}
 # F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
 # F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
 # 99.2 % of hsa candidates; the 32 candidates at level 1 all also fail F5a and F5b

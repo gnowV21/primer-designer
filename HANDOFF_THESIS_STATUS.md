@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); **Giai đoạn 2 (cài đặt) xong 2026-11-18, đang chờ duyệt trước Giai đoạn 3** (số liệu, tài liệu, PR). Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); **Giai đoạn 2b (đo QĐ 29/30 sau cờ) xong, chờ duyệt QĐ 29 và QĐ 32** trước Giai đoạn 3. QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -111,7 +111,7 @@
 **Ưu tiên cao (cho khóa luận):**
 1. **Bản đóng băng 4.0.0** (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026) — các mục còn mở cần xử lý hoặc ghi thành giới hạn trước khi đóng băng:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Chờ duyệt: 5 chi tiết cài đặt (§10) và đề xuất F3/F4 (QĐ 26: F4 là hàm của L, |r| > 0,7 ở 73 % thiết kế). Sau đó Giai đoạn 3.
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Giai đoạn 2b (SPEC §11): QĐ 29 (F4 sàn, bỏ F3) và QĐ 30 (grade A/B/C theo tầng) cài sau cờ `TIERED_F4_FLOOR`, `TIERED_GRADE_BY_TIERS` (đang tắt). Chờ duyệt QĐ 29 theo số đo và QĐ 32 (mồi #1 vi phạm luật V4). Sau đó Giai đoạn 3.
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.

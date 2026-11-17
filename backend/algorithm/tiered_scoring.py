@@ -15,8 +15,15 @@ from .constants import (
     TIERED_F3_LENGTH, TIERED_F4_BINDING_TM_DEV_C,
     TIERED_F5_HAIRPIN_TM_C, TIERED_F5_DIMER_DG, TIERED_F5_END_DIMER_TM_C,
     TIERED_DETAIL_WEIGHTS, TIERED_DETAIL_ANCHORS,
+    TIERED_F4_FLOOR_C, TIERED_DETAIL_TM_BINDING_FLOOR, TIERED_GRADE_A_MIN,
     TM_BINDING_TARGET,
 )
+from . import constants as _K   # flags read at call time (TIERED_F4_FLOOR, TIERED_GRADE_BY_TIERS)
+
+
+def _floor(f4_floor: bool | None) -> bool:
+    """QD 29 flag: explicit argument, else constants.TIERED_F4_FLOOR."""
+    return _K.TIERED_F4_FLOOR if f4_floor is None else bool(f4_floor)
 
 
 # ── generic level helpers ─────────────────────────────────────────
@@ -133,7 +140,13 @@ def f3_specific_length(length: int) -> int:
 
 
 def f4_binding_tm(tm_binding: float) -> int:
+    """Two-sided F4 (4.0.0 as approved in Giai đoạn 1): |Tm_binding − 45 °C|."""
     return level_at_most(abs(tm_binding - TM_BINDING_TARGET), TIERED_F4_BINDING_TM_DEV_C)
+
+
+def f4_binding_tm_floor(tm_binding: float) -> int:
+    """One-sided F4 (QD 29): ≥ 45 → 5, 43–<45 → 4, 41–<43 → 3, 39–<41 → 2, < 39 → 1."""
+    return level_at_least(tm_binding, TIERED_F4_FLOOR_C)
 
 
 def f5_structure(hairpin_tm: float | None, dimer_dg: float | None,
@@ -150,22 +163,31 @@ def f5_structure(hairpin_tm: float | None, dimer_dg: float | None,
 
 # ── whole candidate ───────────────────────────────────────────────
 
-def detailed_score(m: dict) -> float:
+def _detail_weights_raw(f4_floor: bool | None = None) -> dict:
+    w = dict(TIERED_DETAIL_WEIGHTS)
+    if _floor(f4_floor):
+        w.pop("primer_size")          # QD 29: length is report-only
+    return w
+
+
+def detailed_score(m: dict, f4_floor: bool | None = None) -> float:
     """0–100 tie-break (SPEC §3.4). m carries the raw metrics and the V4 sub-scores
     tm_accuracy, tm_binding_accuracy, gc_content, gc_clamp, primer_size, amplicon_size."""
-    parts = detailed_parts(m)
-    w = TIERED_DETAIL_WEIGHTS
+    parts = detailed_parts(m, f4_floor)
+    w = _detail_weights_raw(f4_floor)
     return round(sum(parts[k] * w[k] for k in w) / sum(w.values()), 1)
 
 
-def detailed_weights() -> dict:
-    """Effective weights of the detailed score (TIERED_DETAIL_WEIGHTS / their sum)."""
-    total = sum(TIERED_DETAIL_WEIGHTS.values())
-    return {k: round(v / total, 4) for k, v in TIERED_DETAIL_WEIGHTS.items()}
+def detailed_weights(f4_floor: bool | None = None) -> dict:
+    """Effective weights of the detailed score (raw weights / their sum)."""
+    w = _detail_weights_raw(f4_floor)
+    total = sum(w.values())
+    return {k: round(v / total, 4) for k, v in w.items()}
 
 
-def detailed_parts(m: dict) -> dict:
-    """The 0–100 sub-scores of the detailed score (see detailed_score)."""
+def detailed_parts(m: dict, f4_floor: bool | None = None) -> dict:
+    """The 0–100 sub-scores of the detailed score (see detailed_score). With the QD 29
+    floor: tm_binding_accuracy is one-sided and primer_size is dropped."""
     a = TIERED_DETAIL_ANCHORS
     v4 = m["v4_scores"]
     dcq = 10.0 if m.get("min_delta_cq") is None else min(m["min_delta_cq"], 10.0)
@@ -186,6 +208,9 @@ def detailed_parts(m: dict) -> dict:
         "structure": sum(struct) / 3.0,
         "amplicon_size": v4["amplicon_size"],
     }
+    if _floor(f4_floor):
+        parts["tm_binding_accuracy"] = piecewise(m["tm_binding"], TIERED_DETAIL_TM_BINDING_FLOOR)
+        parts.pop("primer_size")
     return {k: float(v) for k, v in parts.items()}   # unrounded: the tie-break uses them
 
 
@@ -203,7 +228,7 @@ def blast_s1_inputs(result: dict) -> tuple[str, int, str | None]:
     return summ["overall_risk"], n_med, worst
 
 
-def score(m: dict) -> dict:
+def score(m: dict, f4_floor: bool | None = None) -> dict:
     """All levels, tier totals and the detailed score of one candidate.
 
     m: sequence, specific_length, tm_full, tm_binding, tm_reverse, ta, gc_percent,
@@ -216,9 +241,13 @@ def score(m: dict) -> dict:
     p1 = p1_tm_pair(m["tm_full"], m["tm_reverse"])
     p2 = p2_tm_vs_ta(m["tm_full"], m["ta"])
     f5 = f5_structure(m.get("hairpin_tm"), m.get("dimer_dg"), m.get("end_dimer_tm"))
-    f = {"gc": f1_gc(m["gc_percent"]), "gc_clamp": f2_gc_clamp(m["sequence"]),
-         "specific_length": f3_specific_length(m["specific_length"]),
-         "binding_tm": f4_binding_tm(m["tm_binding"]), "structure": f5["score"]}
+    floor = _floor(f4_floor)
+    f3 = f3_specific_length(m["specific_length"])
+    f = {"gc": f1_gc(m["gc_percent"]), "gc_clamp": f2_gc_clamp(m["sequence"])}
+    if not floor:
+        f["specific_length"] = f3
+    f["binding_tm"] = (f4_binding_tm_floor if floor else f4_binding_tm)(m["tm_binding"])
+    f["structure"] = f5["score"]
     s_parts = [x for x in (s1, s2, s3) if x is not None]
     # P1 is report-only (constants.py, Tier 2): the fixed universal reverse primer makes it
     # a function of Tm_forward that opposes P2. PCR tier = P2.
@@ -227,12 +256,36 @@ def score(m: dict) -> dict:
                         "total": sum(s_parts), "max": 5 * len(s_parts)},
         "pcr": {"tm_vs_ta": p2, "total": p2, "max": 5,
                 "tm_pair_report_only": p1},
-        "flexible": {**f, "total": sum(f.values()), "max": 25,
-                     "structure_sub_scores": f5["sub_scores"]},
+        "flexible": {**f, "total": sum(f.values()), "max": 5 * len(f),
+                     "structure_sub_scores": f5["sub_scores"],
+                     # QD 29: length (F3) is reported, not scored
+                     **({"specific_length_report_only": f3} if floor else {})},
         "structure_veto": f5["veto"],
         "eliminated": (s1 == 1) or (s2 == 1),
-        "detailed_score": detailed_score(m),
+        "detailed_score": detailed_score(m, floor),
     }
+
+
+def grade_tiers(r: dict, specificity_fallback: bool) -> dict:
+    """QD 30: grade of one returned set from its tiers. r = score(m).
+    A — passed the elimination with S1 ≥ 4, S2 ≥ 3, S3 ≥ 4 and no structure veto;
+    B — passed it with a weakness (S1 2–3, S2 2, S3 ≤ 3, veto), or without BLAST
+        (S1 unknown: never A);
+    C — specificity_fallback (every candidate failed specificity)."""
+    sp = r["specificity"]
+    if specificity_fallback:
+        return {"grade": "C", "reasons": ["specificity_fallback: every candidate failed "
+                                          "specificity (BLAST CRITICAL or ΔCq CO-AMPLIFIED)"]}
+    names = {"blast": "S1 BLAST", "assay_dcq": "S2 assay ΔCq", "tm_margin": "S3 Tm margin"}
+    reasons = []
+    if sp["blast"] is None:
+        reasons.append("BLAST unavailable: S1 unknown, grade capped at B")
+    for k, lo in TIERED_GRADE_A_MIN.items():
+        if sp[k] is not None and sp[k] < lo:
+            reasons.append(f"{names[k]} level {sp[k]} (< {lo})")
+    if r["structure_veto"]:
+        reasons.append("structure veto (a structure sub-index at level 1)")
+    return {"grade": "B" if reasons else "A", "reasons": reasons}
 
 
 def rank_key(m: dict, r: dict) -> tuple:
