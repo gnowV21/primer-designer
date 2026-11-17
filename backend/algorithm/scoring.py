@@ -178,7 +178,8 @@ def score_candidate(
         f"3'-end dimer ΔG = {worst:.2f} kcal/mol (threshold: > {SELF_DIMER_DG_3PRIME_MAX} kcal/mol). "
         f"Full-structure dimer ΔG = {worst_full:.2f} kcal/mol by {full_method} "
         f"(threshold: > {DIMER_FULL_DG_CRITICAL} kcal/mol). "
-        + ("CRITICAL: polymerase can extend 3'-end dimer. " if critical else "")
+        + ("CRITICAL: 3'-anchored dimer Tm at or above 47 °C (Primer3 *_END_TH default) — "
+           "polymerase can extend it. " if critical else "")
         + ("CRITICAL: full-structure ΔG below -9 kcal/mol — past the miPrimer dimer limit [Kang17]. " if full_critical else "")
         + "Sources: IDT OligoAnalyzer, Premier Biosoft qPCR guidelines; Kang 2017 (DOI 10.1261/rna.061150.117)."
     )

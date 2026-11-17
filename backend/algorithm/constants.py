@@ -75,7 +75,22 @@
 #   the full-primer criterion is 100 for all 131,039 hsa candidates under both
 #   formulas (new θ at 55 °C: 99.66–99.99 %), and the cycle-1 value is unscored
 #   (new median 0.31 % vs 2.71 % before; 12 nt 0.08 %, 17 nt 7.8 %).
-ALGORITHM_VERSION = "3.8.1"
+#   3.8.2 (2026-11-17) — V4 baseline for the 4.0.0 tiered system (SPEC_scoring_tiered
+#   QD 14); measured beforehand on 2656 hsa (benchmark/thesis_freeze_impact.json).
+#   (a) REV-23: family_discrimination is scored on each candidate's own forward
+#   specific length (one check_overhang_collision per length, cached), not once on the
+#   winner's length — the label differs between lengths in 78/2253 designs; #1 changes
+#   in 13, top 3 in 28; #1 CO-AMPLIFIED 52 → 45. (b) REV-21: hard-filter rule 2 is the
+#   Primer3 3'-anchored dimer Tm ≥ 47 °C (END_DIMER_TM_HARD_MAX) instead of ΔG(last
+#   8 nt) ≤ −5; neither rejects a candidate the other rules keep (no output change).
+#   (c) end_stability is computed as Primer3 defines it (ΔG of the last 5 nt as a
+#   perfect duplex, SantaLucia 1998) instead of a hairpin fold of a 5-mer (always 0);
+#   still scored, still 100 for every candidate (max possible 6.86 < 9.0) — display
+#   values change. (d) miRBase source: results and exports carry the release + sha256
+#   of the mature.fa behind the BLAST DB and overhang index; sequences outside it get
+#   a `sequence_not_in_mirbase_release` warning; online lookups are labelled and no
+#   longer cached.
+ALGORITHM_VERSION = "3.8.2"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -252,11 +267,21 @@ SELF_DIMER_DG_3PRIME_MAX = -5.0    # kcal/mol [Premier Biosoft]
 HETERO_DIMER_DG_MAX = -6.0
 HETERO_DIMER_DG_3PRIME_MAX = -5.0
 
-END_DIMER_DG_CRITICAL = -5.0      # kcal/mol — polymerase can extend (3'-end) [Premier Biosoft]
+# Hard-filter rule 2 (3'-end dimer), since algorithm 3.8.2 (AUDIT REV-21): reject a
+# forward candidate whose 3'-anchored dimer has Tm ≥ 47 °C — with itself, or with the
+# universal reverse primer in either orientation. Primer3 manual
+# (primer3.org/manual.html): PRIMER_MAX_SELF_END_TH and PRIMER_PAIR_MAX_COMPL_END_TH,
+# default 47.0 ("10 degrees lower than the default value of PRIMER_MIN_TM", 57.0).
+# The Tm comes from primer3 calc_end_stability (thermodynamic alignment with the
+# 3' end of the first sequence anchored, as Primer3 computes *_END_TH) at the design's
+# salts and primer concentration. Before 3.8.2 the rule was ΔG(last 8 nt) ≤ −5
+# kcal/mol (Premier Biosoft web page, not a paper; it did not check that the 3'
+# terminal base pairs) — it rejected no candidate in 168,929 hsa gate candidates.
+END_DIMER_TM_HARD_MAX = 47.0      # °C [P3] PRIMER_MAX_SELF_END_TH / PRIMER_PAIR_MAX_COMPL_END_TH
 END_STABILITY_MAX = 9.0            # kcal/mol [P3P PRIMER_MAX_END_STABILITY]
 
 # Full-structure (global) dimer ΔG threshold (Kang 2017 DOI 10.1261/rna.061150.117)
-# Distinct from END_DIMER_DG_CRITICAL (3'-end only).
+# Distinct from END_DIMER_TM_HARD_MAX (3'-end only).
 # Kang 2017 (Methods, checked 2026-11-11): the self-dimer and the forward ×
 # universal-reverse hetero-dimer are judged by ΔG (after Shen et al. 2010); above
 # "−9.0 ± 1 kcal/mol" no change is needed, below it the 5' tail is swapped for

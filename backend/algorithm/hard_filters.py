@@ -22,16 +22,18 @@
 #           reverse, ΔG < DIMER_FULL_DG_CRITICAL (−9 kcal/mol). ΔG by RNAcofold,
 #           DNA parameters, 37 °C — Kang 2017's method (structure_check.full_dimer_dg;
 #           primer3 at Ta only if ViennaRNA is missing). Since algorithm 3.6.0.
-#   rule 2  3'-end dimer: duplex of the LAST 8 nt (forward self, and forward vs
-#           universal reverse) ΔG ≤ END_DIMER_DG_CRITICAL (−5 kcal/mol). A proxy:
-#           it does not check that the 3'-terminal base itself is paired.
+#   rule 2  3'-end dimer: Tm of the 3'-anchored dimer ≥ END_DIMER_TM_HARD_MAX (47 °C,
+#           the Primer3 defaults PRIMER_MAX_SELF_END_TH / PRIMER_PAIR_MAX_COMPL_END_TH),
+#           forward × itself and forward × universal reverse in both orientations
+#           (primer3 calc_end_stability). Since 3.8.2 (AUDIT REV-21); before, ΔG of
+#           the last 8 nt ≤ −5 kcal/mol (Premier Biosoft), which no candidate reached.
 #   rule 3  forward hairpin melting temperature Tm ≥ HAIRPIN_TM_HARD_MAX (47 °C, the
 #           Primer3 default PRIMER_MAX_HAIRPIN_TH). Since 3.7.0; before, ΔG at Ta
 #           ≤ −6 kcal/mol, which no candidate ever reached (AUDIT REV-20)
 # The stem-loop RT primer is a hairpin by design and is never hairpin-filtered
 # (its fold is scored as mfe_stemloop); the fixed universal reverse primer is
 # checked once per design and only warns.
-# Conditions, rules 2–3: primer3 thal (SantaLucia 2004 NN; rule 3 compares the Tm) at the annealing
+# Conditions, rules 2–3: primer3 thal (SantaLucia 2004 NN; both compare a Tm) at the annealing
 # temperature (default 60 °C), mv 50 mM, Mg²⁺ 1.5 mM, dNTP 0.8 mM, primer 200 nM
 # unless the user changes them. Rule 1: RNAcofold defaults (37 °C, 1.021 M Na⁺) —
 # fixed, because the −9 limit was set on that scale; the user's salts do not apply.
@@ -49,9 +51,9 @@
 #             OligoAnalyzer step). Before 3.6.0 rule 1 used primer3 at Ta, on
 #             average 5.4 kcal/mol less negative — a much looser gate
 #             (benchmark/dimer_dg_method_compare.json, AUDIT REV-19).
-#   [PB]      Premier Biosoft qPCR guidelines (web page) — rule 2
-#   [P3]      Primer3 manual, PRIMER_MAX_HAIRPIN_TH default 47.0 ("10 degrees lower
-#             than the default value of PRIMER_MIN_TM"); Untergasser 2012 — rule 3
+#   [P3]      Primer3 manual, PRIMER_MAX_HAIRPIN_TH, PRIMER_MAX_SELF_END_TH and
+#             PRIMER_PAIR_MAX_COMPL_END_TH, default 47.0 each ("10 degrees lower than
+#             the default value of PRIMER_MIN_TM"); Untergasser 2012 — rules 2 and 3
 # Contrast (scoring scheme, not a source for the gate):
 #   [Busk14]  DOI 10.1186/1471-2105-15-29, PMC3922658
 # ================================================================
@@ -91,7 +93,7 @@ def apply_hard_filters(candidate: dict) -> list[str]:
             f"hard_dimer_full_dg (ΔG={dg_full:.2f} < {DIMER_FULL_DG_CRITICAL})"
         )
 
-    # ── Rule 2: 3'-end dimer critical — polymerase-extendable [PB] ───
+    # ── Rule 2: 3'-anchored dimer Tm ≥ 47 °C — polymerase-extendable [P3] ───
     if sc.get("has_critical_flag", False):
         reasons.append("hard_dimer_3prime_critical")
 

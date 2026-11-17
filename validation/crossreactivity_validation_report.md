@@ -1,6 +1,6 @@
 # Cross-reactivity matrix — comparison with published data
 
-Matrix: `outputs\crossreactivity_long.parquet` (tool 3.8.1, miRBase 22.1). Cross-reactive = R ≥ 1 %.
+Matrix: `outputs\crossreactivity_long.parquet` (tool 3.8.2, miRBase 22.1). Cross-reactive = R ≥ 1 %.
 
 ## chen2005
 
@@ -17,6 +17,6 @@ _no measured values yet — fill measured_value in the CSV_
 
 ## Sanity check — near-identical vs random pairs
 
-- 322 ordered pairs of equal-length miRNAs differing at 1–2 positions: mean R 0.1409, median 0.0090, 20.8 % above 10 %.
+- 322 ordered pairs of equal-length miRNAs differing at 1–2 positions: mean R 0.1333, median 0.0081, 19.3 % above 10 %.
 - 20000 random pairs: mean R 0.000011, 0.000 % above 10 %.
 - passes (close mean > 10 × random mean): **True**

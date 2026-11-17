@@ -6,6 +6,7 @@ from flask import Blueprint, jsonify, request
 
 from db import local_db
 from db.circuit_breaker import CircuitBreaker
+from algorithm.mirbase_source import release_info
 
 mirbase_bp = Blueprint('mirbase', __name__)
 
@@ -120,6 +121,20 @@ def _fetch_rnacentral(mirna_id: str) -> dict | None:
         return None
 
 
+def _online(result: dict, service: str) -> dict:
+    """Label a sequence fetched online: its miRBase release is not known and it may
+    be absent from the BLAST DB and the overhang index (design results warn too)."""
+    local_rel = release_info()["mirbase_release"]
+    return {
+        **result,
+        "source": "online",
+        "source_service": service,
+        "mirbase_release": "unknown",
+        "note": (f"online, release unknown — fetched from {service}, not from the local "
+                 f"miRBase {local_rel} used by the BLAST database and the overhang index."),
+    }
+
+
 @mirbase_bp.route('/mirbase/suggest')
 def suggest_mirna():
     q = request.args.get('q', '').strip()
@@ -145,6 +160,9 @@ def get_mirna(mirna_id):
             "species":   local.get("species", ""),
             "length":    local.get("length", 0),
             "source":    "local",
+            # The local database is mature.fa of the release behind the BLAST DB and
+            # the overhang index (mirbase_source.py) — checked for every hsa entry.
+            **release_info(),
         })
 
     # ── 1b. Sequence inputs have no miRBase lookup path — skip external calls
@@ -174,22 +192,16 @@ def get_mirna(mirna_id):
                 "suggestion": "Check the ID and try again. Examples: hsa-miR-21-5p, MIMAT0000076",
             }), 404
         _breaker.record_success()
-        local_db.upsert(result)
-        result["source"] = "mirbase"
-        return jsonify(result)
+        # Not cached: the online API may serve a newer release than the local
+        # database, the BLAST DB and the overhang index (3.8.2).
+        return jsonify(_online(result, "mirbase.org API"))
     except Exception:
         _breaker.record_failure()
 
     # ── 4. Fallback: RNAcentral (EBI) ──────────────────────────────────────
     result = _fetch_rnacentral(mirna_id)
     if result:
-        # Only cache records that carry a real accession — RNAcentral always
-        # returns accession="" which would permanently shadow any future miRBase
-        # hit for the same name via INSERT OR REPLACE.
-        if result.get('accession'):
-            local_db.upsert(result)
-        result["source"] = "rnacentral"
-        return jsonify(result)
+        return jsonify(_online(result, "RNAcentral"))
 
     # ── 5. All sources exhausted ────────────────────────────────────────────
     return jsonify({

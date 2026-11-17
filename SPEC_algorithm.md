@@ -30,6 +30,20 @@
 
 ---
 
+### 2026-11-17 — Algorithm 3.8.2: mốc V4 cho bản đóng băng 4.0.0
+
+| Mã | File | Loại | Mô tả |
+|---|---|---|---|
+| REV-23 | `design_pipeline.py` | Correctness | `family_discrimination` chấm theo độ dài vùng đặc hiệu của **từng ứng viên** (`check_overhang_collision` một lần cho mỗi độ dài, cache). Bỏ vòng lặp fixpoint; cấp thiết kế báo cáo theo độ dài của bộ #1 |
+| REV-21 | `structure_check/__init__.py`, `hard_filters.py`, `constants.py`, `primer3_safe.py` | Correctness | Lọc cứng quy tắc 2: Tm dimer neo đầu 3′ ≥ 47 °C (`END_DIMER_TM_HARD_MAX`; primer3 `calc_end_stability`; F tự bắt cặp, F × URP hai chiều) — mặc định `PRIMER_MAX_SELF_END_TH` / `PRIMER_PAIR_MAX_COMPL_END_TH` của Primer3. Trường mới `end_tm` |
+| REV-25 | `thermodynamics.py` | Bug | `calculate_end_stability` = ΔG phá duplex hoàn hảo của 5 nt cuối (SantaLucia 1998, khởi đầu 1,96, +0,05 mỗi đầu A·T), đúng định nghĩa `PRIMER_MAX_END_STABILITY`. Trước đó `calc_hairpin` trên 5-mer luôn ra 0,00 |
+| REV-28 | `mirbase_source.py` (mới), `design_pipeline.py`, `routes/mirbase.py`, `routes/export.py`, `openapi.yaml` | Provenance | Release + sha256 của `mature.fa` (BLAST DB + chỉ mục overhang) vào `metadata.provenance` và file xuất MIQE; cảnh báo `sequence_not_in_mirbase_release`; kết quả tra online gắn `source: online`, `mirbase_release: unknown`, không ghi cache |
+
+**Tác động** (đo trước khi sửa: `benchmark/thesis_freeze_impact.json`; sau khi sửa: thiết kế lại 2656 hsa).
+- Mồi xuôi #1 đổi ở 13/2253 thiết kế hsa, top 3 ở 28; #1 CO-AMPLIFIED 52 → 45. Tất cả do REV-23; REV-21 và REV-25 không đổi mồi hay điểm.
+- Validation 2439/2439, `results.csv` không đổi dòng nào. Benchmark 50/50 không đổi. Ma trận hsa ngoài đường chéo HIGH 208 → 195, MEDIUM 107 → 111, LOW 20.700 → 20.709.
+- `end_stability` hiển thị 1,31–6,09 kcal/mol (trung vị 3,55) thay cho 0,00; vẫn 100 điểm với mọi ứng viên vì tối đa có thể là 6,86 < 9,0.
+
 ### 2026-11-17 — Algorithm 3.8.1: tỉ lệ bám tính theo cân bằng khối lượng
 
 | Mã | File | Loại | Mô tả |
@@ -499,8 +513,8 @@ SELF_DIMER_DG_3PRIME_MAX  = -5.0   # kcal/mol [Premier Biosoft]
 HETERO_DIMER_DG_MAX        = -6.0
 HETERO_DIMER_DG_3PRIME_MAX = -5.0
 
-# Critical 3' end extension risk
-END_DIMER_DG_CRITICAL = -5.0   # kcal/mol
+# Critical 3' end extension risk (từ 3.8.2: Tm dimer neo đầu 3′, Primer3 *_END_TH)
+END_DIMER_TM_HARD_MAX = 47.0   # °C (trước 3.8.2: END_DIMER_DG_CRITICAL = -5.0 kcal/mol, ΔG 8 nt cuối)
 
 # [P3P] 3' end stability
 END_STABILITY_MAX = 9.0   # kcal/mol
@@ -961,7 +975,7 @@ def calculate_end_stability(last_5_bases, params) -> float: ...       # ΔG 5 ba
 1. **Hairpin** — `primer3.calc_hairpin()`, threshold `HAIRPIN_DG_MAX_INTERNAL = -3.0`
 2. **Self-dimer** — `calc_homodimer()` + `calc_homodimer_end()`, threshold `-6.0` / `-5.0`
 3. **Hetero-dimer (fwd × universal reverse)** — `calc_heterodimer()` + `calc_heterodimer_end()`, threshold `-6.0` / `-5.0`
-4. **3' End Stability** — 5-mer cuối, threshold `END_STABILITY_MAX = 9.0` kcal/mol [P3P]
+4. **3' End Stability** — 5-mer cuối, threshold `END_STABILITY_MAX = 9.0` kcal/mol [P3P]. *Từ 3.8.2:* giá trị là ΔG phá duplex hoàn hảo của 5 nt cuối (SantaLucia 1998, khởi đầu 1,96 + 0,05 mỗi đầu A·T), đúng định nghĩa `PRIMER_MAX_END_STABILITY` của Primer3. Trước đó code gấp 5-mer thành hairpin bằng `calc_hairpin` nên luôn ra 0,00. Giá trị lớn nhất có thể là 6,86 (GCGCG) < 9,0, nên tiêu chí không bao giờ fail.
 
 **BUG FIX v2.8.1 #4:** `_check_end_stability` phải dùng `p3` params (không phải `{}`).
 
@@ -1012,7 +1026,7 @@ Mồi có điểm 0,2 *"will not be designed in practice if alternatives with mo
 | Quy tắc | Áp dụng cho | Ngưỡng loại | Nguồn |
 |---|---|---|---|
 | Dimer bền nhất, ở bất kỳ vị trí nào | F tự bắt cặp; F × URP | ΔG < −9,0 kcal/mol (`DIMER_FULL_DG_CRITICAL`), tính bằng **RNAcofold, tham số DNA, 37 °C** (`structure_check.full_dimer_dg`, từ 3.6.0) | Kang 2017 (miPrimer, RNA 24:304): cùng ngưỡng, cùng phạm vi, cùng cách tính ΔG — xem ghi chú dưới bảng |
-| Dimer đầu 3′ | 8 nt cuối của F tự bắt cặp; 8 nt cuối F × 8 nt cuối URP | ΔG ≤ −5,0 kcal/mol (`END_DIMER_DG_CRITICAL`) | Premier Biosoft (trang hướng dẫn, không phải bài báo). Đây là phép xấp xỉ: không kiểm tra base cuối 3′ có thật sự bắt cặp |
+| Dimer đầu 3′ | F tự bắt cặp; F × URP theo cả hai chiều | **Tm dimer neo đầu 3′ ≥ 47 °C** (`END_DIMER_TM_HARD_MAX`, primer3 `calc_end_stability`, từ 3.8.2) | Mặc định `PRIMER_MAX_SELF_END_TH` / `PRIMER_PAIR_MAX_COMPL_END_TH` = 47.0 của Primer3. Đến 3.8.1 quy tắc này là ΔG của 8 nt cuối ở Ta ≤ −5,0 kcal/mol (Premier Biosoft, trang hướng dẫn), không kiểm tra base cuối 3′ có bắt cặp và không bao giờ kích hoạt (AUDIT REV-21) |
 | Hairpin | chỉ F | **Tm hairpin ≥ 47 °C** (`HAIRPIN_TM_HARD_MAX`, từ 3.7.0) | Mặc định `PRIMER_MAX_HAIRPIN_TH` = 47.0 của Primer3 (Untergasser 2012). Tài liệu Primer3 ghi: *"The default value is 10 degrees lower than the default value of PRIMER_MIN_TM"* (57.0). Đến 3.6.0 quy tắc này là ΔG ở Ta ≤ −6 kcal/mol, một mốc riêng không có nguồn và không bao giờ kích hoạt (AUDIT REV-20) |
 
 **Ghi chú về Kang 2017** (đối chiếu đoạn Methods ngày 2026-11-11). Ở bước xác nhận, miPrimer xét self-dimer của mồi xuôi và hetero-dimer giữa mồi xuôi với mồi ngược phổ quát bằng ΔG (theo Shen et al. 2010). Nếu ΔG lớn hơn *"−9.0 ± 1 kcal/mol"* thì giữ nguyên. Nếu nhỏ hơn thì đổi đuôi 5′ sang biến thể IUPAC khác hoặc bỏ các nucleotide tạo dimer, rồi lặp lại đến khi đạt. Phạm vi này trùng với quy tắc 1. Có ba khác biệt:
@@ -1041,7 +1055,7 @@ Khi dùng primer3 ở 60 °C, mốc −9 là con số của Kang đặt lên m�
 
 Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câu này trước đây có trong chú thích code và phần giải thích điểm, nay đã bỏ.
 
-**Điều kiện tính (quy tắc 2–3):** primer3 thal (tham số nearest-neighbor SantaLucia 2004) với Na⁺ tương đương 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM, trừ khi người dùng đổi. Quy tắc 2 tính ΔG ở Ta (mặc định 60 °C). Quy tắc 3 so **Tm** của hairpin (`calc_hairpin().tm`) với mốc cố định 47 °C. Mốc này không thay đổi theo Ta, giống mặc định của Primer3. Hairpin là cấu trúc một phân tử nên Tm không phụ thuộc nồng độ mồi.
+**Điều kiện tính (quy tắc 2–3):** primer3 thal (tham số nearest-neighbor SantaLucia 2004) với Na⁺ tương đương 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM, trừ khi người dùng đổi. Quy tắc 2 so **Tm** của dimer neo đầu 3′ (`calc_end_stability().tm`; tự bắt cặp, và F × URP lấy chiều cao hơn) với mốc cố định 47 °C. Quy tắc 3 so **Tm** của hairpin (`calc_hairpin().tm`) với mốc cố định 47 °C. Mốc này không thay đổi theo Ta, giống mặc định của Primer3. Hairpin là cấu trúc một phân tử nên Tm không phụ thuộc nồng độ mồi.
 
 **Không áp dụng:**
 - **Mồi RT stem-loop:** cố ý là một hairpin; cấu trúc của nó được chấm qua `mfe_stemloop`.
@@ -1050,7 +1064,7 @@ Kang cũng **không** viết rằng dimer dưới −9 gây ức chế qPCR. Câ
 
 **Dự phòng:** nếu mọi ứng viên đều bị loại, tool trả về các ứng viên tốt nhất kèm cảnh báo `hard_filter_fallback`.
 
-**Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Từ 3.7.0, quy tắc hairpin dùng đúng tiêu chí Tm này. Quy tắc 1 vẫn dùng ΔG (theo Kang). Quy tắc 2 vẫn dùng ΔG ở Ta, và trên 9.268 ứng viên của 150 miRNA hsa nó không loại ứng viên nào (AUDIT REV-21, còn mở).
+**Đối chiếu Primer3.** Primer3/Primer3Plus (Untergasser 2012, NAR) không dùng ngưỡng ΔG cho hairpin/dimer. Primer3 dùng **Tm tuyệt đối** của cấu trúc (`PRIMER_MAX_HAIRPIN_TH`, `*_SELF_ANY_TH`, `*_SELF_END_TH`, mặc định 47 °C, thấp hơn `PRIMER_MIN_TM` 10 °C). Từ 3.7.0, quy tắc hairpin dùng đúng tiêu chí Tm này; từ 3.8.2 quy tắc dimer đầu 3′ cũng vậy (AUDIT REV-21). Quy tắc 1 vẫn dùng ΔG (theo Kang).
 
 ### SCORING_WEIGHTS_V4 (Phase 3 v4.1, sửa ở algorithm 3.8.0) — 14 tiêu chí (13 được chấm), ACTIVE
 
