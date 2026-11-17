@@ -35,7 +35,7 @@ from ..constants import (
     REFERENCE_ANNOTATED_SPECIES,
 )
 from ..thermodynamics import _get_p3_params
-from .assay_model import evaluate
+from .assay_model import evaluate, rt_axis, fwd_axis, variant_category, _shifts
 from .family_crossreactivity import _resolve_species_prefix, get_family_id
 
 _INDEX_PATH = os.path.normpath(
@@ -349,3 +349,97 @@ def check_overhang_collision(
         "recommendation": _recommend(target_dna, overhang_len, fwd_len, coamp_seqs, p3),
     })
     return base
+
+
+# ── full screen for the tiered system (4.0.0) ────────────────────
+
+_SCREEN_FLOOR_CQ = 10.0   # S2 top level edge: values ≥ 10 Cq are not resolved further
+
+
+def assay_screen(
+    mature_seq: str,
+    mirna_name: str,
+    params: dict,
+    overhang_len: int,
+    fwd_lens,
+    species: str | None = None,
+    rt_capture_below: float = 4.3,
+) -> dict:
+    """Exact minimum ΔCq_assay and specificity Tm margin, per forward specific length,
+    over every miRNA of the species (+ virus host) in the index — the inputs of S2 and
+    S3 of the tiered system (docs/SPEC_scoring_tiered_4.0.0.md §3.1).
+
+    Unlike check_overhang_collision, the forward axis is evaluated even when the RT
+    step alone discriminates, so values below 10 Cq are exact rather than lower
+    bounds. The table-only forward ΔCq is a proven lower bound of the full one
+    (ΔCq_FWD = max(table, Tm term)); the Tm term is computed only where that bound
+    is below the 10-Cq floor.
+
+    Returns {L: {...}} with
+      min_delta_cq / worst      — over all entries except the target and same_sequence
+                                  entries (None = every one ≥ 10 Cq)
+      min_delta_cq_other / worst_other — the same over category 'other' only (V4's set)
+      tm_margin / tm_margin_worst — min over RT-captured entries (ΔCq_RT < 4.3, not
+                                  same_sequence) of Tm_on − Tm_off, the most stable
+                                  register of the ±2-nt shifts; None = none captured
+      tm_margin_r0              — the same at the unshifted register only
+    """
+    target_dna = _dna((mature_seq or "").upper().strip())
+    prefix = _resolve_species_prefix(mirna_name, species)
+    sp = prefix.rstrip("-")
+    by_species = _load_index().get("mature") or {}
+    host = VIRUS_HOST_SPECIES.get(sp)
+    mature_map = {}
+    for s in (sp, host):
+        if s and s in by_species:
+            mature_map.update(by_species[s])
+    p3 = _get_p3_params(params or {})
+
+    entries = []   # (name, other_dna, category, rt)
+    for name, seq_rna in mature_map.items():
+        o_dna = _dna(seq_rna)
+        if (mirna_name and name == mirna_name) or (not mirna_name and o_dna == target_dna):
+            continue
+        cat = variant_category(target_dna, o_dna)
+        if cat == "same_sequence":
+            continue
+        entries.append((name, o_dna, cat, rt_axis(target_dna, o_dna, overhang_len)))
+
+    out = {}
+    for L in sorted(set(fwd_lens)):
+        region = target_dna[:L]
+        tm_gap = _tm_gap_fn(target_dna, L, p3)
+        best_all = best_other = None
+        margin = margin_r0 = None
+        margin_worst = None
+        for name, o_dna, cat, rt in entries:
+            if rt["delta_cq"] >= _SCREEN_FLOOR_CQ:
+                continue
+            lb = rt["delta_cq"] + fwd_axis(region, o_dna, None)["delta_cq"]
+            if lb < _SCREEN_FLOOR_CQ:
+                exact = round(rt["delta_cq"]
+                              + fwd_axis(region, o_dna, lambda r, o=o_dna: tm_gap(o, r))["delta_cq"], 2)
+                if exact < _SCREEN_FLOOR_CQ:
+                    if best_all is None or (exact, name) < best_all:
+                        best_all = (exact, name)
+                    if cat == "other" and (best_other is None or (exact, name) < best_other):
+                        best_other = (exact, name)
+            if rt["delta_cq"] < rt_capture_below:
+                gaps = [g for g in (tm_gap(o_dna, r) for r in _shifts()) if g is not None]
+                if gaps:
+                    g = min(gaps)
+                    if margin is None or g < margin:
+                        margin, margin_worst = g, name
+                g0 = tm_gap(o_dna, 0)
+                if g0 is not None and (margin_r0 is None or g0 < margin_r0):
+                    margin_r0 = g0
+        out[L] = {
+            "min_delta_cq": best_all[0] if best_all else None,
+            "worst": best_all[1] if best_all else None,
+            "min_delta_cq_other": best_other[0] if best_other else None,
+            "worst_other": best_other[1] if best_other else None,
+            "tm_margin": round(margin, 1) if margin is not None else None,
+            "tm_margin_worst": margin_worst,
+            "tm_margin_r0": round(margin_r0, 1) if margin_r0 is not None else None,
+        }
+    return out

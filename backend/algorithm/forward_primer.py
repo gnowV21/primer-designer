@@ -51,7 +51,8 @@ def _rng_for(*key) -> random.Random:
     return random.Random(int(digest[:12], 16))
 
 
-def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
+def generate_forward_candidates(mature_sequence: str, params: dict,
+                                gc_prefilter: bool = True) -> tuple:
     """
     Generate forward primer candidates using Primer3Plus SEQUENCE_OVERHANG_LEFT logic.
 
@@ -61,6 +62,11 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
       computed via SantaLucia 1998 NN model for every candidate
 
     v2.7: Forward primer uses positions [0 : len(miRNA) - 6] [V07][K11]
+
+    gc_prefilter=False (tiered scoring, 4.0.0, SPEC QD 15): GC % and the 3'-end
+    G/C rules (clamp, max end GC) do not reject candidates — the tiered system scores
+    them (F1/F2) instead. Length, Tm window, homopolymer and amplicon rules still
+    apply. The default (True) is the V4 behaviour, unchanged.
 
     Returns:
         (candidates_passed, rejection_log)
@@ -108,6 +114,8 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     passed = []
     for c in all_candidates:
         hard_reasons, warning_reasons = _prefilter(c, params)
+        if not gc_prefilter:
+            hard_reasons = [r for r in hard_reasons if r not in _GC_PREFILTER_REASONS]
         if not hard_reasons:
             c["warnings_from_prefilter"] = warning_reasons
             passed.append(c)
@@ -241,6 +249,10 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") 
             result.append(tail)
 
     return result
+
+
+# Pre-filter reasons the tiered system scores instead of rejecting (SPEC QD 15).
+_GC_PREFILTER_REASONS = frozenset({"gc_out_of_range", "gc_clamp_fail", "gc_end_window_fail"})
 
 
 def _prefilter(candidate: dict, params: dict) -> tuple:

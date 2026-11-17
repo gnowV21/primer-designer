@@ -893,3 +893,63 @@ ASSAY_LABEL_SCORE = {"DISCRIMINATED": 100, "PARTIAL": 70, "CO-AMPLIFIED": 0, "no
 # term and terminal fraying dominate, so a point Tm is not a defensible display value.
 SHORT_DUPLEX_NT_THRESHOLD     = 8     # nt — report dG37 + a Tm band below this, not a point Tm
 TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; NOT a statistical CI)
+
+
+# ================================================================
+# TIERED SCORING (4.0.0) — docs/SPEC_scoring_tiered_4.0.0.md §3
+# Proposed thresholds, pending approval after the Giai đoạn 1 dry run
+# (backend/scripts/tiered_scoring_dryrun.py). Pure functions: algorithm/tiered_scoring.py.
+# Each table lists the lower edge of levels 5, 4, 3, 2 ("higher is better") or the
+# upper edge ("lower is better"); anything beyond is level 1.
+# "own threshold" = a value of this tool, no published source, not wet-lab calibrated.
+# ================================================================
+SCORING_SYSTEM_DEFAULT = "v4"   # becomes "tiered" in Giai đoạn 2 (SPEC QD 11)
+
+# Tier 1 — specificity (max 15)
+# S1 BLAST (classifier v7, same species + virus host): SAFE 5, MEDIUM with 1 hit 4,
+# MEDIUM with ≥ 2 hits 3, HIGH 2, CRITICAL 1 (eliminated, SPEC QD 4).
+TIERED_S1_BY_RISK = {"SAFE": 5, "MEDIUM_1": 4, "MEDIUM_2+": 3, "HIGH": 2, "CRITICAL": 1}
+# S2 min ΔCq_assay over same-species miRNAs, on the candidate's own specific length.
+TIERED_S2_DCQ = (
+    10.0,                          # 5: ≥ 10 Cq ≈ 0.1 %, lowest single-mismatch cross-signal of Chen 2005 (DECISIONS D-2)
+    7.0,                           # 4: own threshold
+    ASSAY_DCQ_DISCRIMINATED_AT,    # 3: 4.3 — DISCRIMINATED
+    ASSAY_DCQ_COAMPLIFIED_BELOW,   # 2: 3.3 — PARTIAL; below → 1 CO-AMPLIFIED (eliminated)
+)
+# S3 specificity Tm margin = Tm_on − max Tm_off (RT-captured same-species off-targets), °C
+TIERED_S3_MARGIN_C = (
+    15.0,                          # 5: own threshold
+    BLAST_TM_SAFE_MARGIN,          # 4: 10 °C — BLAST SAFE margin
+    7.5,                           # 3: own threshold
+    BLAST_TM_CRITICAL_MARGIN,      # 2: 5 °C — BLAST CRITICAL margin; below → 1 (not eliminated)
+)
+TIERED_RT_CAPTURE_BELOW = ASSAY_DCQ_DISCRIMINATED_AT   # ΔCq_RT < 4.3 → the RT primer captures it
+
+# Tier 2 — PCR (max 10); lower is better, |ΔT| in °C
+TIERED_P1_TM_PAIR_C = (1.0, TM_PAIR_DIFF_MAX, 3.0, 5.0)   # 4: 2 °C [PAST24]; others own thresholds
+TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds
+
+# Tier 3 — flexible (max 25)
+TIERED_F3_LENGTH = {17: 5, 16: 5, 15: 4, 14: 3, 13: 2, 12: 1}   # own threshold (longer = more 3'-mismatch room)
+TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING_TARGET|, own thresholds
+# F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8)
+TIERED_F5_HAIRPIN_TM_C   = (30.0, 37.0, 42.0, HAIRPIN_TM_HARD_MAX)    # level 1 at ≥ 47 °C [P3 PRIMER_MAX_HAIRPIN_TH]
+TIERED_F5_DIMER_DG       = (-5.0, -7.0, -9.0, -10.0)                  # kcal/mol RNAcofold; ≤ −10 → 1 [Kang17 −9 ± 1]
+TIERED_F5_END_DIMER_TM_C = (30.0, 37.0, 42.0, END_DIMER_TM_HARD_MAX)  # level 1 at ≥ 47 °C [P3 *_END_TH]
+
+# Detailed score (0–100), tie-break only (SPEC §3.4). Sub-scores without an existing
+# V4 function are piecewise-linear through these (value, sub-score) anchors — own choice,
+# chosen so each table edge of levels 2…5 maps to 25/50/75/100 (or 20…100).
+TIERED_DETAIL_WEIGHTS = {
+    "min_delta_cq": 0.25, "tm_margin": 0.15, "tm_pair": 0.15, "tm_accuracy": 0.15,
+    "tm_binding_accuracy": 0.08, "gc_content": 0.05, "gc_clamp": 0.05,
+    "primer_size": 0.05, "structure": 0.05, "amplicon_size": 0.02,
+}
+TIERED_DETAIL_ANCHORS = {
+    "min_delta_cq": ((0.0, 0.0), (3.3, 25.0), (4.3, 50.0), (7.0, 75.0), (10.0, 100.0)),   # capped at 10
+    "tm_margin":    ((0.0, 0.0), (5.0, 20.0), (7.5, 40.0), (10.0, 60.0), (15.0, 80.0), (20.0, 100.0)),
+    "tm_pair":      ((1.0, 100.0), (2.0, 75.0), (3.0, 50.0), (5.0, 25.0), (10.0, 0.0)),
+    "hairpin_tm":   ((30.0, 100.0), (37.0, 75.0), (42.0, 50.0), (47.0, 25.0), (60.0, 0.0)),
+    "dimer_dg":     ((-5.0, 100.0), (-7.0, 75.0), (-9.0, 50.0), (-10.0, 25.0), (-15.0, 0.0)),
+    "end_dimer_tm": ((30.0, 100.0), (37.0, 75.0), (42.0, 50.0), (47.0, 25.0), (60.0, 0.0)),
+}
