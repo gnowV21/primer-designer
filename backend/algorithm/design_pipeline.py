@@ -34,7 +34,6 @@ from algorithm.constants import (
     SYBR_GREEN_NON_SPECIFIC_RISK, SYBR_GREEN_WARNING_MESSAGE,
     OVERHANG_LENGTH_DEFAULT, HARD_FILTER_ENABLED,
     STEMLOOP_BODY, UNIVERSAL_REVERSE, AMPLICON_DIMER_TM_GAP_WARN,
-    FORWARD_SPECIFIC_LENGTHS,
     ALGORITHM_VERSION, SCORING_WEIGHTS_V4, UNSCORED_CRITERIA_V4,
     AMPLICON_TM_MG_SPAN_MM, TM_ANNEALING_TEMP_DEFAULT,
 )
@@ -192,56 +191,43 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
         overhang_len=binding_len,
         species=params.get("species"),
     )
-    def _score_all(oc):
-        out = []
-        for c in candidates:
-            result = score_candidate(
-                c, stemloop, reverse, params,
-                cross_reactivity=cross_reactivity_shared,
-                overhang_collision=oc,
-                use_v4=True,
-            )
-            out.append({**c, **result})
-        return out
+    # Assay-level collision (RT overhang + forward prefix) on EACH candidate's own
+    # forward specific length (REV-23, 4.0.0). ΔCq_FWD depends on that length, so
+    # family_discrimination can differ between candidates of one design. Before
+    # 4.0.0 it was scored once, on the winner's length (a fixpoint loop), which gave
+    # every candidate the same value. Cached per length: at most 6 calls.
+    _oc_by_len: dict = {}
 
-    # Iterative primer-axis collision (Week2 C5): forward_specific_len feeds the
-    # collision analysis, which feeds the winner's family_discrimination score — so
-    # the winner and the length it is scored against are mutually dependent. Iterate
-    # to a fixpoint so the REPORTED winner is scored on ITS OWN forward length, not a
-    # neighbour's (a single pass can pick a winner whose length ≠ the length used to
-    # score it). Bounded: specific_length ∈ {12..17}; a `seen` guard stops the rare
-    # oscillation deterministically at its first repeat.
-    overhang_collision = check_overhang_collision(
-        mature_seq=seq, mirna_name=mirna_name, params=params,
-        overhang_len=binding_len, forward_specific_len=None,
-        species=params.get("species"),
-    )
-    # One ranking key for the fixpoint and the final order (score, then closer Tm to
-    # Ta, then sequence — never generation order), so the length the winner is
-    # scored against is the reported winner's own length.
+    def _collision_for(length):
+        if length not in _oc_by_len:
+            _oc_by_len[length] = check_overhang_collision(
+                mature_seq=seq, mirna_name=mirna_name, params=params,
+                overhang_len=binding_len, forward_specific_len=length,
+                species=params.get("species"),
+            )
+        return _oc_by_len[length]
+
+    scored = []
+    for c in candidates:
+        result = score_candidate(
+            c, stemloop, reverse, params,
+            cross_reactivity=cross_reactivity_shared,
+            overhang_collision=_collision_for(c.get("specific_length")),
+            use_v4=True,
+        )
+        scored.append({**c, **result})
+
+    # Rank by score (ties: closer Tm to Ta, then sequence — never generation order),
+    # then pick the top N with relaxing diversity (v3.2.0; see select_diverse_top).
     _ta = float(params.get("annealingTemp", TM_ANNEALING_TEMP_DEFAULT))
 
     def _rank_key(x):
         return (-x["total_score"], abs(x.get("tm_full", 0) - _ta), x["sequence"])
 
-    scored = _score_all(overhang_collision)
-    _seen_L = set()
-    for _ in range(len(FORWARD_SPECIFIC_LENGTHS) + 1):
-        best_L = min(scored, key=_rank_key).get("specific_length")
-        if not best_L or best_L == overhang_collision.get("forward_specific_len") or best_L in _seen_L:
-            break
-        _seen_L.add(best_L)
-        overhang_collision = check_overhang_collision(
-            mature_seq=seq, mirna_name=mirna_name, params=params,
-            overhang_len=binding_len, forward_specific_len=best_L,
-            species=params.get("species"),
-        )
-        scored = _score_all(overhang_collision)
-
-    # Rank by score (ties: closer Tm, then sequence — never generation order), then pick
-    # the top N with relaxing diversity (v3.2.0; see select_diverse_top).
     ranked = sorted(scored, key=_rank_key)
     top_n = select_diverse_top(ranked, CANDIDATES_TOP_N)
+    # Design-level report (warnings, specificity_warnings): the #1 set's own length.
+    overhang_collision = _collision_for(top_n[0].get("specific_length"))
 
     # Amplicon melting Tm + SYBR dimer proximity warning (SPEC_phase5 PART D).
     # The amplicon top strand = tail + miRNA + rc(stem-loop body), cut at the 5' end of
