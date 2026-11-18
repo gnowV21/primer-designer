@@ -90,7 +90,7 @@
 | Ma trận hsa ngoài đường chéo HIGH/MEDIUM/LOW | 172 / 105 / 22.620 (2472 assay) | 195 / 111 / 20.709 (2253) | `outputs/crossreactivity_*` |
 | Độ nhạy BLAST, 175 mồi validation, lề 10 °C: SAFE / CRITICAL | 105 / 51 | 95 / 54 | `benchmark/blast_tm_gate_sensitivity.json` |
 | Thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s, p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
-| Backend tests / e2e / `crossreactivity/tests` | 900 passed, 3 skipped / 74/74 (cache có; lần đầu cache trống 8 fail do giới hạn 15 s) / 29 | 733 / 74 / 29 | 2026-11-18 |
+| Backend tests / e2e / `crossreactivity/tests` | 901 passed, 2 failed (`test_benchmark_endpoint`: validation 2436/2439, chờ quyết định ở mục E), 3 skipped / 74/74 (cache có; lần đầu cache trống 8 fail do giới hạn 15 s) / 29 | 733 / 74 / 29 | 2026-11-18 |
 
 - **Validation in-silico:** `validation/results.json` — 2439/2439 check pass, 201 target (197 mục `mirnas` + 4 edge case trong `reference_mirnas.json`; report ghi "193 miRNAs + 4 edge cases"). Bộ gốc ban đầu: 783/783, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md`, phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
