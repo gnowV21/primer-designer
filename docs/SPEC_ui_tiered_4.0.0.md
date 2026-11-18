@@ -88,3 +88,17 @@ KhÃ´ng cÃ³ `ranking` (U5) â†’ giá»¯ hÃ m cÅ©. Pháº§n logic Ä‘áº·t trong má»™t hÃ
 
 ## 5. NgoÃ i pháº¡m vi
 Äá»•i thuáº­t toÃ¡n hoáº·c ngÆ°á»¡ng; song ngá»¯; trang diá»…n giáº£i Ct sau khi cháº¡y; nÃºt chá»n V4 trÃªn UI.
+
+## 6. Káº¿t quáº£ (2026-11-18)
+
+**UI-1** (commit `88d5d05`): cÃ i 2.1â€“2.5 vÃ  test cá»§a Â§3.
+- Äá»‘i chiáº¿u khÃ³a: `node frontend/scripts/check_tier_order.mjs` trÃªn top 3 API cá»§a 2472 thiáº¿t káº¿ hsa (`backend/scripts/ui_top3_dump.py`, cache hit 215.860/215.860) cho thá»© tá»± trÃ¹ng **2472/2472** (`benchmark/ui_tier_order_check.json`).
+|-| |B|Æ|°|á|»|›|c| |q|u|y|á|º|¿|t| |Ä|‘|á|»|‹|n|h| |#|1|/|#|2|:| |F| |1|1|1|2|,| |Ä|‘|i|á|»|ƒ|m| |p|h|Ã|¢|n| |Ä|‘|á|»|‹|n|h| |5|7|1|,| |s|Ã| |n| |T|m| |2|6|9|,| |l|u|á|º|­|t| |V|4| |2|1|4|,| |S| |1|4|0|,| |c|h|á|»|‰| |k|h|Ã|¡|c| |Ä|‘|u|Ã|´|i| |1|2|1|,| |v|e|t|o| |c|á|º|¥|u| |t|r|Ã|º|c| |2|6|,| |P| |1|7|,| |\|||T|m| |â|ˆ|’| |T|a|\||| |1|.| |B|Æ|°|á|»|›|c| |\|||T|m| |â|ˆ|’| |T|a|\||| |k|h|Ã|´|n|g| |c|Ã|³| |t|r|o|n|g| |8| |n|h|Ã|¡|n|h| |c|á|»|§|a| |Â|§|2|.|4|,| |n|Ã|ª|n| |r|a|n|k|R|e|a|s|o|n| |c|Ã|³| |t|h|Ã|ª|m| |m|á|»|™|t| |c|Ã|¢|u| |r|i|Ã|ª|n|g| |c|h|o| |n|Ã|³|.|
+- áº¢nh chá»¥p: `docs/screenshots/ui-1/` (12 áº£nh). `.gitignore` cháº·n `*.png` nÃªn áº£nh khÃ´ng náº±m trong repo.
+
+**UI-2:**
+- Bá»™ tiered bÃ¡o `scores.bound_fraction_binding_pct` (cycle-1 occupancy, chá»‰ Ä‘á»ƒ thÃ´ng tin nhÆ° á»Ÿ V4, khÃ´ng cÃ³ trá»ng sá»‘, khÃ´ng vÃ o khÃ³a). DÃ²ng ThermoTable trÆ°á»›c Ä‘Ã³ trá»‘ng.
+- NÃºt "Show all hits": `/api/blast-check` tá»« chá»‘i tÃªn miRBase khÃ´ng cÃ³ -5p/-3p (828/2656 hsa, vd. hsa-miR-647) dÃ¹ frontend Ä‘Ã£ gá»­i trÃ¬nh tá»± Ä‘Ã­ch. Route nay chá»‰ tá»« chá»‘i khi thiáº¿u `mirna_sequence`, giá»‘ng BLAST lÃºc thiáº¿t káº¿.
+- Äá»‘i chiáº¿u `overall_risk` giá»¯a BLAST lÃºc thiáº¿t káº¿ vÃ  nÃºt nÃ y (`backend/scripts/ui_blast_consistency.py`, tham sá»‘ máº·c Ä‘á»‹nh cá»§a frontend, 3 ca cÃ³ tÃªn + 40 ca ngáº«u nhiÃªn seed 2026): **0/113 bá»™ khÃ¡c** (104 SAFE, 6 CRITICAL, 3 MEDIUM; 8 thiáº¿t káº¿ tÃªn khÃ´ng cÃ³ háº­u tá»‘).
+- `CLAUDE.md` (frontend), `HANDOFF`, mÃ´ táº£ PR #13.
+- Test: backend 908 passed, 3 skipped; e2e 109/109; `npm run build` khÃ´ng cáº£nh bÃ¡o.

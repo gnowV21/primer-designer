@@ -25,7 +25,7 @@ npm run preview        # preview production build
 ### Tests
 ```bash
 cd backend && python -m pytest tests visualization -q --ignore=tests/smoke   # unit + route tests
-npx playwright test          # e2e (repo root; needs both dev servers running)
+npx playwright test          # e2e (repo root; needs both dev servers running; e2e/global-setup.js warms the BLAST cache first)
 python -m pytest crossreactivity/tests -q   # offline cross-reactivity matrix (repo root)
 ```
 
@@ -54,7 +54,8 @@ In production, `/api/*` must be reverse-proxied to the Flask server separately (
 - `pages/DesignPage/index.jsx` — the single designer (`/design`): miRNA input first; every parameter folded under "Parameters" (defaults until opened). `/design/advanced` redirects here. Form state lives in `hooks/useDesignForm.js` (in-memory draft, survives navigation)
 - `components/ParameterEditor.jsx` — the full parameter editor, used on BOTH `/design` and `/results`; it renders the groups in `pages/SearchPage/` (`PrimerConstraintsGroup` incl. thermodynamics, `QpcrConditionsGroup`, `DetectionMethodGroup`, `ExperimentalContextGroup`). Add a parameter there and it appears on both pages
 - `pages/ResultsPage/RerunBar.jsx` — "Adjust & re-run" on `/results`: edits a draft of the active run's parameters, runs only on the Re-run button, lists changes, keeps a run switcher (`utils/designRuns.js`, max 8 runs, stored in router state). Re-runs are saved to History and handed back to the designer draft
-- `utils/designRequest.js` — the only `POST /api/design` call and error mapping (designer + re-run); `utils/paramSummary.js` — labels/units for chips, change lists and run labels
+- `utils/designRequest.js` — the only `POST /api/design` call and error mapping (designer + re-run; 60 s timeout because 4.0.0 BLASTs during the design); `utils/paramSummary.js` — labels/units for chips, change lists and run labels
+- **Tiered ranking display (algorithm 4.0.0, `docs/SPEC_ui_tiered_4.0.0.md`)** — a set with `ranking.system === "tiered"` shows grade A/B/C + Specificity/PCR/Flexible tiers (`ResultsSection/TierSummary.jsx`), design-level banners (`TierBanners.jsx`: specificity fallback, BLAST unavailable, fewer than 3 sets, overhang suggestion) and no 0–100 gauge; `total_score` is only the tie-break there. `utils/tierRank.js` is the frontend copy of the backend ranking key (`tiered_scoring.rank_key`) and drives "Why #1 over #2" (`rankReason.js`), "Equivalent in silico" and the RerunBar ★ — keep it in step with the backend; `node frontend/scripts/check_tier_order.mjs` checks it against API top-3 dumps (`backend/scripts/ui_top3_dump.py`). Sets without `ranking` (V4 via API, old History records) keep the gauge + ScoreBreakdown. There is no V4 switch in the UI
 
 ### Tailwind custom colors
 Colors are defined under `theme.extend.colors` (not `theme.colors`) to preserve Tailwind's built-in palette:

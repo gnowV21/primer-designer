@@ -589,6 +589,8 @@ components:
             Ranked forward-primer candidates with sub-scores and structure checks. Every
             set carries v4_rule_violations; tiered sets also carry ranking, and their
             total_score / scores / weights are the detailed (tie-break) score.
+            scores.bound_fraction_binding_pct (cycle-1 occupancy at Ta) is informational
+            in both systems: never weighted, scored or ranked.
           items:
             type: object
             properties:

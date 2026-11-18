@@ -20,6 +20,10 @@ MIR16, MIR16_ID = "UAGCAGCACGUAAAUAUUGGCG", "hsa-miR-16-5p"
 MIR21, MIR21_ID = "UAGCUUAUCAGACUGAUGUUGA", "hsa-miR-21-5p"
 
 
+# Informational keys in a tiered set's scores: shown, never weighted or ranked
+# (bound_fraction_binding_pct = cycle-1 occupancy at Ta, SPEC_ui_tiered_4.0.0 UI-2).
+_INFO_SCORES = {"bound_fraction_binding_pct"}
+
 def _blast_result(risk: str, n_medium: int = 0) -> dict:
     hits = [{"subject_id": f"hsa-miR-x{i}", "risk": "MEDIUM"} for i in range(n_medium)]
     if risk in ("HIGH", "CRITICAL"):
@@ -84,7 +88,8 @@ def test_tiered_sets_carry_ranking_and_v4_compatible_fields(monkeypatch):
     for s in d["top3"]:
         rk = s["ranking"]
         assert s["total_score"] == rk["detailed_score"]
-        assert set(s["weights"]) == set(s["scores"])          # frontend breakdown
+        # frontend breakdown; cycle-1 occupancy is informational (not weighted), as in V4
+        assert set(s["weights"]) == set(s["scores"]) - _INFO_SCORES
         assert abs(sum(s["weights"].values()) - 1.0) < 0.01
         assert rk["specificity"]["max"] == 15 and rk["pcr"]["max"] == 5 and rk["flexible"]["max"] == 20
         assert s["grade"] in ("A", "B") and s["grade_basis"] == "tiers (QD 30)"   # QD 35 defaults
@@ -340,8 +345,9 @@ def test_flags_qd29_qd30_in_the_api(monkeypatch):
         fx = s["ranking"]["flexible"]
         assert fx["max"] == 20 and fx["specific_length"]["report_only"] is True
         assert fx["binding_tm"]["mode"] == "floor (QD 29)"
-        assert "primer_size" not in s["scores"] and set(s["weights"]) == set(s["scores"])
-        assert set(s["explanations"]) == set(s["scores"])
+        assert "primer_size" not in s["scores"]
+        assert set(s["weights"]) == set(s["scores"]) - _INFO_SCORES
+        assert set(s["explanations"]) == set(s["scores"]) - _INFO_SCORES
         assert s["grade"] in ("A", "B") and s["grade_basis"] == "tiers (QD 30)"
         assert (s["grade"] == "A") == (s["grade_reasons"] == [])
 

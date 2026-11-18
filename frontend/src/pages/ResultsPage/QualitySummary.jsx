@@ -103,7 +103,9 @@ export default function QualitySummary({ results, onBlastResult }) {
   // appeared to work "sometimes". Now the reason is always stated.
   const mirnaId = (metadata?.mirna_id || '').trim();
   const fwd = top3[0]?.sequence;
-  const hasArm = mirnaId.endsWith('-5p') || mirnaId.endsWith('-3p');
+  // A miRBase name without an arm (hsa-miR-647) is fine when the target sequence is
+  // sent: the backend then identifies the on-target by sequence, as the design does.
+  const hasArm = mirnaId.endsWith('-5p') || mirnaId.endsWith('-3p') || !!metadata?.mirna_sequence;
 
   let blastBlockedReason = null;
   if (!fwd) {

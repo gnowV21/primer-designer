@@ -158,3 +158,24 @@ def test_route_validates_and_forwards_rt_primer(client, monkeypatch):
                                               "rt_primer": _RT.lower()})
     assert r.status_code == 200
     assert seen["rt_primer"] == _RT
+
+
+def test_route_accepts_armless_name_with_target_sequence(client, monkeypatch):
+    """miRBase 22.1 names without an arm (hsa-miR-647) are refused only when the target
+    sequence is missing; with it the on-target is found by sequence, as at design time
+    (SPEC_ui_tiered_4.0.0 §2.5, "Show all hits")."""
+    import routes.blast_check as rb
+    seen = {}
+
+    def fake_check(**kw):
+        seen.update(kw)
+        return {"summary": {"overall_risk": "SAFE"}, "forward_primer_hits": []}
+    monkeypatch.setattr(rb, "check_offtarget", fake_check)
+    monkeypatch.setattr(rb._cache, "get_result", lambda *a, **k: None)
+    monkeypatch.setattr(rb._cache, "set_result", lambda *a, **k: None)
+    no_seq = client.post("/api/blast-check", json={"forward_primer": _PRIMER, "mirna_id": "hsa-miR-647"})
+    assert no_seq.status_code == 400
+    ok = client.post("/api/blast-check", json={"forward_primer": _PRIMER, "mirna_id": "hsa-miR-647",
+                                               "mirna_sequence": "GUGGCUGCACUCACUUCCUUC"})
+    assert ok.status_code == 200
+    assert seen["mirna_id"] == "hsa-miR-647"

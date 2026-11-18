@@ -191,3 +191,24 @@ test('hsa-miR-590-3p #1 shows the binding-floor chip, the V4-rule chip and grade
   await expect(flags).toContainText('Outside V4 rule: gc_clamp_fail');
   await expect(page.getByTestId('grade-badge').first()).toHaveText(/^B/);
 });
+
+// ── OffTargetPanel: design-time BLAST, then the full hit list agrees (SPEC_ui §2.5) ──
+
+test('"Show all hits" returns the same overall risk as the design-time BLAST', async ({ page }) => {
+  await design(page, MIR21);
+  const card = page.getByTestId('design-blast').first();
+  await expect(card).toBeVisible();
+  const designRisk = (await card.locator('span').first().textContent()).trim();
+  await page.getByRole('button', { name: 'Show all hits' }).first().click();
+  await expect(page.getByText('off-target risk').first()).toBeVisible({ timeout: 70_000 });
+  await expect(page.getByTestId('blast-mismatch')).toHaveCount(0);
+  await expect(page.getByText('RT step included').first()).toBeVisible();
+  expect(designRisk).toMatch(/SAFE|MEDIUM|HIGH|CRITICAL/);
+});
+
+test('ThermoTable shows cycle-1 occupancy for tiered sets', async ({ page }) => {
+  await design(page, MIR21);
+  await page.getByRole('button', { name: /Show scientific details/ }).click();
+  const row = page.getByRole('row', { name: /Cycle-1 occupancy/ });
+  await expect(row).toContainText('%');
+});

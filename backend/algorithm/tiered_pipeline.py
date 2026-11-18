@@ -85,6 +85,8 @@ def _metrics(c: dict, v4_scores: dict, screen_l: dict, ta: float, tm_rev: float)
         "blast_risk": None, "blast_medium_hits": 0, "blast_worst": None,
         "v4_violation": bool(c.get("v4_rule_violations")),   # QD 34 rank step
         "v4_scores": {k: v4_scores[k] for k in _V4_SUBSCORES},
+        # Cycle-1 occupancy at Ta: informational, never scored or ranked (audit SCI-02).
+        "bound_fraction_binding_pct": v4_scores.get("bound_fraction_binding_pct"),
     }
 
 
@@ -282,7 +284,10 @@ def _set_fields(m: dict, r: dict, c: dict, specificity_fallback: bool = False) -
         "grade": grade,
         "grade_basis": "tiers (QD 30)" if K.TIERED_GRADE_BY_TIERS else "detailed score",
         "grade_reasons": grade_reasons,
-        "scores": {k: round(v, 1) for k, v in parts.items()},
+        "scores": {**{k: round(v, 1) for k, v in parts.items()},
+                   # informational, as in V4 (UNSCORED_CRITERIA_V4): not in weights/total
+                   **({"bound_fraction_binding_pct": m["bound_fraction_binding_pct"]}
+                      if m.get("bound_fraction_binding_pct") is not None else {})},
         "weights": weights,
         "weights_nominal": {k: v for k, v in TIERED_DETAIL_WEIGHTS.items() if k in weights},
         "unscored_criteria": [],
