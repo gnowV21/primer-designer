@@ -60,7 +60,8 @@ Mẫu số: 2656 miRNA hsa (miRBase 22.1). V4 có mồi cho 2253; hệ tiered c�
 | `specificity_fallback` · #1 có veto cấu trúc · #1 có Tm vùng bám < 39 °C (trên 2472) | 54 · 120 · 196 | — · 115 `hard_filter_fallback` · — | như trên |
 | Grade #1 A / B / C | 2032 / 386 / 54 | — | như trên |
 | Ma trận hsa, ngoài đường chéo, HIGH / MEDIUM / LOW | 172 / 105 / 22.620 (2472 assay) | 195 / 111 / 20.709 (2253) | `outputs/crossreactivity_*` |
-| Độ nhạy BLAST, 175 mồi validation, biên 10 °C: SAFE / MEDIUM / HIGH / CRITICAL | 105 / 15 / 4 / 51 | 95 / — / — / 54 | `benchmark/blast_tm_gate_sensitivity.json` |
+| Độ nhạy BLAST, 100 mồi stem-loop, biên 10 °C, có bước RT (như app chạy): hit CRITICAL / mồi có hit CRITICAL | 15 / 8 | 17 / 11 | `benchmark/blast_tm_gate_sensitivity.json` (`stem_loop["10_rt_step"]`) |
+| Độ nhạy BLAST, 175 mồi validation (100 stem-loop + 75 Busk poly(A)), biên 10 °C, chỉ mồi xuôi: số mồi SAFE / MEDIUM / HIGH / CRITICAL | 105 / 15 / 4 / 51 | 95 / 22 / 4 / 54 | như trên (`all["10"]`) |
 | Thời gian thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s · p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
 | BLAST gộp so với gọi từng mồi | 0/31.049 lần gọi khác nhau | — | `benchmark/blast_batch_equivalence.json` |
 | Frontend: hàm khóa so với thứ tự API · nút "Show all hits" so với BLAST lúc thiết kế | 2472/2472 · 0/113 bộ khác | — | `benchmark/ui_tier_order_check.json`, `ui_blast_consistency.json` |

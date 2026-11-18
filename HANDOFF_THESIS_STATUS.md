@@ -5,13 +5,15 @@
 
 ## 0. Tóm tắt một đoạn
 
-Đề tài: **công cụ web thiết kế mồi stem-loop RT-qPCR cho miRNA trưởng thành** (phương pháp Chen et al. 2005, NAR 33:e179) của HG Lab. Stack: Flask 3 (Python) + React 18/Vite 5/Tailwind 3. Thiết kế 3 mồi: mồi RT stem-loop, mồi xuôi (forward) đặc hiệu, mồi ngược universal cố định `5'-CCAGTGCAGGGTCCGAGGTA-3'`. Phần mềm đã **hoàn chỉnh về tính năng** (algorithm **3.8.2**, đã qua audit khoa học), đã **kiểm chứng in-silico 2439/2439 check (100 %)** trên 193 miRNA + 4 edge case, đối chiếu với mồi đã công bố. Đang chuẩn bị **bản đóng băng thuật toán 4.0.0** cho khóa luận (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026): mọi số liệu trong khóa luận sẽ lấy từ một phiên bản. 4.0.0 thay chấm điểm V4 bằng **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`); bản V4 3.8.2 là mốc so sánh. **Việc còn thiếu lớn nhất là dữ liệu wet-lab** (hiệu suất qPCR trên mồi do tool thiết kế) và **viết khóa luận**.
+Đề tài: **công cụ web thiết kế mồi stem-loop RT-qPCR cho miRNA trưởng thành** (phương pháp Chen et al. 2005, NAR 33:e179) của HG Lab. Stack: Flask 3 (Python) + React 18/Vite 5/Tailwind 3. Thiết kế 3 mồi: mồi RT stem-loop, mồi xuôi (forward) đặc hiệu, mồi ngược universal cố định `5'-CCAGTGCAGGGTCCGAGGTA-3'`. Phần mềm đã **hoàn chỉnh về tính năng** và đã qua audit khoa học. Thuật toán **đã đóng băng ở algorithm 4.0.0 ngày 2026-11-18** (tag `thesis-freeze-4.0.0`, `docs/THESIS_FREEZE_4.0.0.md`; hạn ban đầu 31/12/2026): mọi số liệu in silico trong khóa luận lấy từ bản này, sau tag chỉ sửa lỗi không đổi output. 4.0.0 thay chấm điểm V4 bằng **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`); V4 3.8.2 là mốc so sánh. Kiểm chứng in silico **2439/2439 check (100 %)** trên 193 miRNA + 4 edge case ở cả 4.0.0 và 3.8.2, đối chiếu với mồi đã công bố. **Việc còn thiếu lớn nhất là dữ liệu wet-lab** (hiệu suất qPCR trên mồi do tool thiết kế) và **viết khóa luận**.
 
 ## 1. Git
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
-- **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; Giai đoạn 2c đạt (SPEC §12). **Giai đoạn 3 xong 2026-11-18** (SPEC §13): số liệu chạy lại, `docs/SCORING_TIERED_COMPARISON.md`, PR vào `master` mở nhưng **không merge cho tới khi xong SPEC UI** (QĐ 31). QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. QĐ 38–41 duyệt 2026-11-18 (validation tiered 2439/2439; S3 giữ làm tròn; cache hit tính trên ngữ cảnh đã có; let-7a-5p là ca wet-lab kiểm đặc hiệu). SPEC UI xong; PR #13 merge 2026-11-18. **Đóng băng 2026-11-18** (PROMPT Phần 4): một lượt chạy toàn bộ pipeline (`backend/scripts/freeze_pipeline.py`) cho mọi file trùng bản đã commit, ma trận hsa dựng lại từ đầu trùng 2656/2656; `docs/THESIS_FREEZE_4.0.0.md`; tag `thesis-freeze-4.0.0`. Sau tag chỉ sửa lỗi không đổi output. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). Đã merge vào `master` qua PR #12 (`26c52bb`).
+- `feat/tiered-scoring` (từ `master` sau PR #12) — hệ phân tầng: Giai đoạn 1 (ngưỡng) duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b (QĐ 33–35, mặc định bật); QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache); Giai đoạn 2c đạt (SPEC §12); Giai đoạn 3 xong 2026-11-18 (SPEC §13, `docs/SCORING_TIERED_COMPARISON.md`); QĐ 38–41 (validation tiered 2439/2439; S3 giữ làm tròn; cache hit tính trên ngữ cảnh đã có; let-7a-5p là ca wet-lab kiểm đặc hiệu); SPEC UI (UI-1, UI-2). Theo QĐ 31, PR chỉ merge sau khi xong SPEC UI: **PR #13 đã merge 2026-11-18** (`c8053af`).
+- `freeze/4.0.0` — **đóng băng 2026-11-18** (PROMPT Phần 4): một lượt chạy toàn bộ pipeline ở commit sạch `dee9352` (`backend/scripts/freeze_pipeline.py`), mọi file trùng bản đã commit, ma trận hsa dựng lại từ đầu trùng 2656/2656; `docs/THESIS_FREEZE_4.0.0.md`. **PR #14 đã merge** (`db29668`); tag có chú thích **`thesis-freeze-4.0.0`** trỏ vào `db29668`, đã đẩy lên GitHub. Sau tag chỉ sửa lỗi không đổi output; muốn đổi output thì tăng `ALGORITHM_VERSION` và đóng băng lại.
+- Commit chỉ được tính trên contribution graph GitHub khi đã vào `master`: làm việc trên nhánh từ `master` → PR → merge commit.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -72,7 +74,8 @@
 | `hard_filter_fallback` hsa | **115/2253** (REV-26) | như cũ (chưa từng báo cáo) | `benchmark/thesis_freeze_impact.json` |
 | Mồi hsa đổi | #1 đổi 13/2253, top 3 đổi 28 (REV-23) | — | pool 3.8.2 vs 3.8.1 |
 | Ma trận phản ứng chéo hsa (ngoài đường chéo) | HIGH 195, MEDIUM 111, LOW 20.709 | 208 / 107 / 20.700; 24 cặp đổi mức, đều thuộc 13 assay đổi #1 | `outputs/crossreactivity_*` |
-| Độ nhạy BLAST (stem-loop, biên 10 °C + bước RT) | CRITICAL 17 hit / 11 mồi | 16 / 10 (file cũ chạy với mồi 3.5.0; 95/175 mồi đã đổi qua 3.6.0–3.8.2; thêm mmu-miR-467c-5p ↔ 467b-5p) | `benchmark/blast_tm_gate_sensitivity.json` |
+| Độ nhạy BLAST — 100 mồi stem-loop, biên 10 °C, **có bước RT** (như app chạy): số hit CRITICAL / số mồi có hit CRITICAL | 17 hit / 11 mồi | 16 / 10 (file cũ chạy với mồi 3.5.0; 95/175 mồi đã đổi qua 3.6.0–3.8.2; thêm mmu-miR-467c-5p ↔ 467b-5p) | `benchmark/blast_tm_gate_sensitivity.json`, `summary.stem_loop["10_rt_step"]` |
+| Độ nhạy BLAST — 175 mồi (100 stem-loop + 75 Busk poly(A)), biên 10 °C, **chỉ mồi xuôi, không bước RT**: số mồi theo mức chung SAFE / MEDIUM / HIGH / CRITICAL | 95 / 22 / 4 / 54 | — | như trên, `summary.all["10"]` |
 | Biến thiên tiêu chí V4 | `family_discrimination` 0 % → 3,5 % pool; `end_stability`, `mfe_stemloop`, `bound_fraction_full` vẫn hằng số; chênh bộ #1 − bộ #2 < 1 điểm ở 1046/2248 | — | `benchmark/thesis_freeze_impact.json` |
 | Thời gian thiết kế (20 hsa, seed 42, 1 tiến trình) | p50 1,38 s | 1,09 s | đo 2026-11-17 |
 | Backend tests | 733 passed, 3 skipped | 714 | 2026-11-17 |
@@ -90,7 +93,8 @@
 | `specificity_fallback` / `structure_veto` #1 / dưới sàn 39 °C #1 | 54 / 120 / 196 (của 2472) | — / 115 `hard_filter_fallback` / — | như trên |
 | Grade #1 A/B/C | 2032/386/54 (2472) | — | như trên |
 | Ma trận hsa ngoài đường chéo HIGH/MEDIUM/LOW | 172 / 105 / 22.620 (2472 assay) | 195 / 111 / 20.709 (2253) | `outputs/crossreactivity_*` |
-| Độ nhạy BLAST, 175 mồi validation, lề 10 °C: SAFE / CRITICAL | 105 / 51 | 95 / 54 | `benchmark/blast_tm_gate_sensitivity.json` |
+| Độ nhạy BLAST — 100 mồi stem-loop, biên 10 °C, có bước RT (như app chạy): hit CRITICAL / mồi có hit CRITICAL | **15 / 8** | 17 / 11 | `benchmark/blast_tm_gate_sensitivity.json`, `summary.stem_loop["10_rt_step"]` |
+| Độ nhạy BLAST — 175 mồi (100 stem-loop + 75 Busk poly(A)), biên 10 °C, chỉ mồi xuôi, không bước RT: số mồi SAFE / MEDIUM / HIGH / CRITICAL | 105 / 15 / 4 / 51 | 95 / 22 / 4 / 54 | như trên, `summary.all["10"]` |
 | Thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s, p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
 | Backend tests / e2e / `crossreactivity/tests` | 908 passed, 3 skipped / **109/109** (cache làm nóng bằng `e2e/global-setup.js`, chờ thiết kế 30 s) / 29 | 733 / 74 / 29 | 2026-11-18 |
 
@@ -128,7 +132,7 @@
 **Ưu tiên cao (cho khóa luận):**
 1. ~~**Bản đóng băng 4.0.0**~~ — **xong 2026-11-18**, tag `thesis-freeze-4.0.0` (`docs/THESIS_FREEZE_4.0.0.md`; giới hạn chuyển sang Thảo luận ở §4 của file đó). Các mục dưới giữ để tra cứu:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–41) + SPEC UI: xong, đã merge (PR #13). Việc tiếp: **Phần 5 của PROMPT** — `docs/WETLAB_CANDIDATES.md` (chủ dự án chốt danh sách ứng viên; ca kiểm đặc hiệu let-7a-5p theo QĐ 41).
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–41) + SPEC UI: xong, đã merge (PR #13). Việc tiếp: **Phần 5 của PROMPT** — lập `docs/WETLAB_CANDIDATES.md` (**chưa tạo**; chủ dự án chốt danh sách ứng viên; ca kiểm đặc hiệu let-7a-5p theo QĐ 41).
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.
@@ -139,7 +143,7 @@
    - Đo hiệu suất RT theo overhang 5/6/7 nt; kiểm tra sai số Tm amplicon (≥5 bộ).
    - **Ca kiểm đặc hiệu của hệ phân tầng: hsa-let-7a-5p** (QĐ 41, SPEC_scoring_tiered_4.0.0; dùng cho Phần 5 của `docs/PROMPT_thesis_freeze_4.0.0.md`). let-7a là thiết kế `specificity_fallback`: mọi ứng viên đều bị loại vì let-7d-5p (ΔCq assay dự đoán **1,43**, CO-AMPLIFIED). Thí nghiệm: chạy assay let-7a (bộ #1 do tool 4.0.0 xuất) trên oligo tổng hợp let-7a-5p và let-7d-5p cùng nồng độ, đo ΔCq = Cq(let-7d) − Cq(let-7a) để có tín hiệu chéo thật, rồi so với 1,43. Có trong `benchmark/tiered_fallback_list.csv`.
    - **Cross-reactivity cho cổng Tm BLAST:** mồi xuôi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C vs 44,3 °C đúng đích; trước v2 bị xếp CRITICAL). < 5 % → bằng chứng trực tiếp cho biên 10 °C.
-3. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 14 tiêu chí V4 (13 được chấm), nhiệt động học, BLAST 3'-anchoring + cổng Tm duplex, LNA) → Kết quả (validation 2439/2439, so sánh mồi công bố, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155-5p 24 nt ở miRBase 22.1 khác bản 23 nt mà các bài cũ dùng, dữ liệu miRBase 22.1). *("BLAST không mô hình bước RT" đã sửa ở BLAST classifier v7, REV-13 — không còn là giới hạn.)*
+3. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán; **hệ phân tầng 4.0.0** — đặc hiệu S, veto mềm, luật V4, PCR P, linh hoạt F, điểm chi tiết phá hòa — với V4 3.8.2 (14 tiêu chí, 13 được chấm) làm mốc so sánh; nhiệt động học; BLAST 3'-anchoring + cổng Tm duplex + bước RT; mô hình ΔCq assay; LNA) → Kết quả (số liệu 4.0.0 ở `docs/THESIS_FREEZE_4.0.0.md`: validation 2439/2439, so sánh mồi công bố, độ phủ hsa, ma trận phản ứng chéo, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155-5p 24 nt ở miRBase 22.1 khác bản 23 nt mà các bài cũ dùng, dữ liệu miRBase 22.1). *("BLAST không mô hình bước RT" đã sửa ở BLAST classifier v7, REV-13 — không còn là giới hạn.)*
 4. **Nâng miRBase lên Release 23.1** (mốc riêng, đổi số liệu): build lại DB BLAST (xử lý 10 tên trùng cho `-parse_seqids`), chỉ mục family + overhang; từ 3.8.2 route `/api/mirbase` chỉ phục vụ bản cục bộ 22.1, tra online gắn nhãn "release unknown"; chạy lại validation + benchmark + độ nhạy BLAST.
 
 **Ưu tiên thấp / tùy chọn:**
@@ -153,9 +157,11 @@
 ## 6. Tài liệu trong repo nên đọc trước
 
 - `CLAUDE.md` — lệnh chạy, kiến trúc, quy tắc.
+- `docs/THESIS_FREEZE_4.0.0.md` — bản đóng băng: phiên bản thành phần, cách tái lập, số liệu chính thức, giới hạn cho Thảo luận.
+- `docs/SPEC_scoring_tiered_4.0.0.md` (QĐ 1–41) — hệ phân tầng; `docs/SPEC_ui_tiered_4.0.0.md` — giao diện của nó; `docs/SCORING_TIERED_COMPARISON.md` — so với V4.
 - `AUDIT_REPORT.md` — audit khoa học + trạng thái xử lý (§10) + mục cần wet-lab (§4).
 - `validation/VALIDATION_PLAN.md`, `validation/VALIDATION_REPORT.md` — phương pháp và kết quả kiểm chứng.
-- `SPEC_algorithm.md`, `SPEC_phase3.md` (BLAST, §8.10–8.15), `SPEC_visualization.md`.
+- `SPEC_algorithm.md`, `SPEC_phase3.md` (BLAST, §8.10–8.19; classifier v7 có bước RT ở §8.19), `SPEC_visualization.md`.
 - `docs/archive/` — spec/kế hoạch của các phase đã xong (vd. `SPEC_week1.md`: bảng trạng thái các phase; `SPEC_phase2.md`, `SPEC_phase4…8.md`, `RESEARCH_INSIGHTS*.md`). Tài liệu nhắc tới các file này chỉ bằng tên.
 - `benchmark/primer_benchmark_export.csv` — so sánh mồi tool vs mồi công bố.
 
