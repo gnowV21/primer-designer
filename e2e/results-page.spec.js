@@ -1,5 +1,5 @@
 // E2E tests for ResultsPage — Phase 4 §4/§5/§6/§7.4
-// Covers: state handoff from the designer, empty-state, Quality Summary,
+// Covers: state handoff from the designer, empty-state, removed panels,
 // ThermoTable tabs, EdgeCaseBanner, Back navigation.
 
 import { test, expect } from '@playwright/test';
@@ -65,18 +65,22 @@ test('algorithm version badge visible on results page', async ({ page }) => {
   await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible();
 });
 
-// ── Quality Summary ───────────────────────────────────────────────
+// ── Removed panels (owner's request 2026-11-18) ───────────────────
 
-test('Quality Summary panel is visible', async ({ page }) => {
+test('Quality Summary and Normalization advisor are not on the results page', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText('Quality Summary').first()).toBeVisible();
+  await expect(page.getByText('Quality Summary')).toHaveCount(0);
+  await page.getByRole('button', { name: /Show scientific details/ }).click();
+  await expect(page.getByText(/Normalization/i)).toHaveCount(0);
 });
 
-test('Off-target BLAST not run shows Run check button', async ({ page }) => {
+test('parameters used are listed vertically, one per line', async ({ page }) => {
   await runDesign(page);
-  await page.getByText('Quality Summary').first().click();   // collapsed by default
-  await expect(page.getByText('Off-target (BLAST) — run to include in the exported report.')).toBeVisible();
-  await expect(page.getByText('Run check')).toBeVisible();
+  const rows = page.getByTestId('param-list').locator('dt');
+  await expect(rows).toHaveCount(6);
+  const [a, b] = [await rows.nth(0).boundingBox(), await rows.nth(1).boundingBox()];
+  expect(b.y).toBeGreaterThan(a.y);
+  expect(Math.abs(b.x - a.x)).toBeLessThan(2);
 });
 
 // ── Primer set cards ──────────────────────────────────────────────

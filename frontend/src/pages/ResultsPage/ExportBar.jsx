@@ -72,9 +72,6 @@ export default function ExportBar({ results, blastResult }) {
       <p className="text-xs text-slate-500 leading-relaxed">
         PDF: full report (comparison, scientific notes, off-target, MIQE checklist).
         CSV: Excel-compatible data + specificity + checklist. FASTA: synthesis-order-ready.
-        {!blastResult && (
-          <span className="text-amber-600"> Run the Off-target (BLAST) check above to include it in the report.</span>
-        )}
       </p>
     </div>
   );

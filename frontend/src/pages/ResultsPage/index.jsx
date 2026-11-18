@@ -6,13 +6,11 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EdgeCaseBanner from './EdgeCaseBanner.jsx';
-import QualitySummary from './QualitySummary.jsx';
 import ThermoTable from './ThermoTable.jsx';
 import ExportBar from './ExportBar.jsx';
 import RerunBar from './RerunBar.jsx';
 import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 import ProbeCard from '../../components/ProbeCard.jsx';
-import NormalizationAdvisor from '../../components/NormalizationAdvisor.jsx';
 import VisualizationPanel from '../../components/VisualizationPanel.jsx';
 import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
 import useDraftState, { setDraft } from '../../hooks/useDraftState.js';
@@ -27,9 +25,6 @@ export default function ResultsPage() {
   const activeRun = runs.find((r) => r.id === activeId);
 
   const [rerunning, setRerunning] = useState(false);
-  // BLAST runs on demand inside QualitySummary; kept per run so the export of
-  // run #2 never carries run #1's BLAST report.
-  const [blastByRun, setBlastByRun] = useState({});
   // The scientific panels start folded; once opened they stay open for the session.
   const [showDetails, setShowDetails] = useDraftState('results.showDetails', false);
 
@@ -54,7 +49,9 @@ export default function ResultsPage() {
   const { results, params } = activeRun;
   const signalMethod = params?.detectionMethod?.signalMethod ?? 'taqman';
   const isTaqMan = signalMethod === 'taqman';
-  const { top3, metadata, edge_cases = [], lna_hints = null, probe, probe_note, normalization_advice = null } = results;
+  // normalization_advice and the quality summary stay in the API and the PDF/CSV
+  // export; they are not on the page (review 2026-11-18, owner's request).
+  const { top3, metadata, edge_cases = [], lna_hints = null, probe, probe_note } = results;
 
   /** Run the design again with tuned parameters; on success it becomes the active run. */
   async function handleRerun(form) {
@@ -80,7 +77,20 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-12">
+    // Wide screens: "Parameters used" is a fixed left column (sticky inside the <main>
+    // scroll container) and the results are the column on the right. Phones and
+    // tablets: the parameters sit on top, as before.
+    <div className="max-w-6xl mx-auto pb-12 space-y-6 lg:space-y-0 lg:flex lg:items-start lg:gap-6">
+      <RerunBar
+        runs={runs}
+        activeRun={activeRun}
+        running={rerunning}
+        onRerun={handleRerun}
+        onSelectRun={selectRun}
+        sidebar
+      />
+
+      <div className="min-w-0 flex-1 max-w-3xl mx-auto space-y-6">
 
       {/* ── Page header (wraps under the title on phones) ── */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
@@ -105,15 +115,6 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {/* ── Parameters used + adjust & re-run + run switcher ── */}
-      <RerunBar
-        runs={runs}
-        activeRun={activeRun}
-        running={rerunning}
-        onRerun={handleRerun}
-        onSelectRun={selectRun}
-      />
-
       {/* Keyed by run: switching runs remounts every panel, so no state leaks across. */}
       <div
         key={activeRun.id}
@@ -125,12 +126,6 @@ export default function ResultsPage() {
 
         {/* ── Primer set cards (reuse Phase 2/3 ResultsSection) ── */}
         <ResultsSection results={results} error={null} hideHeader />
-
-        {/* ── Quality summary (below the primer sets) ── */}
-        <QualitySummary
-          results={results}
-          onBlastResult={(r) => setBlastByRun((m) => ({ ...m, [activeRun.id]: r }))}
-        />
 
         {/* ── Detection mode section ── */}
         {isTaqMan && probe && (
@@ -165,7 +160,7 @@ export default function ResultsPage() {
           <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           {showDetails ? 'Hide scientific details' : 'Show scientific details'}
           <span className="text-xs font-normal text-slate-500">
-            thermodynamics · normalization
+            thermodynamics
           </span>
         </button>
 
@@ -178,11 +173,6 @@ export default function ResultsPage() {
               </h2>
               <ThermoTable results={results} params={params} />
             </div>
-
-            {/* ── Normalization Advisor (Phase 7 §D) — shown when sample_type provided ── */}
-            {normalization_advice && (
-              <NormalizationAdvisor advice={normalization_advice} />
-            )}
 
             {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
             {lna_hints?.applicable && (
@@ -204,7 +194,8 @@ export default function ResultsPage() {
         )}
 
         {/* ── Export bar — always available ── */}
-        <ExportBar results={results} blastResult={blastByRun[activeRun.id] ?? null} />
+        <ExportBar results={results} />
+      </div>
       </div>
     </div>
   );

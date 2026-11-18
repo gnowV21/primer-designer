@@ -6,7 +6,23 @@
  */
 import { summarizeParams } from '../utils/paramSummary.js';
 
-export default function ParamChips({ params, highlight = new Set(), className = '' }) {
+export default function ParamChips({ params, highlight = new Set(), className = '', layout = 'chips' }) {
+  if (layout === 'list') {
+    // Vertical: one parameter per line, label left, value right (results page).
+    return (
+      <dl className={`divide-y divide-slate-100 text-xs ${className}`} data-testid="param-list">
+        {summarizeParams(params).map(({ path, label, value }) => {
+          const changed = highlight.has(path);
+          return (
+            <div key={path} className="flex items-baseline justify-between gap-4 py-1">
+              <dt className="font-semibold text-slate-700">{label}</dt>
+              <dd className={`tabular-nums text-right ${changed ? 'text-teal-800 font-semibold' : 'text-slate-700'}`}>{value}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    );
+  }
   return (
     <div className={`flex flex-wrap gap-1.5 ${className}`}>
       {summarizeParams(params).map(({ path, text }) => {
