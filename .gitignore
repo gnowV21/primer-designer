@@ -69,6 +69,7 @@ outputs/crossreactivity_cache/
 
 # Recorded candidate pools of backend/scripts/thesis_freeze_impact.py (regenerable)
 outputs/freeze_cache/
+outputs/freeze_matrix/
 
 # Local archive of the repository (not source)
 primer-designer.zip
