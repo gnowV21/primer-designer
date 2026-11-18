@@ -135,6 +135,10 @@ def offline(a):
         s1 = ([ts.s1_blast(m["blast_risk"], m["blast_medium_hits"]) for m in ms] if name == "v4_382"
               else [t1(name, n)["_r"]["specificity"]["blast"] for n in names])
         col["top1_s1_level"] = dict(sorted(Counter(s1).items()))
+        dcq = [m["min_delta_cq"] for m in ms]
+        col["top1_s2_level"] = dict(sorted(Counter(ts.s2_assay_dcq(x) for x in dcq).items()))
+        col["top1_min_delta_cq"] = {"ge_10_cq (None)": sum(x is None for x in dcq),
+                                    "below_10": dist([x for x in dcq if x is not None])}
         if name != "v4_382":
             cfg, per = R[name]
             col["top1_changed_vs_v4"] = sum(t1(name, n)["_m"]["sequence"] != v4_top1[n]["sequence"]
@@ -153,6 +157,7 @@ def offline(a):
                                                 for x in per[n]["grade"]["reasons"]).most_common())
             col["specificity_fallback"] = sum(per[n]["res"]["specificity_fallback"] for n in names)
             col["designs_with_eliminated"] = sum(per[n]["res"]["eliminated"] > 0 for n in names)
+            col["fewer_than_3_sets"] = sum(len(per[n]["top"]) < CANDIDATES_TOP_N for n in names)
             col["top1_structure_veto"] = sum(t1(name, n)["_r"]["structure_veto"] for n in names)
             col["top1_binding_floor_fail"] = sum(bool(t1(name, n)["_r"]["binding_floor_fail"]) for n in names)
             # S1 improvement over the V4 #1

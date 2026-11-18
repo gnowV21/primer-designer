@@ -100,6 +100,27 @@
     "4": 72,
     "5": 2319
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 48,
+    "3": 48,
+    "4": 2257,
+    "5": 80
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 80,
+    "below_10": {
+     "n": 2392,
+     "mean": 8.0,
+     "p05": 5.57,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1670,
    "top1_changed_vs_final_without_qd36": 639,
    "top1_vs_top2_decided_by": {
@@ -127,6 +148,7 @@
    },
    "specificity_fallback": 54,
    "designs_with_eliminated": 383,
+   "fewer_than_3_sets": 2,
    "top1_structure_veto": 120,
    "top1_binding_floor_fail": 0,
    "v4_top1_s1_le_2": 85,
@@ -196,6 +218,27 @@
     "4": 72,
     "5": 2319
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 48,
+    "3": 48,
+    "4": 2257,
+    "5": 80
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 80,
+    "below_10": {
+     "n": 2392,
+     "mean": 8.0,
+     "p05": 5.69,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1764,
    "top1_changed_vs_final_without_qd36": 182,
    "top1_vs_top2_decided_by": {
@@ -223,6 +266,7 @@
    },
    "specificity_fallback": 54,
    "designs_with_eliminated": 383,
+   "fewer_than_3_sets": 2,
    "top1_structure_veto": 120,
    "top1_binding_floor_fail": 237,
    "v4_top1_s1_le_2": 85,
@@ -291,6 +335,27 @@
     "4": 72,
     "5": 2319
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 48,
+    "3": 48,
+    "4": 2257,
+    "5": 80
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 80,
+    "below_10": {
+     "n": 2392,
+     "mean": 8.0,
+     "p05": 5.69,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1717,
    "top1_changed_vs_final_without_qd36": 0,
    "top1_vs_top2_decided_by": {
@@ -320,6 +385,7 @@
    },
    "specificity_fallback": 54,
    "designs_with_eliminated": 383,
+   "fewer_than_3_sets": 2,
    "top1_structure_veto": 120,
    "top1_binding_floor_fail": 262,
    "v4_top1_s1_le_2": 85,
@@ -379,6 +445,27 @@
     "4": 72,
     "5": 2319
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 48,
+    "3": 48,
+    "4": 2257,
+    "5": 80
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 80,
+    "below_10": {
+     "n": 2392,
+     "mean": 8.0,
+     "p05": 5.69,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1723,
    "top1_changed_vs_final_without_qd36": 66,
    "top1_vs_top2_decided_by": {
@@ -409,6 +496,7 @@
    },
    "specificity_fallback": 54,
    "designs_with_eliminated": 383,
+   "fewer_than_3_sets": 2,
    "top1_structure_veto": 120,
    "top1_binding_floor_fail": 196,
    "v4_top1_s1_le_2": 85,
@@ -475,6 +563,27 @@
     "3": 34,
     "4": 115,
     "5": 2019
+   },
+   "top1_s2_level": {
+    "1": 55,
+    "2": 49,
+    "3": 61,
+    "4": 2011,
+    "5": 77
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 77,
+    "below_10": {
+     "n": 2176,
+     "mean": 7.91,
+     "p05": 4.45,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 9.8
+    }
    }
   },
   "tiered_g2": {
@@ -509,6 +618,27 @@
     "4": 68,
     "5": 2107
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 45,
+    "3": 48,
+    "4": 2043,
+    "5": 78
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 78,
+    "below_10": {
+     "n": 2175,
+     "mean": 7.98,
+     "p05": 5.11,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1670,
    "top1_changed_vs_final_without_qd36": 593,
    "top1_vs_top2_decided_by": {
@@ -536,6 +666,7 @@
    },
    "specificity_fallback": 53,
    "designs_with_eliminated": 371,
+   "fewer_than_3_sets": 0,
    "top1_structure_veto": 77,
    "top1_binding_floor_fail": 0,
    "v4_top1_s1_le_2": 85,
@@ -605,6 +736,27 @@
     "4": 68,
     "5": 2107
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 45,
+    "3": 48,
+    "4": 2043,
+    "5": 78
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 78,
+    "below_10": {
+     "n": 2175,
+     "mean": 7.98,
+     "p05": 5.11,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1764,
    "top1_changed_vs_final_without_qd36": 178,
    "top1_vs_top2_decided_by": {
@@ -632,6 +784,7 @@
    },
    "specificity_fallback": 53,
    "designs_with_eliminated": 371,
+   "fewer_than_3_sets": 0,
    "top1_structure_veto": 77,
    "top1_binding_floor_fail": 211,
    "v4_top1_s1_le_2": 85,
@@ -700,6 +853,27 @@
     "4": 68,
     "5": 2107
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 45,
+    "3": 48,
+    "4": 2043,
+    "5": 78
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 78,
+    "below_10": {
+     "n": 2175,
+     "mean": 7.98,
+     "p05": 5.11,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1717,
    "top1_changed_vs_final_without_qd36": 0,
    "top1_vs_top2_decided_by": {
@@ -729,6 +903,7 @@
    },
    "specificity_fallback": 53,
    "designs_with_eliminated": 371,
+   "fewer_than_3_sets": 0,
    "top1_structure_veto": 77,
    "top1_binding_floor_fail": 236,
    "v4_top1_s1_le_2": 85,
@@ -788,6 +963,27 @@
     "4": 68,
     "5": 2107
    },
+   "top1_s2_level": {
+    "1": 39,
+    "2": 45,
+    "3": 48,
+    "4": 2043,
+    "5": 78
+   },
+   "top1_min_delta_cq": {
+    "ge_10_cq (None)": 78,
+    "below_10": {
+     "n": 2175,
+     "mean": 7.98,
+     "p05": 5.11,
+     "p25": 8.3,
+     "median": 8.3,
+     "p75": 8.3,
+     "p95": 8.3,
+     "min": 0.0,
+     "max": 8.3
+    }
+   },
    "top1_changed_vs_v4": 1723,
    "top1_changed_vs_final_without_qd36": 58,
    "top1_vs_top2_decided_by": {
@@ -818,6 +1014,7 @@
    },
    "specificity_fallback": 53,
    "designs_with_eliminated": 371,
+   "fewer_than_3_sets": 0,
    "top1_structure_veto": 77,
    "top1_binding_floor_fail": 178,
    "v4_top1_s1_le_2": 85,

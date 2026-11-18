@@ -1,0 +1,16 @@
+{
+ "spec": "docs/SPEC_scoring_tiered_4.0.0.md Giai đoạn 3 C (QD 37)",
+ "cache_rows": 215985,
+ "designs": 2472,
+ "pool_candidates": 217780,
+ "candidates_in_cache": 215860,
+ "designs_with_all_some_none_candidates_in_cache": {
+  "all": 2426,
+  "some": 46
+ },
+ "s1_level_different": 0,
+ "risk_or_medium_count_different": 0,
+ "examples": [],
+ "note": "Candidates not in the cache were not BLASTed by the pipeline (S2 eliminated them outside a fallback design) or the design failed.",
+ "pass": true
+}

@@ -1,0 +1,74 @@
+{
+ "ath": {
+  "blast_candidates": 360,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 360,
+  "cache_write_errors": 0,
+  "designs": 5,
+  "new_blast_calls": 0
+ },
+ "bta": {
+  "blast_candidates": 100,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 100,
+  "cache_write_errors": 0,
+  "designs": 1,
+  "new_blast_calls": 0
+ },
+ "cel": {
+  "blast_candidates": 100,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 100,
+  "cache_write_errors": 0,
+  "designs": 1,
+  "new_blast_calls": 0
+ },
+ "ebv": {
+  "blast_candidates": 3067,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 3067,
+  "cache_write_errors": 0,
+  "designs": 30,
+  "new_blast_calls": 0
+ },
+ "gga": {
+  "blast_candidates": 120,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 120,
+  "cache_write_errors": 0,
+  "designs": 1,
+  "new_blast_calls": 0
+ },
+ "hsa": {
+  "blast_candidates": 8180,
+  "cache_hit_rate": 0.9169,
+  "cache_hits": 7500,
+  "cache_write_errors": 0,
+  "designs": 84,
+  "new_blast_calls": 680
+ },
+ "mmu": {
+  "blast_candidates": 3866,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 3866,
+  "cache_write_errors": 0,
+  "designs": 39,
+  "new_blast_calls": 0
+ },
+ "osa": {
+  "blast_candidates": 540,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 540,
+  "cache_write_errors": 0,
+  "designs": 7,
+  "new_blast_calls": 0
+ },
+ "ssc": {
+  "blast_candidates": 5200,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 5200,
+  "cache_write_errors": 0,
+  "designs": 55,
+  "new_blast_calls": 0
+ }
+}
