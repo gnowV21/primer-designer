@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18, Giai đoạn 3 của hệ phân tầng)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18, đóng băng algorithm 4.0.0)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; Giai đoạn 2c đạt (SPEC §12). **Giai đoạn 3 xong 2026-11-18** (SPEC §13): số liệu chạy lại, `docs/SCORING_TIERED_COMPARISON.md`, PR vào `master` mở nhưng **không merge cho tới khi xong SPEC UI** (QĐ 31). QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. QĐ 38–41 duyệt 2026-11-18 (validation tiered 2439/2439; S3 giữ làm tròn; cache hit tính trên ngữ cảnh đã có; let-7a-5p là ca wet-lab kiểm đặc hiệu). SPEC UI (`docs/SPEC_ui_tiered_4.0.0.md`): UI-1 + UI-2 xong, chờ duyệt merge PR #13. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; Giai đoạn 2c đạt (SPEC §12). **Giai đoạn 3 xong 2026-11-18** (SPEC §13): số liệu chạy lại, `docs/SCORING_TIERED_COMPARISON.md`, PR vào `master` mở nhưng **không merge cho tới khi xong SPEC UI** (QĐ 31). QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. QĐ 38–41 duyệt 2026-11-18 (validation tiered 2439/2439; S3 giữ làm tròn; cache hit tính trên ngữ cảnh đã có; let-7a-5p là ca wet-lab kiểm đặc hiệu). SPEC UI xong; PR #13 merge 2026-11-18. **Đóng băng 2026-11-18** (PROMPT Phần 4): một lượt chạy toàn bộ pipeline (`backend/scripts/freeze_pipeline.py`) cho mọi file trùng bản đã commit, ma trận hsa dựng lại từ đầu trùng 2656/2656; `docs/THESIS_FREEZE_4.0.0.md`; tag `thesis-freeze-4.0.0`. Sau tag chỉ sửa lỗi không đổi output. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -55,10 +55,11 @@
 | 2026-11-17 | **Algorithm 3.8.2 — mốc V4 cho 4.0.0** (AUDIT §10.5). REV-23: `family_discrimination` chấm theo độ dài vùng đặc hiệu của từng ứng viên (#1 đổi ở 13/2253 hsa, top 3 ở 28; #1 CO-AMPLIFIED 52 → 45). REV-21: lọc cứng dimer đầu 3′ theo Tm ≥ 47 °C của Primer3 (không đổi output). `end_stability` tính đúng định nghĩa Primer3 (điểm không đổi, giá trị hiển thị đổi). Nguồn miRBase: release + sha256 vào provenance và file xuất MIQE; trình tự ngoài 22.1 có cảnh báo `sequence_not_in_mirbase_release`; kết quả tra online gắn nhãn "online, release unknown" và không ghi cache. Validation 2439/2439 (`results.csv` không đổi dòng nào); benchmark 50/50; ma trận hsa ngoài đường chéo HIGH 208 → 195, MEDIUM 107 → 111, LOW 20.700 → 20.709. |
 | 2026-11-17/18 | **Algorithm 4.0.0, hệ phân tầng — Giai đoạn 1–2** (nhánh `feat/tiered-scoring`, SPEC §9–10). Xếp hạng Đặc hiệu (BLAST S1, ΔCq assay S2, biên Tm S3) → veto cấu trúc → PCR (Tm − Ta) → Linh hoạt → điểm chi tiết; mặc định `tiered`, V4 sau cờ `scoringSystem`. BLAST gộp (1 `blastn` multi-FASTA chia 8 tiến trình + 1 `blastdbcmd`/thiết kế): 212 s → ~8 s, giống từng hit trên 31.049 lần gọi. Thiết kế không cache p50 9,8 s / p90 11,9 s. Trên 2472 hsa có BLAST: #1 khác V4 1670/2253, fallback 54, 219/403 miRNA V4 không thiết kế được nay có mồi (`v4_rule_violations` đánh dấu). |
 | 2026-11-18 | **Giao diện cho hệ phân tầng** (`docs/SPEC_ui_tiered_4.0.0.md`, UI-1 + UI-2). Thẻ bộ mồi: grade A/B/C + 3 tầng (bỏ đồng hồ 0–100), chip mức từng tiêu chí, chip veto / luật V4 / loại; banner fallback (nêu off-target, khuyên đối chứng chéo), thiếu BLAST, ít bộ, gợi ý overhang; câu "#1 so với #2" theo bước quyết định của khóa; nhãn "Equivalent in silico"; ThermoTable, RerunBar (★ theo khóa), History, xuất TSV/FASTA/CSV/PDF theo tầng. `utils/tierRank.js` là bản frontend của khóa xếp hạng: trùng thứ tự API 2472/2472. Nút "Show all hits" gửi mồi RT và so với BLAST lúc thiết kế: 0/113 bộ khác; sửa kèm route `/api/blast-check` từ chối 828/2656 tên hsa không có -5p/-3p dù đã có trình tự đích. Bộ tiered báo thêm cycle-1 occupancy (thông tin, không chấm). Giới hạn chờ thiết kế của app 15 → 60 s |
+| 2026-11-18 | **Đóng băng algorithm 4.0.0** (PROMPT Phần 4, tag `thesis-freeze-4.0.0`). Một lượt chạy toàn bộ pipeline ở một commit sạch (`backend/scripts/freeze_pipeline.py`, provenance `benchmark/logs/freeze_run.json`): validation 2439/2439, V4 trùng 3.8.2, benchmark 50/50, export 223/224, độ nhạy BLAST — mọi file trùng bản đã commit; ma trận hsa thiết kế lại từ đầu trùng 2656/2656 bản ghi. Biến thiên tiêu chí của 4.0.0: `benchmark/freeze_criterion_variation.json`. Test: backend 908, e2e 109/109, crossreactivity 29. `docs/THESIS_FREEZE_4.0.0.md` |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
-> **Số liệu dưới đây là của algorithm 3.8.2 (2026-11-17), mốc V4 để so với hệ phân tầng 4.0.0**, và sẽ bị thay bằng bản 4.0.0 (chạy lại một lần ở Phần 4 của `docs/PROMPT_thesis_freeze_4.0.0.md`). Không trích số nào của mục này vào khóa luận trước khi có `docs/THESIS_FREEZE_4.0.0.md`.
+> **Bảng đầu là số liệu algorithm 3.8.2 (V4), mốc so sánh. Số liệu chính thức của khóa luận là của 4.0.0** — bảng thứ hai, và đầy đủ trong `docs/THESIS_FREEZE_4.0.0.md` (tag `thesis-freeze-4.0.0`, tái lập bằng một lượt chạy toàn bộ pipeline ngày 2026-11-18).
 
 | Số liệu | Giá trị (3.8.2) | So với 3.8.1 | Nguồn |
 |---|---|---|---|
@@ -78,7 +79,7 @@
 | E2E Playwright | 74/74 | — (lần trước 2026-11-03) | 2026-11-17 |
 | Ma trận: test `crossreactivity/tests` | 29 passed | — | 2026-11-17 |
 
-**Số liệu algorithm 4.0.0** (nhánh `feat/tiered-scoring`, chưa merge — QĐ 31; chi tiết `docs/SCORING_TIERED_COMPARISON.md`, SPEC §13):
+**Số liệu algorithm 4.0.0 — bản đóng băng** (tag `thesis-freeze-4.0.0`; chi tiết `docs/THESIS_FREEZE_4.0.0.md`, `docs/SCORING_TIERED_COMPARISON.md`):
 
 | Số liệu | 4.0.0 tiered | 3.8.2 (V4) | Nguồn |
 |---|---|---|---|
@@ -125,9 +126,9 @@
 ## 5. Việc còn tồn / bước tiếp theo đề xuất cho khóa luận
 
 **Ưu tiên cao (cho khóa luận):**
-1. **Bản đóng băng 4.0.0** (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026) — các mục còn mở cần xử lý hoặc ghi thành giới hạn trước khi đóng băng:
+1. ~~**Bản đóng băng 4.0.0**~~ — **xong 2026-11-18**, tag `thesis-freeze-4.0.0` (`docs/THESIS_FREEZE_4.0.0.md`; giới hạn chuyển sang Thảo luận ở §4 của file đó). Các mục dưới giữ để tra cứu:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Giai đoạn 1–3 xong (SPEC §9–13); cấu hình cuối = QĐ 29 + 30 + 33 + 34 + 36, mặc định bật. **SPEC UI** (`docs/SPEC_ui_tiered_4.0.0.md`): UI-1 xong 2026-11-18 (thẻ grade + 3 tầng, banner fallback / BLAST / ít bộ / overhang, câu "#1 so với #2" theo bước quyết định của khóa, "Equivalent in silico", ThermoTable, RerunBar, History, xuất CSV/PDF; hàm khóa phía frontend trùng thứ tự API 2472/2472); UI-2 (CLAUDE.md, HANDOFF, PR, chỉ số cycle-1 cho bộ tiered, kiểm tra nút "Show all hits") chờ duyệt merge. Việc tiếp: merge PR #13 và Phần 4–5 của PROMPT.
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–41) + SPEC UI: xong, đã merge (PR #13). Việc tiếp: **Phần 5 của PROMPT** — `docs/WETLAB_CANDIDATES.md` (chủ dự án chốt danh sách ứng viên; ca kiểm đặc hiệu let-7a-5p theo QĐ 41).
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.

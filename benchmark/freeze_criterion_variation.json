@@ -1,0 +1,126 @@
+{
+ "source": "outputs/freeze_cache/tiered_pools_hsa.jsonl.gz + tiered_blast_full_hsa.jsonl.gz",
+ "denominator_designs": 2472,
+ "ranked_pool_size_median": 100.0,
+ "best_S_group_size_median": 80.0,
+ "varies_in_pool": {
+  "S1_blast": {
+   "n": 1196,
+   "pct": 48.4
+  },
+  "S2_assay_dcq": {
+   "n": 103,
+   "pct": 4.2
+  },
+  "S3_tm_margin": {
+   "n": 351,
+   "pct": 14.2
+  },
+  "P2_tm_vs_ta": {
+   "n": 299,
+   "pct": 12.1
+  },
+  "F1_gc": {
+   "n": 523,
+   "pct": 21.2
+  },
+  "F2_gc_clamp": {
+   "n": 2085,
+   "pct": 84.3
+  },
+  "F4_binding_tm_floor": {
+   "n": 1979,
+   "pct": 80.1
+  },
+  "F5_structure": {
+   "n": 2347,
+   "pct": 94.9
+  },
+  "structure_veto": {
+   "n": 2305,
+   "pct": 93.2
+  },
+  "binding_floor_fail": {
+   "n": 1274,
+   "pct": 51.5
+  },
+  "S_total": {
+   "n": 1294,
+   "pct": 52.3
+  },
+  "P_total": {
+   "n": 299,
+   "pct": 12.1
+  },
+  "F_total": {
+   "n": 2446,
+   "pct": 98.9
+  }
+ },
+ "varies_in_best_S_group": {
+  "S1_blast": {
+   "n": 4,
+   "pct": 0.2
+  },
+  "S2_assay_dcq": {
+   "n": 1,
+   "pct": 0.0
+  },
+  "S3_tm_margin": {
+   "n": 5,
+   "pct": 0.2
+  },
+  "P2_tm_vs_ta": {
+   "n": 281,
+   "pct": 11.4
+  },
+  "F1_gc": {
+   "n": 493,
+   "pct": 19.9
+  },
+  "F2_gc_clamp": {
+   "n": 1918,
+   "pct": 77.6
+  },
+  "F4_binding_tm_floor": {
+   "n": 1804,
+   "pct": 73.0
+  },
+  "F5_structure": {
+   "n": 2336,
+   "pct": 94.5
+  },
+  "structure_veto": {
+   "n": 2273,
+   "pct": 91.9
+  },
+  "binding_floor_fail": {
+   "n": 1115,
+   "pct": 45.1
+  },
+  "S_total": {
+   "n": 0,
+   "pct": 0.0
+  },
+  "P_total": {
+   "n": 281,
+   "pct": 11.4
+  },
+  "F_total": {
+   "n": 2430,
+   "pct": 98.3
+  }
+ },
+ "tie_break_range_in_best_S_group_median": 7.8,
+ "deciding_step_ranked_1_vs_2_of_pool": {
+  "sequence": 1232,
+  "detailed_score": 1088,
+  "F_total": 134,
+  "tm_vs_ta": 10,
+  "S_total": 3,
+  "v4_violation": 2,
+  "P_total": 1,
+  "structure_veto": 1
+ },
+ "note": "Pool = candidates after the S2 screen, ranked by the shipped key (all four TIERED_* flags on). 'Best S group' = candidates with the highest S total; the soft vetoes, V4 step, P, F and the tie-break only choose inside it. The API #1 vs #2 decision (after select_diverse_top) is in benchmark/ui_tier_order_check.json."
+}

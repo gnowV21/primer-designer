@@ -1,0 +1,129 @@
+{
+ "provenance": {
+  "started": "2026-11-18T15:54:40",
+  "git_sha": "dee93525602651b17db376963dde0649994a503e",
+  "git_branch": "freeze/4.0.0",
+  "working_tree_clean": true,
+  "algorithm_version": "4.0.0",
+  "scoring_system_default": "tiered",
+  "tiered_flags": {
+   "TIERED_F4_FLOOR": true,
+   "TIERED_GRADE_BY_TIERS": true,
+   "TIERED_V4_COMPLIANT_FIRST": true,
+   "TIERED_BINDING_FLOOR_VETO": true
+  },
+  "design_provenance": {
+   "python": "3.12.8",
+   "primer3_py": "2.0.3",
+   "viennarna": "2.7.2",
+   "scoring_weights_sha256": "1fe2b60ada11",
+   "tiered_thresholds_sha256": "4f9b87786af5",
+   "mirbase_release": "22.1",
+   "mature_fa_sha256": "3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342",
+   "mature_fa_build_date": "2026-10-29"
+  },
+  "python": "3.12.8",
+  "primer3_py": "2.0.3",
+  "viennarna": "2.7.2",
+  "blastn": "blastn: 2.17.0+",
+  "blast_db_metadata": {
+   "mirbase_version": "22.1",
+   "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
+   "build_date": "2026-07-01",
+   "sequences_count": {
+    "mirbase_multi": 48885
+   },
+   "makeblastdb_version": "makeblastdb: 2.17.0+"
+  },
+  "blast_db_files_sha256": "e31aee0368c57f385995cb137e6d843edefa7af847a05bdf2ab8cca17eb19aa4",
+  "env_BLAST_CACHE_DISABLED": null,
+  "env_SCORING_SYSTEM": null
+ },
+ "steps": [
+  {
+   "step": "validation",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/validate_primers.py",
+   "exit_code": 0,
+   "seconds": 877.1,
+   "log": "benchmark/logs/freeze_validation.log"
+  },
+  {
+   "step": "validation_report",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe backend/scripts/build_validation_report.py",
+   "exit_code": 0,
+   "seconds": 0.2,
+   "log": "benchmark/logs/freeze_validation_report.log"
+  },
+  {
+   "step": "benchmark_validation_block",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/build_benchmark_validation.py --in-place",
+   "exit_code": 0,
+   "seconds": 0.1,
+   "log": "benchmark/logs/freeze_benchmark_validation_block.log"
+  },
+  {
+   "step": "validation_v4",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/validate_primers.py --scoring-system v4 --out D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\benchmark\\logs\\freeze_v4\\results.csv --json-out D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\benchmark\\logs\\freeze_v4\\results.json",
+   "exit_code": 0,
+   "seconds": 796.8,
+   "log": "benchmark/logs/freeze_validation_v4.log"
+  },
+  {
+   "step": "benchmark50",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe run_benchmark.py",
+   "exit_code": 0,
+   "seconds": 229.2,
+   "log": "benchmark/logs/freeze_benchmark50.log"
+  },
+  {
+   "step": "benchmark_export",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe backend/scripts/export_benchmark_primers.py",
+   "exit_code": 0,
+   "seconds": 944.6,
+   "log": "benchmark/logs/freeze_benchmark_export.log"
+  },
+  {
+   "step": "blast_sensitivity",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe backend/scripts/blast_tm_gate_sensitivity.py",
+   "exit_code": 0,
+   "seconds": 370.5,
+   "log": "benchmark/logs/freeze_blast_sensitivity.log"
+  },
+  {
+   "step": "matrix_design_all",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m crossreactivity.design_all --cache D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\outputs\\freeze_matrix\\cache --workers 8",
+   "exit_code": 0,
+   "seconds": 847.1,
+   "log": "benchmark/logs/freeze_matrix_design_all.log"
+  },
+  {
+   "step": "matrix_build",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m crossreactivity.build_matrix --cache D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\outputs\\freeze_matrix\\cache --out D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\outputs\\freeze_matrix --workers 14",
+   "exit_code": 0,
+   "seconds": 78.1,
+   "log": "benchmark/logs/freeze_matrix_build.log"
+  },
+  {
+   "step": "matrix_plots",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m crossreactivity.plots",
+   "exit_code": 0,
+   "seconds": 5.9,
+   "log": "benchmark/logs/freeze_matrix_plots.log"
+  },
+  {
+   "step": "matrix_validate",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe -m crossreactivity.validate",
+   "exit_code": 1,
+   "seconds": 2.9,
+   "log": "benchmark/logs/freeze_matrix_validate.log",
+   "rerun_exit_code": 0
+  }
+ ],
+ "finished": "2026-11-18T17:03:59",
+ "notes": [
+  "matrix_validate exited 1 only because its report print hit cp1252 stdout (UnicodeEncodeError on '≥'); rerun with PYTHONIOENCODING=utf-8: exit 0, report unchanged. freeze_pipeline.py now sets PYTHONIOENCODING=utf-8 for every step.",
+  "validation_v4 overwrote benchmark/logs/validation_blast_stats.json with the empty stats of a no-BLAST run; restored from the tiered validation log (identical to the committed file). freeze_pipeline.py now keeps that file across the V4 step.",
+  "Comparison with the committed data: every regenerated file is identical (git diff empty after LF normalisation) except benchmark/logs/benchmark_export_blast_stats.json (cache hits now 100 %). Figures (outputs/figures/*.svg) differ only in matplotlib's date and random element ids and were restored.",
+  "Fresh matrix (outputs/freeze_matrix/, not committed): 2656/2656 design records identical to outputs/crossreactivity_cache/designs_hsa.jsonl (ignoring timing and cache counters); crossreactivity_long.csv, row_stats, top30_offdiagonal, failed_designs identical; metadata differs only in seconds, run_date, git_commit."
+ ]
+}
