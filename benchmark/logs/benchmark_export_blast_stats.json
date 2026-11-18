@@ -41,11 +41,11 @@
  },
  "hsa": {
   "blast_candidates": 8180,
-  "cache_hit_rate": 0.9169,
-  "cache_hits": 7500,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 8180,
   "cache_write_errors": 0,
   "designs": 84,
-  "new_blast_calls": 680
+  "new_blast_calls": 0
  },
  "mmu": {
   "blast_candidates": 3866,

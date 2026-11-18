@@ -117,7 +117,7 @@ def main(argv=None) -> int:
         log = os.path.join(LOGS, f"freeze_{name}.log")
         with open(log, "w", encoding="utf-8") as f:
             rc = subprocess.call(cmd, cwd=cwd, stdout=f, stderr=subprocess.STDOUT,
-                                 env={**os.environ, "PYTHONUNBUFFERED": "1"})
+                                 env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
         run["steps"].append({"step": name, "cmd": " ".join(cmd), "exit_code": rc,
                              "seconds": round(time.time() - t0, 1),
                              "log": os.path.relpath(log, ROOT).replace("\\", "/")})
@@ -151,9 +151,16 @@ def main(argv=None) -> int:
         if "v4" not in args.skip:
             v4 = os.path.join(LOGS, "freeze_v4")
             os.makedirs(v4, exist_ok=True)
+            # validate_primers.py rewrites benchmark/logs/validation_blast_stats.json; the V4
+            # run has no BLAST, so keep the tiered run's file.
+            stats = os.path.join(LOGS, "validation_blast_stats.json")
+            kept = open(stats, "rb").read() if os.path.exists(stats) else None
             step("validation_v4", [PY, "validation/validate_primers.py", "--scoring-system", "v4",
                                    "--out", os.path.join(v4, "results.csv"),
                                    "--json-out", os.path.join(v4, "results.json")])
+            if kept is not None:
+                with open(stats, "wb") as f:
+                    f.write(kept)
         if "benchmark" not in args.skip:
             step("benchmark50", [PY, "run_benchmark.py"], cwd=os.path.join(ROOT, "benchmark"))
         if "export" not in args.skip:
