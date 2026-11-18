@@ -60,19 +60,21 @@ Các thiết kế mà #1 tiered vi phạm luật V4 trong khi #1 V4 không vi ph
 
 ## 6. Bộ validation (201 mục; 2439 check)
 - Hồi quy V4: `validate_primers.py --scoring-system v4` cho `results.json` và `results.csv` trùng bản 3.8.2.
-- **Tiered: 2436/2439 check đạt.** 3 check `expected_design_failure` không đạt (xem mục 6.1).
+- **Tiered: 2439/2439 check đạt.** Theo QĐ 38, 3 mục V4 từ chối (`expected_design_failure`) được chấm ở tiered bằng check `v4_limitation_designed` (mục 6.1).
 - So với V4 3.8.2:
   - vùng đặc hiệu của mồi xuôi đổi ở 90/189 mục;
   - L trung bình 14,43 → 14,97 nt;
   - độ trùng trung bình với vùng đặc hiệu của mồi đã công bố 13,74 → 14,10 nt;
   - số mục chung vùng lõi với mồi công bố không đổi (184), mồi RT không đổi.
 
-### 6.1 Check không đạt (không sửa check)
-| Mục | Check | Lý do | #1 tiered | Đề xuất |
+### 6.1 Ba giới hạn đã biết của V4, thiết kế được ở 4.0.0 (QĐ 38)
+Ở V4 các mục này giữ check `expected_design_failure` (V4 từ chối). Ở tiered, check `v4_limitation_designed` đạt khi cả ba điều kiện đúng: thiết kế thành công; vùng đặc hiệu của #1 trùng, hoặc là chuỗi con, của vùng khớp miRNA trong mồi xuôi đã công bố (hoặc ngược lại); và #1 vi phạm ít nhất một luật V4. Ghi chú trong bộ dữ liệu: "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab".
+
+| Mục | Check tiered | Vùng đặc hiệu #1 | Vùng của mồi công bố | Luật V4 #1 vi phạm |
 |---|---|---|---|---|
-| ath-miR171a-3p (Varkonyi-Gasic 2007) | `expected_design_failure` | Ghi là KNOWN LIMITATION của V4: đầu 5′ giàu GC, V4 từ chối. Tiered bỏ lọc GC (QĐ 15) nên thiết kế được | CTAC + **TGATTGAGCCGCGCC** (L 15, GC 63,2 %), trùng 15 nt vùng đặc hiệu của mồi công bố | Đổi kỳ vọng của mục theo hệ chấm điểm: V4 = từ chối; tiered = so với mồi công bố |
-| ebv-miR-BART6-3p (Cosmopoulos 2009) | `expected_design_failure` | Như trên (V4 từ chối vì GC); bài dùng hệ stem-loop khác | GGAC + CGGGGATCGGACTA (L 14, GC 63,2 %), nằm trong vùng công bố CGGGGATCGGACTAGC | Như trên |
-| mmu-miR-124-3p (Lukashevich 2026, bm_001) | `expected_design_failure` | V4 từ chối (`gc_end_window_fail`) | CCTGATAG + **TAAGGCACGCGG** (L 12), trùng vùng đặc hiệu của mồi công bố AAGTACTC + TAAGGCACGCGG | Như trên |
+| ath-miR171a-3p | `v4_limitation_designed` đạt | TGATTGAGCCGCGCC | TGATTGAGCCGCGCC | `gc_out_of_range,gc_end_window_fail` |
+| ebv-miR-BART6-3p | `v4_limitation_designed` đạt | CGGGGATCGGACTA | CGGGGATCGGACTAGC | `gc_out_of_range` |
+| mmu-miR-124-3p | `v4_limitation_designed` đạt | TAAGGCACGCGG | TAAGGCACGCGG | `gc_end_window_fail` |
 
 ## 7. Ma trận phản ứng chéo hsa (mồi #1, mô hình assay)
 | | V4 3.8.2 | 4.0.0 tiered |

@@ -116,6 +116,24 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
       - báo kèm: số #1 vi phạm luật V4, % < 45 °C, grade A/B/C, số #1 đổi. Báo trên cả 2253 và 2472 thiết kế.
 37. **Cache.** Giai đoạn 2c dùng dữ liệu offline (`outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`), kiểm tra bằng pipeline thật trên 20 miRNA (top 3 trùng 20/20, tất định). Giai đoạn 3 nạp cache SQLite bằng lượt dựng ma trận hsa: lượt này là BLAST mới nên không áp ngưỡng cache hit, nhưng số lần ghi cache thất bại phải bằng 0. Sau đó kiểm tra S1 của mọi ứng viên trong cache so với dữ liệu offline; các lượt sau áp ngưỡng cache hit ≥ 90 % cho thiết kế hsa.
 
+**Sau Giai đoạn 2c và 3 (2026-11-18; §12, §13):**
+
+38. **Kỳ vọng của 3 mục validation theo hệ chấm điểm** (ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p).
+    - V4: giữ `expected_design_failure`. Output `--scoring-system v4` phải trùng 3.8.2 từng byte (`results.json` bỏ qua `run_date`; `results.csv`).
+    - Tiered: thay bằng check mới `v4_limitation_designed`. Check đạt khi cả ba điều kiện đúng:
+      1. thiết kế thành công;
+      2. vùng đặc hiệu của #1 trùng với vùng khớp miRNA trong mồi xuôi đã công bố, hoặc là chuỗi con của vùng đó (hoặc ngược lại);
+      3. `v4_rule_violations` của #1 không rỗng.
+    - Ghi chú vào bộ dữ liệu: "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab" (mmu-miR-124-3p: E 107 %).
+    - Nghiệm thu:
+      - validation tiered đạt 2439/2439;
+      - 2 test trong `test_benchmark_endpoint.py` pass mà không sửa test. Nếu phải đổi test thì ghi rõ lý do.
+39. **S3 giữ cách xét mức trên biên Tm đã làm tròn 0,1 °C.** Lệch tối đa là 0,05 °C, nhỏ hơn nhiều so với sai số của Tm NN (±1–2 °C, QĐ 17/23), và mức khớp với giá trị hiển thị. Không chạy lại số liệu.
+40. **Cache hit 88,4 % ở validation: chấp nhận.** Phần hụt đến từ 7 thiết kế có ngữ cảnh mới; trên 51 thiết kế cùng ngữ cảnh, cache hit là 100 %. Từ nay ngưỡng cache hit chỉ tính trên các thiết kế có ngữ cảnh đã có trong cache. Luôn báo cả hai mẫu số.
+41. **Wet-lab: giữ hsa-let-7a-5p làm ca kiểm đặc hiệu.**
+    - Thí nghiệm dùng assay let-7a trên oligo tổng hợp let-7a-5p và let-7d-5p để đo tín hiệu chéo thật, rồi so với ΔCq dự đoán 1,43.
+    - Ghi vào HANDOFF, phần wet-lab, cho Phần 5 của PROMPT.
+
 **Giới hạn đã biết (ghi vào khóa luận):**
 - F2 đếm G/C trong 5 nt cuối, không xét vị trí: …GCAAT được 5 điểm, trong khi V4 loại vì 3 nt cuối không có G/C. QĐ 34 xử lý phần lớn các ca cùng S.
 - Mốc 45 °C của Tm vùng bám là mức sàn rút từ giả thuyết chu kỳ 1 của khóa luận, không phải đích tối ưu.
@@ -555,3 +573,23 @@ Provenance: `benchmark/logs/stage3_provenance.json`. Ghi lại ở đó: git SHA
 
 **Đề xuất cho SPEC UI:** giới hạn thời gian của thiết kế trong e2e (15 s) quá sát với thời gian thiết kế không cache. Nên tăng lên 30 s, hoặc làm nóng cache trước khi chạy.
 
+## 14. Sau QĐ 38–41 (2026-11-18)
+
+**QĐ 38: đạt.**
+- `validate_primers.py`: ở tiered, mục có `expect_design_failure` mà thiết kế được sẽ chấm bằng check `v4_limitation_designed` (một check, thay cho `expected_design_failure`). V4 giữ nguyên nhánh cũ.
+- Bộ dữ liệu: 3 mục có thêm trường `v4_limitation_note`. ssc-miR-2137 vẫn không thiết kế được ở tiered nên giữ `expected_design_failure`.
+- Validation tiered: **2439/2439**.
+
+| Mục | Vùng đặc hiệu #1 | Vùng khớp miRNA của mồi công bố | `v4_rule_violations` của #1 |
+|---|---|---|---|
+| ath-miR171a-3p | TGATTGAGCCGCGCC | TGATTGAGCCGCGCC (trùng) | gc_out_of_range, gc_end_window_fail |
+| ebv-miR-BART6-3p | CGGGGATCGGACTA | CGGGGATCGGACTAGC (chuỗi con) | gc_out_of_range |
+| mmu-miR-124-3p | TAAGGCACGCGG | TAAGGCACGCGG (trùng) | gc_end_window_fail |
+
+- Hồi quy V4 (`--scoring-system v4`) trùng 3.8.2:
+  - `results.json` giống hệt khi bỏ `run_date`;
+  - `results.csv` có cùng blob git với master (`a41790c`). Trên đĩa file có CRLF do `csv.writer`; git chuẩn hóa về LF.
+- `test_benchmark_endpoint.py`: 9/9 pass, không sửa test. Khối validation trong `benchmark_results.json` được sinh lại bằng `build_benchmark_validation.py --in-place`, và `--check` cho kết quả khớp.
+- Cache hit của lượt này (QĐ 40) là 100 % ở mọi loài: hsa 5840/5840 trên 58 thiết kế. Các ngữ cảnh mới của Giai đoạn 3 đã nằm trong cache.
+
+**QĐ 39–41:** ghi nhận, không chạy lại số liệu. QĐ 41 đã ghi vào HANDOFF §5, mục wet-lab.

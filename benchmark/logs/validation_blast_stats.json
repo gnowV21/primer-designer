@@ -1,74 +1,74 @@
 {
  "ath": {
   "blast_candidates": 360,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 360,
   "cache_write_errors": 0,
   "designs": 5,
-  "new_blast_calls": 360
+  "new_blast_calls": 0
  },
  "bta": {
   "blast_candidates": 100,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 100,
   "cache_write_errors": 0,
   "designs": 1,
-  "new_blast_calls": 100
+  "new_blast_calls": 0
  },
  "cel": {
   "blast_candidates": 100,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 100,
   "cache_write_errors": 0,
   "designs": 1,
-  "new_blast_calls": 100
+  "new_blast_calls": 0
  },
  "ebv": {
   "blast_candidates": 3067,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 3067,
   "cache_write_errors": 0,
   "designs": 30,
-  "new_blast_calls": 3067
+  "new_blast_calls": 0
  },
  "gga": {
   "blast_candidates": 120,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 120,
   "cache_write_errors": 0,
   "designs": 1,
-  "new_blast_calls": 120
+  "new_blast_calls": 0
  },
  "hsa": {
   "blast_candidates": 5840,
-  "cache_hit_rate": 0.8836,
-  "cache_hits": 5160,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 5840,
   "cache_write_errors": 0,
   "designs": 58,
-  "new_blast_calls": 680
+  "new_blast_calls": 0
  },
  "mmu": {
   "blast_candidates": 3866,
-  "cache_hit_rate": 0.0259,
-  "cache_hits": 100,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 3866,
   "cache_write_errors": 0,
   "designs": 39,
-  "new_blast_calls": 3766
+  "new_blast_calls": 0
  },
  "osa": {
   "blast_candidates": 540,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 540,
   "cache_write_errors": 0,
   "designs": 7,
-  "new_blast_calls": 540
+  "new_blast_calls": 0
  },
  "ssc": {
   "blast_candidates": 5200,
-  "cache_hit_rate": 0.0,
-  "cache_hits": 0,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 5200,
   "cache_write_errors": 0,
   "designs": 55,
-  "new_blast_calls": 5200
+  "new_blast_calls": 0
  }
 }

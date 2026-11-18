@@ -14,7 +14,7 @@
       "Panel of 50 curated open-access hsa- miRNAs — may not represent full biological diversity",
       "Design time includes network overhead (localhost); actual server latency will differ"
     ],
-    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 2436/2439 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
+    "validation_note": "Competitor columns are null (different RT chemistry / binaries not installed); scientific correctness is established by the `validation` block: 2439/2439 checks vs Chen 2005 deterministic ground truth + Wang 2017 specificity concordance. Includes a BYTE-IDENTICAL exact match of the miR-16 stem-loop RT primer + universal reverse to a published table, plus cross-system RT-overhang/forward concordance with Czimmerer 2013 (miR-1, miR-181a) and Yang 2014 (miR-150) — independent labs using different universal stem-loop bodies."
   },
   "metrics": {
     "forward_tm_mean": {
@@ -755,9 +755,9 @@
       "[Var07] Varkonyi-Gasic E et al. Plant Methods 2007;3:12 — protocol; 6-nt overhang optimal.",
       "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
     ],
-    "checks_passed": 2436,
+    "checks_passed": 2439,
     "checks_total": 2439,
-    "success_rate": 0.9988,
+    "success_rate": 1.0,
     "deterministic_primer_targets": [
       {
         "id": "hsa-miR-21-5p",

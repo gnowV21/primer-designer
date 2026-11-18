@@ -288,8 +288,11 @@ def validate_one(base, entry, consts, windows):
     checks = [] if entry.get("expect_edge_code") else [("design_succeeded", True)]
     row = {"target": label, "source": src, "length": len(used_seq), "status": "200"}
 
-    # A documented limitation that now designs fine: flag it so the dataset gets updated.
+    # A documented V4 limitation. Under the tiered system (no GC pre-filter, QD 15) the
+    # design is expected to succeed: SPEC_scoring_tiered_4.0.0 QD 38.
     if entry.get("expect_design_failure"):
+        if get(data, "metadata", "scoring_system") == "tiered":
+            return v4_limitation_designed(entry, data, dna, row)
         return row, [("expected_design_failure", False)]
 
     # --- Edge-case entries: just verify the expected code fired ---
@@ -363,6 +366,35 @@ def validate_one(base, entry, consts, windows):
     return row, checks
 
 
+def v4_limitation_designed(entry, data, dna, row):
+    """SPEC_scoring_tiered_4.0.0 QD 38 — a V4-refused entry designed by the tiered system.
+
+    One check, passing when all three hold:
+      1. the design succeeded (a #1 set exists);
+      2. the #1 specific region equals, or is a substring of, the miRNA-matching region of
+         the published forward primer (or the other way round);
+      3. the #1 set breaks at least one V4 rule (`v4_rule_violations` not empty) — it is
+         the V4 limitation that is being lifted, not a set V4 would have accepted.
+    """
+    top = (data.get("top3") or [{}])[0]
+    spec = (top.get("specific_region") or "").upper()
+    pub_spec, _ = anchored_region(_norm(entry.get("published_forward")), dna)
+    violations = list(top.get("v4_rule_violations") or [])
+    designed = bool(spec)
+    region_ok = bool(spec and pub_spec) and (spec in pub_spec or pub_spec in spec)
+    passed = designed and region_ok and bool(violations)
+    row.update({
+        "status": "200 (V4 limitation designed)",
+        "forward_tool_specific": spec,
+        "forward_pub_specific": pub_spec,
+        "v4_rule_violations": ",".join(violations),
+        "v4_limitation_note": entry.get("v4_limitation_note"),
+        "tm_full": top.get("tm_full"), "gc_pct": top.get("gc_percent"),
+        "amplicon_bp": top.get("amplicon_size"), "grade": top.get("grade"),
+    })
+    return row, [("v4_limitation_designed", passed)]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url", default="http://localhost:5000")
@@ -423,6 +455,9 @@ def main():
             "published_source": row.get("published_source"),
             "failed_checks": failed,
         })
+        if "v4_rule_violations" in row:   # QD 38 entries only: V4 output stays byte-identical
+            json_records[-1]["v4_rule_violations"] = row["v4_rule_violations"]
+            json_records[-1]["v4_limitation_note"] = row.get("v4_limitation_note")
         flag = "OK " if (n and p == n) else ("--- " if not n else "!!! ")
         print(f"{flag}{row['target']:<20} {row['checks_pass']:<8} "
               f"{('FAILED: ' + row['failed_checks']) if failed else row.get('status','')}")

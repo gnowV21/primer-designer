@@ -7,9 +7,9 @@
     "[MIQE09] Bustin SA et al. Clin Chem 2009;55(4):611-622. DOI 10.1373/clinchem.2008.112797 (PMID 19246619) — qPCR efficiency 90-110% acceptable."
   ],
   "run_date": "2026-11-18",
-  "checks_passed": 2436,
+  "checks_passed": 2439,
   "checks_total": 2439,
-  "success_rate": 0.9988,
+  "success_rate": 1.0,
   "targets": [
     {
       "target": "hsa-miR-21-5p",
@@ -912,14 +912,14 @@
     },
     {
       "target": "ath-miR171a-3p",
-      "checks_pass": 0,
+      "checks_pass": 1,
       "checks_total": 1,
-      "passed": false,
+      "passed": true,
       "rt_overhang_expected": null,
       "rt_overhang_actual": null,
-      "forward_tm_c": null,
-      "forward_gc_pct": null,
-      "amplicon_bp": null,
+      "forward_tm_c": 60.8,
+      "forward_gc_pct": 63.2,
+      "amplicon_bp": 62,
       "siblings_flagged": null,
       "edge_expected": null,
       "edge_found": null,
@@ -929,17 +929,17 @@
       "published_forward_specific_shared": null,
       "published_forward_tool": null,
       "published_forward_ref": null,
-      "forward_tool_specific": null,
-      "forward_pub_specific": null,
+      "forward_tool_specific": "TGATTGAGCCGCGCC",
+      "forward_pub_specific": "TGATTGAGCCGCGCC",
       "forward_specific_overlap_nt": null,
       "forward_pub_start_nt": null,
       "published_rt_printed": null,
       "published_rt_unscored": null,
       "benchmark_group": null,
       "published_source": null,
-      "failed_checks": [
-        "expected_design_failure"
-      ]
+      "failed_checks": [],
+      "v4_rule_violations": "gc_out_of_range,gc_end_window_fail",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab"
     },
     {
       "target": "ebv-miR-BHRF1-1",
@@ -1175,14 +1175,14 @@
     },
     {
       "target": "ebv-miR-BART6-3p",
-      "checks_pass": 0,
+      "checks_pass": 1,
       "checks_total": 1,
-      "passed": false,
+      "passed": true,
       "rt_overhang_expected": null,
       "rt_overhang_actual": null,
-      "forward_tm_c": null,
-      "forward_gc_pct": null,
-      "amplicon_bp": null,
+      "forward_tm_c": 60.0,
+      "forward_gc_pct": 63.2,
+      "amplicon_bp": 64,
       "siblings_flagged": null,
       "edge_expected": null,
       "edge_found": null,
@@ -1192,17 +1192,17 @@
       "published_forward_specific_shared": null,
       "published_forward_tool": null,
       "published_forward_ref": null,
-      "forward_tool_specific": null,
-      "forward_pub_specific": null,
+      "forward_tool_specific": "CGGGGATCGGACTA",
+      "forward_pub_specific": "CGGGGATCGGACTAGC",
       "forward_specific_overlap_nt": null,
       "forward_pub_start_nt": null,
       "published_rt_printed": null,
       "published_rt_unscored": null,
       "benchmark_group": null,
       "published_source": null,
-      "failed_checks": [
-        "expected_design_failure"
-      ]
+      "failed_checks": [],
+      "v4_rule_violations": "gc_out_of_range",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab"
     },
     {
       "target": "ebv-miR-BART7-3p",
@@ -5469,14 +5469,14 @@
     },
     {
       "target": "mmu-miR-124-3p",
-      "checks_pass": 0,
+      "checks_pass": 1,
       "checks_total": 1,
-      "passed": false,
+      "passed": true,
       "rt_overhang_expected": null,
       "rt_overhang_actual": null,
-      "forward_tm_c": null,
-      "forward_gc_pct": null,
-      "amplicon_bp": null,
+      "forward_tm_c": 60.0,
+      "forward_gc_pct": 60.0,
+      "amplicon_bp": 65,
       "siblings_flagged": null,
       "edge_expected": null,
       "edge_found": null,
@@ -5486,17 +5486,17 @@
       "published_forward_specific_shared": null,
       "published_forward_tool": null,
       "published_forward_ref": null,
-      "forward_tool_specific": null,
-      "forward_pub_specific": null,
+      "forward_tool_specific": "TAAGGCACGCGG",
+      "forward_pub_specific": "TAAGGCACGCGG",
       "forward_specific_overlap_nt": null,
       "forward_pub_start_nt": null,
       "published_rt_printed": null,
       "published_rt_unscored": null,
       "benchmark_group": null,
       "published_source": null,
-      "failed_checks": [
-        "expected_design_failure"
-      ]
+      "failed_checks": [],
+      "v4_rule_violations": "gc_end_window_fail",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab (E 107 %)"
     },
     {
       "target": "mmu-miR-125a-5p",
