@@ -72,13 +72,21 @@ export function summarizeParams(p) {
   if (!p) return [];
   const v = (group, field) => formatValue(group, field, p[group]?.[field]);
   // `path` matches diffParams() entries, so a chip can be highlighted when its value changed.
+  // `text` = chip (one string); `label` + `value` = the vertical list on /results.
+  const row = (path, label, value, text) => ({ path, label, value, text });
   return [
-    { path: 'detectionMethod.signalMethod',            text: v('detectionMethod', 'signalMethod') },
-    { path: 'experimentalContext.sampleType',          text: v('experimentalContext', 'sampleType') },
-    { path: 'primerConstraints.bindingRegion3prime',   text: `${v('primerConstraints', 'bindingRegion3prime')} overhang` },
-    { path: 'thermodynamic.saltConcentration',         text: `Na⁺ ${v('thermodynamic', 'saltConcentration')}` },
-    { path: 'thermodynamic.magnesiumConcentration',    text: `Mg²⁺ ${v('thermodynamic', 'magnesiumConcentration')}` },
-    { path: 'qpcr.annealingTemp',                      text: `Ta ${v('qpcr', 'annealingTemp')}` },
+    row('detectionMethod.signalMethod', 'Detection', v('detectionMethod', 'signalMethod'),
+      v('detectionMethod', 'signalMethod')),
+    row('experimentalContext.sampleType', 'Sample', v('experimentalContext', 'sampleType'),
+      v('experimentalContext', 'sampleType')),
+    row('primerConstraints.bindingRegion3prime', 'RT overhang', v('primerConstraints', 'bindingRegion3prime'),
+      `${v('primerConstraints', 'bindingRegion3prime')} overhang`),
+    row('thermodynamic.saltConcentration', 'Na⁺', v('thermodynamic', 'saltConcentration'),
+      `Na⁺ ${v('thermodynamic', 'saltConcentration')}`),
+    row('thermodynamic.magnesiumConcentration', 'Mg²⁺', v('thermodynamic', 'magnesiumConcentration'),
+      `Mg²⁺ ${v('thermodynamic', 'magnesiumConcentration')}`),
+    row('qpcr.annealingTemp', 'Annealing (Ta)', v('qpcr', 'annealingTemp'),
+      `Ta ${v('qpcr', 'annealingTemp')}`),
   ];
 }
 

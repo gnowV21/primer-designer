@@ -50,7 +50,7 @@ function bestRuns(runs) {
   return new Set(scores.map((v, i) => (v === best ? i : -1)).filter((i) => i >= 0));
 }
 
-export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRun }) {
+export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRun, sidebar = false }) {
   const baseForm = useMemo(() => bodyToForm(activeRun.params), [activeRun]);
 
   const [open, setOpen] = useState(false);
@@ -113,13 +113,21 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
   const firstForm = bodyToForm(runs[0].params);
   const best = bestRuns(runs);
 
+  // Sidebar (wide screens): a fixed left column — sticky at the top of the <main>
+  // scroll container, scrolling inside itself when the editor is taller than the
+  // screen; it widens while the editor is open. Below lg it stacks on top as before.
+  const sidebarCls = sidebar
+    ? `lg:sticky lg:top-0 lg:shrink-0 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:overscroll-contain ${
+        open ? 'lg:w-[30rem]' : 'lg:w-56'}`
+    : '';
+
   return (
-    <div className="space-y-2">
+    <aside className={`space-y-2 ${sidebarCls}`} aria-label="Parameters used" data-testid="rerun-sidebar">
       <div className={`rounded-xl border bg-white ${open ? 'border-teal-300 shadow-sm' : 'border-slate-200'}`}>
 
-        {/* ── Summary: label + action on one row, chips full width below (no squeeze on phones) ── */}
+        {/* ── Summary: label + action, the parameters listed vertically below ── */}
         <div className="px-4 py-3 space-y-2">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Parameters used</p>
             <button
               type="button"
@@ -134,7 +142,7 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
               {open ? 'Close' : '✎ Adjust & re-run'}
             </button>
           </div>
-          <ParamChips params={open ? draft : baseForm} highlight={open ? changedPaths(changes) : new Set()} />
+          <ParamChips layout="list" params={open ? draft : baseForm} highlight={open ? changedPaths(changes) : new Set()} />
         </div>
 
         {/* ── Editor ── */}
@@ -243,6 +251,6 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
           })}
         </div>
       )}
-    </div>
+    </aside>
   );
 }

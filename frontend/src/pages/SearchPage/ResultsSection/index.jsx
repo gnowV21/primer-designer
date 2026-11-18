@@ -15,6 +15,10 @@ import { equivalentRanks } from '../../../utils/tierRank.js';
 // Warnings shown in-context elsewhere (design-page slider / results-page note, or the
 // tiered banners) — not repeated in the generic list. Still in the exported report.
 const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime', ...TIER_WARNING_FIELDS]);
+// Warnings with their own panel on /results (Assay Specificity, Seed Family, the
+// 3′-isomiR line of "Shared by all sets"): not repeated as a banner.
+const PANEL_WARNING_FIELDS = new Set(['overhang_collision', 'cross_reactivity', 'three_prime_isomir',
+  'three_prime_isomir_fold_change']);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -75,6 +79,16 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
       {/* 1. Verdict: design-level banners, then why #1 is above #2 */}
       <TierBanners results={results} />
+      {/* Critical design warnings without a dedicated display (the Quality summary that
+          listed them is gone from /results; every warning stays in the PDF/CSV export). */}
+      {hideHeader && global_warnings
+        .filter((w) => w.severity === 'critical' && !DEDICATED_WARNING_FIELDS.has(w.field)
+          && !PANEL_WARNING_FIELDS.has(w.field))
+        .map((w, i) => (
+          <div key={i} className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 break-words" data-testid="critical-warning">
+            {w.message}
+          </div>
+        ))}
       {top3?.length > 1 && (
         <p className="text-sm text-slate-700 leading-relaxed" data-testid="rank-reason">{rankReason(top3[0], top3[1])}</p>
       )}

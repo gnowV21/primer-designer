@@ -25,11 +25,13 @@ async function designDefault(page) {
 }
 
 // The RT primer is shown once, in "Shared by all sets", as 5'–SEQ–3'.
+// "Parameters used" on /results is a vertical list: label left, value right.
+const paramValue = (page, label) => page.getByTestId('param-list').locator('div', { hasText: label }).locator('dd');
 const rtPrimer = (page, seq) => page.getByTestId('shared-primers').getByText(`5'–${seq}–3'`, { exact: true });
 
 test('Re-run is disabled until a parameter changes', async ({ page }) => {
   await designDefault(page);
-  await expect(page.getByText('6 nt overhang')).toBeVisible();
+  await expect(paramValue(page, 'RT overhang')).toHaveText('6 nt');
   await page.getByRole('button', { name: /Adjust & re-run/ }).click();
   await expect(page.getByRole('button', { name: /Re-run/ })).toBeDisabled();
   await expect(page.getByText('Change any parameter, then re-run.')).toBeVisible();
@@ -51,7 +53,7 @@ test('re-run with a 7-nt overhang adds a run; runs can be switched', async ({ pa
 
   await runs.getByRole('button', { name: /#1/ }).click();
   await expect(rtPrimer(page, RT_6NT)).toBeVisible();
-  await expect(page.getByText('6 nt overhang')).toBeVisible();
+  await expect(paramValue(page, 'RT overhang')).toHaveText('6 nt');
 
   // The designer opens with the parameters of the run being viewed.
   await runs.getByRole('button', { name: /#2/ }).click();
