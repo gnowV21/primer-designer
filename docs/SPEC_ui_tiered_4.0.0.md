@@ -93,7 +93,7 @@ KhÃ´ng cÃ³ `ranking` (U5) â†’ giá»¯ hÃ m cÅ©. Pháº§n logic Ä‘áº·t trong má»™t hÃ
 
 **UI-1** (commit `88d5d05`): cÃ i 2.1â€“2.5 vÃ  test cá»§a Â§3.
 - Äá»‘i chiáº¿u khÃ³a: `node frontend/scripts/check_tier_order.mjs` trÃªn top 3 API cá»§a 2472 thiáº¿t káº¿ hsa (`backend/scripts/ui_top3_dump.py`, cache hit 215.860/215.860) cho thá»© tá»± trÃ¹ng **2472/2472** (`benchmark/ui_tier_order_check.json`).
-|-| |B|Æ|°|á|»|›|c| |q|u|y|á|º|¿|t| |Ä|‘|á|»|‹|n|h| |#|1|/|#|2|:| |F| |1|1|1|2|,| |Ä|‘|i|á|»|ƒ|m| |p|h|Ã|¢|n| |Ä|‘|á|»|‹|n|h| |5|7|1|,| |s|Ã| |n| |T|m| |2|6|9|,| |l|u|á|º|­|t| |V|4| |2|1|4|,| |S| |1|4|0|,| |c|h|á|»|‰| |k|h|Ã|¡|c| |Ä|‘|u|Ã|´|i| |1|2|1|,| |v|e|t|o| |c|á|º|¥|u| |t|r|Ã|º|c| |2|6|,| |P| |1|7|,| |\|||T|m| |â|ˆ|’| |T|a|\||| |1|.| |B|Æ|°|á|»|›|c| |\|||T|m| |â|ˆ|’| |T|a|\||| |k|h|Ã|´|n|g| |c|Ã|³| |t|r|o|n|g| |8| |n|h|Ã|¡|n|h| |c|á|»|§|a| |Â|§|2|.|4|,| |n|Ã|ª|n| |r|a|n|k|R|e|a|s|o|n| |c|Ã|³| |t|h|Ã|ª|m| |m|á|»|™|t| |c|Ã|¢|u| |r|i|Ã|ª|n|g| |c|h|o| |n|Ã|³|.|
+- BÆ°á»›c quyáº¿t Ä‘á»‹nh #1/#2: F 1112, Ä‘iá»ƒm phÃ¢n Ä‘á»‹nh 571, sÃ n Tm 269, luáº­t V4 214, S 140, chá»‰ khÃ¡c Ä‘uÃ´i 121, veto cáº¥u trÃºc 26, P 17, |Tm âˆ’ Ta| 1. BÆ°á»›c |Tm âˆ’ Ta| khÃ´ng cÃ³ trong 8 nhÃ¡nh cá»§a Â§2.4, nÃªn rankReason cÃ³ thÃªm má»™t cÃ¢u riÃªng cho nÃ³.
 - áº¢nh chá»¥p: `docs/screenshots/ui-1/` (12 áº£nh). `.gitignore` cháº·n `*.png` nÃªn áº£nh khÃ´ng náº±m trong repo.
 
 **UI-2:**
