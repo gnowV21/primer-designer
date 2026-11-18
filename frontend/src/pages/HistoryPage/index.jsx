@@ -3,6 +3,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listDesigns, deleteDesign, clearDesigns } from '../../utils/historyDb.js';
 
+/** "#1 A · S 14/15 · tiered" (4.0.0) or " · best 93.1 (Excellent)" for older records (U5). */
+function historySummary(d) {
+  if (d.scoringSystem === 'tiered' && d.topSpecificity) {
+    return ` · #1 grade ${d.grade} · S ${d.topSpecificity.total}/${d.topSpecificity.max} · tiered`;
+  }
+  if (d.topScore != null) {
+    return ` · best ${d.topScore} (${d.grade})${d.scoringSystem ? ` · ${d.scoringSystem}` : ''}`;
+  }
+  return '';
+}
+
 export default function HistoryPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState(null);
@@ -75,7 +86,7 @@ export default function HistoryPage() {
                 </p>
                 <p className="text-xs text-slate-500 tabular-nums">
                   {new Date(d.createdAt).toLocaleString()}
-                  {d.topScore != null && ` · best ${d.topScore} (${d.grade})`}
+                  {historySummary(d)}
                   {d.algorithmVersion && ` · v${d.algorithmVersion}`}
                 </p>
               </button>

@@ -9,7 +9,7 @@
  * invalid value) is shown here and the current result stays on screen.
  *
  * Below the bar, once there is more than one run, a switcher lets the user go
- * back to any earlier run — labelled by what it changed and by its top score.
+ * back to any earlier run — labelled by what it changed and by its #1 set (grade + S).
  */
 import { useEffect, useMemo, useState } from 'react';
 import ParameterEditor from '../../components/ParameterEditor.jsx';
@@ -18,6 +18,7 @@ import ResultsSection from '../SearchPage/ResultsSection/index.jsx';
 import { computeSeqAnalysis } from '../../utils/seqAnalysis.js';
 import { bodyToForm } from '../../utils/designRequest.js';
 import { applySamplePreset, changedPaths, diffParams } from '../../utils/paramSummary.js';
+import { bestRunIndices, hasTiers } from '../../utils/tierRank.js';
 
 /** Short label for a run: what it changed relative to the first run kept. */
 function runLabel(run, baseForm) {
@@ -27,10 +28,26 @@ function runLabel(run, baseForm) {
   return changes.length > 2 ? `${head} +${changes.length - 2}` : head;
 }
 
-function topScore(run) {
+/** Label of a run's #1 set: grade + "S x/15" when tiered (4.0.0), else grade + V4 score. */
+function topLabel(run) {
   const top = run.results?.top3?.[0];
   if (!top) return null;
-  return { grade: top.grade, score: Math.round(top.total_score ?? 0) };
+  if (hasTiers(top)) {
+    return `${top.grade} S ${top.ranking.specificity.total}/${top.ranking.specificity.max}`;
+  }
+  return `${top.grade} ${Math.round(top.total_score ?? 0)}`;
+}
+
+/** Runs whose #1 set is best. Tiered: the ranking key itself (SPEC_ui §2.5);
+ *  V4 runs: the highest total score, as before. A star only marks a real difference. */
+function bestRuns(runs) {
+  const tops = runs.map((r) => r.results?.top3?.[0]);
+  if (tops.every((t) => t && hasTiers(t))) return new Set(bestRunIndices(tops));
+  if (tops.some((t) => t && hasTiers(t))) return new Set();   // tiered vs V4: not comparable
+  const scores = tops.map((t) => t?.total_score ?? -1);
+  const best = Math.max(...scores);
+  if (!(best > Math.min(...scores))) return new Set();
+  return new Set(scores.map((v, i) => (v === best ? i : -1)).filter((i) => i >= 0));
 }
 
 export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRun }) {
@@ -94,10 +111,7 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
   }
 
   const firstForm = bodyToForm(runs[0].params);
-  // A star only means something when the runs actually differ in score.
-  const scores = runs.map((r) => topScore(r)?.score ?? -1);
-  const bestScore = Math.max(...scores);
-  const scoresDiffer = bestScore > Math.min(...scores);
+  const best = bestRuns(runs);
 
   return (
     <div className="space-y-2">
@@ -201,8 +215,8 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
           <span className="text-xs text-slate-500 mr-0.5">Runs</span>
           {runs.map((run, i) => {
             const active = run.id === activeRun.id;
-            const s = topScore(run);
-            const best = scoresDiffer && s && s.score === bestScore;
+            const s = topLabel(run);
+            const isBest = best.has(i);
             return (
               <button
                 key={run.id}
@@ -210,7 +224,7 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
                 onClick={() => onSelectRun(run.id)}
                 aria-pressed={active}
                 disabled={running}
-                title={best ? 'Highest top-set score among these runs' : undefined}
+                title={isBest ? 'Best #1 set among these runs (same ranking as the primer sets)' : undefined}
                 className={`text-xs rounded-lg border px-2.5 py-1 transition tabular-nums ${
                   active
                     ? 'bg-teal-600 border-teal-600 text-white'
@@ -220,8 +234,8 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
                 <span className="font-semibold">#{i + 1}</span>
                 <span className={active ? 'text-teal-50' : 'text-slate-500'}> · {runLabel(run, firstForm)}</span>
                 {s && (
-                  <span className={`ml-1.5 font-semibold ${active ? 'text-white' : best ? 'text-teal-700' : 'text-slate-600'}`}>
-                    {s.grade} {s.score}{best ? ' ★' : ''}
+                  <span className={`ml-1.5 font-semibold ${active ? 'text-white' : isBest ? 'text-teal-700' : 'text-slate-600'}`}>
+                    {s}{isBest ? ' ★' : ''}
                   </span>
                 )}
               </button>

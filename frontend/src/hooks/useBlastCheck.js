@@ -30,7 +30,7 @@ export default function useBlastCheck() {
 
   // mirnaSequence + conditions (the design's effective_p3) feed the duplex-Tm gate;
   // without them the backend falls back to the DB sequence and default salts.
-  async function run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species } = {}) {
+  async function run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species, rtPrimer } = {}) {
     // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
@@ -50,6 +50,8 @@ export default function useBlastCheck() {
           mirna_sequence: mirnaSequence || undefined,
           conditions: conditions || undefined,
           species: species || undefined,
+          // The design's RT primer → the RT step, as in the tiered S1 (classifier v7).
+          rt_primer: rtPrimer || undefined,
         },
         { signal: controller.signal, timeout: BLAST_TIMEOUT_MS },
       );

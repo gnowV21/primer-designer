@@ -16,7 +16,7 @@ export default function ScoreGauge({ score, grade, compact = false }) {
   const stroke = gradeColor(grade);
 
   return (
-    <div className={`flex flex-col items-center gap-0.5 ${compact ? '' : 'py-1'}`}>
+    <div className={`flex flex-col items-center gap-0.5 ${compact ? '' : 'py-1'}`} data-testid="score-gauge">
       <svg
         width={size}
         height={size}

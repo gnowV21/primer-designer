@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
+import { TIER_WARNING_FIELDS } from '../SearchPage/ResultsSection/TierBanners.jsx';
 
 const SEV_STYLE = {
   critical: 'bg-red-50 border-red-200 text-red-800',
@@ -16,7 +17,9 @@ const SEV_STYLE = {
 //   signalMethod (SYBR)       → shown as its own note below the primer sets
 //   bindingRegion3prime       → shown on the design page at the point of choice
 //                               (still recorded in the exported report)
-const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime']);
+//   specificity_fallback, fewer_than_3_sets, blast_unavailable
+//                             → tiered banners above the primer sets (TierBanners)
+const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime', ...TIER_WARNING_FIELDS]);
 
 export default function QualitySummary({ results, onBlastResult }) {
   const {

@@ -16,3 +16,17 @@ export async function openParameters(page) {
 export async function showScientificDetails(page) {
   await page.getByRole('button', { name: /Show scientific details/ }).click();
 }
+
+/** Wait for a real /api/design (algorithm 4.0.0 BLASTs during the design). */
+export const DESIGN_TIMEOUT = 30000;
+
+/**
+ * miRNAs the specs design through the UI with the frontend defaults; global-setup.js
+ * sends the same requests first so the BLAST cache is warm (SPEC_ui_tiered_4.0.0 §3).
+ */
+export const WARM_MIRNAS = [
+  { name: 'hsa-miR-21-5p', sequence: 'UAGCUUAUCAGACUGAUGUUGA' },
+  { name: 'hsa-let-7a-5p', sequence: 'UGAGGUAGUAGGUUGUAUAGUU' },
+  // #1 below the 39 °C binding-Tm floor and outside a V4 rule (gc_clamp_fail), grade B
+  { name: 'hsa-miR-590-3p', sequence: 'UAAUUUUAUGUAUAAGCUAGU' },
+];

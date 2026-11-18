@@ -18,7 +18,7 @@ async function runDesign(page) {
   const designBtn = page.getByRole('button', { name: 'Design Primers →' });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
-  await expect(page).toHaveURL('/results', { timeout: 15000 });
+  await expect(page).toHaveURL('/results', { timeout: 30000 });
 }
 
 // ── CSV download ───────────────────────────────────────────────────

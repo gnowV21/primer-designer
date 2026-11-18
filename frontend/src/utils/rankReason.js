@@ -2,6 +2,7 @@
 // Uses the same effective weights as the total, so the named criteria are the
 // ones that actually moved the ranking.
 import { CRITERION_LABELS } from './scoreSeverity.js';
+import { hasTiers, tierReason } from './tierRank.js';
 
 const TIE_POINTS = 1.0;       // total-score gap below which the sets are called a tie
 const MIN_CONTRIB = 0.3;      // ignore criteria that moved the total by < 0.3 points
@@ -19,6 +20,15 @@ const label = (k) => CRITERION_LABELS[k] || k.replace(/_/g, ' ');
 const list = (cs) => cs.map((c) => `${label(c.key)} (${c.pts > 0 ? '+' : ''}${c.pts.toFixed(1)})`).join(', ');
 
 export function rankReason(first, second) {
+  if (!first || !second) return null;
+  // Tiered sets (algorithm 4.0.0): explain by the deciding tier, in ranking-key order
+  // (SPEC_ui_tiered_4.0.0 §2.4). total_score is only the last tie-break there.
+  if (hasTiers(first) && hasTiers(second)) return tierReason(first, second).text;
+  return v4RankReason(first, second);
+}
+
+/** V4 sets (API scoringSystem "v4", old History records): weighted-score gap (U5). */
+export function v4RankReason(first, second) {
   if (!first || !second) return null;
   const gap = (first.total_score ?? 0) - (second.total_score ?? 0);
   const cs = contributions(first, second);

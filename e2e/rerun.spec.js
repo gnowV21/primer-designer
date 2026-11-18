@@ -21,7 +21,7 @@ async function designDefault(page) {
   const designBtn = page.getByRole('button', { name: 'Design Primers →' });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
-  await expect(page).toHaveURL('/results', { timeout: 15000 });
+  await expect(page).toHaveURL('/results', { timeout: 30000 });
 }
 
 const rtPrimer = (page, seq) => page.getByText(seq, { exact: true }).first();
@@ -44,7 +44,7 @@ test('re-run with a 7-nt overhang adds a run; runs can be switched', async ({ pa
   await page.getByRole('button', { name: /Re-run/ }).click();
 
   const runs = page.getByRole('group', { name: 'Design runs' });
-  await expect(runs).toBeVisible({ timeout: 15000 });
+  await expect(runs).toBeVisible({ timeout: 30000 });
   await expect(runs.getByRole('button')).toHaveCount(2);
   await expect(rtPrimer(page, RT_7NT)).toBeVisible();
 

@@ -1,0 +1,33 @@
+{
+ "source": "outputs/freeze_cache/ui_top3_hsa.jsonl.gz",
+ "designs_with_sets": 2472,
+ "order_identical": 2472,
+ "order_different": 0,
+ "not_tiered": 0,
+ "designs_with_one_set": 1,
+ "deciding_step_1_vs_2": {
+  "specificity": 140,
+  "structure_veto": 26,
+  "binding_floor_fail": 269,
+  "v4_violation": 214,
+  "pcr": 17,
+  "flexible": 1112,
+  "tie_break": 571,
+  "tm_vs_ta": 1,
+  "sequence": 121,
+  "identical": 0
+ },
+ "rank_reason_branch_1_vs_2": {
+  "flexible": 1112,
+  "binding_floor_fail": 269,
+  "specificity": 140,
+  "identical": 121,
+  "tie_break": 571,
+  "v4_violation": 214,
+  "structure_veto": 26,
+  "pcr": 17,
+  "tm_vs_ta": 1
+ },
+ "equivalent_in_silico_pairs": 1257,
+ "mismatches": []
+}
