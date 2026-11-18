@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18, Giai đoạn 3 của hệ phân tầng)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; **Giai đoạn 2c đạt** (SPEC §12: 0 ca F4 = 1 tránh được; pipeline trùng offline 20/20, tất định). Đang làm Giai đoạn 3. QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; Giai đoạn 2c đạt (SPEC §12). **Giai đoạn 3 xong 2026-11-18** (SPEC §13): số liệu chạy lại, `docs/SCORING_TIERED_COMPARISON.md`, PR vào `master` mở nhưng **không merge cho tới khi xong SPEC UI** (QĐ 31). QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -77,6 +77,21 @@
 | E2E Playwright | 74/74 | — (lần trước 2026-11-03) | 2026-11-17 |
 | Ma trận: test `crossreactivity/tests` | 29 passed | — | 2026-11-17 |
 
+**Số liệu algorithm 4.0.0** (nhánh `feat/tiered-scoring`, chưa merge — QĐ 31; chi tiết `docs/SCORING_TIERED_COMPARISON.md`, SPEC §13):
+
+| Số liệu | 4.0.0 tiered | 3.8.2 (V4) | Nguồn |
+|---|---|---|---|
+| Validation in-silico | **2436/2439**; 3 `expected_design_failure` (ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p: V4 từ chối vì GC, tiered thiết kế được, trùng vùng đặc hiệu mồi công bố). V4 sau cờ trùng 3.8.2 | 2439/2439 | `validation/results.json` |
+| Benchmark 50 / so mồi công bố | 50/50; 223/224 thiết kế được, 193 có mồi công bố | 50/50; 220/224 | `benchmark/` |
+| Độ phủ hsa | **2472/2656** (184 thất bại) | 2253/2656 | `outputs/crossreactivity_metadata.json` |
+| #1 S1 ≤ 2 (HIGH/CRITICAL, cùng classifier) | 55/2253 (34 ca cải thiện) | 85/2253 | `benchmark/tiered_stage2c_report.json` |
+| `specificity_fallback` / `structure_veto` #1 / dưới sàn 39 °C #1 | 54 / 120 / 196 (của 2472) | — / 115 `hard_filter_fallback` / — | như trên |
+| Grade #1 A/B/C | 2032/386/54 (2472) | — | như trên |
+| Ma trận hsa ngoài đường chéo HIGH/MEDIUM/LOW | 172 / 105 / 22.620 (2472 assay) | 195 / 111 / 20.709 (2253) | `outputs/crossreactivity_*` |
+| Độ nhạy BLAST, 175 mồi validation, lề 10 °C: SAFE / CRITICAL | 105 / 51 | 95 / 54 | `benchmark/blast_tm_gate_sensitivity.json` |
+| Thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s, p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
+| Backend tests / e2e / `crossreactivity/tests` | 900 passed, 3 skipped / 74/74 (cache có; lần đầu cache trống 8 fail do giới hạn 15 s) / 29 | 733 / 74 / 29 | 2026-11-18 |
+
 - **Validation in-silico:** `validation/results.json` — 2439/2439 check pass, 201 target (197 mục `mirnas` + 4 edge case trong `reference_mirnas.json`; report ghi "193 miRNAs + 4 edge cases"). Bộ gốc ban đầu: 783/783, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md`, phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
   - Kiểm tra cửa sổ nhiệt động (Fwd Tm ≈ 60 °C, GC %, amplicon 63–73 bp), độ đặc hiệu let-7 (so với Wang 2017), edge cases E1/E4/E5/E6.
@@ -103,7 +118,7 @@
 - Dữ liệu isomiR 3' từ **isomiRdb** (PMID 36243964) — đủ 42.494/42.494 mẫu (từ 2026-10-22; trước đó 20.635 do tải chậm bị server cắt ở ≈1 GiB).
 - Family miRNA: nhóm theo seed (nt 2–8) từ `mature.fa` (miFam.dat đã bị miRBase gỡ).
 - Thí nghiệm miR-16 exp 220826 của lab chỉ là **case study minh họa** — không dùng để calibrate.
-- **2026-11-17 — bản đóng băng 4.0.0:** chấm điểm của 4.0.0 là **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–16); V4 giữ chạy được sau cờ, mốc so sánh là **3.8.2**. Ở V4: REV-21 theo Tm 47 °C của Primer3; `end_stability` tính đúng Primer3 và vẫn chấm (điểm V4 không đổi); không làm nhãn "equivalent in silico"; D-8 giữ nguyên (giới hạn). Trình tự miRNA ghim về `mature.fa` 22.1 cục bộ; tra online chỉ là dự phòng có nhãn.
+- **2026-11-17 — bản đóng băng 4.0.0:** chấm điểm của 4.0.0 là **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–37); V4 giữ chạy được sau cờ, mốc so sánh là **3.8.2**. Cấu hình cuối (2026-11-18): đặc hiệu trước (BLAST S1 + ΔCq S2 + biên Tm S3, loại CRITICAL / CO-AMPLIFIED), veto mềm cấu trúc rồi sàn Tm vùng bám 39 °C, cùng S thì bộ không vi phạm luật V4 trước, rồi PCR, Linh hoạt (F4 là sàn một phía ≥ 45 °C; độ dài chỉ báo cáo), điểm chi tiết; grade A/B/C theo tầng. Ngưỡng ghi "own threshold" chưa hiệu chỉnh bằng wet-lab. Ở V4: REV-21 theo Tm 47 °C của Primer3; `end_stability` tính đúng Primer3 và vẫn chấm (điểm V4 không đổi); không làm nhãn "equivalent in silico"; D-8 giữ nguyên (giới hạn). Trình tự miRNA ghim về `mature.fa` 22.1 cục bộ; tra online chỉ là dự phòng có nhãn.
 - Đã hoãn: song ngữ VI/EN (UX-02), mẫu đặt hàng nhà cung cấp (UX-05), Batch design, Docker (B2), form nhập dữ liệu calibration (B1a), trang diễn giải Cq sau chạy (SCI-11 phần 3).
 
 ## 5. Việc còn tồn / bước tiếp theo đề xuất cho khóa luận
@@ -111,7 +126,7 @@
 **Ưu tiên cao (cho khóa luận):**
 1. **Bản đóng băng 4.0.0** (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026) — các mục còn mở cần xử lý hoặc ghi thành giới hạn trước khi đóng băng:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Giai đoạn 2b (SPEC §11): QĐ 29 (F4 sàn, bỏ F3) và QĐ 30 (grade A/B/C theo tầng) cài sau cờ `TIERED_F4_FLOOR`, `TIERED_GRADE_BY_TIERS` (đang tắt). Chờ duyệt QĐ 29 theo số đo và QĐ 32 (mồi #1 vi phạm luật V4). Sau đó Giai đoạn 3.
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Giai đoạn 1–3 xong (SPEC §9–13); cấu hình cuối = QĐ 29 + 30 + 33 + 34 + 36, mặc định bật. Việc tiếp: **SPEC UI** (frontend hiển thị tầng, grade A/B/C, câu "#1 so với #2" theo tầng — hiện sai ở 444 thiết kế), rồi merge PR và Phần 4–5 của PROMPT.
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.

@@ -308,6 +308,18 @@ Validation in-silico vẫn **2439/2439**. Mồi, điểm và nhãn ΔCq của 16
 | REV-27 | ⏳ Ghi nhận (D-8) | **403/2656 miRNA hsa không thiết kế được**, cả 403 do bộ lọc sơ bộ mồi xuôi (GC trung vị 69,6 % so với 50 % ở nhóm thiết kế được). Nới riêng GC 40–60 % cứu 181 ca; nới riêng kẹp GC cứu 34 ca (nhóm giàu AT); 180 ca cần nới từ 2 ràng buộc; miR-302e/f (17 nt) không đủ chỗ cho vùng đặc hiệu 12 nt. **Nguyên nhân gốc:** đuôi 5′ luôn có GC ≥ 50 % (`_generate_tail_pool`), nên mồi của miRNA giàu GC không thể xuống dưới 60 % GC. V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên (SPEC QĐ 15). Đuôi giàu AT chưa làm. |
 | REV-28 | ✅ Sửa (3.8.2) | **Nguồn trình tự miRBase.** `/api/mirbase/hsa-miR-155-5p` trả 24 nt không phải lỗi: `mature.fa` 22.1 (sha256 `3c521fc9…`, cùng file với BLAST DB và chỉ mục overhang) ghi MIMAT0000646 dài 24 nt; bản 23 nt là chú giải cũ (≤ 21). Route khớp `mature.fa` ở 2656/2656 hsa (theo tên và accession). Rủi ro thật: khi không có trong SQLite, route lấy online (miRBase/RNAcentral, có thể là release mới hơn) rồi ghi vào cache không kèm phiên bản — đã có 2 dòng như vậy (`hsa-miR-375`, `hsa-miR-137`, trình tự trùng 22.1; đã xóa). Nay: kết quả online gắn `source: online`, `mirbase_release: unknown` và không ghi cache; thiết kế có trình tự ngoài 22.1 (hoặc khác mục 22.1 cùng tên) nhận cảnh báo `sequence_not_in_mirbase_release`; release + sha256 ghi vào `metadata.provenance` và file xuất MIQE. Không đổi mồi. |
 
+### 10.6 Bổ sung 2026-11-18 — algorithm 4.0.0 (hệ phân tầng)
+
+| ID | Trạng thái | Nội dung |
+|---|---|---|
+| REV-21, REV-23, REV-25 | ✅ Đóng ở 3.8.2 | Xem §10.5. Hệ phân tầng chấm đặc hiệu theo từng ứng viên (S2 theo độ dài riêng); `end_stability` chỉ báo cáo. |
+| REV-26 | ✅ Xử lý (4.0.0) | 115/2253 thiết kế V4 chạy `hard_filter_fallback`. Hệ phân tầng bỏ lọc cứng cấu trúc, thay bằng F5 + veto mềm; #1 có `structure_veto` ở 120/2472 thiết kế (grade B), không còn trả mồi vi phạm mà không xếp hạng. Bộ #1 của V4 vi phạm chính luật V4 ở đúng 115 thiết kế này. |
+| REV-27 / D-8 | ✅ Một phần (4.0.0) | Hệ phân tầng bỏ lọc GC % / kẹp GC ở bước sinh ứng viên (QĐ 15): 219/403 miRNA V4 không thiết kế được nay có mồi (mọi bộ #1 đều vi phạm ≥ 1 luật V4, đánh dấu bằng `v4_rule_violations`); 184 vẫn không có (cửa sổ Tm, độ dài, homopolymer). Đuôi 5′ giàu AT chưa làm. |
+| REV-29 | ✅ Sửa (4.0.0) | **BLAST không tham gia chọn mồi** (V4 chỉ BLAST sau khi chọn). Nay S1 là tiêu chí đầu tiên. #1 của V4 3.8.2 có S1 ≤ 2 (HIGH/CRITICAL) ở 85/2253 thiết kế; hệ mới chọn mồi có S1 cao hơn ở 34 ca, 51 ca còn lại không có ứng viên tốt hơn (38 là fallback). |
+| REV-30 | ⏳ Giới hạn | **F2 (kẹp GC) không xét vị trí** trong 5 nt cuối (…GCAAT = 5 điểm, V4 loại). QĐ 34 (cùng S thì bộ không vi phạm luật V4 xếp trước) xử lý phần lớn các ca cùng S. |
+| REV-31 | ⏳ Giới hạn | **196/2472 thiết kế không thể đạt sàn Tm vùng bám 39 °C** trong nhóm đặc hiệu cao nhất; #1 grade B. Mốc 45 °C là mức sàn từ giả thuyết chu kỳ 1, không phải đích. |
+| REV-32 | ⏳ Mở (SPEC UI) | Frontend hiển thị `total_score` (điểm chi tiết) và câu "#1 so với #2" theo hiệu điểm; ở 444/2472 thiết kế #1 có điểm chi tiết thấp hơn #2. PR 4.0.0 không merge cho tới khi xong SPEC UI (QĐ 31). |
+
 ## 11. Tài liệu tham khảo (đã kiểm chứng qua PubMed)
 
 Nguồn: PubMed. Mọi mục dưới đây đã được khớp PMID bằng PubMed MCP trong phiên audit.

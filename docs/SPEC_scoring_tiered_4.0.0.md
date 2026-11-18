@@ -522,3 +522,36 @@ Lần 1 dừng ở mốc nghiệm thu cũ của QĐ 33 (262 bộ #1 có F4 = 1; 
   - ΔS > 0: 57 ca. Luật: `gc_clamp_fail` 28, `gc_out_of_range` 24, `hard_hairpin_tm` 3, `hard_dimer_full_dg` 2, `gc_end_window_fail` 1.
   - ΔS = 0: 28 ca, đều do veto sàn 39 °C quyết định. Luật: `gc_clamp_fail` 22, `hard_dimer_full_dg` 6.
 - **Giới hạn:** 196 thiết kế (2472) không thể đạt sàn 39 °C với bất kỳ ứng viên nào trong nhóm đặc hiệu cao nhất.
+
+## 13. Kết quả Giai đoạn 3 (số liệu, tài liệu, PR — 2026-11-18)
+Provenance: `benchmark/logs/stage3_provenance.json`. Ghi lại ở đó: git SHA, cờ, `blastn` 2.17.0+, sha256 của BLAST DB, cache có 2660 dòng trước khi chạy. Bản sao lưu cache: `backend/data/blast_cache.20261118-0557.bak` (gitignore).
+
+**B. Lượt dựng ma trận hsa (nạp cache, BLAST mới):**
+- 2656 miRNA: 2472 thiết kế được, 184 thất bại (không có ứng viên).
+- 213.325 lần BLAST mới; **0 lỗi BLAST, 0 lần ghi cache thất bại**.
+- JSONL 2656 dòng, không trùng.
+- Thời gian thực khoảng 80 phút. Thời gian tường 4,9 giờ vì máy ngủ 3,5 giờ giữa chừng; sau đó có tiến trình giữ máy thức trong các lượt chạy dài.
+
+**C. Kiểm tra sau khi nạp (đạt hết):**
+- S1 của 215.860 ứng viên trong cache so với offline của Giai đoạn 2: **0 khác** (`benchmark/tiered_stage3_cache_s1.json`). 1920 ứng viên không có trong cache vì bị S2 loại ngoài thiết kế fallback, nên pipeline không BLAST.
+- #1 của lượt ma trận (API thật) trùng #1 offline ở **2472/2472** thiết kế.
+- 20 thiết kế chạy lại hai lần: cache hit 1875/1875, kết quả giống hệt, top 3 trùng offline 20/20.
+- Cache: 2660 → 215.985 dòng.
+
+**D. Các lượt có BLAST sau khi nạp:**
+- Validation: 2436/2439.
+  - Cache hit hsa 5160/5840 (88,4 %) tính trên mọi thiết kế mang mã loài hsa. Cả 680 lần BLAST mới thuộc 7 thiết kế có ngữ cảnh không có trong ma trận: 3 tên cũ của Busk 2014, 3 "putative miRNA" không tiền tố loài, 1 trình tự tự nhập. Tính trên 51 thiết kế có cùng ngữ cảnh với ma trận: 5160/5160 (100 %).
+  - Loài khác là BLAST mới: ssc 5200, mmu 3766, ebv 3067, osa 540, ath 360, gga 120, bta 100, cel 100 lần gọi (`benchmark/logs/validation_blast_stats.json`).
+- Benchmark 50: 50/50, cache hit hsa 4780/4780.
+- Benchmark export: 223/224, cache hit 100 % mọi loài.
+- BLAST sensitivity: 175 mồi, BLAST trực tiếp, không qua cache thiết kế.
+- e2e: lần đầu, khi cache cho tham số mặc định của frontend còn trống, 62 pass / 4 flaky / 8 fail. 8 test fail vì vượt giới hạn 15 s: thiết kế không cache mất khoảng 10–13 s, cộng 4 worker song song. Chạy lại khi cache đã có: **74/74**.
+
+**E. Check validation fail (không sửa check):** 3 `expected_design_failure`.
+- ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p được ghi là giới hạn của V4 (đầu 5′ giàu GC). Tiered thiết kế được (QĐ 15), và vùng đặc hiệu trùng hoặc nằm trong vùng của mồi đã công bố.
+- Đề xuất: kỳ vọng của mục theo hệ chấm điểm (V4: từ chối; tiered: so với mồi công bố).
+
+**F.** `docs/SCORING_TIERED_COMPARISON.md`, sinh bằng `backend/scripts/build_tiered_comparison_doc.py`.
+
+**Đề xuất cho SPEC UI:** giới hạn thời gian của thiết kế trong e2e (15 s) quá sát với thời gian thiết kế không cache. Nên tăng lên 30 s, hoặc làm nóng cache trước khi chạy.
+
