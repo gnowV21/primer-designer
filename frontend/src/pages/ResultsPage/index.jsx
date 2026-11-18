@@ -141,14 +141,8 @@ export default function ResultsPage() {
             <ProbeCard probe={probe} probeNote={probe_note} />
           </div>
         )}
-        {!isTaqMan && (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="text-sm font-medium text-slate-700">SYBR Green mode</p>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Melting-curve analysis after every run confirms product specificity; amplicon is constrained to ≤ 120 bp.
-            </p>
-          </div>
-        )}
+        {/* SYBR Green: no card — the mode is in "Parameters used" and the melt-curve
+            check is in the protocol advice (review panel 2026-11-18). */}
 
         {/* ── Reaction / Melting / Gel visualization (SPEC_visualization) ──
              Outside the scientific-details toggle so it opens in one click; still

@@ -77,6 +77,14 @@ test.describe('tier key comparator', () => {
     expect(bestRunIndices([mk(), mk()])).toEqual([]);                 // all equal: no star
     expect(bestRunIndices([mk(), { total_score: 99 }])).toEqual([]);  // mixed: not comparable
   });
+
+  test('no best run across S scales (BLAST /15 vs no BLAST /10)', () => {
+    const noBlast = mk({ s1: 0 });
+    noBlast.ranking.specificity.blast = { score: null, overall_risk: null };
+    noBlast.ranking.specificity.total = 10;
+    noBlast.ranking.specificity.max = 10;
+    expect(bestRunIndices([noBlast, mk({ s1: 2 })])).toEqual([]);
+  });
 });
 
 test.describe('rankReason — 8 branches (SPEC_ui §2.4)', () => {

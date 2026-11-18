@@ -21,8 +21,12 @@ const SELECTION_LABEL = {
   },
 };
 
+// Pre-filter notes shown on V4 sets only (review panel 2026-11-18):
+//  - tiered sets score the clamp as F2 (chip above), so the V4 "75/100" text would
+//    contradict it on the same card;
+//  - "3′ end is T" is dropped everywhere: it asks for no action (the 3′ end is set
+//    by the miRNA) and has no measured effect behind it.
 const PREFILTER_WARNING_TEXT = {
-  t_at_3prime_warning: "3′ end is T — may reduce polymerase efficiency slightly",
   gc_clamp_weak_warning: "Only 1 G/C in the last 3 nt (weak GC clamp). The 3′ end is set by the miRNA sequence; scored 75/100 on the GC-clamp criterion",
 };
 
@@ -44,6 +48,7 @@ export default function PrimerSetCard({
   const rankColor  = rankColors[(set.rank || 1) - 1] ?? rankColors[2];
   const isomirRisk = set.isomir_flag?.isomir_discrimination_risk;
   const selection  = SELECTION_LABEL[set.selection];
+  const prefilterNotes = tiered ? [] : (set.warnings_from_prefilter || []).filter((w) => PREFILTER_WARNING_TEXT[w]);
 
   return (
     <div className={`rounded-2xl border shadow-sm ${set.rank === 1 ? 'border-teal-300 shadow-teal-100' : 'border-slate-200'}`}>
@@ -113,12 +118,10 @@ export default function PrimerSetCard({
 
       {expanded && (
         <div className="border-t border-slate-100 px-4 sm:px-5 py-4 space-y-5">
-          {/* ── Primer sequences ── */}
-          <div className="grid grid-cols-1 gap-2">
-            <PrimerRow label="Forward" seq={set.sequence} detail={`Binding: ${set.specific_region || '—'} (${set.specific_length} nt)`} />
-            {stemloop && <PrimerRow label="RT (stem-loop)" seq={stemloop.sequence} detail={`Tm ${stemloop.tm_full?.toFixed(1)}°C · MFE ${stemloop.mfe?.toFixed(2)} kcal/mol`} />}
-            {reverse  && <PrimerRow label="Reverse (universal)" seq={reverse.sequence}  detail={`Tm ${reverse.tm?.toFixed(1)}°C · GC ${reverse.gc_percent}%`} />}
-          </div>
+          {/* ── Forward primer (the RT primer and the universal reverse are the same for
+               every set: shown once, in "Shared by all sets") ── */}
+          <PrimerRow label="Forward" seq={set.sequence} detail={`Binding: ${set.specific_region || '—'} (${set.specific_length} nt)`} />
+          {tiered && <LowBindingTmNote set={set} />}
 
           {/* ── Tiers (4.0.0) or the V4 score (U5) + structure ── */}
           {tiered ? (
@@ -159,14 +162,11 @@ export default function PrimerSetCard({
             </div>
           )}
 
-          {/* ── Warnings ── */}
-          {(set.warnings_from_prefilter || []).length > 0 && (
+          {/* ── Pre-filter notes (V4 sets only) ── */}
+          {prefilterNotes.length > 0 && (
             <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-700 mb-1">Warnings</p>
-              {set.warnings_from_prefilter.map((w) => (
-                <p key={w} className="text-xs text-amber-700">
-                  • {PREFILTER_WARNING_TEXT[w] ?? w}
-                </p>
+              {prefilterNotes.map((w) => (
+                <p key={w} className="text-xs text-amber-700">{PREFILTER_WARNING_TEXT[w]}</p>
               ))}
             </div>
           )}
@@ -192,16 +192,32 @@ export default function PrimerSetCard({
   );
 }
 
+/** Binding-region Tm below the 39 °C floor (QD 36): in cycle 1 the forward primer
+ *  anneals to the cDNA through this region only. Advice only — the ranking and the
+ *  grade are unchanged (review panel 2026-11-18, A5). */
+function LowBindingTmNote({ set }) {
+  if (!set.ranking?.binding_floor_fail) return null;
+  const tm = set.ranking.flexible?.binding_tm?.tm_binding;
+  return (
+    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" data-testid="low-binding-tm">
+      <span className="font-semibold">Binding-region Tm {tm != null ? `${Number(tm).toFixed(1)} °C` : 'below 39 °C'}:</span>{' '}
+      in cycle 1 the forward primer binds the cDNA through this region only. Run the first
+      2–3 cycles at Ta ≈ 50 °C, or consider an LNA forward primer.
+    </p>
+  );
+}
+
 function HeterodimersPanel({ checks }) {
+  // Fwd × universal reverse is the "Hetero-dimer" row of Structure Checks (same
+  // primers, same PCR buffer): only the RT-step pair is added here.
   const pairs = [
     { key: 'heterodimer_fwd_stemloop', label: 'Fwd × RT (stem-loop)', subtitle: 'RT step buffer (Kramer 2011)' },
-    { key: 'heterodimer_fwd_reverse',  label: 'Fwd × Universal Rev',  subtitle: 'PCR step buffer (user params)' },
   ];
 
   return (
     <div className="rounded-lg border border-slate-200 overflow-hidden">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 py-2 bg-slate-50 border-b border-slate-200">
-        Heterodimer Check
+        Heterodimer with the RT primer
       </p>
       <div className="divide-y divide-slate-100">
         {pairs.map(({ key, label, subtitle }) => {

@@ -20,6 +20,12 @@ const GRADE_MEANING = {
 
 const fmt = (v, d = 1) => (v == null || Number.isNaN(Number(v)) ? 'n/a' : Number(v).toFixed(d));
 
+/** F4 is a one-sided floor (TIERED_F4_FLOOR, QD 29) or a two-sided target: read the mode. */
+const f4IsFloor = (bt) => !bt?.mode || String(bt.mode).startsWith('floor');
+const f4Label = (bt) => `${f4IsFloor(bt) ? 'floor' : 'target'} ${fmt(bt?.target, 0)} °C`;
+/** F3 specific length is report-only unless the backend scores it. */
+const f3ReportOnly = (fx) => fx?.specific_length?.report_only !== false;
+
 /** "A" / "B" / "C" pill; `withTooltip` adds the grade reasons on hover / focus. */
 export function GradeBadge({ set, blastAvailable = true, withTooltip = true, size = 'md' }) {
   const g = set?.grade;
@@ -95,7 +101,8 @@ export function TierFlags({ set }) {
       title: set.explanations?.tm_binding_accuracy || 'Specific-region Tm below the 39 °C floor (F4 level 1).' });
   }
   for (const code of set.v4_rule_violations || []) {
-    chips.push({ key: code, tone: 'slate', text: `Outside V4 rule: ${code}`, title: v4RuleLabel(code) });
+    // Readable rule in the chip, the code in the hover text (review panel: no raw codes).
+    chips.push({ key: code, tone: 'slate', text: `Outside V4 rule: ${v4RuleLabel(code)}`, title: code });
   }
   if (!chips.length) return null;
   const TONE = {
@@ -129,7 +136,10 @@ export default function TierSummary({ set, blastAvailable = true }) {
     <div className="rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-3 space-y-3" data-testid="tier-summary">
       <div className="flex flex-wrap items-center gap-2">
         <GradeBadge set={set} blastAvailable={blastAvailable} />
-        <span className="text-xs text-slate-500">{set.grade_basis === 'tiers (QD 30)' ? 'Grade from the tiers' : set.grade_basis}</span>
+        <span className="text-xs text-slate-500">
+          {set.grade_basis === 'tiers (QD 30)' ? 'Grade from the tiers' : set.grade_basis}
+          {' · '}criterion levels L1–L5, L5 best
+        </span>
       </div>
 
       <TierFlags set={set} />
@@ -167,8 +177,12 @@ export default function TierSummary({ set, blastAvailable = true }) {
         <Chip name="F1 GC" score={fx.gc?.score} value={`${fmt(fx.gc?.gc_percent)} %`} title={ex.gc_content} />
         <Chip name="F2 GC clamp" score={fx.gc_clamp?.score} value={fx.gc_clamp?.last5} title={ex.gc_clamp} />
         <Chip name="F4 binding Tm" score={fx.binding_tm?.score}
-          value={`${fmt(fx.binding_tm?.tm_binding)} °C · floor ${fmt(fx.binding_tm?.target, 0)} °C`}
+          value={`${fmt(fx.binding_tm?.tm_binding)} °C · ${f4Label(fx.binding_tm)}`}
           title={ex.tm_binding_accuracy} />
+        {!f3ReportOnly(fx) && (
+          <Chip name="F3 length" score={fx.specific_length?.score}
+            value={`${fx.specific_length?.length ?? set.specific_length} nt`} />
+        )}
         <Chip name="F5 structure" score={st.score}
           value={`min of hairpin ${sub.hairpin_tm ?? '—'}, dimer ${sub.dimer_dg ?? '—'}, 3′ dimer ${sub.end_dimer_tm ?? '—'}`}
           title={ex.structure} />
@@ -195,8 +209,10 @@ export function TierDetailTable({ set }) {
     ['P1 Tm pair (report only)', null, `${fmt(pcr.tm_pair?.diff, 2)} °C`, ''],
     ['F1 GC', fx.gc?.score, `${fmt(fx.gc?.gc_percent)} %`, ex.gc_content],
     ['F2 GC clamp', fx.gc_clamp?.score, fx.gc_clamp?.last5, ex.gc_clamp],
-    ['F3 specific length (report only)', null, `${fx.specific_length?.length ?? set.specific_length} nt`, ''],
-    ['F4 binding Tm (floor 45 °C)', fx.binding_tm?.score, `${fmt(fx.binding_tm?.tm_binding)} °C`, ex.tm_binding_accuracy],
+    [`F3 specific length${f3ReportOnly(fx) ? ' (report only)' : ''}`,
+      f3ReportOnly(fx) ? null : fx.specific_length?.score,
+      `${fx.specific_length?.length ?? set.specific_length} nt`, ''],
+    [`F4 binding Tm (${f4Label(fx.binding_tm)})`, fx.binding_tm?.score, `${fmt(fx.binding_tm?.tm_binding)} °C`, ex.tm_binding_accuracy],
     ['F5 structure', fx.structure?.score,
       `hairpin Tm ${fmt(fx.structure?.hairpin_tm)} °C · dimer ΔG ${fmt(fx.structure?.dimer_dg)} · 3′ dimer Tm ${fmt(fx.structure?.end_dimer_tm)} °C`,
       ex.structure],

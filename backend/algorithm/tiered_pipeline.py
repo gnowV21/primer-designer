@@ -26,6 +26,7 @@ from .constants import (
     OVERHANG_LENGTH_DEFAULT, OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX,
     BLAST_CLASSIFIER_VERSION, SCORING_SYSTEM_DEFAULT, SCORING_SYSTEMS,
     TIERED_DETAIL_WEIGHTS, TIERED_RT_CAPTURE_BELOW, TIERED_DETAIL_TM_BINDING_FLOOR,
+    MIRBASE_HUMAN_PREFIX,
 )
 from .forward_primer import _prefilter, _GC_PREFILTER_REASONS, select_diverse_top
 from .hard_filters import apply_hard_filters
@@ -255,6 +256,11 @@ def rank(seq: str, params: dict, mirna_name: str, binding_len: int, stemloop: di
         # set when results could not be written to the sqlite cache (counted by batch runs)
         "blast_cache_write_error": blast.get("cache_write_error"),
         "returned_sets": len(top),
+        # Species whose miRNAs S1–S3 were screened against. With no miRBase species
+        # (form "Other", or a pasted sequence without a name) both the assay screen and
+        # BLAST fall back to human; the UI says so (review panel 2026-11-18, A4).
+        "screen_species": species or MIRBASE_HUMAN_PREFIX.rstrip("-"),
+        "screen_species_assumed": species is None,
         "timing_ms": {"blast": blast["ms"]},   # design_pipeline adds "total"
     }
     return {"top": top, "warnings": warnings, "summary": summary, "screen": screen,

@@ -259,7 +259,9 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
         "end_stability_3prime": end_stab,
         "warnings": warnings,
         "pass_flags": pass_flags,
-        "rt_primer_conc_note": "Use 1 nM final concentration in RT reaction (Kramer 2011), not 50 nM from Chen 2005.",
+        # Both sources side by side; the lab chooses (review panel 2026-11-18, A7).
+        "rt_primer_conc_note": ("RT primer: 1 nM final reduced non-specific products "
+                                "(Kramer 2011); Chen 2005 used 50 nM."),
         "refolding_protocol": REFOLDING_PROTOCOL if include_refold else None,
         "sources": ["Chen et al. 2005", "Kramer 2011 Unit 15.10", "Varkonyi-Gasic et al. 2007", "Report 2 HG Lab"],
     }

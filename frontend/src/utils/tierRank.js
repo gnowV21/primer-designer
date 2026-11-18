@@ -188,6 +188,10 @@ export function tierReason(first, second) {
  *  #1 is equal on the key (nothing to single out). */
 export function bestRunIndices(topSets) {
   if (topSets.length < 2 || !topSets.every(hasTiers)) return [];
+  // S is out of 15 with BLAST and out of 10 without: runs that differ in BLAST
+  // availability are not on one scale, so no run is singled out (review panel A3).
+  const maxes = new Set(topSets.map((s) => s.ranking.specificity?.max));
+  if (maxes.size > 1) return [];
   let best = topSets[0];
   for (const s of topSets) if (compareTiered(s, best) < 0) best = s;
   const idx = topSets.map((s, i) => (compareTiered(s, best) === 0 ? i : -1)).filter((i) => i >= 0);

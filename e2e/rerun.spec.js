@@ -24,7 +24,8 @@ async function designDefault(page) {
   await expect(page).toHaveURL('/results', { timeout: 30000 });
 }
 
-const rtPrimer = (page, seq) => page.getByText(seq, { exact: true }).first();
+// The RT primer is shown once, in "Shared by all sets", as 5'–SEQ–3'.
+const rtPrimer = (page, seq) => page.getByTestId('shared-primers').getByText(`5'–${seq}–3'`, { exact: true });
 
 test('Re-run is disabled until a parameter changes', async ({ page }) => {
   await designDefault(page);

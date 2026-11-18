@@ -73,6 +73,11 @@ def _fetch_mirbase(mirna_id: str) -> dict | None:
                 params={param: mirna_id},
                 timeout=_ATTEMPT_TIMEOUT,
             )
+            # 5xx / 429 = the service is failing, not "no such miRNA": retry, and if it
+            # persists raise so the caller counts a breaker failure and tries RNAcentral.
+            if r.status_code >= 500 or r.status_code == 429:
+                last_exc = RuntimeError(f"miRBase API HTTP {r.status_code}")
+                continue
             if r.status_code != 200:
                 return None
             body    = r.json()

@@ -96,7 +96,7 @@ def _analyze_single(seq: str, role: str, p3: dict, temp_c: float, params: dict) 
         if seq.startswith(STEMLOOP_BODY) and not self_dimer["pass_overall"]:
             self_dimer["note"] += (
                 " For a stem-loop RT primer this is expected: two copies can exchange "
-                "their stems (same 44-nt body in every assay). Used at ~1 nM and refolded "
+                "their stems (same 44-nt body in every assay). Used at low concentration (1 nM Kramer 2011 – 50 nM Chen 2005) and refolded "
                 "before RT, it is not a design defect."
             )
     return result
