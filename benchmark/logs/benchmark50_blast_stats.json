@@ -1,0 +1,18 @@
+{
+ "cel": {
+  "blast_candidates": 100,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 100,
+  "cache_write_errors": 0,
+  "designs": 1,
+  "new_blast_calls": 0
+ },
+ "hsa": {
+  "blast_candidates": 4780,
+  "cache_hit_rate": 1.0,
+  "cache_hits": 4780,
+  "cache_write_errors": 0,
+  "designs": 49,
+  "new_blast_calls": 0
+ }
+}

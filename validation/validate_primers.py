@@ -165,9 +165,12 @@ def get(d, *keys, default=None):
     return cur
 
 
+SCORING_SYSTEM = None   # --scoring-system; None = the backend default (tiered since 4.0.0)
+
+
 def default_payload(mature_seq: str, mirna_id: str = "") -> dict:
     """Minimal /api/design body; empty param groups let backend apply its own defaults."""
-    return {
+    body = {
         "sequence": {"matureSequence": mature_seq, "mirnaId": mirna_id},
         "thermodynamic": {},
         "primerConstraints": {},
@@ -175,6 +178,9 @@ def default_payload(mature_seq: str, mirna_id: str = "") -> dict:
         "detectionMethod": {},
         "experimentalContext": {},
     }
+    if SCORING_SYSTEM:
+        body["scoringSystem"] = SCORING_SYSTEM
+    return body
 
 
 def fetch_sequence(base, mirna_id):
@@ -189,8 +195,49 @@ def fetch_sequence(base, mirna_id):
 
 
 def run_design(base, mature_seq, mirna_id=""):
-    r = requests.post(f"{base}/api/design", json=default_payload(mature_seq, mirna_id), timeout=60)
+    r = requests.post(f"{base}/api/design", json=default_payload(mature_seq, mirna_id), timeout=120)
+    if r.status_code == 200:
+        require_blast(r.json())
     return r
+
+
+def require_blast(data: dict) -> dict:
+    """Thesis data must not silently lose S1 (SPEC_scoring_tiered_4.0.0 QD 24e): a
+    tiered design without BLAST stops the run."""
+    rs = (data or {}).get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        raise SystemExit("BLAST unavailable on the backend ("
+                         f"{rs.get('blast_unavailable_reason')}) — tiered specificity "
+                         "ranking would be S2 + S3 only. Fix BLAST+ / the DB and re-run.")
+    if rs:
+        sp = ((data or {}).get("metadata") or {}).get("species_code") or "?"
+        s = BLAST_STATS.setdefault(sp, {"designs": 0, "blast_candidates": 0, "cache_hits": 0,
+                                        "cache_write_errors": 0})
+        s["designs"] += 1
+        s["blast_candidates"] += rs.get("blast_candidates") or 0
+        s["cache_hits"] += rs.get("blast_cache_hits") or 0
+        s["cache_write_errors"] += bool(rs.get("blast_cache_write_error"))
+    return data
+
+
+BLAST_STATS: dict = {}   # species code → designs / BLASTed candidates / cache hits
+
+
+def write_blast_stats(name: str) -> None:
+    """Per-species BLAST cache use of this run → benchmark/logs/<name>_blast_stats.json
+    (SPEC_scoring_tiered_4.0.0 Giai đoạn 3: cache hit ≥ 90 % for hsa designs)."""
+    import json as _j
+    import os as _o
+    for s in BLAST_STATS.values():
+        s["new_blast_calls"] = s["blast_candidates"] - s["cache_hits"]
+        s["cache_hit_rate"] = round(s["cache_hits"] / s["blast_candidates"], 4) if s["blast_candidates"] else None
+    root = _o.path.normpath(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), *([".."] * 1)))
+    path = _o.path.join(root, "benchmark", "logs", f"{name}_blast_stats.json")
+    _o.makedirs(_o.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        _j.dump(BLAST_STATS, f, indent=1, sort_keys=True)
+    print(f"BLAST stats ({path}): " + _j.dumps(BLAST_STATS, sort_keys=True))
+
 
 
 def validate_one(base, entry, consts, windows):
@@ -241,8 +288,11 @@ def validate_one(base, entry, consts, windows):
     checks = [] if entry.get("expect_edge_code") else [("design_succeeded", True)]
     row = {"target": label, "source": src, "length": len(used_seq), "status": "200"}
 
-    # A documented limitation that now designs fine: flag it so the dataset gets updated.
+    # A documented V4 limitation. Under the tiered system (no GC pre-filter, QD 15) the
+    # design is expected to succeed: SPEC_scoring_tiered_4.0.0 QD 38.
     if entry.get("expect_design_failure"):
+        if get(data, "metadata", "scoring_system") == "tiered":
+            return v4_limitation_designed(entry, data, dna, row)
         return row, [("expected_design_failure", False)]
 
     # --- Edge-case entries: just verify the expected code fired ---
@@ -316,6 +366,35 @@ def validate_one(base, entry, consts, windows):
     return row, checks
 
 
+def v4_limitation_designed(entry, data, dna, row):
+    """SPEC_scoring_tiered_4.0.0 QD 38 — a V4-refused entry designed by the tiered system.
+
+    One check, passing when all three hold:
+      1. the design succeeded (a #1 set exists);
+      2. the #1 specific region equals, or is a substring of, the miRNA-matching region of
+         the published forward primer (or the other way round);
+      3. the #1 set breaks at least one V4 rule (`v4_rule_violations` not empty) — it is
+         the V4 limitation that is being lifted, not a set V4 would have accepted.
+    """
+    top = (data.get("top3") or [{}])[0]
+    spec = (top.get("specific_region") or "").upper()
+    pub_spec, _ = anchored_region(_norm(entry.get("published_forward")), dna)
+    violations = list(top.get("v4_rule_violations") or [])
+    designed = bool(spec)
+    region_ok = bool(spec and pub_spec) and (spec in pub_spec or pub_spec in spec)
+    passed = designed and region_ok and bool(violations)
+    row.update({
+        "status": "200 (V4 limitation designed)",
+        "forward_tool_specific": spec,
+        "forward_pub_specific": pub_spec,
+        "v4_rule_violations": ",".join(violations),
+        "v4_limitation_note": entry.get("v4_limitation_note"),
+        "tm_full": top.get("tm_full"), "gc_pct": top.get("gc_percent"),
+        "amplicon_bp": top.get("amplicon_size"), "grade": top.get("grade"),
+    })
+    return row, [("v4_limitation_designed", passed)]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url", default="http://localhost:5000")
@@ -323,7 +402,11 @@ def main():
     ap.add_argument("--out", default="validation/results.csv")
     ap.add_argument("--json-out", default="validation/results.json",
                     help="machine-readable summary (mergeable into benchmark_results.json)")
+    ap.add_argument("--scoring-system", choices=["tiered", "v4"], default=None,
+                    help="ranking system sent as scoringSystem (default: the backend's)")
     args = ap.parse_args()
+    global SCORING_SYSTEM
+    SCORING_SYSTEM = args.scoring_system
 
     with open(args.dataset, encoding="utf-8") as f:
         ds = json.load(f)
@@ -372,6 +455,9 @@ def main():
             "published_source": row.get("published_source"),
             "failed_checks": failed,
         })
+        if "v4_rule_violations" in row:   # QD 38 entries only: V4 output stays byte-identical
+            json_records[-1]["v4_rule_violations"] = row["v4_rule_violations"]
+            json_records[-1]["v4_limitation_note"] = row.get("v4_limitation_note")
         flag = "OK " if (n and p == n) else ("--- " if not n else "!!! ")
         print(f"{flag}{row['target']:<20} {row['checks_pass']:<8} "
               f"{('FAILED: ' + row['failed_checks']) if failed else row.get('status','')}")
@@ -417,6 +503,7 @@ def main():
     print(f"JSON written: {args.json_out}\n")
 
     # Non-zero exit if any deterministic check failed (useful for CI)
+    write_blast_stats("validation")
     sys.exit(0 if total_pass == total_checks else 1)
 
 

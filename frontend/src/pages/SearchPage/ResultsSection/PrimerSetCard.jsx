@@ -5,6 +5,8 @@ import ScoreBreakdown from './ScoreBreakdown.jsx';
 import StructureChecks from './StructureChecks.jsx';
 import ExportButtons from './ExportButtons.jsx';
 import OffTargetPanel from './OffTargetPanel.jsx';
+import TierSummary, { GradeBadge, TierDetailTable } from './TierSummary.jsx';
+import { hasTiers } from '../../../utils/tierRank.js';
 import { useState } from 'react';
 
 // How a set relates to the higher-ranked sets (backend select_diverse_top, v3.2.0).
@@ -31,8 +33,12 @@ const RISK_STYLE = {
   PASS:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSequence, conditions, species }) {
+export default function PrimerSetCard({
+  set, stemloop, reverse, mirnaId, mirnaSequence, conditions, species,
+  blastAvailable = true, equivalentTo = [],
+}) {
   const [expanded, setExpanded] = useState(set.rank === 1);
+  const tiered = hasTiers(set);
 
   const rankColors = ['text-teal-700 bg-teal-50 border-teal-300', 'text-slate-700 bg-slate-50 border-slate-300', 'text-slate-600 bg-slate-50 border-slate-300'];
   const rankColor  = rankColors[(set.rank || 1) - 1] ?? rankColors[2];
@@ -78,10 +84,32 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <ScoreGauge score={set.total_score} grade={set.grade} compact />
+          {tiered ? (
+            <span className="flex flex-col items-end gap-1" data-testid="card-tier-header">
+              <span className="flex items-center gap-1.5">
+                <GradeBadge set={set} blastAvailable={blastAvailable} withTooltip={false} />
+                <span className="text-xs font-semibold text-slate-700 tabular-nums">
+                  S {set.ranking.specificity.total}/{set.ranking.specificity.max}
+                </span>
+              </span>
+            </span>
+          ) : (
+            <ScoreGauge score={set.total_score} grade={set.grade} compact />
+          )}
           <span className="text-slate-500 text-sm">{expanded ? '▲' : '▼'}</span>
         </div>
       </button>
+      {tiered && equivalentTo?.length > 0 && (
+        <p className="px-4 sm:px-5 -mt-2 pb-3">
+          <span
+            className="text-xs px-2 py-0.5 rounded-full border text-slate-700 bg-slate-50 border-slate-300"
+            title="Same specificity, soft vetoes, V4-rule step, PCR and flexible tiers: the sets differ only in the tie-break score (SPEC QD 16)."
+            data-testid="equivalent-label"
+          >
+            Equivalent in silico to #{equivalentTo.join(', #')}
+          </span>
+        </p>
+      )}
 
       {expanded && (
         <div className="border-t border-slate-100 px-4 sm:px-5 py-4 space-y-5">
@@ -92,20 +120,30 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
             {reverse  && <PrimerRow label="Reverse (universal)" seq={reverse.sequence}  detail={`Tm ${reverse.tm?.toFixed(1)}°C · GC ${reverse.gc_percent}%`} />}
           </div>
 
-          {/* ── Score + structure ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* ── Tiers (4.0.0) or the V4 score (U5) + structure ── */}
+          {tiered ? (
             <div className="space-y-3">
-              <ScoreGauge score={set.total_score} grade={set.grade} />
-              {set.scores && set.weights && (
-                <ScoreBreakdown scores={set.scores} weights={set.weights} explanations={set.explanations} />
-              )}
-            </div>
-            <div>
+              <TierSummary set={set} blastAvailable={blastAvailable} />
+              <TierDetailTable set={set} />
               {set.structure_checks && (
                 <StructureChecks checks={set.structure_checks} />
               )}
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-3">
+                <ScoreGauge score={set.total_score} grade={set.grade} />
+                {set.scores && set.weights && (
+                  <ScoreBreakdown scores={set.scores} weights={set.weights} explanations={set.explanations} />
+                )}
+              </div>
+              <div>
+                {set.structure_checks && (
+                  <StructureChecks checks={set.structure_checks} />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ── Heterodimer checks ── */}
           {set.heterodimer_checks && (
@@ -141,6 +179,9 @@ export default function PrimerSetCard({ set, stemloop, reverse, mirnaId, mirnaSe
             mirnaSequence={mirnaSequence}
             conditions={conditions}
             species={species}
+            rtPrimer={stemloop?.sequence}
+            designBlast={tiered ? set.ranking.specificity.blast : null}
+            blastAvailable={blastAvailable}
           />
 
           {/* ── Export ── */}

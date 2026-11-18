@@ -96,8 +96,9 @@ def test_gc_clamp_levels():
 # ── End-to-end ───────────────────────────────────────────────────
 
 def test_mir21_3p_gets_three_sets_including_the_13nt_region():
-    """sRNAPrimerDB's 13-nt region CAACACCAGTCGA was dropped before scoring in v3.1.2."""
-    r = design_pipeline.run("CAACACCAGUCGAUGGGCUGU", {}, "hsa-miR-21-3p")
+    """sRNAPrimerDB's 13-nt region CAACACCAGTCGA was dropped before scoring in v3.1.2.
+    V4 ranking; the tiered system prefers longer regions (F3) for this miRNA."""
+    r = design_pipeline.run("CAACACCAGUCGAUGGGCUGU", {"scoringSystem": "v4"}, "hsa-miR-21-3p")
     regions = [c["specific_region"] for c in r["top3"]]
     assert len(r["top3"]) == CANDIDATES_TOP_N
     assert "CAACACCAGTCGA" in regions
@@ -113,7 +114,9 @@ def test_selection_independent_of_generation_order(monkeypatch):
 
 
 def test_top_is_highest_score_and_ranks_are_sequential():
-    r = design_pipeline.run("UAGCAGCACGUAAAUAUUGGCG", {}, "hsa-miR-16-5p")
+    # V4: rank = total score. (Tiered ranks by tiers first; the detailed score is only
+    # the last tie-break, so it need not decrease with rank — test_tiered_scoring.py.)
+    r = design_pipeline.run("UAGCAGCACGUAAAUAUUGGCG", {"scoringSystem": "v4"}, "hsa-miR-16-5p")
     top = r["top3"]
     assert [c["rank"] for c in top] == list(range(1, len(top) + 1))
     assert top[0]["total_score"] == max(c["total_score"] for c in top)

@@ -205,3 +205,64 @@ if __name__ == "__main__":
     test_export_empty_top3_400()
     test_export_filename_contains_mirna_id()
     print("\nAll export tests passed (PDF skipped if reportlab not installed).")
+
+
+# ── Tiered sets (algorithm 4.0.0, SPEC_ui_tiered_4.0.0 §2.5) ──────────
+
+def _tiered_results():
+    import copy
+    res = copy.deepcopy(_RESULTS)
+    res["metadata"] = {**res.get("metadata", {}), "scoring_system": "tiered"}
+    for s, (s1, veto, floor, viol) in zip(res["top3"], [(5, False, False, []),
+                                                         (4, True, False, ["hard_hairpin_tm"]),
+                                                         (None, False, True, ["gc_clamp_fail"])]):
+        s["grade"] = "A" if s1 == 5 else "B"
+        s["grade_reasons"] = [] if s1 == 5 else ["structure veto", "binding Tm below the 39 °C floor"]
+        s["v4_rule_violations"] = viol
+        s["ranking"] = {
+            "system": "tiered",
+            "specificity": {"blast": {"score": s1}, "assay_dcq": {"score": 4},
+                            "tm_margin": {"score": 5}, "total": (s1 or 0) + 9,
+                            "max": 15 if s1 is not None else 10},
+            "pcr": {"total": 5, "max": 5}, "flexible": {"total": 17, "max": 20},
+            "structure_veto": veto, "binding_floor_fail": floor, "eliminated": False,
+            "detailed_score": s["total_score"],
+        }
+    return res
+
+
+def _csv_rows(text):
+    import csv as _csv
+    lines = [ln for ln in text.splitlines() if ln and not ln.startswith("#")]
+    rows = list(_csv.reader(lines))
+    return rows[0], rows[1:]
+
+
+def test_export_csv_tiered_columns():
+    r = _post("csv", _tiered_results())
+    header, rows = _csv_rows(r.data.decode("utf-8"))
+    for col in ("scoring_system", "grade", "grade_reasons", "S1", "S2", "S3", "S_total", "P_total",
+                "F_total", "structure_veto", "binding_floor_fail", "v4_rule_violations",
+                "tie_break_score"):
+        assert col in header, col
+    assert "Total_Score" not in header
+    rec = {h: v for h, v in zip(header, rows[0])}
+    assert (rec["scoring_system"], rec["grade"], rec["S1"], rec["S_total"]) == ("tiered", "A", "5", "14/15")
+    assert rec["tie_break_score"] == "81.5"
+    rec3 = {h: v for h, v in zip(header, rows[2])}
+    assert (rec3["S1"], rec3["S_total"], rec3["binding_floor_fail"], rec3["v4_rule_violations"]) == \
+        ("n/a", "9/10", "True", "gc_clamp_fail")
+    # The shared RT / reverse rows stay aligned with the header.
+    assert all(len(r_) == len(header) for r_ in rows[:5])
+
+
+def test_export_csv_v4_header_unchanged():
+    header, _ = _csv_rows(_post("csv").data.decode("utf-8"))
+    assert header == ["Set_Rank", "Primer_Role", "Sequence", "Length_nt", "Tm_C", "GC_percent",
+                      "Hairpin_dG_kcalmol", "SelfDimer_dG_kcalmol", "Amplicon_bp", "Total_Score",
+                      "Grade", "Notes"]
+
+
+def test_export_pdf_tiered_ok():
+    r = _post("pdf", _tiered_results())
+    assert r.status_code in (200, 503)   # 503 = reportlab missing

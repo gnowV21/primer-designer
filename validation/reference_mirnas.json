@@ -304,7 +304,8 @@
       "published_rt_overhang": "GATATT",
       "published_forward": "TTCCTTGATTGAGCCGCGCC",
       "published_source": "Varkonyi-Gasic E, Wu R, Wood M, Walton EF, Hellens RP. 'Protocol: a highly sensitive RT-PCR method for detection and quantification of microRNAs.' Plant Methods 2007;3:12. DOI 10.1186/1746-4811-3-12 (PMID 17931426, PMC2225395; confirmed on PubMed), Table 1. Same 44-nt stem-loop body as this tool; universal reverse is the 16-nt GTGCAGGGTCCGAGGT (sub-window of this tool's 20-nt reverse, not exact-matched). The paper lists the mature sequence without a species prefix; it is identical to the Arabidopsis entry named here (the sequence is conserved across many plant species in miRBase). PLANT miRNA: outside the tool's specificity data (family/overhang-collision index is hsa/mmu/rno, BLAST is human cDNA) — only primer design is validated.",
-      "expect_design_failure": "Every forward 3' end inside the miRNA's 5' prefix at 12-15 nt ends in 5/5 G/C (TGATTGAGCC|GCGCC), rejected by the hard 3'-end GC rule (Primer3 Max End GC, forward_primer.py); at 16 nt the GC tail pushes GC%/Tm out of range. The published forward TTCCTT+TGATTGAGCCGCGCC itself ends in GCGCC, i.e. violates that rule. Kept as a documented limitation (owner decision 2026-10-08), not relaxed in the algorithm."
+      "expect_design_failure": "Every forward 3' end inside the miRNA's 5' prefix at 12-15 nt ends in 5/5 G/C (TGATTGAGCC|GCGCC), rejected by the hard 3'-end GC rule (Primer3 Max End GC, forward_primer.py); at 16 nt the GC tail pushes GC%/Tm out of range. The published forward TTCCTT+TGATTGAGCCGCGCC itself ends in GCGCC, i.e. violates that rule. Kept as a documented limitation (owner decision 2026-10-08), not relaxed in the algorithm.",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab"
     },
     {
       "id": "ebv-miR-BHRF1-1",
@@ -386,7 +387,8 @@
       "published_rt_overhang": "TCTAAGGC",
       "published_forward": "ACACTCCAGCTGGGCGGGGATCGGACTAGC",
       "published_source": "Cosmopoulos K, Pegtel M, Hawkins J, et al. 'Comprehensive profiling of Epstein-Barr virus microRNAs in nasopharyngeal carcinoma.' J Virol 2009;83(5):2357-67. DOI 10.1128/JVI.02104-08 (PMID 19091858, PMC2643705; confirmed on PubMed), Tables I-II. DIFFERENT stem-loop system (36-nt body CTCAACTGGTGTCGTGGAGTCGGCAATTCAGTTGAG, 8-nt overhang, forward = ACACTCCAGCTGGG + 16-nt miRNA prefix; some forwards are printed with U, normalised to T) — no full-RT match applies; scored: tool's 6-nt overhang is the 5' prefix of the published 8-nt overhang, and the forward miRNA-specific core. VIRAL miRNA: family/collision index has no ebv- data; BLAST (human cDNA) is meaningful here because EBV miRNAs are measured in human cells.",
-      "expect_design_failure": "GC-rich 5' prefix (CGGGGAUCGG...): every forward candidate fails the GC clamp or GC% window (rejections: gc_clamp_fail, gc_out_of_range). Documented limitation, same policy as ath-miR171a-3p."
+      "expect_design_failure": "GC-rich 5' prefix (CGGGGAUCGG...): every forward candidate fails the GC clamp or GC% window (rejections: gc_clamp_fail, gc_out_of_range). Documented limitation, same policy as ath-miR171a-3p.",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab"
     },
     {
       "id": "ebv-miR-BART7-3p",
@@ -1955,7 +1957,8 @@
       "published_rt": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGGCATT",
       "published_forward": "AAGTACTCTAAGGCACGCGG",
       "published_source": "Lukashevich MV, Rudenok MM, Partevian SA, Shadrina MI, Slominsky PA, Alieva AKh. 'An Optimized RT-qPCR Protocol for Comprehensive Analysis of microRNAs and mRNAs in Mus musculus Brain Tissues.' Non-Coding RNA 2026;12:20. DOI 10.3390/ncrna12030020, Tables 1-2. Chen 2005 44-nt body + 6-nt overhang; redesigned universal reverse GTCGTATCCAGTGCAGGGTC (different stem window, not compared). MOUSE miRNA.",
-      "expect_design_failure": "20-nt miRNA: only 14 nt (UAAGGCACGCGGUG) remain for the forward after the 6-nt overhang region. At 12 nt the 3' end is CGCGG (5/5 G/C, hard 3'-end GC rule); at 13-14 nt the specific region is 62-64% GC, so every tail that reaches the Tm target leaves the full primer above the 60% GC window (rejections: gc_out_of_range, gc_end_window_fail). The published, wet-lab validated forward AAGTACTCT+AAGGCACGCGG (E 107%, R2 0.99) ends in CGCGG, i.e. violates the 3'-end rule. Documented limitation (owner decision 2026-10-10), same policy as ath-miR171a-3p; not relaxed in the algorithm."
+      "expect_design_failure": "20-nt miRNA: only 14 nt (UAAGGCACGCGGUG) remain for the forward after the 6-nt overhang region. At 12 nt the 3' end is CGCGG (5/5 G/C, hard 3'-end GC rule); at 13-14 nt the specific region is 62-64% GC, so every tail that reaches the Tm target leaves the full primer above the 60% GC window (rejections: gc_out_of_range, gc_end_window_fail). The published, wet-lab validated forward AAGTACTCT+AAGGCACGCGG (E 107%, R2 0.99) ends in CGCGG, i.e. violates the 3'-end rule. Documented limitation (owner decision 2026-10-10), same policy as ath-miR171a-3p; not relaxed in the algorithm.",
+      "v4_limitation_note": "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab (E 107 %)"
     },
     {
       "id": "mmu-miR-125a-5p",

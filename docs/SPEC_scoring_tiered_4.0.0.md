@@ -43,6 +43,102 @@ Lý do (đo trên 2253 thiết kế hsa, pool của 3.7.0):
 15. Ở hệ tiered, GC % và kẹp GC **không còn là bộ lọc sơ bộ** trong `generate_forward_candidates`; chúng chỉ được chấm ở F1/F2. Ràng buộc hình học (độ dài, vị trí) và cửa sổ Tm giữ nguyên. Cách sinh đuôi 5′ giữ nguyên trong 4.0.0 (đuôi giàu AT là việc sau, cần đo riêng). Nhánh V4 giữ nguyên bộ lọc.
 16. Nhãn "equivalent in silico" không làm cho V4. Ở hệ tiered, hai bộ có cùng (S_total, structure_veto, P_total, F_total) là tương đương; cách hiển thị để SPEC UI.
 
+**Bổ sung sau khi duyệt Giai đoạn 1 (2026-11-17; số liệu §9, `benchmark/tiered_scoring_dryrun.json`):**
+
+17. **Tầng PCR chỉ còn P2** (tối đa 5). P1 (ΔTm F–R) chỉ báo cáo, không chấm, và bỏ khỏi điểm chi tiết (trọng số còn lại chuẩn hóa theo tổng 0,85). Lý do: mồi ngược cố định (Tm 62,93 °C ở điều kiện mặc định), nên P1 chỉ là hàm của Tm mồi xuôi và kéo nó về 62,9 °C trong khi P2 kéo về Ta (r = −0,95 trên 217.780 ứng viên). P2 giữ bậc ≤ 1 / 2 / 3 / 5 °C; **không dùng bậc hẹp hơn 1 °C** vì Tm nearest-neighbor có sai số ~±1–2 °C. P2 không hằng số ở các thiết kế fallback của V4 (khác nhau ở 23/115 pool), nên vẫn có tác dụng bảo vệ ở đó.
+18. **S2 giữ ngưỡng.** Mức 4 (7 – < 10 Cq) là mức cao nhất đạt được trên thực tế, nghĩa là "mồi RT bắt được off-target nhưng mồi xuôi không mồi được": ΔCq_FWD chạm trần mô hình 8,3 (DECISIONS D-4). Mức 5 chỉ đạt khi không có off-target nào mà RT bắt được. **Không đặt mốc mức 5 ở 8,3**: trần của mô hình không phải bằng chứng đặc hiệu tối đa. S2 vẫn tham gia xếp hạng vì nó khác nhau giữa các ứng viên ở 5,6 % thiết kế (REV-23) và là căn cứ loại ứng viên (QĐ 4).
+19. **S2 tính cả `shifted_5p` và `shifted_3p`**, chỉ bỏ `same_sequence` (đúng chữ của §3.1). Hai trình tự trùng nhau thì không mồi nào phân biệt được. Còn trình tự lệch đầu là nguy cơ phản ứng chéo có thật: lệch 3′ chạm vùng overhang RT, lệch 5′ chạm mồi xuôi. **Khác V4**: `family_discrimination` của V4 bỏ cả ba loại. Khóa luận phải ghi rõ khác biệt này khi so V4 với tiered. Tác động: 39 thiết kế `specificity_fallback` (28 nếu theo cách của V4), 97 thiết kế có ứng viên bị loại (92). Các thiết kế có off-target lệch đầu nên được ưu tiên kiểm tra phản ứng chéo ở wet-lab.
+20. **S3 lấy khung bền nhất trong ±2 nt** cho Tm_off (trường hợp xấu nhất). S3 là phép phạt off-target: mồi xuôi gắn trên cDNA của một off-target lệch đầu theo khung dịch vẫn kéo dài được. Tm_on vẫn tính ở khung không dịch (r = 0), tức là gắn đúng đích. Phương án chỉ dùng r = 0 được đo nhưng không dùng (`alternative_s3_register_0_only_not_used`).
+21. **F5c (Tm dimer đầu 3′) trên thực tế là veto, không phải tiêu chí chấm theo bậc**: 99,2 % ứng viên ở mức 5. Cả 32 ứng viên ở mức 1 đều cũng có F5a = 1 và F5b = 1 (đầu 3′ tự bổ sung như CTGCAG, GTCGAC). Không thiết kế nào bị veto toàn bộ chỉ vì F5c. Giữ lại vì Primer3 có quy tắc này. F5a (hairpin) cũng gần như nhị phân: 89 % ở mức 5, 11 % ở mức 1, các mức giữa gần như trống.
+22. **QĐ 15, thứ tự cắt pool.** Bỏ cả luật "≥ 5 G/C trong 5 nt cuối" khỏi bộ lọc sơ bộ, vì F2 đã chấm trường hợp này ở mức 1. Khi không còn lọc GC, pool 20 đuôi/độ dài được xếp **theo mức F1 (GC % toàn mồi) trước**, rồi mới theo |Tm − Ta|. Không cần xếp theo F2 trước: 5 nt cuối nằm trong vùng đặc hiệu nên F2 giống nhau với mọi đuôi cùng độ dài. Trước khi sửa, 95/2253 mồi #1 của V4 không có trong pool tiered (các đuôi GC lệch có Tm gần hơn đã chiếm chỗ); sau khi sửa: 0/2253. Có test hồi quy (`test_forward_gc_prefilter_flag.py`).
+23. **Nguyên tắc chỉnh ngưỡng** (áp cho mọi lần sửa sau): không chỉnh ngưỡng chỉ để phân bố "trải đều"; mỗi ngưỡng cần lý do sinh học hoặc lý do về độ chính xác của mô hình, nếu không có thì ghi "own threshold". Vai trò của từng thành phần do **độ biến thiên trong cùng thiết kế** quyết định: bằng 0 thì chỉ báo cáo; chỉ tách mức 1 thì là bộ lọc/veto; còn lại thì xếp hạng. Bảng chẩn đoán này (§9) là luận cứ cho cấu trúc hàm điểm trong khóa luận.
+
+**Bổ sung khi duyệt ngưỡng, trước Giai đoạn 2 (2026-11-17):** bộ ngưỡng §3 và QĐ 17–23 đã được duyệt.
+
+24. **BLAST là việc đầu tiên của Giai đoạn 2.** Lý do: S1 là thành phần đặc hiệu duy nhất khác nhau giữa các ứng viên ở số đông thiết kế (52,8 % trên mẫu; S2 5,6 %, S3 14,9 %).
+    - a) Profile trước: tách thời gian `blastn`, `blastdbcmd`, NW, thal cho 1 thiết kế.
+    - b) Gộp truy vấn: 1 lần `blastn` multi-FASTA + 1 lần `blastdbcmd` cho mọi entry cần lấy. Test: S1 và từng hit trùng với cách gọi từng mồi trên toàn bộ 31.049 lần gọi của mẫu 309 miRNA.
+    - c) Nghiệm thu: p50 ≤ 15 s, chưa cache, trên 20 miRNA hsa ngẫu nhiên (seed cố định), đo trên máy dự án. Báo cả p90.
+    - d) Nếu chưa đạt: cắt tỉa chính xác — chỉ BLAST ứng viên mà cận trên (S1 = 5) còn có thể vào top 3 sau bước chọn đa dạng. Test: top 3 trùng với BLAST toàn bộ trên mẫu 309. Không đổi CSDL BLAST, không giảm độ nhạy (`word_size`, `evalue`). Nếu vẫn chưa đạt: dừng và hỏi.
+    - e) Thiếu BLAST: cảnh báo `blast_unavailable` ghi rõ "specificity ranking reduced to S2 + S3". Các script số liệu (validation, benchmark, dry run) phải fail nếu BLAST không có.
+25. **`v4_rule_violations`** trên mỗi bộ mồi: danh sách luật V4 mà bộ đó vi phạm (lọc GC %, kẹp GC, 3 luật lọc cứng cấu trúc); mảng rỗng nếu không vi phạm. Có trong API, `openapi.yaml` và export. Mục đích: đánh dấu rõ các bộ của 219 miRNA mà V4 không thiết kế được, và các bộ bị veto.
+26. **Báo cáo cuối Giai đoạn 2 thêm 3 chỉ số:**
+    - (1) tương quan F3–F4 trong cùng thiết kế;
+    - (2) phân bố độ dài vùng đặc hiệu và Tm vùng bám của #1 (V4 3.8.2 so với tiered);
+    - (3) trong 1659 ca đổi #1, Tm vùng bám của #1 mới gần hay xa 45 °C hơn.
+
+    Nếu tương quan > 0,7: đề xuất phương án gộp F3/F4, không tự sửa.
+27. **Hòa hoàn toàn.** Khi mọi chỉ số đều bằng nhau (các biến thể đuôi), thứ tự theo trình tự là tùy ý nhưng tất định (1195 thiết kế ở mức #1 so với #2); bước chọn đa dạng vẫn chọn các đầu 3′ khác nhau (ghi ở §3.5).
+
+**Sau khi duyệt Giai đoạn 2 (2026-11-18; số liệu §10):**
+
+28. **Duyệt 4/5 chi tiết cài đặt ở §10:** (1) chỉ BLAST các ứng viên S2 không loại (BLAST thêm phần còn lại khi fallback); (3) cờ `report_only` / `eliminated`; (4) cách chọn overhang để gợi ý; (5) `v4_rule_violations` ở cả hai hệ. Riêng (2) (`grade` theo điểm chi tiết) được thay bằng QĐ 30.
+29. **Gộp F3/F4 theo phương án (d), không theo (b) — chờ duyệt lại sau số đo của Giai đoạn 2b.**
+    - Lý do: `TM_BINDING_TARGET = 45 °C` là trung vị Tm của các vùng 12–17 nt (`SPEC_algorithm.md`, sửa ở v2.8.1), không phải mức tối ưu sinh học. Ở chu kỳ 1, Tm vùng bám càng cao thì gắn càng tốt: cân bằng khối lượng 3.8.1 cho 0,08 % ở 12 nt, 7,8 % ở 17 nt, tại 60 °C. Khả năng phân biệt mismatch đã được đo trực tiếp ở tầng S. Giả thuyết ~45 °C của khóa luận là **mức sàn**, không phải đích hai phía.
+    - Bỏ F3 khỏi tầng Linh hoạt (tối đa còn 20).
+    - F4 thành sàn một phía: Tm vùng bám ≥ 45 → 5; 43–< 45 → 4; 41–< 43 → 3; 39–< 41 → 2; < 39 → 1. Ghi "own threshold; floor = thesis cycle-1 hypothesis (let-7a 33,6 vs 46,2 °C)".
+    - Điểm chi tiết: `tm_binding_accuracy` cũng một phía (100 khi ≥ 45 °C, giảm tuyến tính về 0 tại 35 °C). Bỏ `primer_size` (cùng lý do bỏ F3); chuẩn hóa lại trọng số.
+    - L vẫn có trong API, chỉ để báo cáo.
+    - Cài sau cờ `TIERED_F4_FLOOR` (mặc định tắt cho tới khi duyệt).
+30. **Ở hệ tiered, `grade` tính theo tầng, không theo điểm chi tiết.**
+    - A: không `specificity_fallback`, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4, không `structure_veto`.
+    - B: qua bước loại nhưng có ít nhất một điểm yếu (S1 = 2–3, S2 = 2, S3 ≤ 3, hoặc `structure_veto`).
+    - C: `specificity_fallback`.
+    - Khi `blast_unavailable`: không cho A; cao nhất là B, ghi lý do.
+    - Có test cho từng mức. `total_score` giữ = điểm chi tiết; cách hiển thị để SPEC UI.
+    - Cài sau cờ `TIERED_GRADE_BY_TIERS`.
+31. **Giai đoạn 3 mở PR vào `master` nhưng KHÔNG merge cho tới khi xong SPEC UI.** Lý do: frontend (ScoreGauge, RerunBar, History, ThermoTable, export CSV, `rankReason`) hiển thị `total_score` / `grade`, nên ở 444 thiết kế bộ #1 trông kém hơn #2. Ghi điều này trong mô tả PR.
+32. **Chờ số liệu:** cách xử lý các bộ #1 vi phạm luật V4 trong khi V4 có mồi tuân thủ. Chưa đổi luật; số đo ở Giai đoạn 2b mục 4.
+
+**Sau khi duyệt Giai đoạn 2b (2026-11-18; số liệu §11):**
+
+33. **Duyệt QĐ 29, kèm chỉnh cho các ca dưới sàn.** `tm_binding_accuracy` trong điểm chi tiết: tuyến tính một phía, 0 điểm tại 25 °C, 100 điểm tại ≥ 45 °C (25 °C ≈ Tm vùng bám thấp nhất quan sát được; own threshold). Giữ trọng số 0,10 sau chuẩn hóa.
+    - Nghiệm thu, trên bộ #1 của 2472 thiết kế: số thiết kế có F4 = 1 ≤ 179, và % có Tm vùng bám < 45 °C ≤ 39,0.
+    - Nếu chưa đạt: thử trọng số 0,15 (chuẩn hóa lại tổng) rồi đo lại. Vẫn chưa đạt → DỪNG, báo cả hai phương án.
+34. **Giải quyết QĐ 32.** Khóa xếp hạng tiered thành `(−S_total, structure_veto, has_v4_violation, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với `has_v4_violation = len(v4_rule_violations) > 0`.
+    - Luật này chỉ phân định khi tổng đặc hiệu bằng nhau. Ở Giai đoạn 2b nó không làm giảm S1 hay S3 của #1 ở ca nào.
+    - F2 giữ nguyên (xem giới hạn).
+    - Nghiệm thu: so với cấu hình không có QĐ 34, ở mọi thiết kế S1, S2, S3 của #1 không đổi (từng thành phần, không chỉ tổng).
+    - Cờ: `TIERED_V4_COMPLIANT_FIRST`.
+35. **Mặc định của hệ tiered: bật QĐ 29 (+33), QĐ 30, QĐ 34.** Giữ các cờ (`TIERED_F4_FLOOR`, `TIERED_GRADE_BY_TIERS`, `TIERED_V4_COMPLIANT_FIRST`) để script so sánh vẫn tắt được. Cập nhật test và `openapi.yaml`.
+
+**Sau Giai đoạn 2c lần 1 (2026-11-18; §12):** bỏ mốc nghiệm thu "F4 = 1 ≤ 179" của QĐ 33. Mốc đó lấy từ tập 2253 thiết kế mà áp lên 2472, và không trừ các ca không thể tránh.
+
+36. **F4 = 1 (Tm vùng bám < 39 °C) thành veto mềm**, giống mức 1 của cấu trúc.
+    - Khóa xếp hạng: `(−S_total, structure_veto, binding_floor_fail, has_v4_violation, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với `binding_floor_fail = (F4 == 1)`.
+    - Lý do: dưới 39 °C là vùng mà giả thuyết chu kỳ 1 của khóa luận cho rằng mồi gần như không gắn được (let-7a 33,6 °C), tức lỗi chức năng. Còn vi phạm luật V4 ở đây chủ yếu là `gc_clamp_fail`, chỉ là khuyến nghị mềm.
+    - Không loại ứng viên. Giữ QĐ 33 (0 điểm tại 25 °C, trọng số 0,10) để xếp thứ tự trong nhóm vẫn dưới sàn.
+    - Grade (QĐ 30): `binding_floor_fail` là một lý do của mức B, giống `structure_veto`.
+    - Cờ `TIERED_BINDING_FLOOR_VETO`. Test: veto này đứng sau `structure_veto`, trước `has_v4_violation`, và chỉ phân định khi cùng tổng S.
+    - Nghiệm thu (offline, bộ #1, 2472 thiết kế):
+      - số #1 có F4 = 1 phải bằng số thiết kế mà nhóm (S_total, structure_veto) cao nhất không có ứng viên nào F4 ≥ 2, tức 0 ca tránh được;
+      - S1, S2, S3 của #1 không đổi so với cấu hình không có QĐ 36, ở mọi thiết kế;
+      - báo kèm: số #1 vi phạm luật V4, % < 45 °C, grade A/B/C, số #1 đổi. Báo trên cả 2253 và 2472 thiết kế.
+37. **Cache.** Giai đoạn 2c dùng dữ liệu offline (`outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`), kiểm tra bằng pipeline thật trên 20 miRNA (top 3 trùng 20/20, tất định). Giai đoạn 3 nạp cache SQLite bằng lượt dựng ma trận hsa: lượt này là BLAST mới nên không áp ngưỡng cache hit, nhưng số lần ghi cache thất bại phải bằng 0. Sau đó kiểm tra S1 của mọi ứng viên trong cache so với dữ liệu offline; các lượt sau áp ngưỡng cache hit ≥ 90 % cho thiết kế hsa.
+
+**Sau Giai đoạn 2c và 3 (2026-11-18; §12, §13):**
+
+38. **Kỳ vọng của 3 mục validation theo hệ chấm điểm** (ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p).
+    - V4: giữ `expected_design_failure`. Output `--scoring-system v4` phải trùng 3.8.2 từng byte (`results.json` bỏ qua `run_date`; `results.csv`).
+    - Tiered: thay bằng check mới `v4_limitation_designed`. Check đạt khi cả ba điều kiện đúng:
+      1. thiết kế thành công;
+      2. vùng đặc hiệu của #1 trùng với vùng khớp miRNA trong mồi xuôi đã công bố, hoặc là chuỗi con của vùng đó (hoặc ngược lại);
+      3. `v4_rule_violations` của #1 không rỗng.
+    - Ghi chú vào bộ dữ liệu: "known V4 limitation; designed by 4.0.0 (QD 15), published primer used in wet-lab" (mmu-miR-124-3p: E 107 %).
+    - Nghiệm thu:
+      - validation tiered đạt 2439/2439;
+      - 2 test trong `test_benchmark_endpoint.py` pass mà không sửa test. Nếu phải đổi test thì ghi rõ lý do.
+39. **S3 giữ cách xét mức trên biên Tm đã làm tròn 0,1 °C.** Lệch tối đa là 0,05 °C, nhỏ hơn nhiều so với sai số của Tm NN (±1–2 °C, QĐ 17/23), và mức khớp với giá trị hiển thị. Không chạy lại số liệu.
+40. **Cache hit 88,4 % ở validation: chấp nhận.** Phần hụt đến từ 7 thiết kế có ngữ cảnh mới; trên 51 thiết kế cùng ngữ cảnh, cache hit là 100 %. Từ nay ngưỡng cache hit chỉ tính trên các thiết kế có ngữ cảnh đã có trong cache. Luôn báo cả hai mẫu số.
+41. **Wet-lab: giữ hsa-let-7a-5p làm ca kiểm đặc hiệu.**
+    - Thí nghiệm dùng assay let-7a trên oligo tổng hợp let-7a-5p và let-7d-5p để đo tín hiệu chéo thật, rồi so với ΔCq dự đoán 1,43.
+    - Ghi vào HANDOFF, phần wet-lab, cho Phần 5 của PROMPT.
+
+**Giới hạn đã biết (ghi vào khóa luận):**
+- F2 đếm G/C trong 5 nt cuối, không xét vị trí: …GCAAT được 5 điểm, trong khi V4 loại vì 3 nt cuối không có G/C. QĐ 34 xử lý phần lớn các ca cùng S.
+- Mốc 45 °C của Tm vùng bám là mức sàn rút từ giả thuyết chu kỳ 1 của khóa luận, không phải đích tối ưu.
+- Các ngưỡng ghi "own threshold" chưa được hiệu chỉnh bằng wet-lab.
+
 ## 3. Tiêu chí và ngưỡng đề xuất (chờ duyệt ở Giai đoạn 1)
 Quy ước:
 - L = độ dài vùng đặc hiệu của ứng viên (12–17 nt).
@@ -84,8 +180,8 @@ Quy ước:
 | 2 | 5 – < 7,5 | `BLAST_TM_CRITICAL_MARGIN` |
 | 1 | < 5 | (không loại; QĐ 4 chỉ áp cho S1, S2) |
 
-### 3.2 Tầng 2 — PCR (tối đa 10)
-**P1 · ΔTm F–R** = |Tm(mồi xuôi đầy đủ) − Tm(mồi ngược universal)|, cùng điều kiện.
+### 3.2 Tầng 2 — PCR (tối đa 5 từ QĐ 17; trước đó 10)
+**P1 · ΔTm F–R** = |Tm(mồi xuôi đầy đủ) − Tm(mồi ngược universal)|, cùng điều kiện. **Chỉ báo cáo (QĐ 17).**
 **P2 · Tm so với Ta** = |Tm(mồi xuôi đầy đủ) − Ta người dùng| (cùng tham chiếu với `tm_accuracy` hiện tại).
 
 | Điểm | P1 | P2 |
@@ -97,6 +193,7 @@ Quy ước:
 | 1 | > 5 | > 5 |
 
 Cần đo: mồi ngược là cố định, nên nếu Tm_rev ≈ Ta thì P1 ≈ P2 (đếm đôi). Báo Tm_rev và tương quan P1–P2.
+**Đã đo:** Tm_rev = 62,93 °C; r(|F − R|, |F − Ta|) = −0,95 → P1 bỏ khỏi xếp hạng (QĐ 17).
 
 ### 3.3 Tầng 3 — Linh hoạt (tối đa 25)
 Thứ tự mốc trong mỗi ô: 5 / 4 / 3 / 2 / 1.
@@ -127,7 +224,7 @@ Mỗi thành phần là sub-score liên tục 0–100. Dùng hàm sub-score hi�
 |---|---|
 | min ΔCq_assay (chặn trên ở 10) | 0,25 |
 | Biên Tm đặc hiệu (chặn trên ở 20 °C) | 0,15 |
-| ΔTm F–R | 0,15 |
+| ~~ΔTm F–R~~ | ~~0,15~~ → bỏ (QĐ 17) |
 | Tm so với Ta (`tm_accuracy`) | 0,15 |
 | Tm vùng bám (`tm_binding_accuracy`) | 0,08 |
 | GC % | 0,05 |
@@ -136,14 +233,15 @@ Mỗi thành phần là sub-score liên tục 0–100. Dùng hàm sub-score hi�
 | Cấu trúc (trung bình 3 sub-score) | 0,05 |
 | Amplicon | 0,02 |
 
-Tổng 1,00, trong đó đặc hiệu 0,40, Tm 0,38, cấu trúc 0,05.
+Tổng 1,00 ban đầu; sau QĐ 17 còn 0,85 và được chuẩn hóa theo tổng đó (trước chuẩn hóa: đặc hiệu 0,40, Tm 0,23, cấu trúc 0,05).
 Chỉ báo cáo, không chấm (gom vào `assay_qc`): `mfe_stemloop`, `end_stability`, bound fraction (cả 2 vòng), `family_discrimination` của V4, `tm_pair_match` của V4 (đã thay bằng P1).
 
 ### 3.5 Khóa xếp hạng
 1. Loại ứng viên theo QĐ 4.
-2. `key = (−S_total, structure_veto, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`.
+2. `key = (−S_total, structure_veto, −P_total, −F_total, −detailed_score, |Tm_full − Ta|, sequence)`, với P_total = P2 (QĐ 17).
 3. Chọn top 3 bằng `select_diverse_top(ranked, CANDIDATES_TOP_N)`, giữ nguyên logic đa dạng.
 4. Hệ mới bỏ vòng fixpoint `family_discrimination` trong `design_pipeline.py` (không cần nữa vì S2 đã tính theo từng ứng viên).
+5. (QĐ 27) Khi mọi phần tử của khóa trừ `sequence` bằng nhau (thường là các biến thể đuôi 5′ có cùng mọi chỉ số), thứ tự theo trình tự là **tùy ý nhưng tất định**. Ở Giai đoạn 1 điều này quyết định #1 so với #2 ở 1195/2253 thiết kế. Không ảnh hưởng tính đa dạng: `select_diverse_top` vẫn chọn các bộ có đầu 3′ khác nhau.
 
 ### 3.6 Gợi ý overhang (không đổi lựa chọn)
 Với bộ #1, tính S2 khi overhang là 5 nt và 7 nt. Nếu một trong hai cho mức S2 cao hơn 6 nt → thêm `overhang_suggestion` gồm `{length, min_delta_cq, worst_target, note}`, trong đó note ghi rõ off-label, chưa kiểm chứng wet-lab.
@@ -225,7 +323,28 @@ Mỗi bộ mồi trong `POST /api/design` có thêm:
   - Nếu đã gộp BLAST: kết quả trùng từng hit với cách gọi từng mồi.
 - Toàn bộ test hiện có phải pass: `cd backend && python -m pytest tests visualization -q --ignore=tests/smoke`.
 
+### Giai đoạn 2b — đo QĐ 29/30, rồi DỪNG (2026-11-18)
+Cài QĐ 29 và QĐ 30 sau cờ, đo trên hệ có BLAST đầy đủ (2472 thiết kế, dùng cache BLAST của §10), chưa chạy lại số liệu Giai đoạn 3:
+1. QĐ 29 so với tiered hiện tại và V4 3.8.2: số #1 đổi; phân bố L và Tm vùng bám của #1; % #1 có Tm vùng bám < 45 °C; phân bố mức F4 của #1; % thiết kế mà F4 khác nhau giữa các ứng viên; bảng "#1 so với #2 được phân định bởi tầng nào".
+2. QĐ 30: phân bố A/B/C của #1; số ca grade cũ khác grade mới (đặc biệt cũ cao nhất mà nay là C).
+3. S1 của #1 V4 3.8.2 (cùng classifier, cùng mồi RT): phân bố mức 1–5; số thiết kế mà #1 V4 có S1 ≤ 2 và #1 tiered có S1 cao hơn (số chính cho chương Kết quả).
+4. QĐ 32: các thiết kế mà #1 tiered vi phạm luật V4 còn #1 V4 thì không (trừ 219 ca V4 không thiết kế được), tách theo ΔS_total (tiered − V4): ΔS > 0 (số ca, luật); ΔS = 0 (tầng quyết định, luật; riêng `hard_dimer_full_dg`: phân bố ΔG). Mô phỏng, không áp dụng: "cùng S_total thì mồi không vi phạm luật V4 xếp trước (sau veto)" — số #1 đổi, S1/S3 của #1 đổi thế nào.
+5. Danh sách các thiết kế `specificity_fallback`: miRNA, họ seed, off-target gây loại (tên, loại `shifted_5p` / `shifted_3p` / `other`, ΔCq hoặc mức BLAST) → `benchmark/tiered_fallback_list.csv`.
+
+Mọi test pass; hồi quy V4 vẫn trùng 3.8.2. ⛔ DỪNG: chờ duyệt QĐ 29 (theo số đo) và QĐ 32.
+
+### Giai đoạn 2c — đo cấu hình cuối (QĐ 33–35), dùng lại cache BLAST
+- A. Trước khi chạy: working tree sạch, test pass, hồi quy V4 trùng 3.8.2. Ghi provenance vào đầu log (git SHA, `ALGORITHM_VERSION`, giá trị mọi cờ, phiên bản `blastn`, metadata + sha256 của BLAST DB, số dòng `blast_cache.sqlite`, giờ bắt đầu). Sao lưu `blast_cache.sqlite` → `blast_cache.<yyyymmdd-hhmm>.bak` (gitignore; không xóa, không ghi đè, không `BLAST_CACHE_DISABLED`). Chỉ một tiến trình ghi cache. Chạy thử 20 miRNA của phép đo thời gian: cache hit ≥ 90 % và S1 của mọi ứng viên trùng Giai đoạn 2. Không đạt → DỪNG, báo thành phần khóa cache đã đổi.
+- B. Chạy đủ 2472 thiết kế, thứ tự theo tên, JSONL theo miRNA, có `--resume`, log ở `benchmark/logs/`. Mỗi 100 miRNA một dòng tiến độ. DỪNG nếu sau 200 miRNA cache hit < 90 % hoặc ước tính tổng > 2 giờ. Lỗi BLAST: chạy lại 1 lần cuối lượt; còn > 1 % (24) → DỪNG.
+- C. Kiểm tra:
+  - tắt QĐ 29/33/34 thì tái tạo Giai đoạn 2 (#1 trùng 2472/2472, fallback 54, có ứng viên bị loại 383);
+  - nghiệm thu QĐ 33, QĐ 34;
+  - tất định trên 20 miRNA;
+  - JSONL không trùng, số dòng = 2472 − số lỗi.
+- D. Báo cáo 4 cột (V4 3.8.2 | tiered Giai đoạn 2 | QĐ 29 | cấu hình cuối) → `benchmark/tiered_stage2c_report.json`, SPEC §12, HANDOFF. Đạt hết thì sang Giai đoạn 3 không cần chờ; có mục không đạt → DỪNG.
+
 ### Giai đoạn 3 — Số liệu, tài liệu, PR
+- (QĐ 31) Mở PR vào `master`, **không merge** cho tới khi xong SPEC UI; ghi lý do trong mô tả PR. `docs/SCORING_TIERED_COMPARISON.md` thêm: S1 của #1 V4 so với tiered (Giai đoạn 2b mục 3) và danh sách fallback kèm gợi ý ưu tiên kiểm phản ứng chéo ở wet-lab (mục 5).
 - Chạy lại pipeline theo HANDOFF §7 (backend tắt auto-reloader): validation + report, benchmark export, `blast_tm_gate_sensitivity.py`, benchmark 50, ma trận hsa; chạy e2e Playwright.
 - Check validation nào fail: không sửa check cho pass. Liệt kê từng check fail, lý do và đề xuất.
 - Viết `docs/SCORING_TIERED_COMPARISON.md` so V4 với hệ tiered trên 2656 hsa và trên bộ validation. Gồm các chỉ số 3–6 của Giai đoạn 1, cộng thêm cho bộ #1: phân bố S1 (SAFE/MEDIUM/HIGH/CRITICAL), phân bố min ΔCq, L trung bình, số bộ có `structure_veto`.
@@ -248,3 +367,229 @@ Mỗi bộ mồi trong `POST /api/design` có thêm:
 
 ## 8. Báo cáo cuối mỗi giai đoạn
 Viết bằng tiếng Việt, gồm: việc đã làm; lệnh đã chạy + output rút gọn; file đã đổi; số liệu; vấn đề còn mở.
+
+## 9. Kết quả Giai đoạn 1 (dry run, 2026-11-17, sau QĐ 17–22)
+Nguồn: `benchmark/tiered_scoring_dryrun.json` (`backend/scripts/tiered_scoring_dryrun.py`). 2656 miRNA hsa, miRBase 22.1, mặc định backend. S2/S3/P/F tính trên mọi ứng viên của 2472 thiết kế có ứng viên. S1 (BLAST, classifier v7) chỉ chạy trên mẫu 309 miRNA (300 ngẫu nhiên seed 2026 + 7 ca của mục 8 + ứng viên wet-lab), 31.049 lần gọi, vì một lần BLAST ≈ 1,1 s.
+
+**Bảng chẩn đoán: độ biến thiên trong cùng thiết kế** (% thiết kế mà tiêu chí khác nhau giữa các ứng viên; SD trung bình của mức trong một thiết kế):
+
+| Tiêu chí | Khác nhau | SD | Vai trò |
+|---|---|---|---|
+| S1 BLAST (mẫu) | 52,8 % | 0,21 | xếp hạng + loại CRITICAL |
+| S2 ΔCq | 5,6 % | 0,04 | xếp hạng (ít) + loại CO-AMPLIFIED |
+| S3 biên Tm | 14,9 % | 0,09 | xếp hạng |
+| P1 ΔTm F–R | 78,2 % | 0,28 | **chỉ báo cáo** (đối nghịch P2) |
+| P2 Tm − Ta | 12,1 % | 0,05 | xếp hạng (ít) |
+| F1 GC % | 21,2 % | 0,12 | xếp hạng |
+| F2 kẹp GC | 85,1 % | 0,71 | xếp hạng |
+| F3 độ dài | 96,6 % | 1,20 | xếp hạng |
+| F4 Tm vùng bám | 92,6 % | 1,14 | xếp hạng |
+| F5 cấu trúc | 95,0 % | 0,95 | xếp hạng + veto |
+| F5a hairpin | 92,6 % | 1,02 | gần như bộ lọc (99 % số thiết kế có biến thiên chỉ tách mức 1) |
+| F5c dimer đầu 3′ | 19,0 % | 0,04 | veto (QĐ 21) |
+
+**Số liệu chính** (không BLAST, 2472 thiết kế; trong ngoặc: mẫu có BLAST, 309 thiết kế):
+- Có ứng viên bị loại: 97 (54); `specificity_fallback`: 39 (7); trả < 3 bộ: 2 (0); #1 bị veto mềm: 118 (13).
+- #1 khác #1 của V4 3.8.2: 1659/2253 (73,6 %); trong đó ΔS = 0 ở 1487 ca, ΔL > 0 ở 781 ca, ΔTm trung vị 0. Mẫu có BLAST: 204/277.
+- #1 so với #2 trong bảng xếp hạng được phân định bởi: điểm chi tiết 1124, trình tự 1195 (đa số là biến thể đuôi có cùng mọi chỉ số), F 138, |Tm − Ta| 13, veto 1.
+- Mức chiếm > 90 %: P2 = 5 (97,3 %), F5c = 5 (99,2 %). S2 = 4 chiếm 89,4 % (QĐ 18).
+- 403 miRNA V4 không thiết kế được: 219 có ứng viên ở hệ tiered (#1: F1 mức 5/4/3/2 = 34/70/69/46; F2 = 1 ở 31 ca; veto 43); 184 vẫn không có (cửa sổ Tm, độ dài, homopolymer).
+- 115 thiết kế V4 `hard_filter_fallback`: #1 của hệ tiered bị veto ở 72 ca (F5 = 1 ở 72, = 2 ở 41).
+- **Thời gian:** BLAST trung vị 1,11 s/ứng viên (2 subprocess: `blastn`, `blastdbcmd`); pool trung vị 100 ứng viên → ước tính ~113 s/thiết kế, vượt xa 15 s (QĐ 12). Giai đoạn 2 phải gộp truy vấn BLAST (§5).
+- Nhánh V4 sinh đúng tập ứng viên như 3.8.2 ở 2656/2656 miRNA.
+
+## 10. Kết quả Giai đoạn 2 (cài đặt, 2026-11-18)
+Code: `backend/algorithm/tiered_pipeline.py` (tích hợp), `tiered_scoring.py` (hàm thuần), `specificity_check/blast_offtarget.py` (BLAST gộp), `design_pipeline.py` (rẽ nhánh `tiered` / `v4`). Mặc định `scoringSystem = "tiered"`; chọn theo request (`scoringSystem`, trả 400 nếu sai) hoặc biến môi trường `SCORING_SYSTEM`. `ALGORITHM_VERSION = "4.0.0"`.
+
+**QĐ 24 — BLAST**
+- a) Profile hsa-miR-21-5p, 100 ứng viên, gọi từng mồi: 212,7 s, gồm `blastn` 111,1 s (100 lần), `blastdbcmd` 97,0 s (100 lần), thal 1,95 s, NW 1,58 s. Gần như toàn bộ thời gian là khởi động tiến trình và nạp CSDL.
+- b) Gộp: một `blastn` multi-FASTA và một `blastdbcmd` cho mỗi thiết kế (`check_offtarget_batch`). Truy vấn được chia cho `BLAST_BATCH_PROCESSES = 8` tiến trình `blastn` song song. Chỉ đổi hiệu năng: output giống từng dòng với 1 tiến trình; 1 → 8,5 s, 8 → 2,5 s. Phần phân loại hit dùng chung một hàm (`_classify_hits`) với cách gọi từng mồi. **Đối chiếu: 0/31.049 lần gọi khác nhau** (so toàn bộ JSON, 7.585 hit không-SAFE, gồm S1); S1 cũng khớp 31.049/31.049 kết quả đã lưu ở Giai đoạn 1 (`benchmark/blast_batch_equivalence.json`, `scripts/blast_batch_equivalence.py`). Không đổi CSDL, `word_size` hay `evalue`.
+- c) Thời gian, không cache, 20 miRNA hsa có thiết kế (thứ tự `random.Random(2026)`; bỏ hsa-miR-6845-5p vì không có ứng viên), chạy trong tiến trình, tuần tự: **p50 9,78 s, p90 11,89 s**, max 13,38 s. Riêng BLAST: p50 8,07 s, p90 10,04 s (`benchmark/tiered_design_timing.json`). Đạt ≤ 15 s, nên không cần cắt tỉa (d).
+- e) Không có BLAST (thiếu binary/CSDL, hoặc lỗi khi chạy): request vẫn trả kết quả; S1 = null cho **mọi** ứng viên, cảnh báo `blast_unavailable` ghi "specificity ranking reduced to S2 + S3". S1 hoặc có cho mọi ứng viên được xếp hạng, hoặc không có cho ứng viên nào, kể cả khi lần BLAST bổ sung của fallback lỗi. Các script số liệu dừng với lỗi khi không có BLAST: `validate_primers.py`, `run_benchmark.py`, `export_benchmark_primers.py`, `tiered_scoring_dryrun.py`, `crossreactivity/design_all.py`, `blast_batch_equivalence.py`, `tiered_design_timing.py`, `tiered_stage2_report.py`.
+- Cache: dùng bảng `blast_cache.sqlite`, khóa gồm mồi, mồi ngược, ngày dựng CSDL, tên miRNA, cùng ngữ cảnh thiết kế (classifier, trình tự đích, loài, mồi RT, điều kiện muối). Đặt `BLAST_CACHE_DISABLED=1` để tắt. Lỗi SQLite chỉ làm bỏ qua cache.
+
+**Chi tiết cài đặt mà SPEC chưa quy định** (cần duyệt):
+1. BLAST các ứng viên không bị S2 loại (§5). Nếu mọi ứng viên còn lại đều CRITICAL (tức fallback), BLAST thêm các ứng viên đã bị S2 loại, để tổng S so sánh được.
+2. `total_score` = điểm chi tiết; `grade` dùng cùng mốc của V4 (80/65/50) trên điểm chi tiết. `scores` / `weights` = các phần của điểm chi tiết (trọng số đã chuẩn hóa).
+3. `ranking.pcr.tm_pair` có `report_only: true` (QĐ 17); `ranking.eliminated = true` chỉ xuất hiện trong thiết kế fallback.
+4. `overhang_suggestion` xét các độ dài 5–7 nt khác độ dài đang dùng. Chọn mức S2 cao nhất, rồi ΔCq lớn nhất. Bỏ qua độ dài mà vùng đặc hiệu của #1 không còn vừa (L > độ dài miRNA − overhang).
+5. `v4_rule_violations` có ở cả hai hệ, là danh sách mã luật (`gc_out_of_range`, `gc_clamp_fail`, `gc_end_window_fail`, `hard_dimer_full_dg`, `hard_dimer_3prime_critical`, `hard_hairpin_tm`).
+
+**Kiểm chứng**
+- Test backend: 869 pass, 3 skip (gồm `test_tiered_scoring.py`, `test_blast_batch.py`); `crossreactivity/tests` 29 pass.
+- Hồi quy V4: `validate_primers.py --scoring-system v4` cho `results.json` giống bản 3.8.2 đã commit (bỏ qua `run_date`; 2439/2439) và `results.csv` giống từng byte.
+- Pipeline khớp dry run: top 3 của pipeline thật (BLAST thật, không cache) trùng top 3 offline ở 20/20 miRNA của phép đo thời gian; hsa-miR-21-5p trùng bảng ca của Giai đoạn 1.
+
+**Hệ đã cài, BLAST cho cả 2472 thiết kế** (`benchmark/tiered_stage2_report.json`, `scripts/tiered_stage2_report.py`; không BLAST → có BLAST):
+- Có ứng viên bị loại 97 → **383**; `specificity_fallback` 39 → **54**; trả < 3 bộ 2 → 2; #1 bị veto mềm 118 → 120.
+- #1 khác V4 3.8.2: 1659 → **1670**/2253.
+- S1 của #1 (mức 5/4/3/2/1): 2107 / 68 / 23 / 17 / 38. Cả 38 ca mức 1 đều là thiết kế fallback.
+- #1 có `total_score` thấp hơn #2 ở 444 thiết kế; `total_score` không giảm dần theo hạng ở 777 thiết kế. Lý do: điểm chi tiết chỉ là bước phân định cuối, xem mục giới hạn bên dưới.
+
+**QĐ 25 — `v4_rule_violations` của #1 (có BLAST):** 555/2472 bộ #1 vi phạm ít nhất một luật V4: `gc_out_of_range` 225, `gc_clamp_fail` 201, `hard_dimer_full_dg` 165, `hard_hairpin_tm` 46, `gc_end_window_fail` 17. Trong 219 miRNA V4 không thiết kế được, mọi bộ #1 đều vi phạm ít nhất một luật: `gc_out_of_range` 185, `hard_dimer_full_dg` 44, `gc_clamp_fail` 34, `hard_hairpin_tm` 23, `gc_end_window_fail` 11.
+
+**QĐ 26**
+- (1) Tương quan F3–F4 trong cùng thiết kế: r gộp sau khi trừ trung bình từng thiết kế = 0,21. Nhưng |r| tính theo từng thiết kế có trung vị 0,88, và **1664/2290 thiết kế có |r| > 0,7**. Nguyên nhân: vùng đặc hiệu độ dài L luôn là `dna[:L]`, nên F4 là hàm của L ở 2656/2656 thiết kế, đúng như F3. r gộp thấp chỉ vì dấu đổi giữa các thiết kế (F4 đỉnh tại L có Tm ≈ 45 °C). → Đề xuất phương án gộp, **chưa sửa** (bảng dưới).
+- (2) #1, V4 3.8.2 so với tiered có BLAST:
+  - L trung bình 14,05 → 14,59; phân bố L 12…17 từ 433/421/478/499/369/53 thành 244/296/423/562/639/89.
+  - Tm vùng bám: trung vị 44,4 → 45,2 °C, p95 47,8 → 52,2 °C.
+  - |Tm vùng bám − 45|: trung bình 2,53 → 3,17, trung vị 1,6 → 2,1.
+- (3) Trong 1670 ca đổi #1 (có BLAST): #1 mới **gần 45 °C hơn ở 294 ca, xa hơn ở 621 ca, bằng ở 755 ca**. Không BLAST, 1659 ca: 299 / 609 / 751.
+
+Phương án F3/F4, đo trên hệ có BLAST, **chưa áp dụng**:
+
+| Phương án | #1 đổi so với tiered hiện tại | L trung bình | \|Tm vùng bám − 45\| TB / trung vị |
+|---|---|---|---|
+| hiện tại F3 + F4 | — | 14,59 | 3,17 / 2,1 |
+| a) một tiêu chí = min(F3, F4) | 461 | 14,51 | 3,51 / 2,7 |
+| b) bỏ F3, giữ F4 (độ dài còn trong điểm chi tiết) | 639 | 14,11 | 2,75 / 1,6 |
+| c) bỏ F4, giữ F3 | 719 | 14,98 | 4,51 / 3,9 |
+| V4 3.8.2 | — | 14,05 | 2,53 / 1,6 |
+
+**Giới hạn còn mở (cho SPEC UI, ngoài phạm vi QĐ 13):** frontend `rankReason` giải thích "#1 vs #2" bằng hiệu `total_score`. Ở hệ tiered, `total_score` chỉ là bước phân định cuối, nên ở 444/2472 thiết kế hiệu này âm, và câu giải thích sai ("practically tied" hoặc "−x points"). SPEC UI cần giải thích theo tầng quyết định (S → veto → P → F → chi tiết).
+
+## 11. Kết quả Giai đoạn 2b (QĐ 29/30 sau cờ, 2026-11-18)
+Nguồn: `benchmark/tiered_stage2b_report.json`, `benchmark/tiered_fallback_list.csv` (`backend/scripts/tiered_stage2b_report.py`). Dữ liệu là 2472 thiết kế hsa có BLAST đầy đủ (cache của §10); bảng so với V4 dùng 2253 thiết kế mà V4 có mồi. Cờ `TIERED_F4_FLOOR` và `TIERED_GRADE_BY_TIERS` đang tắt; tiered ở đây là bản 4.0.0 của Giai đoạn 2.
+
+**1. QĐ 29 (F4 sàn, bỏ F3)**
+
+| #1 | V4 3.8.2 | tiered | QĐ 29 |
+|---|---|---|---|
+| #1 đổi so với V4 | — | 1670 | 1764 |
+| #1 đổi so với tiered | — | — | 560 |
+| L 12/13/14/15/16/17 | 433/421/478/499/369/53 | 244/296/423/562/639/89 | 256/249/382/586/642/138 |
+| L trung bình | 14,05 | 14,59 | 14,68 |
+| Tm vùng bám, trung vị (p05–p95) | 44,4 (36,8–47,8) | 45,2 (37,4–52,2) | 45,9 (34,9–53,5) |
+| % #1 có Tm vùng bám < 45 °C | 59,5 | 45,5 | **38,4** |
+| Mức F4 thang sàn 1/2/3/4/5 | 201/178/311/651/912 | 179/148/233/465/1228 | **211**/134/207/314/1387 |
+| % thiết kế F4 khác nhau giữa ứng viên | — | 92,6 | 80,8 |
+| #1 so với #2 phân định bởi: trình tự / chi tiết / F / Tm / S / veto (2472) | — | 1179/1134/142/12/3/1 | 1226/1098/134/9/3/1 |
+
+- QĐ 29 giảm số #1 dưới 45 °C (45,5 → 38,4 %).
+- Nhưng số #1 dưới 39 °C lại tăng (mức 1: 179 → 211). Ở các thiết kế mà mọi vùng đều dưới 39 °C, F4 bằng 1 cho tất cả. Khi đó F3 không còn kéo về vùng dài hơn, và điểm chi tiết của Tm vùng bám (trọng số 0,10 sau chuẩn hóa) không đủ để quyết định.
+
+**2. QĐ 30 (grade theo tầng)** — #1 (tiered và QĐ 29 cho cùng kết quả): A 2190, B 228, C 54.
+- Lý do của mức B:
+  - `structure_veto`: 118;
+  - S2 = 2: 44;
+  - S3 = 3: 33;
+  - S3 = 2: 28;
+  - S1 = 3: 24;
+  - S1 = 2: 6.
+- So với grade cũ (theo điểm chi tiết), trên hệ tiered:
+  - Excellent → A 2089, → B 102;
+  - Good → A 101, → B 72, → C 4;
+  - Acceptable → B 53, → C 31;
+  - Poor → B 1, → C 19.
+- Không có bộ nào từ Excellent xuống C.
+
+**3. S1 của #1 V4 3.8.2** (cùng classifier v7, cùng mồi RT):
+- Mức 5/4/3/2/1: 2019 / 115 / 34 / 18 / **67**. Tức là 67 CRITICAL và 18 HIGH.
+- **85 thiết kế có #1 V4 với S1 ≤ 2.** Trong đó, #1 tiered có S1 cao hơn ở **34 ca**:
+  - từ CRITICAL lên 2/3/4/5: 4/9/9/7;
+  - từ HIGH lên 5: 5.
+- 51 ca còn lại không cải thiện được. Gồm 38 ca CRITICAL → CRITICAL, đều là thiết kế fallback, và 13 ca HIGH → HIGH.
+- #1 của V4 bị hệ tiered loại ở 78 thiết kế. #1 tiered có S_total cao hơn #1 V4 ở 227 thiết kế.
+
+**4. QĐ 32** — thiết kế mà #1 tiered vi phạm luật V4 trong khi #1 V4 thì không (đã trừ 219 ca V4 không thiết kế được). Số ngoài ngoặc là tiered, trong ngoặc là QĐ 29: 221 (185).
+- ΔS > 0: 75 (68). Hệ mới chấp nhận vi phạm để được đặc hiệu cao hơn; ΔS = 1 ở 35 ca.
+  - Luật bị vi phạm: `gc_clamp_fail` 39, `gc_out_of_range` 25, `hard_dimer_full_dg` 8 (ΔG −9,4…−12,8), `hard_hairpin_tm` 3, `gc_end_window_fail` 1.
+- ΔS = 0: 146 (117). Tầng quyết định là F ở 141 ca (111), điểm chi tiết 4 (6), trình tự 1 (0).
+  - Luật bị vi phạm: `gc_clamp_fail` 118 (78), `hard_dimer_full_dg` 15 (15; ΔG −9,1…−9,9, tức F5b mức 2, sát ngưỡng), `gc_out_of_range` 12 (24), `gc_end_window_fail` 3.
+  - `gc_clamp_fail` chiếm đa số vì F2 chấm số G/C trong 5 nt cuối, không xét vị trí. Một đầu 3′ như …GCAAT (2 G/C trong 5 nt, 0 G/C trong 3 nt cuối) được F2 = 5, trong khi V4 loại.
+- ΔS < 0: 0.
+- Mô phỏng, không áp dụng: "cùng S_total thì mồi không vi phạm luật V4 xếp trước (sau veto)".
+  - #1 đổi ở 166 thiết kế (130 với QĐ 29), và cả 166 (130) #1 mới đều tuân thủ luật V4.
+  - **S1 và S3 của #1 không đổi ở ca nào** (ΔS1 = ΔS3 = 0).
+
+**5. Fallback:** 54 thiết kế, giống nhau dưới QĐ 29 (`benchmark/tiered_fallback_list.csv`).
+- Họ seed: miR-548 (11 + 5 họ con), miR-5 (9), miR-1 (3), miR-378 (3), let-7, miR-103, miR-30, miR-376, miR-302, miR-520, miR-5692 (mỗi họ 2), …
+- Nguyên nhân bị loại: cả S1 và S2 ở 48 thiết kế; chỉ S1 ở 3; chỉ S2 ở 3.
+- Off-target chính của S2: `other` 35, `shifted_3p` 13, `shifted_5p` 3. Có 16 thiết kế fallback do mục nhập lệch đầu (QĐ 19).
+
+## 12. Kết quả Giai đoạn 2c (cấu hình cuối, 2026-11-18)
+Lần 1 dừng ở mốc nghiệm thu cũ của QĐ 33 (262 bộ #1 có F4 = 1; 226 ca không có ứng viên nào cùng S, veto và QĐ 34 đạt F4 ≥ 2). Mốc đó bỏ, thay bằng QĐ 36.
+
+- Nguồn: `benchmark/tiered_stage2c_report.json` (`backend/scripts/tiered_stage2c.py offline`). Pool đã ghi + BLAST đầy đủ của Giai đoạn 2 (`outputs/freeze_cache/tiered_blast_full_hsa.jsonl.gz`, QĐ 37 cách a).
+- Cấu hình cuối = QĐ 29 + 33 + 34 + 36. Cột "tiered G2" là tiered của Giai đoạn 2.
+
+**Nghiệm thu QĐ 36 (đạt)**, trên 2472 thiết kế:
+- 196 bộ #1 có F4 = 1, bằng đúng số thiết kế mà nhóm (S_total, structure_veto) cao nhất không có ứng viên nào F4 ≥ 2. Tức là **0 ca tránh được**.
+- S1, S2, S3 của #1 không đổi so với cấu hình không có QĐ 36 ở mọi thiết kế; #1 đổi ở 66 thiết kế.
+- QĐ 34 (Giai đoạn 2c lần 1): S1, S2, S3 không đổi ở mọi thiết kế; #1 đổi ở 121 thiết kế.
+
+**Pipeline thật** (`tiered_stage2c.py pipeline-check`, 20 miRNA, `random.Random(2026)`): top 3 trùng offline 20/20; chạy hai lần giống hệt 20/20 (lần 2 cache hit 1875/1875).
+
+**Bảng so sánh.** Mẫu số: 2253 = các thiết kế mà V4 có mồi; 2472 = mọi thiết kế có ứng viên.
+
+| Bộ #1 | V4 3.8.2 (2253) | tiered G2 (2253) | QĐ 29 (2253) | **cuối (2253)** | **cuối (2472)** |
+|---|---|---|---|---|---|
+| #1 khác V4 | — | 1670 | 1764 | 1723 | — |
+| L trung bình | 14,05 | 14,59 | 14,68 | 14,65 | 14,57 |
+| Tm vùng bám trung vị (p05–p95), °C | 44,4 (36,8–47,8) | 45,2 (37,4–52,2) | 45,9 (34,9–53,5) | 45,7 (35,8–53,4) | 46,0 (35,6–54,6) |
+| % < 45 °C | 59,5 | 45,5 | 38,4 | 40,3 | 38,1 |
+| Mức F4 thang sàn 1/2/3/4/5 | 201/178/311/651/912 | 179/148/233/465/1228 | 211/134/207/314/1387 | 178/190/225/316/1344 | 196/195/231/321/1529 |
+| #1 vi phạm luật V4 | 115 | 336 | 300 | 200 | 419 |
+| S1 của #1, mức 1/2/3/4/5 | 67/18/34/115/2019 | 38/17/23/68/2107 | như G2 | như G2 | 39/18/24/72/2319 |
+| Grade A/B/C | — | 2023/177/53 | 2023/177/53 | 1881/319/53 | 2032/386/54 |
+
+- **#1 so với #2 được phân định bởi** (cuối, 2472 thiết kế): trình tự 1232, điểm chi tiết 1088, F 134, \|Tm − Ta\| 10, S 3, luật V4 2, P 1, veto cấu trúc 1.
+- **Lý do của mức B** (cuối, 2472 thiết kế): dưới sàn 39 °C 185, `structure_veto` 118, S2 = 2: 44, S3 = 3: 33, S3 = 2: 28, S1 = 3: 24, S1 = 2: 6.
+- **S1 so với #1 V4:** 85 thiết kế có #1 V4 với S1 ≤ 2. #1 tiered có S1 cao hơn ở 34 ca, giống nhau ở mọi cấu hình tiered.
+- **#1 vi phạm luật V4 trong khi #1 V4 không vi phạm** (2253 thiết kế): G2 221 → QĐ 29 185 → cuối không QĐ 36: 55 → **cuối 85**.
+  - ΔS > 0: 57 ca. Luật: `gc_clamp_fail` 28, `gc_out_of_range` 24, `hard_hairpin_tm` 3, `hard_dimer_full_dg` 2, `gc_end_window_fail` 1.
+  - ΔS = 0: 28 ca, đều do veto sàn 39 °C quyết định. Luật: `gc_clamp_fail` 22, `hard_dimer_full_dg` 6.
+- **Giới hạn:** 196 thiết kế (2472) không thể đạt sàn 39 °C với bất kỳ ứng viên nào trong nhóm đặc hiệu cao nhất.
+
+## 13. Kết quả Giai đoạn 3 (số liệu, tài liệu, PR — 2026-11-18)
+Provenance: `benchmark/logs/stage3_provenance.json`. Ghi lại ở đó: git SHA, cờ, `blastn` 2.17.0+, sha256 của BLAST DB, cache có 2660 dòng trước khi chạy. Bản sao lưu cache: `backend/data/blast_cache.20261118-0557.bak` (gitignore).
+
+**B. Lượt dựng ma trận hsa (nạp cache, BLAST mới):**
+- 2656 miRNA: 2472 thiết kế được, 184 thất bại (không có ứng viên).
+- 213.325 lần BLAST mới; **0 lỗi BLAST, 0 lần ghi cache thất bại**.
+- JSONL 2656 dòng, không trùng.
+- Thời gian thực khoảng 80 phút. Thời gian tường 4,9 giờ vì máy ngủ 3,5 giờ giữa chừng; sau đó có tiến trình giữ máy thức trong các lượt chạy dài.
+
+**C. Kiểm tra sau khi nạp (đạt hết):**
+- S1 của 215.860 ứng viên trong cache so với offline của Giai đoạn 2: **0 khác** (`benchmark/tiered_stage3_cache_s1.json`). 1920 ứng viên không có trong cache vì bị S2 loại ngoài thiết kế fallback, nên pipeline không BLAST.
+- #1 của lượt ma trận (API thật) trùng #1 offline ở **2472/2472** thiết kế.
+- 20 thiết kế chạy lại hai lần: cache hit 1875/1875, kết quả giống hệt, top 3 trùng offline 20/20.
+- Cache: 2660 → 215.985 dòng.
+
+**D. Các lượt có BLAST sau khi nạp:**
+- Validation: 2436/2439.
+  - Cache hit hsa 5160/5840 (88,4 %) tính trên mọi thiết kế mang mã loài hsa. Cả 680 lần BLAST mới thuộc 7 thiết kế có ngữ cảnh không có trong ma trận: 3 tên cũ của Busk 2014, 3 "putative miRNA" không tiền tố loài, 1 trình tự tự nhập. Tính trên 51 thiết kế có cùng ngữ cảnh với ma trận: 5160/5160 (100 %).
+  - Loài khác là BLAST mới: ssc 5200, mmu 3766, ebv 3067, osa 540, ath 360, gga 120, bta 100, cel 100 lần gọi (`benchmark/logs/validation_blast_stats.json`).
+- Benchmark 50: 50/50, cache hit hsa 4780/4780.
+- Benchmark export: 223/224, cache hit 100 % mọi loài.
+- BLAST sensitivity: 175 mồi, BLAST trực tiếp, không qua cache thiết kế.
+- e2e: lần đầu, khi cache cho tham số mặc định của frontend còn trống, 62 pass / 4 flaky / 8 fail. 8 test fail vì vượt giới hạn 15 s: thiết kế không cache mất khoảng 10–13 s, cộng 4 worker song song. Chạy lại khi cache đã có: **74/74**.
+
+**E. Check validation fail (không sửa check):** 3 `expected_design_failure`.
+- ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p được ghi là giới hạn của V4 (đầu 5′ giàu GC). Tiered thiết kế được (QĐ 15), và vùng đặc hiệu trùng hoặc nằm trong vùng của mồi đã công bố.
+- Đề xuất: kỳ vọng của mục theo hệ chấm điểm (V4: từ chối; tiered: so với mồi công bố).
+
+**F.** `docs/SCORING_TIERED_COMPARISON.md`, sinh bằng `backend/scripts/build_tiered_comparison_doc.py`.
+
+**Đề xuất cho SPEC UI:** giới hạn thời gian của thiết kế trong e2e (15 s) quá sát với thời gian thiết kế không cache. Nên tăng lên 30 s, hoặc làm nóng cache trước khi chạy.
+
+## 14. Sau QĐ 38–41 (2026-11-18)
+
+**QĐ 38: đạt.**
+- `validate_primers.py`: ở tiered, mục có `expect_design_failure` mà thiết kế được sẽ chấm bằng check `v4_limitation_designed` (một check, thay cho `expected_design_failure`). V4 giữ nguyên nhánh cũ.
+- Bộ dữ liệu: 3 mục có thêm trường `v4_limitation_note`. ssc-miR-2137 vẫn không thiết kế được ở tiered nên giữ `expected_design_failure`.
+- Validation tiered: **2439/2439**.
+
+| Mục | Vùng đặc hiệu #1 | Vùng khớp miRNA của mồi công bố | `v4_rule_violations` của #1 |
+|---|---|---|---|
+| ath-miR171a-3p | TGATTGAGCCGCGCC | TGATTGAGCCGCGCC (trùng) | gc_out_of_range, gc_end_window_fail |
+| ebv-miR-BART6-3p | CGGGGATCGGACTA | CGGGGATCGGACTAGC (chuỗi con) | gc_out_of_range |
+| mmu-miR-124-3p | TAAGGCACGCGG | TAAGGCACGCGG (trùng) | gc_end_window_fail |
+
+- Hồi quy V4 (`--scoring-system v4`) trùng 3.8.2:
+  - `results.json` giống hệt khi bỏ `run_date`;
+  - `results.csv` có cùng blob git với master (`a41790c`). Trên đĩa file có CRLF do `csv.writer`; git chuẩn hóa về LF.
+- `test_benchmark_endpoint.py`: 9/9 pass, không sửa test. Khối validation trong `benchmark_results.json` được sinh lại bằng `build_benchmark_validation.py --in-place`, và `--check` cho kết quả khớp.
+- Cache hit của lượt này (QĐ 40) là 100 % ở mọi loài: hsa 5840/5840 trên 58 thiết kế. Các ngữ cảnh mới của Giai đoạn 3 đã nằm trong cache.
+
+**QĐ 39–41:** ghi nhận, không chạy lại số liệu. QĐ 41 đã ghi vào HANDOFF §5, mục wet-lab.

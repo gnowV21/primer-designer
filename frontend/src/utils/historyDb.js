@@ -49,6 +49,12 @@ export async function saveDesign(params, results) {
       sequence: params?.sequence?.matureSequence || '',
       topScore: top?.total_score ?? null,
       grade: top?.grade ?? null,
+      // 4.0.0 tiered: the #1 set's specificity tier (SPEC_ui_tiered_4.0.0 §2.5).
+      // Records saved before 4.0.0 have no scoringSystem and show the V4 score.
+      scoringSystem: results?.metadata?.scoring_system ?? null,
+      topSpecificity: top?.ranking?.specificity
+        ? { total: top.ranking.specificity.total, max: top.ranking.specificity.max }
+        : null,
       algorithmVersion: results?.metadata?.algorithm_version ?? null,
       params,
       results,

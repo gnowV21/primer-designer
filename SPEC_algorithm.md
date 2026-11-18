@@ -30,6 +30,19 @@
 
 ---
 
+### 2026-11-18 — Algorithm 4.0.0: xếp hạng phân tầng, ưu tiên đặc hiệu (mặc định)
+
+Chi tiết: `docs/SPEC_scoring_tiered_4.0.0.md` (QĐ 1–37), so sánh: `docs/SCORING_TIERED_COMPARISON.md`. V4 không đổi, chạy bằng `scoringSystem: "v4"` (hồi quy: `validation/results.*` trùng 3.8.2).
+
+| Phần | File | Mô tả |
+|---|---|---|
+| Xếp hạng | `tiered_scoring.py`, `tiered_pipeline.py`, `design_pipeline.py` | Khóa `(−S, structure_veto, binding_floor_fail, has_v4_violation, −P, −F, −detailed, \|Tm − Ta\|, sequence)`. S = S1 BLAST + S2 min ΔCq_assay theo độ dài từng ứng viên + S3 biên Tm (tối đa 15); loại S1 = 1 / S2 = 1, `specificity_fallback` khi mọi ứng viên bị loại. P = \|Tm − Ta\| (P1 ΔTm F–R chỉ báo cáo). F = GC %, kẹp GC, sàn Tm vùng bám (≥ 45 °C → 5, < 39 °C → veto mềm), cấu trúc (min 3 chỉ số con, mức 1 → veto mềm); độ dài vùng đặc hiệu chỉ báo cáo. `total_score` = điểm chi tiết (phân định cuối); `grade` A/B/C theo tầng |
+| Ứng viên | `forward_primer.py` | `gc_prefilter=False`: không lọc GC % / kẹp GC; pool 20 đuôi/độ dài xếp theo F1 trước |
+| BLAST | `blast_offtarget.py`, `blast_cache.py` | `check_offtarget_batch`: 1 `blastn` multi-FASTA (chia `BLAST_BATCH_PROCESSES` = 8 tiến trình) + 1 `blastdbcmd` / thiết kế; trùng từng hit với gọi từng mồi (0/31.049 khác). Cache SQLite theo ngữ cảnh thiết kế (WAL). Thiếu BLAST: S1 = null, cảnh báo `blast_unavailable` |
+| API | `routes/design.py`, `routes/export.py`, `openapi.yaml` | `ranking`, `ranking_summary`, `overhang_suggestion`, `v4_rule_violations`, `grade_reasons`; provenance `scoring_system`, `tiered_thresholds_sha256` |
+
+**Tác động** (2656 hsa; `benchmark/tiered_stage2c_report.json`): 2472 thiết kế có mồi (V4: 2253); #1 khác V4 1723/2253; S1 ≤ 2 của #1: V4 85 → tiered 55 (34 ca cải thiện); #1 S2 = 1: 55 → 39 (đều là fallback). Validation 2436/2439 (3 `expected_design_failure`: tool nay thiết kế được). Thiết kế không cache p50 9,8 s.
+
 ### 2026-11-17 — Algorithm 3.8.2: mốc V4 cho bản đóng băng 4.0.0
 
 | Mã | File | Loại | Mô tả |

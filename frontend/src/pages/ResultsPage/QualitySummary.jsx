@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
+import { TIER_WARNING_FIELDS } from '../SearchPage/ResultsSection/TierBanners.jsx';
 
 const SEV_STYLE = {
   critical: 'bg-red-50 border-red-200 text-red-800',
@@ -16,7 +17,9 @@ const SEV_STYLE = {
 //   signalMethod (SYBR)       → shown as its own note below the primer sets
 //   bindingRegion3prime       → shown on the design page at the point of choice
 //                               (still recorded in the exported report)
-const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime']);
+//   specificity_fallback, fewer_than_3_sets, blast_unavailable
+//                             → tiered banners above the primer sets (TierBanners)
+const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime', ...TIER_WARNING_FIELDS]);
 
 export default function QualitySummary({ results, onBlastResult }) {
   const {
@@ -100,7 +103,9 @@ export default function QualitySummary({ results, onBlastResult }) {
   // appeared to work "sometimes". Now the reason is always stated.
   const mirnaId = (metadata?.mirna_id || '').trim();
   const fwd = top3[0]?.sequence;
-  const hasArm = mirnaId.endsWith('-5p') || mirnaId.endsWith('-3p');
+  // A miRBase name without an arm (hsa-miR-647) is fine when the target sequence is
+  // sent: the backend then identifies the on-target by sequence, as the design does.
+  const hasArm = mirnaId.endsWith('-5p') || mirnaId.endsWith('-3p') || !!metadata?.mirna_sequence;
 
   let blastBlockedReason = null;
   if (!fwd) {

@@ -94,9 +94,13 @@ def blast_check():
     # mirna_id must carry arm designation (-5p/-3p): an arm-less id ('hsa-miR-21') names
     # both arms, so when the sequence check cannot run the other arm would be skipped
     # as a self-hit. [spec §8.12; boundary-safe name matching since classifier v3]
-    if mirna_id and not (mirna_id.endswith("-5p") or mirna_id.endswith("-3p")):
+    # With mirna_sequence the on-target is identified by sequence (classifier v3), so a
+    # miRBase name without an arm (828/2656 hsa entries in 22.1, e.g. hsa-miR-647) is
+    # accepted — exactly what the design-time BLAST does (SPEC_ui_tiered_4.0.0 §2.5).
+    if mirna_id and not (mirna_id.endswith("-5p") or mirna_id.endswith("-3p")) and not mirna_seq:
         return jsonify({
-            "error": "mirna_id must include arm designation (-5p or -3p), e.g. 'hsa-miR-21-5p'."
+            "error": "mirna_id must include arm designation (-5p or -3p), e.g. 'hsa-miR-21-5p', "
+                     "unless mirna_sequence is given."
         }), 400
 
     # ── 2. Database freshness check ──────────────────────────────

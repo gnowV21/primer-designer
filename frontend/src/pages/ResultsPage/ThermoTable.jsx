@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import LnaPanel from '../../components/LnaPanel/index.jsx';
 import useLnaEnabled from '../../hooks/useLnaEnabled.js';
+import { hasTiers } from '../../utils/tierRank.js';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -56,6 +57,9 @@ function bestIndex(sets, extractor, direction) {
     return typeof v === 'number' ? v : null;
   });
   if (vals.every((v) => v === null)) return -1;
+  // Every set equal on this row (common for the tiers): nothing to highlight.
+  const present = vals.filter((v) => v !== null);
+  if (present.length > 1 && present.every((v) => v === present[0])) return -1;
   let best = -1, bestVal = null;
   for (let i = 0; i < vals.length; i++) {
     if (vals[i] === null) continue;
@@ -122,14 +126,14 @@ const ROWS = [
   },
   {
     label: 'Hetero-dimer fwd×rev ΔG',
-    extract: (s) => get(s, 'heterodimer_checks', 'fwd_reverse', 'dg'),
-    format: (s) => fmtDg(get(s, 'heterodimer_checks', 'fwd_reverse', 'dg')),
+    extract: (s) => get(s, 'heterodimer_checks', 'heterodimer_fwd_reverse', 'dg'),
+    format: (s) => fmtDg(get(s, 'heterodimer_checks', 'heterodimer_fwd_reverse', 'dg')),
     best: 'min_abs',
   },
   {
     label: 'Hetero-dimer fwd×RT ΔG',
-    extract: (s) => get(s, 'heterodimer_checks', 'fwd_stemloop', 'dg'),
-    format: (s) => fmtDg(get(s, 'heterodimer_checks', 'fwd_stemloop', 'dg')),
+    extract: (s) => get(s, 'heterodimer_checks', 'heterodimer_fwd_stemloop', 'dg'),
+    format: (s) => fmtDg(get(s, 'heterodimer_checks', 'heterodimer_fwd_stemloop', 'dg')),
     best: 'min_abs',
   },
   {
@@ -172,8 +176,32 @@ const ROWS = [
   },
 ];
 
+// Tiered sets (4.0.0): the V4 "Total score" row is replaced by the tiers
+// (SPEC_ui_tiered_4.0.0 §2.5). total_score is only the final tie-break there.
+const yesNo = (v) => (v ? 'Yes' : '—');
+const TIER_ROWS = [
+  { label: 'Grade', extract: () => null, format: (s) => s.grade ?? '—', best: null },
+  { label: 'Specificity (S)', extract: (s) => s.ranking.specificity.total,
+    format: (s) => `${s.ranking.specificity.total}/${s.ranking.specificity.max}`, best: 'max' },
+  { label: 'PCR (P)', extract: (s) => s.ranking.pcr.total,
+    format: (s) => `${s.ranking.pcr.total}/${s.ranking.pcr.max}`, best: 'max' },
+  { label: 'Flexible (F)', extract: (s) => s.ranking.flexible.total,
+    format: (s) => `${s.ranking.flexible.total}/${s.ranking.flexible.max}`, best: 'max' },
+  { label: 'Structure veto', extract: () => null, format: (s) => yesNo(s.ranking.structure_veto), best: null },
+  { label: 'Binding Tm < 39 °C', extract: () => null, format: (s) => yesNo(s.ranking.binding_floor_fail), best: null },
+  { label: 'Outside V4 rules', extract: () => null,
+    format: (s) => (s.v4_rule_violations || []).join(', ') || '—', best: null },
+  { label: 'Tie-break score', extract: (s) => s.ranking.detailed_score,
+    format: (s) => fmt(s.ranking.detailed_score), best: 'max' },
+];
+
+function comparisonRows(top3) {
+  return top3?.length && top3.every(hasTiers) ? [...TIER_ROWS, ...ROWS.slice(1)] : ROWS;
+}
+
 function TabA({ top3 }) {
   if (!top3?.length) return null;
+  const rows = comparisonRows(top3);
 
   return (
     <div className="overflow-x-auto">
@@ -189,7 +217,7 @@ function TabA({ top3 }) {
           </tr>
         </thead>
         <tbody>
-          {ROWS.map((row, ri) => {
+          {rows.map((row, ri) => {
             const bIdx = row.best ? bestIndex(top3, row.extract, row.best) : -1;
             return (
               <tr
@@ -330,7 +358,16 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
               ? `${fmt(set.scores.bound_fraction_full_pct)}%`
               : undefined}
           />
-          <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
+          {hasTiers(set) ? (
+            <>
+              <PropRow label="Grade" value={set.grade} />
+              <PropRow label="Tiers S / P / F"
+                value={`${set.ranking.specificity.total}/${set.ranking.specificity.max} · ${set.ranking.pcr.total}/${set.ranking.pcr.max} · ${set.ranking.flexible.total}/${set.ranking.flexible.max}`} />
+              <PropRow label="Tie-break score" value={fmt(set.ranking.detailed_score)} />
+            </>
+          ) : (
+            <PropRow label="Total score" value={set.total_score !== undefined ? fmt(set.total_score) : undefined} />
+          )}
         </div>
 
         {/* LNA Tm suggester (informational only) — on-demand for the forward primer.

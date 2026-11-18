@@ -90,7 +90,14 @@
 #   of the mature.fa behind the BLAST DB and overhang index; sequences outside it get
 #   a `sequence_not_in_mirbase_release` warning; online lookups are labelled and no
 #   longer cached.
-ALGORITHM_VERSION = "3.8.2"
+# 4.0.0 (docs/SPEC_scoring_tiered_4.0.0.md): tiered, specificity-first ranking of the
+#   forward candidates (algorithm/tiered_pipeline.py) is the default; V4 stays
+#   available (scoringSystem = "v4") and unchanged. Tiered: no GC % / G-C clamp
+#   pre-filter and no structural hard filters (scored F1/F2/F5 + soft veto instead);
+#   BLAST (batched: one multi-FASTA blastn split over parallel processes + one
+#   blastdbcmd per design) scores every candidate S2 does not eliminate; each set
+#   lists the V4 rules it breaks (v4_rule_violations).
+ALGORITHM_VERSION = "4.0.0"
 
 STEMLOOP_BODY = "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGAC"  # 44 nt [Chen05][K11]
 STEMLOOP_BODY_LENGTH = 44
@@ -614,6 +621,12 @@ BLAST_MAX_TARGET_SEQS  = 50000   # [Ye12] — vs standard 250
 BLAST_REWARD           = 1       # [Ye12] — match reward
 BLAST_PENALTY          = -1      # [Ye12] — mismatch penalty, ratio 1:1
 BLAST_TASK             = "blastn-short"  # for queries <30 nt
+# Batched BLAST (tiered 4.0.0, SPEC QD 24b): the forward candidates of one design
+# go to blastn as multi-FASTA, split over this many parallel blastn processes.
+# Performance only — blastn scores each query on its own, so the hits are the same
+# for any split (benchmark/blast_batch_equivalence.json). hsa-miR-21-5p, 100
+# candidates: 1 process 8.5 s, 4 → 3.4 s, 8 → 2.5 s, 12 → 2.5 s.
+BLAST_BATCH_PROCESSES  = 8
 
 # [Ye12] Primer-BLAST default specificity thresholds
 PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specific enough"
@@ -893,3 +906,108 @@ ASSAY_LABEL_SCORE = {"DISCRIMINATED": 100, "PARTIAL": 70, "CO-AMPLIFIED": 0, "no
 # term and terminal fraying dominate, so a point Tm is not a defensible display value.
 SHORT_DUPLEX_NT_THRESHOLD     = 8     # nt — report dG37 + a Tm band below this, not a point Tm
 TM_SHORT_DUPLEX_UNCERTAINTY_C = 5.0   # +/- °C indicative band (conservative; NOT a statistical CI)
+
+
+# ================================================================
+# TIERED SCORING (4.0.0) — docs/SPEC_scoring_tiered_4.0.0.md §3
+# Thresholds approved 2026-11-17 after the Giai đoạn 1 dry run (SPEC QD 17–23;
+# backend/scripts/tiered_scoring_dryrun.py). Pure functions: algorithm/tiered_scoring.py;
+# pipeline: algorithm/tiered_pipeline.py.
+# Each table lists the lower edge of levels 5, 4, 3, 2 ("higher is better") or the
+# upper edge ("lower is better"); anything beyond is level 1.
+# "own threshold" = a value of this tool, no published source, not wet-lab calibrated.
+# ================================================================
+# Ranking system of /api/design: "tiered" (4.0.0 default) or "v4" (weighted sum, kept
+# for the thesis comparison; SPEC QD 11). Per request: scoringSystem; per process: the
+# SCORING_SYSTEM environment variable.
+SCORING_SYSTEM_DEFAULT = "tiered"
+SCORING_SYSTEMS = ("tiered", "v4")
+
+# Tier 1 — specificity (max 15)
+# S1 BLAST (classifier v7, same species + virus host): SAFE 5, MEDIUM with 1 hit 4,
+# MEDIUM with ≥ 2 hits 3, HIGH 2, CRITICAL 1 (eliminated, SPEC QD 4).
+TIERED_S1_BY_RISK = {"SAFE": 5, "MEDIUM_1": 4, "MEDIUM_2+": 3, "HIGH": 2, "CRITICAL": 1}
+# S2 min ΔCq_assay over same-species miRNAs, on the candidate's own specific length.
+TIERED_S2_DCQ = (
+    10.0,                          # 5: ≥ 10 Cq ≈ 0.1 %, lowest single-mismatch cross-signal of Chen 2005 (DECISIONS D-2)
+    7.0,                           # 4: own threshold
+    ASSAY_DCQ_DISCRIMINATED_AT,    # 3: 4.3 — DISCRIMINATED
+    ASSAY_DCQ_COAMPLIFIED_BELOW,   # 2: 3.3 — PARTIAL; below → 1 CO-AMPLIFIED (eliminated)
+)
+# S3 specificity Tm margin = Tm_on − max Tm_off (RT-captured same-species off-targets), °C
+TIERED_S3_MARGIN_C = (
+    15.0,                          # 5: own threshold
+    BLAST_TM_SAFE_MARGIN,          # 4: 10 °C — BLAST SAFE margin
+    7.5,                           # 3: own threshold
+    BLAST_TM_CRITICAL_MARGIN,      # 2: 5 °C — BLAST CRITICAL margin; below → 1 (not eliminated)
+)
+TIERED_RT_CAPTURE_BELOW = ASSAY_DCQ_DISCRIMINATED_AT   # ΔCq_RT < 4.3 → the RT primer captures it
+
+# Tier 2 — PCR (max 5 since the Giai đoạn 1 review, 2026-11-17); lower is better, °C.
+# P2 |Tm_forward − Ta| is the only scored PCR criterion. Edges no tighter than 1 °C:
+# nearest-neighbour Tm predictions carry ~±1–2 °C error, so finer steps would rank noise.
+# P1 |Tm_forward − Tm_reverse| is REPORT-ONLY: the universal reverse primer is fixed
+# (Tm 62.93 °C at the design defaults), so P1 is a function of Tm_forward alone and
+# pulls it towards 62.9 °C while P2 pulls it towards Ta (r = −0.95 over 217,780 hsa
+# candidates; P1 level 3 for 88 %). benchmark/tiered_scoring_dryrun.json.
+TIERED_P1_TM_PAIR_C = (1.0, TM_PAIR_DIFF_MAX, 3.0, 5.0)   # report only; 4: 2 °C [PAST24]
+TIERED_P2_TM_TA_C   = (1.0, 2.0, 3.0, 5.0)                # own thresholds (≥ 1 °C steps)
+
+# Tier 3 — flexible (max 25)
+TIERED_F3_LENGTH = {17: 5, 16: 5, 15: 4, 14: 3, 13: 2, 12: 1}   # own threshold (longer = more 3'-mismatch room)
+TIERED_F4_BINDING_TM_DEV_C = (2.0, 4.0, 6.0, 8.0)   # |Tm_binding − TM_BINDING_TARGET|, own thresholds
+# SPEC QD 29 (behind TIERED_F4_FLOOR until approved on the Giai đoạn 2b numbers):
+# TM_BINDING_TARGET (45 °C) is the median Tm of 12–17-nt regions, not a biological
+# optimum — at cycle 1 a higher binding Tm only binds better (3.8.1 mass balance at
+# 60 °C: 0.08 % at 12 nt, 7.8 % at 17 nt), and mismatch discrimination is measured in
+# tier S. So F4 becomes a one-sided floor and F3 (length) leaves the flexible tier
+# (report only; F max 20); the detailed score drops primer_size and scores the binding
+# Tm one-sided (100 at ≥ 45 °C, linear to 0 at 35 °C).
+TIERED_F4_FLOOR = True    # default since QD 35 (approved 2026-11-18)
+TIERED_F4_FLOOR_C = (45.0, 43.0, 41.0, 39.0)   # own threshold; floor = thesis cycle-1 hypothesis (let-7a 33.6 vs 46.2 °C)
+# QD 33: 0 at 25 °C (≈ lowest binding Tm observed), 100 at ≥ 45 °C, so the detailed score
+# still prefers a higher binding Tm among candidates below the floor (all F4 = 1). Own
+# threshold. Its weight stays 0.10 after normalisation (raw 0.08 of 0.80).
+TIERED_DETAIL_TM_BINDING_FLOOR = ((25.0, 0.0), (45.0, 100.0))
+# SPEC QD 30 (behind TIERED_GRADE_BY_TIERS): tiered grade from the tiers, not the
+# detailed score. A: no fallback, S1 ≥ 4, S2 ≥ 3, S3 ≥ 4, no veto; B: passed the
+# elimination with a weakness (S1 2–3, S2 2, S3 ≤ 3, veto) or without BLAST (no A
+# without S1); C: specificity_fallback.
+TIERED_GRADE_BY_TIERS = True    # default since QD 35
+TIERED_GRADE_A_MIN = {"blast": 4, "assay_dcq": 3, "tm_margin": 4}
+# SPEC QD 34: within the same specificity total and veto, a candidate that breaks no V4
+# rule (v4_rule_violations empty) ranks first. Giai đoạn 2b: it never lowered S1 or S3 of
+# the #1 set. Key: (−S, veto, has_v4_violation, −P, −F, −detailed, |Tm − Ta|, sequence).
+TIERED_V4_COMPLIANT_FIRST = True    # default since QD 35
+# SPEC QD 36: binding Tm below the floor (F4 = 1, < 39 °C) is a soft veto like a
+# structure sub-index at level 1 — below 39 °C the thesis cycle-1 hypothesis expects
+# the primer to barely bind (let-7a 33.6 °C): a functional failure, whereas the V4 rule
+# broken here is mostly gc_clamp_fail, a soft recommendation. Not eliminated. Key:
+# (−S, structure_veto, binding_floor_fail, has_v4_violation, −P, −F, −detailed, |Tm − Ta|, seq).
+TIERED_BINDING_FLOOR_VETO = True
+# F5 structure = min of three sub-indices; a sub-index of 1 sets structure_veto (SPEC QD 8).
+# F5c (3'-end dimer Tm) acts as a VETO in practice, not a graded criterion: level 5 for
+# 99.2 % of hsa candidates; the 32 candidates at level 1 all also fail F5a and F5b
+# (self-complementary 3' ends such as CTGCAG, GTCGAC). Kept because Primer3 has the rule.
+TIERED_F5_HAIRPIN_TM_C   = (30.0, 37.0, 42.0, HAIRPIN_TM_HARD_MAX)    # level 1 at ≥ 47 °C [P3 PRIMER_MAX_HAIRPIN_TH]
+TIERED_F5_DIMER_DG       = (-5.0, -7.0, -9.0, -10.0)                  # kcal/mol RNAcofold; ≤ −10 → 1 [Kang17 −9 ± 1]
+TIERED_F5_END_DIMER_TM_C = (30.0, 37.0, 42.0, END_DIMER_TM_HARD_MAX)  # level 1 at ≥ 47 °C [P3 *_END_TH]
+
+# Detailed score (0–100), tie-break only (SPEC §3.4). Sub-scores without an existing
+# V4 function are piecewise-linear through these (value, sub-score) anchors — own choice,
+# chosen so each table edge of levels 2…5 maps to 25/50/75/100 (or 20…100).
+# tm_pair (0.15) removed with P1 (same conflict with tm_accuracy); the rest is
+# renormalised by its sum (0.85).
+TIERED_DETAIL_WEIGHTS = {
+    "min_delta_cq": 0.25, "tm_margin": 0.15, "tm_accuracy": 0.15,
+    "tm_binding_accuracy": 0.08, "gc_content": 0.05, "gc_clamp": 0.05,
+    "primer_size": 0.05, "structure": 0.05, "amplicon_size": 0.02,
+}
+TIERED_DETAIL_ANCHORS = {
+    "min_delta_cq": ((0.0, 0.0), (3.3, 25.0), (4.3, 50.0), (7.0, 75.0), (10.0, 100.0)),   # capped at 10
+    "tm_margin":    ((0.0, 0.0), (5.0, 20.0), (7.5, 40.0), (10.0, 60.0), (15.0, 80.0), (20.0, 100.0)),
+    "tm_pair":      ((1.0, 100.0), (2.0, 75.0), (3.0, 50.0), (5.0, 25.0), (10.0, 0.0)),
+    "hairpin_tm":   ((30.0, 100.0), (37.0, 75.0), (42.0, 50.0), (47.0, 25.0), (60.0, 0.0)),
+    "dimer_dg":     ((-5.0, 100.0), (-7.0, 75.0), (-9.0, 50.0), (-10.0, 25.0), (-15.0, 0.0)),
+    "end_dimer_tm": ((30.0, 100.0), (37.0, 75.0), (42.0, 50.0), (47.0, 25.0), (60.0, 0.0)),
+}

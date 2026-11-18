@@ -1,6 +1,7 @@
 // ExportButtons — copy primers to clipboard in various formats.
 
 import { useState } from 'react';
+import { hasTiers } from '../../../utils/tierRank.js';
 
 export default function ExportButtons({ set, stemloop, reverse }) {
   const [copied, setCopied] = useState('');
@@ -12,7 +13,24 @@ export default function ExportButtons({ set, stemloop, reverse }) {
     });
   }
 
+  const tiered = hasTiers(set);
+
   function tsvRow() {
+    if (tiered) {
+      // Tiered (4.0.0): the V4 "Score" column is the tie-break score; tiers added.
+      const r = set.ranking;
+      const cols = [
+        `#${set.rank} Forward`, set.sequence, stemloop?.sequence ?? '', reverse?.sequence ?? '',
+        set.grade ?? '', `${r.specificity.total}/${r.specificity.max}`, `${r.pcr.total}/${r.pcr.max}`,
+        `${r.flexible.total}/${r.flexible.max}`, r.detailed_score?.toFixed(1) ?? '',
+        set.tm_full?.toFixed(1) ?? '', set.gc_percent ?? '', set.amplicon_size ?? '',
+      ];
+      return [
+        ['Rank', 'Forward Primer', 'RT Primer', 'Reverse Primer', 'Grade', 'S', 'P', 'F',
+          'Tie-break score', 'Tm (°C)', 'GC%', 'Amplicon (bp)'].join('\t'),
+        cols.join('\t'),
+      ].join('\n');
+    }
     const cols = [
       `#${set.rank} Forward`,
       set.sequence,
@@ -31,8 +49,11 @@ export default function ExportButtons({ set, stemloop, reverse }) {
   }
 
   function fastaBlock() {
+    const quality = tiered
+      ? `Grade=${set.grade} S=${set.ranking.specificity.total}/${set.ranking.specificity.max}`
+      : `Score=${set.total_score?.toFixed(1)}`;
     return [
-      `>Primer_Set_${set.rank}_Forward  Tm=${set.tm_full?.toFixed(1)}C GC=${set.gc_percent}% Score=${set.total_score?.toFixed(1)}`,
+      `>Primer_Set_${set.rank}_Forward  Tm=${set.tm_full?.toFixed(1)}C GC=${set.gc_percent}% ${quality}`,
       set.sequence,
       '>Primer_Set_RT_StemLoop',
       stemloop?.sequence ?? '',

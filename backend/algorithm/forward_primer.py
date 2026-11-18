@@ -51,7 +51,8 @@ def _rng_for(*key) -> random.Random:
     return random.Random(int(digest[:12], 16))
 
 
-def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
+def generate_forward_candidates(mature_sequence: str, params: dict,
+                                gc_prefilter: bool = True) -> tuple:
     """
     Generate forward primer candidates using Primer3Plus SEQUENCE_OVERHANG_LEFT logic.
 
@@ -61,6 +62,11 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
       computed via SantaLucia 1998 NN model for every candidate
 
     v2.7: Forward primer uses positions [0 : len(miRNA) - 6] [V07][K11]
+
+    gc_prefilter=False (tiered scoring, 4.0.0, SPEC QD 15): GC % and the 3'-end
+    G/C rules (clamp, max end GC) do not reject candidates — the tiered system scores
+    them (F1/F2) instead. Length, Tm window, homopolymer and amplicon rules still
+    apply. The default (True) is the V4 behaviour, unchanged.
 
     Returns:
         (candidates_passed, rejection_log)
@@ -108,6 +114,8 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
     passed = []
     for c in all_candidates:
         hard_reasons, warning_reasons = _prefilter(c, params)
+        if not gc_prefilter:
+            hard_reasons = [r for r in hard_reasons if r not in _GC_PREFILTER_REASONS]
         if not hard_reasons:
             c["warnings_from_prefilter"] = warning_reasons
             passed.append(c)
@@ -117,7 +125,7 @@ def generate_forward_candidates(mature_sequence: str, params: dict) -> tuple:
 
     # Hand the best few tails of EVERY 3' end to scoring; which sets are returned is
     # decided after scoring by select_diverse_top (v3.2.0).
-    passed = _candidate_pool(passed, target_tm)
+    passed = _candidate_pool(passed, target_tm, gc_first=not gc_prefilter)
     return passed, rejection_log
 
 
@@ -243,6 +251,10 @@ def _generate_tail_pool(tail_len: int, max_pool: int = 400, sequence: str = "") 
     return result
 
 
+# Pre-filter reasons the tiered system scores instead of rejecting (SPEC QD 15).
+_GC_PREFILTER_REASONS = frozenset({"gc_out_of_range", "gc_clamp_fail", "gc_end_window_fail"})
+
+
 def _prefilter(candidate: dict, params: dict) -> tuple:
     """
     Pre-filter candidates. Returns (hard_rejection_reasons, warning_reasons).
@@ -304,7 +316,8 @@ def _prefilter(candidate: dict, params: dict) -> tuple:
 
 
 def _candidate_pool(candidates: list, target_tm: float,
-                    per_length: int = FORWARD_TAILS_PER_LENGTH) -> list:
+                    per_length: int = FORWARD_TAILS_PER_LENGTH,
+                    gc_first: bool = False) -> list:
     """
     Keep the `per_length` tails closest to target_tm for EACH specific length (each
     3' end), so every usable 3' end reaches the 15-criterion score.
@@ -314,10 +327,23 @@ def _candidate_pool(candidates: list, target_tm: float,
     12-nt region won over the 13-nt one just by being generated first — and dropped
     3' ends 1 nt from a kept one before anything was scored. Ties here break on the
     sequence, so the pool never depends on generation order.
+
+    gc_first (tiered, 4.0.0): without the GC pre-filter, tails whose full-primer GC %
+    the tiered F1 criterion will penalise were nearest in Tm and crowded GC-balanced
+    tails out of the 20 kept per length (95/2253 hsa V4 #1 primers missing from the
+    pool). The F1 level is therefore sorted first, then |Tm − Ta|. F2 (G/C in the last
+    5 nt) needs no such step: the 3' end lies in the specific region, so it is the same
+    for every tail of one length.
     """
+    def key(x):
+        k = (abs(x.get("tm_full", 0) - target_tm), x["sequence"])
+        if gc_first:
+            from .tiered_scoring import f1_gc
+            return (-f1_gc(x["gc_percent"]),) + k
+        return k
+
     by_length: dict[int, list] = {}
-    for c in sorted(candidates, key=lambda x: (abs(x.get("tm_full", 0) - target_tm),
-                                               x["sequence"])):
+    for c in sorted(candidates, key=key):
         kept = by_length.setdefault(c["specific_length"], [])
         if len(kept) < per_length:
             kept.append(c)

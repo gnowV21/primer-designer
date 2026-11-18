@@ -22,7 +22,7 @@ async function runDesign(page) {
   const designBtn = page.getByRole('button', { name: 'Design Primers →' });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
-  await expect(page).toHaveURL('/results', { timeout: 15000 });
+  await expect(page).toHaveURL('/results', { timeout: 30000 });
 }
 
 // ── Empty state ────────────────────────────────────────────────────
@@ -109,7 +109,10 @@ test('ThermoTable Tab A shows by default', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
   await expect(page.getByRole('button', { name: /Tab A.*Comparison/i })).toBeVisible();
-  await expect(page.getByText('Total score')).toBeVisible();
+  // Tiered (4.0.0): the V4 "Total score" row is replaced by the tiers (SPEC_ui_tiered_4.0.0 §2.5).
+  await expect(page.getByRole('cell', { name: 'Specificity (S)' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Tie-break score' })).toBeVisible();
+  await expect(page.getByText('Total score')).toHaveCount(0);
 });
 
 test('ThermoTable Tab B switch shows per-primer detail', async ({ page }) => {

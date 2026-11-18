@@ -6,7 +6,10 @@
  */
 import axios from 'axios';
 
-export const DESIGN_TIMEOUT_MS = 15000;
+// Algorithm 4.0.0 BLASTs every surviving candidate during the design: ~10–13 s when
+// the BLAST cache is cold (benchmark/tiered_design_timing.json, p90 11.9 s), more when
+// requests queue on the backend's primer3 lock. 15 s (3.8.x, no BLAST) cut real designs.
+export const DESIGN_TIMEOUT_MS = 60000;
 
 /**
  * Values derived from the thermodynamic inputs, sent alongside the form as

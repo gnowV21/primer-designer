@@ -85,7 +85,9 @@ def test_cycle1_occupancy_uses_annealing_temp():
 
 
 def test_binding_occupancy_not_scored_and_total_renormalised(client):
-    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16}})
+    # V4 weighted score (the tiered total is its detailed score, tested elsewhere).
+    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16},
+                                         "scoringSystem": "v4"})
     top = r.get_json()["top3"][0]
     assert "bound_fraction_binding" not in top["scores"]
     assert "bound_fraction_binding_pct" in top["scores"]
@@ -178,3 +180,13 @@ def test_pdf_contains_controls_section(client):
     assert results["controls_advice"]["ntc_delta_cq_min"] == 10
     pdf = client.post("/api/export", json={"format": "pdf", "results": results, "history_count": 1})
     assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"
+
+
+def test_binding_occupancy_reported_for_tiered_sets(client):
+    """Tiered sets report cycle-1 occupancy too (SPEC_ui_tiered_4.0.0 UI-2), informational:
+    it is in scores, never in weights, and does not move the ranking."""
+    r = client.post("/api/design", json={"sequence": {"matureSequence": MIR16},
+                                         "scoringSystem": "tiered"})
+    for s in r.get_json()["top3"]:
+        assert s["scores"]["bound_fraction_binding_pct"] > 0
+        assert "bound_fraction_binding_pct" not in s["weights"]

@@ -3,7 +3,7 @@
 // visible without scrolling the tab strip.
 
 import { test, expect } from '@playwright/test';
-import { PLACEHOLDER } from './helpers.js';
+import { PLACEHOLDER, DESIGN_TIMEOUT, WARM_MIRNAS } from './helpers.js';
 
 async function horizontalOverflow(page) {
   return page.evaluate(() => {
@@ -39,10 +39,33 @@ test.describe('320 px layout', () => {
     const designBtn = page.getByRole('button', { name: 'Design Primers →' });
     await expect(designBtn).toBeEnabled({ timeout: 8000 });
     await designBtn.click();
-    await expect(page).toHaveURL('/results', { timeout: 15000 });
+    await expect(page).toHaveURL('/results', { timeout: 30000 });
     expect(await horizontalOverflow(page)).toEqual({ main: 0, nav: 0 });
   });
 });
+
+// Tiered cards (grade, tier chips, flags), the fallback banner and the expanded detail
+// table (SPEC_ui_tiered_4.0.0 §3): no sideways scroll on common phone widths.
+for (const width of [320, 360, 390]) {
+  for (const m of WARM_MIRNAS) {
+    test(`/results ${m.name} at ${width} px: tier cards and banners fit`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/design');
+      await page.getByPlaceholder(PLACEHOLDER).fill(m.sequence);
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
+        if (b) b.click();
+      });
+      const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+      await expect(designBtn).toBeEnabled({ timeout: 8000 });
+      await designBtn.click();
+      await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });
+      await expect(page.getByTestId('tier-summary').first()).toBeVisible();
+      await page.getByText('Criteria detail').first().click();
+      expect(await horizontalOverflow(page)).toEqual({ main: 0, nav: 0 });
+    });
+  }
+}
 
 test('unknown address shows a not-found page with a way back', async ({ page }) => {
   await page.goto('/no-such-page');

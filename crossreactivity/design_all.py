@@ -49,6 +49,10 @@ def _init_worker(design_request: dict):
     sys.path.insert(0, backend)
     os.chdir(backend)                         # the app resolves data paths from here
     from app import app
+    # Parallel over designs: one blastn process per design instead of
+    # BLAST_BATCH_PROCESSES per design (performance only; hits are the same).
+    import algorithm.specificity_check.blast_offtarget as _bo
+    _bo.BLAST_BATCH_PROCESSES = 1
     app.config["TESTING"] = True
     _client = app.test_client()
     _request = {k: v for k, v in design_request.items() if not k.startswith("_")}
@@ -75,8 +79,14 @@ def design_one(item: tuple[str, str]) -> dict:
         if data.get("rejection_summary"):
             reason += f" — rejections: {data['rejection_summary']}"
         return {**rec, "status": "failed", "reason": reason}
-    rt = (data.get("stemloop_rt") or {}).get("sequence", "")
     meta = data.get("metadata") or {}
+    rs = data.get("ranking_summary") or {}
+    if rs and not rs.get("blast_available", True):
+        # Tiered #1 without S1 is not the tool's real choice (SPEC_scoring_tiered_4.0.0
+        # QD 24e): not cached as a design, and main() fails the run.
+        return {**rec, "status": "failed",
+                "reason": f"blast_unavailable: {rs.get('blast_unavailable_reason')}"}
+    rt = (data.get("stemloop_rt") or {}).get("sequence", "")
     return {
         **rec,
         "status": "ok",
@@ -88,6 +98,11 @@ def design_one(item: tuple[str, str]) -> dict:
         "total_score": top.get("total_score"),
         "grade": top.get("grade"),
         "algorithm_version": meta.get("algorithm_version") or _version,
+        "scoring_system": meta.get("scoring_system"),
+        # BLAST bookkeeping of the tiered ranking (None for v4)
+        "blast_candidates": rs.get("blast_candidates"),
+        "blast_cache_hits": rs.get("blast_cache_hits"),
+        "blast_cache_write_error": rs.get("blast_cache_write_error"),
     }
 
 
@@ -104,9 +119,11 @@ def read_done(path: str) -> dict[str, dict]:
 
 
 def select_todo(mature: dict[str, str], done: dict[str, dict], version: str) -> list:
-    """miRNAs to design: not cached, or cached by another algorithm version."""
+    """miRNAs to design: not cached, cached by another algorithm version, or failed
+    only because BLAST was unavailable."""
     return [(n, s) for n, s in sorted(mature.items())
-            if n not in done or done[n].get("algorithm_version") != version]
+            if n not in done or done[n].get("algorithm_version") != version
+            or str(done[n].get("reason", "")).startswith("blast_unavailable")]
 
 
 def compact(path: str) -> None:
@@ -126,6 +143,8 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--cache", default=DEFAULT_CACHE)
     ap.add_argument("--limit", type=int, default=None, help="first N miRNAs (testing)")
+    ap.add_argument("--max-hours", type=float, default=None,
+                    help="stop (exit 2) if, after 200 designs, the estimated total exceeds this")
     args = ap.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -146,18 +165,45 @@ def main(argv=None) -> int:
           f"({workers} workers)", flush=True)
 
     t0 = time.time()
+    st = {"hits": 0, "blasted": 0, "blast_errors": 0, "cache_write_errors": 0, "failed": 0}
+    stopped = False
     with open(out_path, "a", encoding="utf-8") as out, \
             mp.Pool(workers, initializer=_init_worker, initargs=(cfg["design_request"],)) as pool:
         for i, rec in enumerate(pool.imap_unordered(design_one, todo, chunksize=4), 1):
             out.write(json.dumps(rec, ensure_ascii=False) + "\n")
             out.flush()
+            st["hits"] += rec.get("blast_cache_hits") or 0
+            st["blasted"] += rec.get("blast_candidates") or 0
+            st["cache_write_errors"] += bool(rec.get("blast_cache_write_error"))
+            st["blast_errors"] += str(rec.get("reason", "")).startswith("blast_unavailable")
+            st["failed"] += rec.get("status") == "failed"
             if i % 100 == 0 or i == len(todo):
-                print(f"  {i}/{len(todo)}  {time.time() - t0:.0f}s", flush=True)
+                el = time.time() - t0
+                eta = el / i * (len(todo) - i)
+                print(f"  {i}/{len(todo)}  {el:.0f}s  ETA {eta / 60:.0f} min  "
+                      f"cache hit {st['hits']}/{st['blasted']}  new BLAST {st['blasted'] - st['hits']}  "
+                      f"BLAST errors {st['blast_errors']}  cache write errors {st['cache_write_errors']}  "
+                      f"failed {st['failed']}", flush=True)
+            if (args.max_hours and i == 200
+                    and (time.time() - t0) / i * len(todo) > args.max_hours * 3600):
+                print(f"STOP: estimated total {(time.time() - t0) / i * len(todo) / 3600:.1f} h "
+                      f"> {args.max_hours} h", flush=True)
+                pool.terminate()
+                stopped = True
+                break
 
     compact(out_path)
     done = read_done(out_path)
     n_ok = sum(r["status"] == "ok" for r in done.values())
     print(f"done: {n_ok} designed, {len(done) - n_ok} failed -> {out_path}")
+    print(f"run stats: {json.dumps(st)}")
+    if stopped:
+        return 2
+    n_blast = sum(str(r.get("reason", "")).startswith("blast_unavailable") for r in done.values())
+    if n_blast:
+        print(f"ERROR: {n_blast} designs ran without BLAST — fix BLAST+ / the DB and re-run "
+              "(they will be redesigned).", file=sys.stderr)
+        return 1
     return 0
 
 

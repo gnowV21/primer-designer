@@ -72,3 +72,5 @@ outputs/freeze_cache/
 
 # Local archive of the repository (not source)
 primer-designer.zip
+backend/data/blast_cache.*.bak
+backend/data/blast_cache.sqlite-*

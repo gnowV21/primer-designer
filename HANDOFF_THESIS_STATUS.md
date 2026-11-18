@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-17)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18, Giai đoạn 3 của hệ phân tầng)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -11,7 +11,7 @@
 
 - `feat/design-focus` đã merge vào `master` (PR #2). Các thay đổi sau đó đi qua PR #3–#11; `master` @ `9182922` = algorithm 3.8.1.
 - **`release/4.0.0`** (từ `master` @ `9182922`): vệ sinh repo, đo tác động offline, algorithm **3.8.2** (REV-23 qua nhánh `fix/rev23-family-per-candidate`; REV-21, `end_stability`, nguồn miRBase). PR `release/4.0.0` → `master` chờ duyệt.
-- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng (SPEC Giai đoạn 0–1, dừng ở ⛔ đầu tiên). Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
+- Sau khi merge: nhánh `feat/tiered-scoring` từ `master` cho hệ phân tầng. Giai đoạn 1 (ngưỡng) đã duyệt 2026-11-17 (QĐ 17–27); Giai đoạn 2 (cài đặt) duyệt 2026-11-18 (QĐ 28–32); Giai đoạn 2b duyệt (QĐ 33–35 cài, mặc định bật). QĐ 36–37 (veto sàn Tm vùng bám < 39 °C; cache) duyệt; Giai đoạn 2c đạt (SPEC §12). **Giai đoạn 3 xong 2026-11-18** (SPEC §13): số liệu chạy lại, `docs/SCORING_TIERED_COMPARISON.md`, PR vào `master` mở nhưng **không merge cho tới khi xong SPEC UI** (QĐ 31). QĐ 31: PR vào `master` không merge cho tới khi xong SPEC UI. QĐ 38–41 duyệt 2026-11-18 (validation tiered 2439/2439; S3 giữ làm tròn; cache hit tính trên ngữ cảnh đã có; let-7a-5p là ca wet-lab kiểm đặc hiệu). SPEC UI (`docs/SPEC_ui_tiered_4.0.0.md`): UI-1 + UI-2 xong, chờ duyệt merge PR #13. Tag `thesis-freeze-4.0.0` gắn khi 4.0.0 xong.
 - Từ 2026-11-17 repo có `.gitattributes` (`* text=auto eol=lf`, `*.bat` CRLF, khai báo binary): working tree dùng LF, không còn file "chỉ khác ký tự xuống dòng".
 
 ## 2. Các giai đoạn đã hoàn thành (theo thời gian)
@@ -53,6 +53,8 @@
 | 2026-11-17 | **Algorithm 3.8.1 — tỉ lệ bám theo cân bằng khối lượng** (AUDIT REV-24). θ = K·C_P/(1 + K·C_P) thay cho công thức √ cũ, vốn chỉ đúng tại 50 %. Không đổi điểm, mồi hay xếp loại (thiết kế lại 2656 miRNA hsa: 0 thay đổi). Chỉ số chu kỳ 1 hiển thị đổi: trung vị 0,31 % (trước 2,71 %); 12 nt 0,08 %, 17 nt 7,8 %. |
 | 2026-11-17 | **Bản đóng băng 4.0.0, phần chuẩn bị** (nhánh `release/4.0.0`). `.gitattributes` (LF). Đo tác động offline trên 2656 miRNA hsa bằng cách ghi lại toàn bộ ứng viên rồi xếp hạng lại (`backend/scripts/thesis_freeze_impact.py`, `benchmark/thesis_freeze_impact.json`; tái tạo đúng #1 và top 3 của API ở 2253/2253). Phát hiện: `end_stability` luôn bằng 0 (gấp 5-mer thành hairpin) và kể cả tính đúng cũng không thể fail (tối đa 6,86 < 9,0); **115/2253 thiết kế hsa chạy `hard_filter_fallback`**; 403 ca thất bại đều do lọc sơ bộ GC/kẹp GC, gốc là đuôi 5′ luôn GC ≥ 50 %; miR-155-5p 24 nt là chú giải đúng của miRBase 22.1, route khớp `mature.fa` ở 2656/2656 hsa. Chủ dự án chọn hệ chấm điểm phân tầng cho 4.0.0 (`docs/SPEC_scoring_tiered_4.0.0.md`). |
 | 2026-11-17 | **Algorithm 3.8.2 — mốc V4 cho 4.0.0** (AUDIT §10.5). REV-23: `family_discrimination` chấm theo độ dài vùng đặc hiệu của từng ứng viên (#1 đổi ở 13/2253 hsa, top 3 ở 28; #1 CO-AMPLIFIED 52 → 45). REV-21: lọc cứng dimer đầu 3′ theo Tm ≥ 47 °C của Primer3 (không đổi output). `end_stability` tính đúng định nghĩa Primer3 (điểm không đổi, giá trị hiển thị đổi). Nguồn miRBase: release + sha256 vào provenance và file xuất MIQE; trình tự ngoài 22.1 có cảnh báo `sequence_not_in_mirbase_release`; kết quả tra online gắn nhãn "online, release unknown" và không ghi cache. Validation 2439/2439 (`results.csv` không đổi dòng nào); benchmark 50/50; ma trận hsa ngoài đường chéo HIGH 208 → 195, MEDIUM 107 → 111, LOW 20.700 → 20.709. |
+| 2026-11-17/18 | **Algorithm 4.0.0, hệ phân tầng — Giai đoạn 1–2** (nhánh `feat/tiered-scoring`, SPEC §9–10). Xếp hạng Đặc hiệu (BLAST S1, ΔCq assay S2, biên Tm S3) → veto cấu trúc → PCR (Tm − Ta) → Linh hoạt → điểm chi tiết; mặc định `tiered`, V4 sau cờ `scoringSystem`. BLAST gộp (1 `blastn` multi-FASTA chia 8 tiến trình + 1 `blastdbcmd`/thiết kế): 212 s → ~8 s, giống từng hit trên 31.049 lần gọi. Thiết kế không cache p50 9,8 s / p90 11,9 s. Trên 2472 hsa có BLAST: #1 khác V4 1670/2253, fallback 54, 219/403 miRNA V4 không thiết kế được nay có mồi (`v4_rule_violations` đánh dấu). |
+| 2026-11-18 | **Giao diện cho hệ phân tầng** (`docs/SPEC_ui_tiered_4.0.0.md`, UI-1 + UI-2). Thẻ bộ mồi: grade A/B/C + 3 tầng (bỏ đồng hồ 0–100), chip mức từng tiêu chí, chip veto / luật V4 / loại; banner fallback (nêu off-target, khuyên đối chứng chéo), thiếu BLAST, ít bộ, gợi ý overhang; câu "#1 so với #2" theo bước quyết định của khóa; nhãn "Equivalent in silico"; ThermoTable, RerunBar (★ theo khóa), History, xuất TSV/FASTA/CSV/PDF theo tầng. `utils/tierRank.js` là bản frontend của khóa xếp hạng: trùng thứ tự API 2472/2472. Nút "Show all hits" gửi mồi RT và so với BLAST lúc thiết kế: 0/113 bộ khác; sửa kèm route `/api/blast-check` từ chối 828/2656 tên hsa không có -5p/-3p dù đã có trình tự đích. Bộ tiered báo thêm cycle-1 occupancy (thông tin, không chấm). Giới hạn chờ thiết kế của app 15 → 60 s |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -75,6 +77,21 @@
 | Backend tests | 733 passed, 3 skipped | 714 | 2026-11-17 |
 | E2E Playwright | 74/74 | — (lần trước 2026-11-03) | 2026-11-17 |
 | Ma trận: test `crossreactivity/tests` | 29 passed | — | 2026-11-17 |
+
+**Số liệu algorithm 4.0.0** (nhánh `feat/tiered-scoring`, chưa merge — QĐ 31; chi tiết `docs/SCORING_TIERED_COMPARISON.md`, SPEC §13):
+
+| Số liệu | 4.0.0 tiered | 3.8.2 (V4) | Nguồn |
+|---|---|---|---|
+| Validation in-silico | **2439/2439** (QĐ 38: 3 mục V4 từ chối — ath-miR171a-3p, ebv-miR-BART6-3p, mmu-miR-124-3p — chấm ở tiered bằng `v4_limitation_designed`: thiết kế được, vùng đặc hiệu trùng/nằm trong vùng của mồi công bố, #1 vi phạm luật V4). V4 sau cờ trùng 3.8.2 | 2439/2439 | `validation/results.json` |
+| Benchmark 50 / so mồi công bố | 50/50; 223/224 thiết kế được, 193 có mồi công bố | 50/50; 220/224 | `benchmark/` |
+| Độ phủ hsa | **2472/2656** (184 thất bại) | 2253/2656 | `outputs/crossreactivity_metadata.json` |
+| #1 S1 ≤ 2 (HIGH/CRITICAL, cùng classifier) | 55/2253 (34 ca cải thiện) | 85/2253 | `benchmark/tiered_stage2c_report.json` |
+| `specificity_fallback` / `structure_veto` #1 / dưới sàn 39 °C #1 | 54 / 120 / 196 (của 2472) | — / 115 `hard_filter_fallback` / — | như trên |
+| Grade #1 A/B/C | 2032/386/54 (2472) | — | như trên |
+| Ma trận hsa ngoài đường chéo HIGH/MEDIUM/LOW | 172 / 105 / 22.620 (2472 assay) | 195 / 111 / 20.709 (2253) | `outputs/crossreactivity_*` |
+| Độ nhạy BLAST, 175 mồi validation, lề 10 °C: SAFE / CRITICAL | 105 / 51 | 95 / 54 | `benchmark/blast_tm_gate_sensitivity.json` |
+| Thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s, p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
+| Backend tests / e2e / `crossreactivity/tests` | 908 passed, 3 skipped / **109/109** (cache làm nóng bằng `e2e/global-setup.js`, chờ thiết kế 30 s) / 29 | 733 / 74 / 29 | 2026-11-18 |
 
 - **Validation in-silico:** `validation/results.json` — 2439/2439 check pass, 201 target (197 mục `mirnas` + 4 edge case trong `reference_mirnas.json`; report ghi "193 miRNAs + 4 edge cases"). Bộ gốc ban đầu: 783/783, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md`, phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
@@ -102,7 +119,7 @@
 - Dữ liệu isomiR 3' từ **isomiRdb** (PMID 36243964) — đủ 42.494/42.494 mẫu (từ 2026-10-22; trước đó 20.635 do tải chậm bị server cắt ở ≈1 GiB).
 - Family miRNA: nhóm theo seed (nt 2–8) từ `mature.fa` (miFam.dat đã bị miRBase gỡ).
 - Thí nghiệm miR-16 exp 220826 của lab chỉ là **case study minh họa** — không dùng để calibrate.
-- **2026-11-17 — bản đóng băng 4.0.0:** chấm điểm của 4.0.0 là **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–16); V4 giữ chạy được sau cờ, mốc so sánh là **3.8.2**. Ở V4: REV-21 theo Tm 47 °C của Primer3; `end_stability` tính đúng Primer3 và vẫn chấm (điểm V4 không đổi); không làm nhãn "equivalent in silico"; D-8 giữ nguyên (giới hạn). Trình tự miRNA ghim về `mature.fa` 22.1 cục bộ; tra online chỉ là dự phòng có nhãn.
+- **2026-11-17 — bản đóng băng 4.0.0:** chấm điểm của 4.0.0 là **hệ phân tầng ưu tiên đặc hiệu** (`docs/SPEC_scoring_tiered_4.0.0.md`, QĐ 1–37); V4 giữ chạy được sau cờ, mốc so sánh là **3.8.2**. Cấu hình cuối (2026-11-18): đặc hiệu trước (BLAST S1 + ΔCq S2 + biên Tm S3, loại CRITICAL / CO-AMPLIFIED), veto mềm cấu trúc rồi sàn Tm vùng bám 39 °C, cùng S thì bộ không vi phạm luật V4 trước, rồi PCR, Linh hoạt (F4 là sàn một phía ≥ 45 °C; độ dài chỉ báo cáo), điểm chi tiết; grade A/B/C theo tầng. Ngưỡng ghi "own threshold" chưa hiệu chỉnh bằng wet-lab. Ở V4: REV-21 theo Tm 47 °C của Primer3; `end_stability` tính đúng Primer3 và vẫn chấm (điểm V4 không đổi); không làm nhãn "equivalent in silico"; D-8 giữ nguyên (giới hạn). Trình tự miRNA ghim về `mature.fa` 22.1 cục bộ; tra online chỉ là dự phòng có nhãn.
 - Đã hoãn: song ngữ VI/EN (UX-02), mẫu đặt hàng nhà cung cấp (UX-05), Batch design, Docker (B2), form nhập dữ liệu calibration (B1a), trang diễn giải Cq sau chạy (SCI-11 phần 3).
 
 ## 5. Việc còn tồn / bước tiếp theo đề xuất cho khóa luận
@@ -110,7 +127,7 @@
 **Ưu tiên cao (cho khóa luận):**
 1. **Bản đóng băng 4.0.0** (`docs/PROMPT_thesis_freeze_4.0.0.md`, hạn 31/12/2026) — các mục còn mở cần xử lý hoặc ghi thành giới hạn trước khi đóng băng:
    - ~~REV-21, REV-23, `end_stability`~~ — xong ở 3.8.2 (AUDIT §10.5).
-   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring` từ `master` sau khi 3.8.2 merge; Giai đoạn 1 (đo ngưỡng) rồi dừng chờ duyệt.
+   - **Hệ phân tầng** (`docs/SPEC_scoring_tiered_4.0.0.md`): nhánh `feat/tiered-scoring`. Giai đoạn 2 xong (SPEC §10: BLAST gộp 0/31.049 khác biệt, p50 9,8 s; V4 hồi quy giống 3.8.2). Giai đoạn 1–3 xong (SPEC §9–13); cấu hình cuối = QĐ 29 + 30 + 33 + 34 + 36, mặc định bật. **SPEC UI** (`docs/SPEC_ui_tiered_4.0.0.md`): UI-1 xong 2026-11-18 (thẻ grade + 3 tầng, banner fallback / BLAST / ít bộ / overhang, câu "#1 so với #2" theo bước quyết định của khóa, "Equivalent in silico", ThermoTable, RerunBar, History, xuất CSV/PDF; hàm khóa phía frontend trùng thứ tự API 2472/2472); UI-2 (CLAUDE.md, HANDOFF, PR, chỉ số cycle-1 cho bộ tiered, kiểm tra nút "Show all hits") chờ duyệt merge. Việc tiếp: merge PR #13 và Phần 4–5 của PROMPT.
    - **D-8 / REV-27** — 403/2656 hsa không thiết kế được: V4 giữ nguyên (giới hạn); hệ phân tầng bỏ lọc GC %/kẹp GC ở bước sinh ứng viên. Đuôi 5′ giàu AT: chưa làm.
    - **REV-26** — 115/2253 thiết kế hsa chạy `hard_filter_fallback`: xử lý bằng tiêu chí cấu trúc + veto mềm của hệ phân tầng.
    - **D-16** (REV-15) — rU·dG chưa được coi là wobble ở bước RT. Ngoài phạm vi 4.0.0 → giới hạn.
@@ -119,6 +136,7 @@
    - Thiết kế mồi bằng tool cho ≥ vài miRNA → chạy standard curve (hiệu suất 90–110 %), NTC, no-RT, melt curve theo MIQE.
    - Muốn calibrate trọng số (`calibrate_weights.py`): cần **N ≥ 20 assay**, mồi đúng y trình tự tool xuất ra, **gồm cả mồi hạng #2/#3 điểm thấp** (cần ca thất bại). Không dùng hiệu suất lấy từ bài báo.
    - Đo hiệu suất RT theo overhang 5/6/7 nt; kiểm tra sai số Tm amplicon (≥5 bộ).
+   - **Ca kiểm đặc hiệu của hệ phân tầng: hsa-let-7a-5p** (QĐ 41, SPEC_scoring_tiered_4.0.0; dùng cho Phần 5 của `docs/PROMPT_thesis_freeze_4.0.0.md`). let-7a là thiết kế `specificity_fallback`: mọi ứng viên đều bị loại vì let-7d-5p (ΔCq assay dự đoán **1,43**, CO-AMPLIFIED). Thí nghiệm: chạy assay let-7a (bộ #1 do tool 4.0.0 xuất) trên oligo tổng hợp let-7a-5p và let-7d-5p cùng nồng độ, đo ΔCq = Cq(let-7d) − Cq(let-7a) để có tín hiệu chéo thật, rồi so với 1,43. Có trong `benchmark/tiered_fallback_list.csv`.
    - **Cross-reactivity cho cổng Tm BLAST:** mồi xuôi miR-21 với oligo tổng hợp miR-374a-3p (Tm duplex 22,1 °C vs 44,3 °C đúng đích; trước v2 bị xếp CRITICAL). < 5 % → bằng chứng trực tiếp cho biên 10 °C.
 3. Viết khóa luận: Tổng quan (stem-loop RT-qPCR, Chen 2005, isomiR, family) → Phương pháp (thuật toán, 14 tiêu chí V4 (13 được chấm), nhiệt động học, BLAST 3'-anchoring + cổng Tm duplex, LNA) → Kết quả (validation 2439/2439, so sánh mồi công bố, benchmark LNA, độ nhạy cổng Tm, ảnh visualization) → Thảo luận (giới hạn: chưa có wet-lab, isomiRdb thiếu mẫu huyết thanh, 4 miRNA bị từ chối, miR-155-5p 24 nt ở miRBase 22.1 khác bản 23 nt mà các bài cũ dùng, dữ liệu miRBase 22.1). *("BLAST không mô hình bước RT" đã sửa ở BLAST classifier v7, REV-13 — không còn là giới hạn.)*
 4. **Nâng miRBase lên Release 23.1** (mốc riêng, đổi số liệu): build lại DB BLAST (xử lý 10 tên trùng cho `-parse_seqids`), chỉ mục family + overhang; từ 3.8.2 route `/api/mirbase` chỉ phục vụ bản cục bộ 22.1, tra online gắn nhãn "release unknown"; chạy lại validation + benchmark + độ nhạy BLAST.

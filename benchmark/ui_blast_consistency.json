@@ -1,0 +1,1030 @@
+{
+ "designs": 43,
+ "sets": 113,
+ "overall_risk_different": 0,
+ "seed": 2026,
+ "named": [
+  "hsa-miR-21-5p",
+  "hsa-let-7a-5p",
+  "hsa-miR-590-3p"
+ ],
+ "rows": [
+  {
+   "mirna": "hsa-miR-21-5p",
+   "rank": 1,
+   "sequence": "CCACTGGTAGCTTATCAGACTGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-21-5p",
+   "rank": 2,
+   "sequence": "AAGGCGGTTAGCTTATCAGACT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-21-5p",
+   "rank": 3,
+   "sequence": "TGCAAGTCCGTAGCTTATCAGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7a-5p",
+   "rank": 1,
+   "sequence": "CACGATCTGAGGTAGTAGGTTGT",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7a-5p",
+   "rank": 2,
+   "sequence": "CATGGTGGTGAGGTAGTAGGTT",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7a-5p",
+   "rank": 3,
+   "sequence": "TTAGGCGTGTTGAGGTAGTAGG",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-590-3p",
+   "rank": 1,
+   "sequence": "GCGAGCCGACGTAATTTTATGTATA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-590-3p",
+   "rank": 2,
+   "sequence": "CTCCGCGCCGTAATTTTATGTATA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-590-3p",
+   "rank": 3,
+   "sequence": "CTCCGCGCCGTAATTTTATGTATAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-221-5p",
+   "rank": 1,
+   "sequence": "GCTCCATACCTGGCATACAATG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-221-5p",
+   "rank": 2,
+   "sequence": "CAGCAACCTGGCATACAATGT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-221-5p",
+   "rank": 3,
+   "sequence": "ACACCGTACCTGGCATACAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4686",
+   "rank": 1,
+   "sequence": "CACGATATCTGCTGGGCTTTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4686",
+   "rank": 2,
+   "sequence": "GAGATCCTATCTGCTGGGCTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4686",
+   "rank": 3,
+   "sequence": "AGAGGTCATATCTGCTGGGC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-654-3p",
+   "rank": 1,
+   "sequence": "AGGAACCTCTATGTCTGCTGAC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-654-3p",
+   "rank": 2,
+   "sequence": "ACGTGGTGTATGTCTGCTGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-654-3p",
+   "rank": 3,
+   "sequence": "TCACGTATGTCTGCTGACCAT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6722-3p",
+   "rank": 1,
+   "sequence": "CTAGTGCAGGGGTCGGGT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6722-3p",
+   "rank": 2,
+   "sequence": "CTACTGCAGGGGTCGGGT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-99a-5p",
+   "rank": 1,
+   "sequence": "CAGCTAACCCGTAGATCCGAT",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-99a-5p",
+   "rank": 2,
+   "sequence": "CGATCAACCCGTAGATCCGA",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-99a-5p",
+   "rank": 3,
+   "sequence": "CCGTCTAGATAACCCGTAGATCC",
+   "design_risk": "CRITICAL",
+   "check_risk": "CRITICAL",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-19b-2-5p",
+   "rank": 1,
+   "sequence": "CGCTTAGTTTTGCAGGTTTGC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-19b-2-5p",
+   "rank": 2,
+   "sequence": "CGCGAAGTTTTGCAGGTTTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-19b-2-5p",
+   "rank": 3,
+   "sequence": "CCAGCGTAGTTTTGCAGGTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3912-3p",
+   "rank": 1,
+   "sequence": "CGTCCTGGTAACGCATAATATGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3912-3p",
+   "rank": 2,
+   "sequence": "GAGGCCACCTAACGCATAATATG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3912-3p",
+   "rank": 3,
+   "sequence": "CCGCCGCTTAACGCATAATAT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-8060",
+   "rank": 1,
+   "sequence": "GACCAGTTCCATGAAGCAGTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-8060",
+   "rank": 2,
+   "sequence": "CTCTCCATGAAGCAGTGGGTA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-8060",
+   "rank": 3,
+   "sequence": "CAAGCCATGAAGCAGTGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6812-5p",
+   "rank": 1,
+   "sequence": "GAGAGGTATGGGGTGAGATGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6812-5p",
+   "rank": 2,
+   "sequence": "GAGTATGGGGTGAGATGGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6812-5p",
+   "rank": 3,
+   "sequence": "AACCGTTGATGGGGTGAGAT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-548ao-3p",
+   "rank": 1,
+   "sequence": "CAAGAGCAAAGACCGTGACTAC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-548ao-3p",
+   "rank": 2,
+   "sequence": "TCGCAAAGACCGTGACTACT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-548ao-3p",
+   "rank": 3,
+   "sequence": "TAGGCGAAAAGACCGTGACT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6846-5p",
+   "rank": 1,
+   "sequence": "CTACTGGGGGCTGGATGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6846-5p",
+   "rank": 2,
+   "sequence": "CTAGTGGGGGCTGGATGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6846-5p",
+   "rank": 3,
+   "sequence": "CCTAGTGGGGGCTGGATG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6794-5p",
+   "rank": 1,
+   "sequence": "CCTACAGGGGGACTGGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6794-5p",
+   "rank": 2,
+   "sequence": "CCTCTCAGGGGGACTGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6794-5p",
+   "rank": 3,
+   "sequence": "CTCTCAGGGGGACTGGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-649",
+   "rank": 1,
+   "sequence": "ACCACCAAACCTGTGTTGTTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-649",
+   "rank": 2,
+   "sequence": "CCACCAAACCTGTGTTGTTCA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-649",
+   "rank": 3,
+   "sequence": "GCCGATCAAACCTGTGTTGT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6876-3p",
+   "rank": 1,
+   "sequence": "CGAGTAGCTGTCTGTGTTTTCC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6876-3p",
+   "rank": 2,
+   "sequence": "ACGCCTAGCTGTCTGTGTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6876-3p",
+   "rank": 3,
+   "sequence": "CAACCGAGCTGTCTGTGTTTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-558",
+   "rank": 1,
+   "sequence": "CGAGATTGTGAGCTGCTGTAC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-558",
+   "rank": 2,
+   "sequence": "CTGATGCTTGAGCTGCTGTAC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-558",
+   "rank": 3,
+   "sequence": "TAACGGTGTGAGCTGCTGTA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7f-1-3p",
+   "rank": 1,
+   "sequence": "CCACGCCCTATACAATCTATTGC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7f-1-3p",
+   "rank": 2,
+   "sequence": "CGTGGTCCGCTATACAATCTATTG",
+   "design_risk": "MEDIUM",
+   "check_risk": "MEDIUM",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-let-7f-1-3p",
+   "rank": 3,
+   "sequence": "TCACAGTCCGCCTATACAATCTATT",
+   "design_risk": "MEDIUM",
+   "check_risk": "MEDIUM",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-7843-3p",
+   "rank": 1,
+   "sequence": "GACACCAATGAAGCCTTCTCTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-7843-3p",
+   "rank": 2,
+   "sequence": "GCCATATGAAGCCTTCTCTGC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-7843-3p",
+   "rank": 3,
+   "sequence": "CACTCCAACATGAAGCCTTCTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-155-5p",
+   "rank": 1,
+   "sequence": "GGTGTGGTTAATGCTAATCGTGAT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-155-5p",
+   "rank": 2,
+   "sequence": "AGCTTGTCCTTAATGCTAATCGTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-155-5p",
+   "rank": 3,
+   "sequence": "GCCGAGTCCTTAATGCTAATCG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-211-3p",
+   "rank": 1,
+   "sequence": "CAAGGCAGGGACAGCAAAG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-211-3p",
+   "rank": 2,
+   "sequence": "TACGGCAGGGACAGCAAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-211-3p",
+   "rank": 3,
+   "sequence": "GAGAGGCAGGGACAGCAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-450b-5p",
+   "rank": 1,
+   "sequence": "CCAACCGTTTTGCAATATGTTCC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-450b-5p",
+   "rank": 2,
+   "sequence": "GCTTGCCGTTTTGCAATATGTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-450b-5p",
+   "rank": 3,
+   "sequence": "CAGCGCCGATTTTGCAATATG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-195-5p",
+   "rank": 1,
+   "sequence": "CACCGTTAGCAGCACAGAAAT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-195-5p",
+   "rank": 2,
+   "sequence": "AGCCACTAGCAGCACAGAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-195-5p",
+   "rank": 3,
+   "sequence": "TCCGATCTAGCAGCACAGAAA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5681b",
+   "rank": 1,
+   "sequence": "CCGATAGGTATTGCCACCCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5681b",
+   "rank": 2,
+   "sequence": "TCACAGGTATTGCCACCCTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5681b",
+   "rank": 3,
+   "sequence": "CAACTCCAAGGTATTGCCACC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-647",
+   "rank": 1,
+   "sequence": "CCTAGTGGCTGCACTCACT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-647",
+   "rank": 2,
+   "sequence": "GAGAGGTGGCTGCACTCA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-647",
+   "rank": 3,
+   "sequence": "CATGGTGGCTGCACTCAC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4671-3p",
+   "rank": 1,
+   "sequence": "AGGCTGGTTAGTGCATAGTCTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4671-3p",
+   "rank": 2,
+   "sequence": "AAGGTCGCTTAGTGCATAGTCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4671-3p",
+   "rank": 3,
+   "sequence": "CGAAGGTTGGTTAGTGCATAGTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3714",
+   "rank": 1,
+   "sequence": "GGTCCTAGAAGGCAGCAGT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3714",
+   "rank": 2,
+   "sequence": "AGAGGGAAGGCAGCAGTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-3714",
+   "rank": 3,
+   "sequence": "CCTAGAAGGCAGCAGTGCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-518a-3p",
+   "rank": 1,
+   "sequence": "CACAGAAAGCGCTTCCCTTT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-518a-3p",
+   "rank": 2,
+   "sequence": "ACCAGAAAGCGCTTCCCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-518a-3p",
+   "rank": 3,
+   "sequence": "CATACCGGAAAGCGCTTCC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4302",
+   "rank": 1,
+   "sequence": "CTGTCTCTCCAGTGTGGCTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4302",
+   "rank": 2,
+   "sequence": "GGTCTCTACCAGTGTGGCTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4302",
+   "rank": 3,
+   "sequence": "CGTATCTCCCAGTGTGGCTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4757-3p",
+   "rank": 1,
+   "sequence": "AAGCCCATGACGTCACAGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4757-3p",
+   "rank": 2,
+   "sequence": "AGACCATGACGTCACAGAGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4757-3p",
+   "rank": 3,
+   "sequence": "AGGCTACACATGACGTCACA",
+   "design_risk": "MEDIUM",
+   "check_risk": "MEDIUM",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4778-5p",
+   "rank": 1,
+   "sequence": "CGACGAGAGTAATTCTGTAAAGGAAG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4778-5p",
+   "rank": 2,
+   "sequence": "CGAACGGCAATTCTGTAAAGGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4778-5p",
+   "rank": 3,
+   "sequence": "CCGTCCGTCCAATTCTGTAAAG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5001-3p",
+   "rank": 1,
+   "sequence": "CACTCTTCTGCCTCTGTCCA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5001-3p",
+   "rank": 2,
+   "sequence": "TCACTTCTGCCTCTGTCCAG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-5001-3p",
+   "rank": 3,
+   "sequence": "AGTAGTCGTTCTGCCTCTGTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6728-3p",
+   "rank": 1,
+   "sequence": "GGATGCATTCTCTGCTCTGC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6728-3p",
+   "rank": 2,
+   "sequence": "GTCCGATATCTCTGCTCTGCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6728-3p",
+   "rank": 3,
+   "sequence": "CGCTATCTCTGCTCTGCTCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-149-3p",
+   "rank": 1,
+   "sequence": "CCTCTAGTAGGGAGGGACGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-149-3p",
+   "rank": 2,
+   "sequence": "CCTAGAGGGAGGGACGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-149-3p",
+   "rank": 3,
+   "sequence": "CTAGAGGGAGGGACGGGG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4738-5p",
+   "rank": 1,
+   "sequence": "CTAGACCAGCGCGTTTTCAG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4738-5p",
+   "rank": 2,
+   "sequence": "GGTAACCAGCGCGTTTTCA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-4738-5p",
+   "rank": 3,
+   "sequence": "TCACACCAGCGCGTTTTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-18a-3p",
+   "rank": 1,
+   "sequence": "TCTCTGTGACTGCCCTAAGTG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-18a-3p",
+   "rank": 2,
+   "sequence": "TACGACTGCCCTAAGTGCTC",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-18a-3p",
+   "rank": 3,
+   "sequence": "AACGACTGCCCTAAGTGCT",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6814-5p",
+   "rank": 1,
+   "sequence": "CTTGCTCCCAAGGGTGAGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6814-5p",
+   "rank": 2,
+   "sequence": "AACCTCCCAAGGGTGAGATG",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  },
+  {
+   "mirna": "hsa-miR-6814-5p",
+   "rank": 3,
+   "sequence": "GCTCGATATCCCAAGGGTGA",
+   "design_risk": "SAFE",
+   "check_risk": "SAFE",
+   "same": true,
+   "rt_step_applied": true
+  }
+ ]
+}

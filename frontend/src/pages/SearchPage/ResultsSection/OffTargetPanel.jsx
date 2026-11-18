@@ -10,12 +10,29 @@ const BLAST_RISK_STYLE = {
   SAFE:     'text-teal-700 bg-teal-50 border-teal-200',
 };
 
-export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions, species }) {
+export default function OffTargetPanel({
+  forwardPrimer, reversePrimer, mirnaId, mirnaSequence, conditions, species,
+  rtPrimer, designBlast = null, blastAvailable = true,
+}) {
   const { status, result, error, run, reset, dbAvailable, dbMessage } = useBlastCheck();
 
+  // Tiered designs (4.0.0) already ran BLAST: S1 is shown at once. The button fetches
+  // the full hit list with the same inputs (RT primer, salts, species) and checks that
+  // the overall risk equals the design-time one (SPEC_ui_tiered_4.0.0 §2.5).
+  const designRisk = blastAvailable && designBlast?.overall_risk ? designBlast.overall_risk : null;
+
   function handleRun() {
-    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species });
+    run(forwardPrimer, reversePrimer, mirnaId, { mirnaSequence, conditions, species, rtPrimer });
   }
+
+  const checkedRisk = status === 'done' ? result?.summary?.overall_risk : null;
+  const mismatch = designRisk && checkedRisk && checkedRisk !== designRisk;
+  useEffect(() => {
+    if (mismatch) {
+      console.warn(`[OffTargetPanel] BLAST overall_risk ${checkedRisk} differs from the design-time `
+        + `${designRisk} for ${forwardPrimer}`);
+    }
+  }, [mismatch, checkedRisk, designRisk, forwardPrimer]);
 
   // DB unavailable (Phase 7 PART A) — show disabled state with explanation
   const dbNotReady = dbAvailable === false;
@@ -38,6 +55,26 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, 
       </div>
 
       <div className="px-3 py-3 space-y-3">
+        {/* ── Design-time BLAST (tiered S1) ── */}
+        {designRisk && (
+          <div className="flex items-center gap-2 flex-wrap" data-testid="design-blast">
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${BLAST_RISK_STYLE[designRisk] ?? BLAST_RISK_STYLE.SAFE}`}>
+              {designRisk}
+            </span>
+            <span className="text-xs text-slate-600">
+              BLAST at design time · S1 level {designBlast.score}
+              {designBlast.worst_hit && <> · worst hit <span className="font-mono">{designBlast.worst_hit}</span></>}
+              {designBlast.medium_hits > 0 && ` · ${designBlast.medium_hits} medium`}
+            </span>
+          </div>
+        )}
+        {mismatch && (
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1" data-testid="blast-mismatch">
+            The full check returned {checkedRisk}, but the design ranked this set with BLAST {designRisk}.
+            Report this: the two should agree.
+          </p>
+        )}
+
         {/* ── DB not ready (Phase 7 PART A) ── */}
         {dbNotReady && status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
@@ -60,9 +97,11 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, 
         {!dbNotReady && status === 'idle' && (
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Where else the forward primer anneals in miRBase (Primer-BLAST rules, Ye 2012; duplex-Tm gate). Detail for the Assay Specificity verdict, which also models the RT step.
+              {designRisk
+                ? 'Show every hit behind this result (same RT primer, salts and species as the design).'
+                : 'Where else the forward primer anneals in miRBase (Primer-BLAST rules, Ye 2012; duplex-Tm gate). Detail for the Assay Specificity verdict, which also models the RT step.'}
             </p>
-            <BlastCheckButton status={status} onClick={handleRun} />
+            <BlastCheckButton status={status} onClick={handleRun} label={designRisk ? 'Show all hits' : 'Check off-target'} />
           </div>
         )}
 
@@ -90,7 +129,7 @@ export default function OffTargetPanel({ forwardPrimer, reversePrimer, mirnaId, 
 
 // ── Button ────────────────────────────────────────────────────────
 
-function BlastCheckButton({ status, onClick }) {
+function BlastCheckButton({ status, onClick, label = 'Check off-target' }) {
   const loading = status === 'loading';
   return (
     <button
@@ -109,7 +148,7 @@ function BlastCheckButton({ status, onClick }) {
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
       )}
-      {loading ? 'Running…' : 'Check off-target'}
+      {loading ? 'Running…' : label}
     </button>
   );
 }
@@ -210,10 +249,16 @@ function ResultDisplay({ result }) {
               + `${clf.critical_margin_c} °C are CRITICAL.`
             : (clf.tm_gate_note || 'Target sequence unknown — classified by mismatch rules only (no duplex-Tm gate).')}
         </p>
-        <p>
-          Forward primer only — the RT overhang is not modelled here; see Assay Specificity for the
-          combined RT + forward prediction.
-        </p>
+        {clf.rt_step_applied ? (
+          <p>
+            RT step included (the design's RT primer), as in the design's S1 (classifier v7).
+          </p>
+        ) : (
+          <p>
+            Forward primer only — the RT overhang is not modelled here; see Assay Specificity for the
+            combined RT + forward prediction.
+          </p>
+        )}
         {result.reverse_primer_skipped && <p>{result.reverse_primer_skipped}</p>}
         <p>
         {result.cache?.hit ? 'Cached result · ' : ''}

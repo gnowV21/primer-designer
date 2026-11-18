@@ -1,0 +1,308 @@
+{
+ "spec": "docs/SPEC_scoring_tiered_4.0.0.md QD 12, QD 24c",
+ "algorithm_version": "4.0.0",
+ "scoring_system": "tiered",
+ "machine": {
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.8",
+  "cpu_count": 16,
+  "blast_batch_processes": 8
+ },
+ "method": "the first 20 hsa miRNAs with a design in random.Random(2026) order of the miRBase 22.1 hsa set; design_pipeline.run in-process, sequential, backend defaults, BLAST cache disabled; one warm-up design not counted",
+ "warmup": {
+  "mirna": "hsa-miR-16-5p",
+  "seconds": 8.75,
+  "blast_seconds": 6.89,
+  "candidates": 100,
+  "blasted": 100,
+  "top3": [
+   "CCACCGTATAGCAGCACGTAAA",
+   "AACGCACTAGCAGCACGTAAATA",
+   "CAACTCCGAATAGCAGCACGTA"
+  ],
+  "error": null
+ },
+ "skipped_no_candidates": [
+  {
+   "mirna": "hsa-miR-6845-5p",
+   "error": "No valid forward primer candidates found with current parameters.",
+   "seconds": 0.07
+  }
+ ],
+ "seconds": {
+  "p50": 9.78,
+  "p90": 11.89,
+  "min": 4.93,
+  "max": 13.38,
+  "mean": 9.76
+ },
+ "blast_seconds": {
+  "p50": 8.07,
+  "p90": 10.04,
+  "max": 11.44
+ },
+ "limit_s": 15.0,
+ "passes": true,
+ "designs": [
+  {
+   "mirna": "hsa-miR-221-3p",
+   "seconds": 11.02,
+   "blast_seconds": 8.76,
+   "candidates": 120,
+   "blasted": 120,
+   "top3": [
+    "ATGGACGAGCTACATTGTCTGC",
+    "ACGCTAGCTACATTGTCTGCTG",
+    "GCCATTCCGAGCTACATTGTCT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-4685-5p",
+   "seconds": 9.18,
+   "blast_seconds": 7.66,
+   "candidates": 80,
+   "blasted": 80,
+   "top3": [
+    "CCTACCCCAGGGCTTGGA",
+    "CCTACCCAGGGCTTGGAGT",
+    "TACCCCCAGGGCTTGGAG"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-653-3p",
+   "seconds": 9.42,
+   "blast_seconds": 7.71,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "CCGAGGTTCACTGGAGTTTGTT",
+    "GTTGCGTGTTCACTGGAGTTTG",
+    "GACACAGGCTTTCACTGGAGTT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-6720-5p",
+   "seconds": 13.38,
+   "blast_seconds": 11.44,
+   "candidates": 120,
+   "blasted": 120,
+   "top3": [
+    "GGAGAGTATTCCAGCCCTGGTA",
+    "ACTCTTCCAGCCCTGGTAGG",
+    "CATGCCTATTCCAGCCCTGG"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-9986",
+   "seconds": 7.43,
+   "blast_seconds": 6.38,
+   "candidates": 60,
+   "blasted": 60,
+   "top3": [
+    "CCGTTGAGATGTGAGGTTGTCAT",
+    "CTGACAGCTTGTGAGGTTGTCA",
+    "CCTAGCTTGAGTGTGAGGTTGTC"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-19b-2-5p",
+   "seconds": 11.83,
+   "blast_seconds": 10.01,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "ACGCCAAGTTTTGCAGGTTTG",
+    "GGATGAGAGTTTTGCAGGTTTGC",
+    "TCCACACCAGTTTTGCAGGTT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-3911",
+   "seconds": 9.59,
+   "blast_seconds": 7.8,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "CAGCTTGTGTGGATCCTGGAG",
+    "GAATCGACTGTGTGGATCCTGG",
+    "AGTCTTGAGGTGTGTGGATCCT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-7111-5p",
+   "seconds": 11.77,
+   "blast_seconds": 10.01,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "GACGATGGGGGAGGAAGGA",
+    "TCACAGAGTGGGGGAGGAAG",
+    "CAGATGGGGGAGGAAGGACA"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-8058",
+   "seconds": 9.96,
+   "blast_seconds": 8.34,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "GGTAGGAGCTGGACTTTGATCTTG",
+    "CGCCGTTCTGGACTTTGATCT",
+    "CCGTGTGTGTCTGGACTTTGAT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-6811-5p",
+   "seconds": 9.15,
+   "blast_seconds": 7.38,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "CACACATGCAGGCCTGTGTA",
+    "ACACATGCAGGCCTGTGTAC",
+    "CGTCTCTATGCAGGCCTGTG"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-548an",
+   "seconds": 6.82,
+   "blast_seconds": 5.64,
+   "candidates": 60,
+   "blasted": 60,
+   "top3": [
+    "CCGAACGAAAAGGCATTGTGG",
+    "CGCTTGGTCTAAAAGGCATTGTG",
+    "AGGCTCCAAGAAAAGGCATTGT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-6793-5p",
+   "seconds": 9.43,
+   "blast_seconds": 7.38,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "TCAGGTGTGGGTTCTGGGT",
+    "AGCTTGTGGGTTCTGGGTTG",
+    "GGATGAAGGTGTGGGTTCTGG"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-647",
+   "seconds": 7.85,
+   "blast_seconds": 6.55,
+   "candidates": 80,
+   "blasted": 80,
+   "top3": [
+    "CATGGTGGCTGCACTCACT",
+    "CTCTGTACGTGGCTGCACTC",
+    "AGCTGTGGCTGCACTCAC"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-6875-3p",
+   "seconds": 11.51,
+   "blast_seconds": 9.66,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "GATGAGCTATTCTTCCTGCCCTG",
+    "CACAGATTCTTCCTGCCCTGG",
+    "AAGGCTCAATTCTTCCTGCCC"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-5579-5p",
+   "seconds": 7.27,
+   "blast_seconds": 5.72,
+   "candidates": 80,
+   "blasted": 80,
+   "top3": [
+    "ACCGAACTCAGATATGGTACTCCTTAA",
+    "AGGCAGCGTATGGTACTCCTTA",
+    "ACCGAACTCAGATATGGTACTCCTT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-4254",
+   "seconds": 10.92,
+   "blast_seconds": 8.87,
+   "candidates": 120,
+   "blasted": 120,
+   "top3": [
+    "CCTATCTGGCCTGGAGCTACT",
+    "TACCGCCTGGAGCTACTCC",
+    "CCTAGCCTGGAGCTACTCCAC"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-let-7e-5p",
+   "seconds": 10.81,
+   "blast_seconds": 8.97,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "ACGCTTGATGAGGTAGGAGGT",
+    "AGCCATTAGGTGAGGTAGGAGG",
+    "AGCCATGAGGTAGGAGGTTGT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-7705",
+   "seconds": 12.46,
+   "blast_seconds": 10.26,
+   "candidates": 120,
+   "blasted": 120,
+   "top3": [
+    "ACCGCCAATAGCTCAGAATGTC",
+    "CCGAGGTCCAATAGCTCAGAATG",
+    "CAAGGCGTCGAATAGCTCAGAA"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-155-3p",
+   "seconds": 10.43,
+   "blast_seconds": 8.85,
+   "candidates": 100,
+   "blasted": 100,
+   "top3": [
+    "GCGTTGGCTCCTACATATTAGCA",
+    "CGAACGACCGCTCCTACATATTAG",
+    "ACTGGCGTCCCTCCTACATATT"
+   ],
+   "error": null
+  },
+  {
+   "mirna": "hsa-miR-210-5p",
+   "seconds": 4.93,
+   "blast_seconds": 4.0,
+   "candidates": 35,
+   "blasted": 35,
+   "top3": [
+    "CTAGAGCCCCTGCCCACC",
+    "CTCTAGCCCCTGCCCACC",
+    "CCTAGAGCCCCTGCCCAC"
+   ],
+   "error": null
+  }
+ ]
+}

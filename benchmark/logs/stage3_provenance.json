@@ -1,0 +1,32 @@
+{
+ "stage": "Giai đoạn 3 A",
+ "started": "2026-11-18T05:57:01",
+ "git_sha": "56b00b32045de172667cad3839225118caf4629a",
+ "working_tree_clean": true,
+ "algorithm_version": "4.0.0",
+ "flags": {
+  "TIERED_BINDING_FLOOR_VETO": true,
+  "TIERED_F4_FLOOR": true,
+  "TIERED_GRADE_BY_TIERS": true,
+  "TIERED_V4_COMPLIANT_FIRST": true,
+  "SCORING_SYSTEM_DEFAULT": "tiered",
+  "BLAST_BATCH_PROCESSES": 8
+ },
+ "env_BLAST_CACHE_DISABLED": null,
+ "env_SCORING_SYSTEM": null,
+ "blastn": "blastn: 2.17.0+",
+ "blast_db_metadata": {
+  "mirbase_version": "22.1",
+  "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
+  "build_date": "2026-07-01",
+  "sequences_count": {
+   "mirbase_multi": 48885
+  },
+  "makeblastdb_version": "makeblastdb: 2.17.0+"
+ },
+ "blast_db_files_sha256": "9ff749f2101a0244595a91f52d5370ce472a567dc0549b5fb6ba6d44458f782d",
+ "blast_cache_rows": 2660,
+ "blast_cache_backup": "backend/data/blast_cache.20261118-0557.bak",
+ "blast_cache_backup_rows": 2660,
+ "note": "git fields recomputed after ignoring the cache WAL/SHM files (commit above); backup unchanged"
+}

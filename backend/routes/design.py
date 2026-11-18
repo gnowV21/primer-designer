@@ -4,6 +4,7 @@
 
 from flask import Blueprint, jsonify, request
 from algorithm.design_pipeline import run as _run_pipeline
+from algorithm.tiered_pipeline import resolve_system
 from algorithm.sequence_utils import validate_rna_sequence
 from algorithm.constants import OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX
 
@@ -41,6 +42,15 @@ def design_primers():
                 f"(got {params['bindingRegion3prime']!r})."
             )}), 400
         params["bindingRegion3prime"] = ov
+
+    # Ranking system (4.0.0): "tiered" (default) or "v4". Top-level field, or inside
+    # any parameter group.
+    if data.get("scoringSystem") is not None:
+        params["scoringSystem"] = data["scoringSystem"]
+    try:
+        params["scoringSystem"] = resolve_system(params)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
     # Species drives family cross-reactivity scoping when the miRNA is pasted
     # without a name prefix (otherwise the name prefix is authoritative). [A3]

@@ -8,11 +8,13 @@ import Tooltip from '../../../components/ui/Tooltip.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
 import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
+import TierBanners, { TIER_WARNING_FIELDS } from './TierBanners.jsx';
 import { rankReason } from '../../../utils/rankReason.js';
+import { equivalentRanks } from '../../../utils/tierRank.js';
 
-// Warnings shown in-context elsewhere (design-page slider / results-page note) —
-// not repeated in the generic list. Still recorded in the exported report.
-const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime']);
+// Warnings shown in-context elsewhere (design-page slider / results-page note, or the
+// tiered banners) — not repeated in the generic list. Still in the exported report.
+const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime', ...TIER_WARNING_FIELDS]);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
@@ -28,6 +30,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
   } = results;
 
   const mirnaId = metadata?.mirna_id ?? '';
+  const blastAvailable = results.ranking_summary?.blast_available !== false;
 
   return (
     <div className="space-y-6">
@@ -154,9 +157,12 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         </div>
       )}
 
+      {/* ── Tiered design-level banners: fallback, BLAST, fewer sets, overhang (4.0.0) ── */}
+      <TierBanners results={results} />
+
       {/* ── Top-3 primer sets ── */}
       {top3?.length > 1 && (
-        <p className="text-sm text-slate-600 leading-relaxed">{rankReason(top3[0], top3[1])}</p>
+        <p className="text-sm text-slate-600 leading-relaxed" data-testid="rank-reason">{rankReason(top3[0], top3[1])}</p>
       )}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
@@ -169,6 +175,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
             mirnaSequence={metadata?.mirna_sequence}
             conditions={metadata?.design_settings?.effective_p3}
             species={metadata?.species_code}
+            blastAvailable={blastAvailable}
+            equivalentTo={equivalentRanks(set, top3)}
           />
         ))}
       </div>

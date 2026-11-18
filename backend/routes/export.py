@@ -161,7 +161,10 @@ def _miqe_design_rows(meta, top3):
     engines = " · ".join(filter(None, [
         f"primer3-py {pv['primer3_py']}" if pv.get("primer3_py") else None,
         f"ViennaRNA {pv['viennarna']}" if pv.get("viennarna") else None,
+        f"scoring system {pv['scoring_system']}" if pv.get("scoring_system") else None,
         f"weights #{pv['scoring_weights_sha256']}" if pv.get("scoring_weights_sha256") else None,
+        (f"tiered thresholds #{pv['tiered_thresholds_sha256']}"
+         if pv.get("tiered_thresholds_sha256") else None),
         f"miRBase release {pv.get('mirbase_release', 'unknown')}" if pv else None,
         f"mature.fa sha256 {pv['mature_fa_sha256']}" if pv.get("mature_fa_sha256") else None,
     ])) or "—"
@@ -205,11 +208,21 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     )
 
     writer = csv.writer(buf, lineterminator="\r\n")
+    # Tiered sets (algorithm 4.0.0, SPEC_ui_tiered_4.0.0 §2.5): the tiers get their own
+    # columns and total_score is named for what it is there, the tie-break score.
+    # A V4 result keeps the V4 header (Total_Score) unchanged.
+    tiered = bool(top3) and all(s.get("ranking") for s in top3)
+    system = meta.get("scoring_system") or ("tiered" if tiered else "v4")
+    score_cols = (["scoring_system", "grade", "grade_reasons", "S1", "S2", "S3", "S_total",
+                   "P_total", "F_total", "structure_veto", "binding_floor_fail",
+                   "v4_rule_violations", "tie_break_score"]
+                  if tiered else ["Total_Score", "Grade"])
     writer.writerow([
         "Set_Rank", "Primer_Role", "Sequence", "Length_nt",
         "Tm_C", "GC_percent", "Hairpin_dG_kcalmol", "SelfDimer_dG_kcalmol",
-        "Amplicon_bp", "Total_Score", "Grade", "Notes",
+        "Amplicon_bp", *score_cols, "Notes",
     ])
+    blank_scores = [""] * len(score_cols)
 
     for s in top3:
         rank = s.get("rank", "?")
@@ -217,16 +230,32 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         hp   = sc.get("hairpin", {}).get("dg", "")
         sd   = sc.get("self_dimer", {}).get("dg", "")
 
+        if tiered:
+            rk = s["ranking"]
+            sp = rk["specificity"]
+            scores = [
+                system, s.get("grade", ""), " | ".join(s.get("grade_reasons") or []),
+                _lvl(sp["blast"]["score"]), _lvl(sp["assay_dcq"]["score"]),
+                _lvl(sp["tm_margin"]["score"]),
+                f"{sp['total']}/{sp['max']}", f"{rk['pcr']['total']}/{rk['pcr']['max']}",
+                f"{rk['flexible']['total']}/{rk['flexible']['max']}",
+                str(bool(rk.get("structure_veto"))), str(bool(rk.get("binding_floor_fail"))),
+                " | ".join(s.get("v4_rule_violations") or []), _fmt(rk.get("detailed_score")),
+            ]
+        else:
+            scores = [_fmt(s.get("total_score")), s.get("grade", "")]
+
         # Forward primer
         writer.writerow([
             rank, "Forward", s.get("sequence", ""), s.get("length", ""),
             _fmt(s.get("tm_full")), _fmt(s.get("gc_percent")),
             _fmt(hp), _fmt(sd),
-            s.get("amplicon_size", ""), _fmt(s.get("total_score")),
-            s.get("grade", ""),
+            s.get("amplicon_size", ""), *scores,
             "; ".join(filter(None, [
                 f"Binding region {s.get('specific_length', '?')} nt",
                 _selection_note(s),
+                _ranking_note(s),
+                _v4_rules_note(s),
                 _isomir_note(s),
             ])),
         ])
@@ -236,7 +265,7 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     writer.writerow([
         "", "RT_StemLoop", sl.get("sequence", ""), sl.get("length", ""),
         _fmt(sl.get("tm_full")), _fmt(sl.get("gc_percent")),
-        _fmt(sl_sc.get("hairpin_dg")), "", "", "", "",
+        _fmt(sl_sc.get("hairpin_dg")), "", "", *blank_scores,
         _rt_tm_note(sl),
     ])
 
@@ -246,7 +275,7 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         "", "Universal_Reverse", rev.get("sequence", ""), rev.get("length", ""),
         _fmt(rev.get("tm")), _fmt(rev.get("gc_percent")),
         _fmt(rev_sc.get("hairpin_dg")), _fmt(rev_sc.get("self_dimer_dg")),
-        "", "", "", "Fixed universal reverse [Chen05][K11]",
+        "", *blank_scores, "Fixed universal reverse [Chen05][K11]",
     ])
 
     # ── Assay design (MIQE 2.0 §1) — the tool self-reports itself + settings ──
@@ -489,8 +518,16 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
     if top3:
         best = top3[0]
         story.append(Paragraph("Recommended Primer Set (Rank 1)", h2))
+        if best.get("ranking"):
+            # Tiered (4.0.0): grade + the three tiers + flags; total_score is only the
+            # final tie-break (SPEC_ui_tiered_4.0.0 §2.5).
+            quality = (f"<b>{e(_ranking_note(best))}</b> &nbsp;|&nbsp; tie-break score "
+                       f"{e(_fmt(best['ranking'].get('detailed_score')))}")
+        else:
+            quality = (f"Score: <b>{e(str(best.get('total_score', '?')))}</b> — "
+                       f"{e(str(best.get('grade', '')))}")
         story.append(Paragraph(
-            f"Score: <b>{e(str(best.get('total_score', '?')))}</b> — {e(str(best.get('grade', '')))} "
+            f"{quality} "
             f"&nbsp;|&nbsp; Total primers designed: {meta.get('candidates_passed_prefilter', '?')}",
             body,
         ))
@@ -578,6 +615,12 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Dimer ΔG (RNAcofold, 37 °C)", lambda s: _cofold_dimer_dg(s)),
         ("Cycle-1 occupancy % (Ta)", lambda s: _fmt_pct(s.get('scores', {}).get('bound_fraction_binding_pct'))),
     ]
+    if top3 and all(s.get("ranking") for s in top3):
+        criteria[0] = ("Grade · tiers", lambda s: _ranking_note(s) or "—")
+        criteria.insert(1, ("Tie-break score", lambda s: _fmt(s["ranking"].get("detailed_score"))))
+    elif any(s.get("ranking") for s in top3):
+        criteria.insert(1, ("Tiered ranking", lambda s: _ranking_note(s) or "—"))
+    criteria.append(("V4 rules broken", lambda s: ", ".join(s.get("v4_rule_violations") or []) or "none"))
     cmp_data = [cmp_header] + [
         [label] + [fn(s) for s in top3]
         for label, fn in criteria
@@ -919,6 +962,36 @@ def _selection_note(s: dict) -> str:
     if sel == "adjacent_3prime":
         return "3' end 1 nt from a higher-ranked set"
     return ""
+
+
+def _ranking_note(s: dict) -> str:
+    """Tiered tier totals of one set (SPEC §4), '' for a V4 set."""
+    rk = s.get("ranking")
+    if not rk:
+        return ""
+    sp, pcr, fx = rk["specificity"], rk["pcr"], rk["flexible"]
+    note = (f"Tiered S {sp['total']}/{sp['max']} · P {pcr['total']}/{pcr['max']} · "
+            f"F {fx['total']}/{fx['max']}")
+    if s.get("grade"):
+        note = f"Grade {s['grade']} · " + note
+    if rk.get("structure_veto"):
+        note += " · structure veto"
+    if rk.get("binding_floor_fail"):
+        note += " · binding Tm < 39 °C"
+    if rk.get("eliminated"):
+        note += " · fails specificity (fallback)"
+    return note
+
+
+def _lvl(v) -> str:
+    """A tier level 1–5, or 'n/a' (S1 when BLAST did not run)."""
+    return "n/a" if v is None else str(v)
+
+
+def _v4_rules_note(s: dict) -> str:
+    """V4 rules this set breaks (SPEC QD 25); '' when none or not reported."""
+    v = s.get("v4_rule_violations")
+    return f"V4 rules broken: {', '.join(v)}" if v else ""
 
 
 def _family_provenance_note(results: dict) -> str:
