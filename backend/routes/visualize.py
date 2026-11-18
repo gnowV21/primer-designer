@@ -110,7 +110,11 @@ def visualize():
         if atm is None:
             return _err("MISSING_AMPLICON_TM",
                         "predicted_amplicon_tm is required to render the melting panel")
-        melt = simulate_melting(model.amplicon, float(atm), params=data.get("params") or {})
+        try:
+            atm = float(atm)
+        except (TypeError, ValueError):
+            return _err("INVALID_REQUEST", f"predicted_amplicon_tm must be a number (got {atm!r})")
+        melt = simulate_melting(model.amplicon, atm, params=data.get("params") or {})
         out["melting"] = render_melting(
             melt, mirna_id=mirna_id, amplicon_bp=len(model.amplicon),
             gc_percent=model.gc_percent, dimer_tm_warning=data.get("dimer_tm_warning"),

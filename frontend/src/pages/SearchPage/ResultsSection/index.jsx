@@ -4,11 +4,11 @@
 
 import PrimerSetCard from './PrimerSetCard.jsx';
 import RejectionLog from './RejectionLog.jsx';
-import Tooltip from '../../../components/ui/Tooltip.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
 import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
 import TierBanners, { TIER_WARNING_FIELDS } from './TierBanners.jsx';
+import SetComparison from './SetComparison.jsx';
 import { rankReason } from '../../../utils/rankReason.js';
 import { equivalentRanks } from '../../../utils/tierRank.js';
 
@@ -69,101 +69,25 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         </div>
       )}
 
-      {/* ── Shared components ──────────────────────────────────────────────
-           The RT primer and the universal reverse are identical across all
-           three candidates, so they are grouped once here rather than competing
-           with the ranked results for attention. The universal reverse is the
-           same string in every assay ever run, so it gets a single line; the RT
-           primer is miRNA-specific and keeps its metrics. */}
-      {(stemloop_rt || universal_reverse) && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            Shared by all candidates
-          </p>
+      {/* ── Page order (review panel 2026-11-18): verdict → comparison → shared
+           primers → per-set cards → detail panels. The most important finding (a
+           specificity fallback, a fallback species) is the first thing on the page. ── */}
 
-          {stemloop_rt && (
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-slate-600">
-                Stem-loop RT primer <span className="text-slate-500 font-normal">· miRNA-specific</span>
-              </p>
-              <div className="font-mono text-xs text-slate-700 break-all leading-relaxed">
-                {stemloop_rt.sequence}
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-                {/* [RESEARCH_QUESTIONS_UX A2] RT primer overhang anneals to RNA → DNA:RNA hybrid */}
-                <span className="flex items-center gap-1">
-                  Tm (full) <strong>{stemloop_rt.tm_full?.toFixed(1)}°C</strong>
-                  <RtTmBadge stemloopRt={stemloop_rt} />
-                </span>
-                {stemloop_rt.tm_hybrid_c != null && (
-                  <span>
-                    Overhang hybrid Tm <strong>{stemloop_rt.tm_hybrid_c}°C</strong>
-                  </span>
-                )}
-                <span>GC <strong>{stemloop_rt.gc_percent}%</strong></span>
-                <span>MFE <strong>{stemloop_rt.mfe?.toFixed(2)} kcal/mol</strong></span>
-                <span className="text-slate-500">({stemloop_rt.mfe_method})</span>
-                <span>{stemloop_rt.length} nt</span>
-              </div>
-              {/* The caveat is signposted by the badge above and stays one click
-                  away — it is long methodology, not a finding, so it should not
-                  outweigh the sequence it annotates. */}
-              {stemloop_rt.tm_note && (
-                <details className="group">
-                  <summary className="text-xs text-slate-500 cursor-pointer hover:text-teal-700 list-none marker:hidden">
-                    <span className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
-                    Why this Tm is approximate
-                  </summary>
-                  <p className="text-xs text-slate-500 italic mt-1 leading-relaxed">
-                    {stemloop_rt.tm_note}
-                  </p>
-                </details>
-              )}
-              {stemloop_rt.rt_primer_conc_note && (
-                <p className="text-xs text-slate-500">{stemloop_rt.rt_primer_conc_note}</p>
-              )}
-              {/* A finding, not methodology: when most of this miRNA is 3′ isoforms the
-                  assay measures a minority of it — must be visible without expanding. */}
-              {stemloop_rt.three_prime_isomir?.three_prime_isomir_risk && (
-                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                  <span className="font-semibold">3′ isomiRs:</span> {stemloop_rt.three_prime_isomir.warning}{' '}
-                  <span className="text-amber-700">Source: {stemloop_rt.three_prime_isomir.source}.</span>
-                </p>
-              )}
-              {/* Distinct risk: a shift in isoform composition read as a change in level
-                  [Nejad 2018] — fires even when the canonical form is still the majority. */}
-              {stemloop_rt.three_prime_isomir?.fold_change_bias_risk && (
-                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
-                  {/* The backend message already opens with "Fold-change caution:". */}
-                  {stemloop_rt.three_prime_isomir.fold_change_bias_warning}
-                </p>
-              )}
-            </div>
-          )}
-
-          {universal_reverse && (
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-200 pt-2.5">
-              <p className="text-xs font-medium text-slate-600 shrink-0">
-                Universal reverse <span className="text-slate-500 font-normal">· fixed</span>
-              </p>
-              <code className="font-mono text-xs text-slate-700">
-                5'–{universal_reverse.sequence}–3'
-              </code>
-              <span className="text-xs text-slate-500 tabular-nums">
-                Tm {universal_reverse.tm?.toFixed(1)}°C · GC {universal_reverse.gc_percent}% · {universal_reverse.length} nt
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Tiered design-level banners: fallback, BLAST, fewer sets, overhang (4.0.0) ── */}
+      {/* 1. Verdict: design-level banners, then why #1 is above #2 */}
       <TierBanners results={results} />
-
-      {/* ── Top-3 primer sets ── */}
       {top3?.length > 1 && (
-        <p className="text-sm text-slate-600 leading-relaxed" data-testid="rank-reason">{rankReason(top3[0], top3[1])}</p>
+        <p className="text-sm text-slate-700 leading-relaxed" data-testid="rank-reason">{rankReason(top3[0], top3[1])}</p>
       )}
+
+      {/* 2. The sets side by side (tiered) */}
+      <SetComparison top3={top3} blastAvailable={blastAvailable} />
+
+      {/* 3. RT primer + universal reverse: identical for every set, shown once */}
+      {(stemloop_rt || universal_reverse) && (
+        <SharedPrimers stemloopRt={stemloop_rt} reverse={universal_reverse} />
+      )}
+
+      {/* 4. Per-set cards (#1 open) */}
       <div className="space-y-5">
         {(top3 || []).map((set, i) => (
           <PrimerSetCard
@@ -239,35 +163,83 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
   );
 }
 
-// ── RT primer Tm chemistry badge + tooltip ──────────────────────────
-// [RESEARCH_QUESTIONS_UX A2] RT primer anneals to miRNA (RNA) → DNA:RNA hybrid.
-// Full-primer Tm uses primer3 DNA:DNA NN (indicative); overhang hybrid Tm uses Sugimoto 1995.
+// ── RT primer + universal reverse (shared by every set) ─────────────
+// Review panel 2026-11-18: what binds the miRNA is the overhang, so the overhang and its
+// DNA:RNA ΔG37 are shown; the full-primer DNA:DNA Tm (not what anneals in the RT step)
+// and the modelling caveats are one click away. The 3′-isomiR finding is one line with
+// its numbers; the explanation is one click away.
 
-function RtTmBadge({ stemloopRt }) {
-  const hasHybrid = stemloopRt?.tm_hybrid_c != null;
-  const caveats   = stemloopRt?.tm_hybrid?.caveats ?? [];
+const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)} %`);
 
-  const tooltipText = hasHybrid
-    ? `RT overhang anneals to miRNA (RNA) — DNA:RNA hybrid. `
-      + `Overhang Tm modeled via Sugimoto 1995 nearest-neighbor (Biochemistry 34:11211). `
-      + `Full-primer Tm uses primer3 DNA:DNA NN (SantaLucia 1998) — indicative only, not scored. `
-      + (caveats.length > 0 ? `Caveats: ${caveats.join('; ')}.` : '')
-    : `RT primer anneals to miRNA (RNA) → DNA:RNA hybrid. `
-      + `Tm shown is from primer3 (DNA:DNA nearest-neighbor, SantaLucia 1998) — approximate; `
-      + `true DNA:RNA hybrid Tm may differ by 3–8°C. Not used in scoring.`;
-
-  const label = hasHybrid ? 'Tm: modeled (DNA:RNA, Sugimoto 1995)' : 'Tm: approximate (DNA:RNA)';
-  // The "approximate" state is a modeling caveat shown on every result, not a
-  // problem — neutral slate (not amber) so it does not read as an alarm.
-  const color = hasHybrid
-    ? 'bg-slate-50 text-slate-700 border-slate-200'
-    : 'bg-slate-50 text-slate-500 border-slate-200';
-
+function SharedPrimers({ stemloopRt: rt, reverse }) {
+  const iso = rt?.three_prime_isomir;
+  const isoShown = iso?.three_prime_isomir_risk || iso?.fold_change_bias_risk;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border ${color}`}>
-      {label}
-      <Tooltip text={tooltipText} />
-    </span>
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3" data-testid="shared-primers">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Shared by all sets</p>
+
+      {rt && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-slate-600">
+            Stem-loop RT primer <span className="text-slate-500 font-normal">· miRNA-specific</span>
+          </p>
+          <code className="block font-mono text-xs text-slate-800 break-all leading-relaxed">5'–{rt.sequence}–3'</code>
+          <p className="text-xs text-slate-600 tabular-nums">
+            Overhang <span className="font-mono">{rt.overhang_dna}</span> ({rt.binding_length} nt)
+            {rt.tm_hybrid_c != null
+              ? <> · hybrid Tm <strong>{rt.tm_hybrid_c} °C</strong></>
+              : rt.dg37_kcal_mol != null && <> · ΔG37 <strong>{rt.dg37_kcal_mol} kcal/mol</strong> (DNA:RNA)</>}
+            {' · '}stem MFE {rt.mfe?.toFixed(1)} kcal/mol · {rt.length} nt
+          </p>
+          {rt.rt_primer_conc_note && <p className="text-xs text-slate-500">{rt.rt_primer_conc_note}</p>}
+          <details className="group">
+            <summary className="text-xs text-slate-500 cursor-pointer hover:text-teal-700 list-none marker:hidden">
+              <span className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
+              Overhang Tm and model notes
+            </summary>
+            <div className="text-xs text-slate-500 mt-1 space-y-1 leading-relaxed">
+              {rt.tm_note && <p>{rt.tm_note}</p>}
+              <p>
+                Full-primer Tm {rt.tm_full?.toFixed(1)} °C (primer3, DNA:DNA; informational, the RT step
+                anneals the overhang to RNA). Stem MFE: {rt.mfe_method}.
+              </p>
+            </div>
+          </details>
+
+          {isoShown && (
+            <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1" data-testid="isomir-note">
+              <p>
+                <span className="font-semibold">3′ isomiRs:</span> {pct(iso.median_3prime_fraction)} of reads
+                {iso.iqr_3prime_fraction && <> (IQR {pct(iso.iqr_3prime_fraction[0])}–{pct(iso.iqr_3prime_fraction[1])} across samples)</>}
+                {' '}— fold changes can mix isoform shifts with level changes.
+              </p>
+              <details className="group">
+                <summary className="cursor-pointer text-amber-700 hover:text-amber-900 list-none marker:hidden">
+                  <span className="inline-block transition-transform group-open:rotate-90">▸</span> Why
+                </summary>
+                <div className="mt-1 space-y-1 leading-relaxed">
+                  {iso.three_prime_isomir_risk && iso.warning && <p>{iso.warning}</p>}
+                  {iso.fold_change_bias_risk && iso.fold_change_bias_warning && <p>{iso.fold_change_bias_warning}</p>}
+                  {iso.source && <p className="text-amber-700">Source: {iso.source}.</p>}
+                </div>
+              </details>
+            </div>
+          )}
+        </div>
+      )}
+
+      {reverse && (
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-200 pt-2.5">
+          <p className="text-xs font-medium text-slate-600 shrink-0">
+            Universal reverse <span className="text-slate-500 font-normal">· fixed</span>
+          </p>
+          <code className="font-mono text-xs text-slate-800">5'–{reverse.sequence}–3'</code>
+          <span className="text-xs text-slate-500 tabular-nums">
+            Tm {reverse.tm?.toFixed(1)}°C · GC {reverse.gc_percent}% · {reverse.length} nt
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 

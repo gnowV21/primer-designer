@@ -541,6 +541,8 @@ components:
         blast_cache_hits:       { type: integer }
         blast_cache_write_error: { type: string, nullable: true, description: The results could not be written to the BLAST cache (the design itself is unaffected) }
         returned_sets:          { type: integer }
+        screen_species:         { type: string, description: miRBase species code whose miRNAs S1–S3 were screened against (e.g. hsa) }
+        screen_species_assumed: { type: boolean, description: True when no miRBase species was given (form "Other", or a pasted sequence without a name) and the screen fell back to human }
         timing_ms:
           type: object
           properties:

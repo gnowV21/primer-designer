@@ -62,6 +62,13 @@ def test_determinism(client):
 
 # ── six error paths → correct error_code (SPEC §E.8) ────────────────────────────
 
+@pytest.mark.parametrize("atm", ["n/a", {"tm": 79}, [79.4]])
+def test_error_non_numeric_amplicon_tm(client, atm):
+    """A malformed predicted_amplicon_tm is a 422, not a 500 (review panel 2026-11-18, C5)."""
+    r = client.post("/api/visualize", json=_golden(predicted_amplicon_tm=atm))
+    assert r.status_code == 422 and r.get_json()["error_code"] == "INVALID_REQUEST"
+
+
 def test_error_rt_primer_length(client):
     r = client.post("/api/visualize", json=_golden(stemloop_rt="GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCC"))
     assert r.status_code == 422 and r.get_json()["error_code"] == "RT_PRIMER_LENGTH"

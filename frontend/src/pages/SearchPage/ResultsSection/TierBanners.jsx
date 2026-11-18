@@ -47,6 +47,13 @@ export default function TierBanners({ results }) {
           {rs.blast_unavailable_reason && <span className="text-amber-700"> · {rs.blast_unavailable_reason}</span>}
         </div>
       )}
+      {rs.screen_species_assumed && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" data-testid="banner-species-assumed">
+          Specificity screened against <span className="font-semibold">human (hsa)</span> miRNAs:
+          no miRBase species was given. The grade holds for a human sample only; pick the
+          species, or enter a miRBase name, to screen against the right miRNAs.
+        </div>
+      )}
       {has('fewer_than_3_sets') && (
         <div className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-800" data-testid="banner-fewer-sets">
           {rs.returned_sets ?? top3.length} primer set{(rs.returned_sets ?? top3.length) === 1 ? '' : 's'} returned:

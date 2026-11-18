@@ -143,6 +143,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
     # instead (SPEC QD 15); V4 keeps the pre-filter.
     candidates, rejection_log = generate_forward_candidates(
         seq, params, gc_prefilter=(system == "v4"))
+    # Distinct sequences dropped by the pre-filter (the log has one row per reason).
+    prefilter_rejected = {r["sequence"] for r in rejection_log}
 
     if not candidates:
         reasons = {}
@@ -522,9 +524,12 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
                 "qpcr_instrument": params.get("qpcrSystem"),
                 "sample_type": params.get("sampleType"),
             },
-            "candidates_generated": len(candidates) + len(rejection_log),
+            # rejection_log has one row per (candidate, reason): count distinct candidates
+            # (review panel 2026-11-18, A6). V4 hard-filter rejects are a subset of
+            # `candidates`, so they are not generated twice.
+            "candidates_generated": len(candidates) + len(prefilter_rejected),
             "candidates_passed_prefilter": len(candidates),
-            "candidates_rejected": len(rejection_log),
+            "candidates_rejected": len({r["sequence"] for r in rejection_log}),
             "rejection_summary": rejection_summary,
             "elapsed_seconds": elapsed,
             "algorithm_version": ALGORITHM_VERSION,

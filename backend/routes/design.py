@@ -13,10 +13,19 @@ design_bp = Blueprint("design", __name__)
 
 @design_bp.route("/design", methods=["POST"])
 def design_primers():
-    data = request.get_json(force=True)
+    data = request.get_json(force=True, silent=True)
+    # A JSON body that is not an object (null, a list, a string), or a "sequence"
+    # that is not an object, is a client error, not a 500.
+    if not isinstance(data, dict) or not isinstance(data.get("sequence", {}), dict):
+        return jsonify({"error": "Request body must be a JSON object with a "
+                                 "'sequence' object ({'matureSequence': ...})."}), 400
+    for group in ("thermodynamic", "primerConstraints", "qpcr", "detectionMethod",
+                  "experimentalContext"):
+        if not isinstance(data.get(group, {}), dict):
+            return jsonify({"error": f"'{group}' must be a JSON object."}), 400
 
     # ── 1. Validate input ─────────────────────────────────────────
-    seq = data.get("sequence", {}).get("matureSequence", "").upper().strip()
+    seq = str(data.get("sequence", {}).get("matureSequence") or "").upper().strip()
     is_valid, err_msg = validate_rna_sequence(seq)
     if not is_valid:
         return jsonify({"error": err_msg}), 400
@@ -32,9 +41,13 @@ def design_primers():
     # RT overhang length: supported 5–7 nt. Reject instead of silently clamping,
     # so the returned primers always match what the user asked for.
     if "bindingRegion3prime" in params:
+        # Whole numbers only: int() would truncate 6.9 to 6 (primers for an overhang the
+        # user did not ask for); 6.0 and "6" are accepted, booleans and Infinity are not.
+        raw = params["bindingRegion3prime"]
         try:
-            ov = int(params["bindingRegion3prime"])
-        except (TypeError, ValueError):
+            f = float(raw)
+            ov = int(f) if (not isinstance(raw, bool) and f.is_integer()) else None
+        except (TypeError, ValueError, OverflowError):
             ov = None
         if ov is None or not (OVERHANG_LENGTH_MIN <= ov <= OVERHANG_LENGTH_MAX):
             return jsonify({"error": (

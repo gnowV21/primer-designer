@@ -188,8 +188,38 @@ test('hsa-miR-590-3p #1 shows the binding-floor chip, the V4-rule chip and grade
   await design(page, WARM_MIRNAS.find((m) => m.name === 'hsa-miR-590-3p').sequence);
   const flags = page.getByTestId('tier-flags').first();
   await expect(flags).toContainText('Binding Tm < 39 °C');
-  await expect(flags).toContainText('Outside V4 rule: gc_clamp_fail');
+  await expect(flags).toContainText('Outside V4 rule: No G/C in the last 3 nt');
   await expect(page.getByTestId('grade-badge').first()).toHaveText(/^B/);
+  // advice for a binding Tm below the floor (review panel A5): on the open #1 card
+  await expect(page.getByTestId('low-binding-tm').first()).toContainText('Ta ≈ 50 °C');
+});
+
+// ── review panel 2026-11-18: page order and the cut warnings ─────────
+
+test('results read verdict → comparison → shared primers → cards, without the cut notes', async ({ page }) => {
+  await design(page, LET7A);
+  const y = async (id) => (await page.getByTestId(id).first().boundingBox()).y;
+  const order = [await y('banner-fallback'), await y('rank-reason'), await y('set-comparison'),
+    await y('shared-primers'), await y('card-tier-header')];
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  await expect(page.getByTestId('set-comparison').locator('tbody tr')).toHaveCount(3);
+  // the RT primer and the reverse appear once (shared), not again in each card
+  await expect(page.getByText('RT (stem-loop)', { exact: true })).toHaveCount(0);
+  for (const cut of ['3′ end is T', 'scored 75/100', 'SYBR Green mode', 'Tm (full)', 'Fwd × Universal Rev']) {
+    await expect(page.getByText(cut)).toHaveCount(0);
+  }
+  // the 3′-isomiR finding is one line; the explanation is behind "Why"
+  await expect(page.getByTestId('isomir-note')).toContainText('3′ isomiRs:');
+  await expect(page.getByText('Nejad et al. 2018')).toBeHidden();
+});
+
+test('species "Other": the screen fell back to human and the page says so', async ({ page }) => {
+  await mockDesign(page, (j) => {
+    j.ranking_summary.screen_species = 'hsa';
+    j.ranking_summary.screen_species_assumed = true;
+  });
+  await design(page, MIR21);
+  await expect(page.getByTestId('banner-species-assumed')).toContainText('human (hsa)');
 });
 
 // ── OffTargetPanel: design-time BLAST, then the full hit list agrees (SPEC_ui §2.5) ──

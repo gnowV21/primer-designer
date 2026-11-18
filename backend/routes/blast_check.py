@@ -8,6 +8,7 @@
 #   - Database freshness warning: >90 days  [spec §9.4]
 # ================================================================
 
+import logging
 import os
 import subprocess
 
@@ -26,6 +27,7 @@ from algorithm.constants import (
 )
 
 blast_check_bp = Blueprint("blast_check", __name__)
+log = logging.getLogger(__name__)
 
 # Module-level singletons (reset on server restart, not persisted)
 _cache           = BlastCache()
@@ -111,7 +113,14 @@ def blast_check():
     context = "|".join([f"clf{BLAST_CLASSIFIER_VERSION}", mirna_seq, species or "", rt_primer]
                        + [f"{k}={p3[k]:g}" for k in sorted(p3)])
     cache_key = BlastCache._compute_key(fwd, rev, db_version, mirna_id, context)
-    cached = _cache.get_result(fwd, rev, db_version, mirna_id, context)
+    # The sqlite cache is shared with the tiered design's batch writes: a locked or
+    # unreadable cache must not turn a BLAST check into a 500 (the design pipeline
+    # guards the same calls).
+    try:
+        cached = _cache.get_result(fwd, rev, db_version, mirna_id, context)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("blast-check cache read failed: %s", exc)
+        cached = None
     if cached is not None:
         cached["cache"] = {"hit": True, "cache_key": cache_key}
         cached["database_info"] = db_info
@@ -159,7 +168,10 @@ def blast_check():
         return jsonify({"error": f"Internal error: {e}"}), 500
 
     # ── 6. Cache result ──────────────────────────────────────────
-    _cache.set_result(fwd, rev, result, db_version, mirna_id, context)
+    try:
+        _cache.set_result(fwd, rev, result, db_version, mirna_id, context)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("blast-check cache write failed: %s", exc)
 
     result["cache"]         = {"hit": False, "cache_key": cache_key}
     result["database_info"] = db_info
