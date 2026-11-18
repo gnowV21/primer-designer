@@ -20,6 +20,7 @@ Seed-family membership (positions 2-8) is the mRNA-targeting axis and is reporte
 for context only (`same_seed_family`), never used to classify risk.
 """
 
+import functools
 import json
 import os
 
@@ -80,7 +81,28 @@ def known_species() -> frozenset[str]:
 
 def _duplex_tm(region: str, sense_window: str, p3: dict) -> float:
     """Tm of the forward specific region on the cDNA of `sense_window`."""
-    return float(primer3.calc_heterodimer(region, _revcomp(sense_window), **p3).tm)
+    return _duplex_tm_memo(region, sense_window, tuple(sorted(p3.items())))
+
+
+# Memoised pure functions (perf/design-speed, Bước 2). One design asks the same
+# question several times: the ranking screen (assay_screen), the overhang suggestion
+# (same forward lengths, other overhangs) and the design-level collision report all
+# evaluate the forward primer on the same miRNAs. The values are returned unchanged
+# (same float, same order of evaluation per call site), so the output is identical;
+# only repeated thal / table work is skipped. Bounded, per process, thread-safe.
+_MEMO_SIZE = 1 << 16
+
+
+@functools.lru_cache(maxsize=_MEMO_SIZE)
+def _duplex_tm_memo(region: str, sense_window: str, p3_items: tuple) -> float:
+    return float(primer3.calc_heterodimer(region, _revcomp(sense_window), **dict(p3_items)).tm)
+
+
+@functools.lru_cache(maxsize=_MEMO_SIZE)
+def _fwd_table_dcq(region: str, other: str) -> float:
+    """Table-only forward ΔCq (fwd_axis with no Tm term): a proven lower bound of the
+    full ΔCq_FWD, used by assay_screen to skip the Tm term."""
+    return fwd_axis(region, other, None)["delta_cq"]
 
 
 def _tm_gap_fn(target_dna: str, fwd_len: int, p3: dict):
@@ -416,7 +438,7 @@ def assay_screen(
         for name, o_dna, cat, rt in entries:
             if rt["delta_cq"] >= _SCREEN_FLOOR_CQ:
                 continue
-            lb = rt["delta_cq"] + fwd_axis(region, o_dna, None)["delta_cq"]
+            lb = rt["delta_cq"] + _fwd_table_dcq(region, o_dna)
             if lb < _SCREEN_FLOOR_CQ:
                 exact = round(rt["delta_cq"]
                               + fwd_axis(region, o_dna, lambda r, o=o_dna: tm_gap(o, r))["delta_cq"], 2)

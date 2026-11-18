@@ -32,7 +32,10 @@ class BlastCache(SQLiteKVCache):
     # 60-s busy timeout makes a writer wait for the lock instead of failing at once.
     _BUSY_TIMEOUT_S = 60.0
 
-    def __init__(self, db_path: str = _DB_PATH):
+    def __init__(self, db_path: str | None = None):
+        # BLAST_CACHE_PATH: another cache file (e.g. an empty one, to re-run BLAST for a
+        # verification run). Only the file changes; the cache key does not.
+        db_path = db_path or os.environ.get("BLAST_CACHE_PATH") or _DB_PATH
         super().__init__(
             db_path=db_path,
             table_name="blast_cache",
