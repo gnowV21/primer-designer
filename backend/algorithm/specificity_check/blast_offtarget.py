@@ -983,6 +983,10 @@ def _classify_hits(
         # locus, or the same sequence annotated with ends shifted ≤2 nt (renamed
         # entries such as ssc-miR-20 → ssc-miR-20a-5p): indistinguishable by the
         # forward primer, so listed rather than risk-classified.
+        # Same-species only, although this test runs before the species filter
+        # below: callers fetch `subject_seqs` for the screened species (+ virus host)
+        # only, so an other-species hit has no subject_full and never lands here
+        # (review panel 2026-11-18 §6; locked by test_identical_is_same_species_only).
         if target_sequence and subject_full and sequences_compatible(
                 subject_full, target_sequence):
             identical.add(sid)

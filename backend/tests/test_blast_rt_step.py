@@ -179,3 +179,31 @@ def test_route_accepts_armless_name_with_target_sequence(client, monkeypatch):
                                                "mirna_sequence": "GUGGCUGCACUCACUUCCUUC"})
     assert ok.status_code == 200
     assert seen["mirna_id"] == "hsa-miR-647"
+
+
+# ── review panel 2026-11-18 §6: identical_sequence is same-species only ──
+
+@pytest.mark.parametrize("batch", [False, True])
+def test_identical_is_same_species_only(monkeypatch, batch):
+    """An other-species entry carrying the target's sequence (a conserved ortholog) is
+    excluded as cross-species, never listed in identical_sequence (which can raise
+    overall_risk). The guard is that full subject sequences are fetched only for the
+    screened species; the fake fetch returns a sequence for ANY id it is asked for, so a
+    caller that fetched other species would fail here."""
+    seqs = {"hsa-let-7a-copy": _LET7A, "mmu-let-7a-5p": _LET7A, "gga-let-7a-5p": _LET7A}
+    fetched = []
+
+    def fetch(ids, *a, **k):
+        fetched.extend(ids)
+        return {i: seqs[i] for i in ids if i in seqs}
+    monkeypatch.setattr(bo, "_db_exists", lambda p: True)
+    monkeypatch.setattr(bo, "run_blastn", lambda *a, **k: [_hit(s) for s in seqs])
+    monkeypatch.setattr(bo, "run_blastn_multi",
+                        lambda primers, *a, **k: {p: [_hit(s) for s in seqs] for p in primers})
+    monkeypatch.setattr(bo, "fetch_sequences", fetch)
+    kw = dict(mirna_id="hsa-let-7a-5p", target_sequence=_LET7A, rt_primer=_RT)
+    r = (bo.check_offtarget_batch([_PRIMER], None, **kw)[_PRIMER] if batch
+         else bo.check_offtarget(_PRIMER, None, **kw))
+    assert r["identical_sequence_hits"] == ["hsa-let-7a-copy"]
+    assert r["summary"]["cross_species_excluded"] == 2
+    assert not any(i.startswith(("mmu-", "gga-")) for i in fetched)

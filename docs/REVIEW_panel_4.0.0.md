@@ -250,4 +250,7 @@ Kết quả rủi ro và `identical_sequence` sẽ giữ nguyên.
 
 Riêng `summary.cross_species_excluded` (chỉ hiển thị) có thể đổi. Lý do: hiện nay một hit loài khác có tên trùng tên đích theo `_is_self_hit` bị bỏ qua mà không được đếm vào trường này. Nếu loại hit khác loài trước, nó sẽ được đếm. Muốn output trùng byte thì phải giữ nguyên cách đếm này.
 
-**Đề xuất:** chỉ sửa docstring/comment cho đúng thực tế, và thêm một test khóa bất biến "hit loài khác không bao giờ vào `identical_sequence`". Không đổi output, nên không cần tăng phiên bản. Chờ chủ dự án quyết.
+**Đã làm (chủ dự án duyệt):**
+- Thêm comment trong `_classify_hits` giải thích vì sao phép so "giống hệt" chỉ gặp hit cùng loài.
+- Thêm test `test_identical_is_same_species_only` (`tests/test_blast_rt_step.py`), chạy cả đường gộp lẫn đường từng mồi. Hàm fetch giả trả trình tự cho **mọi** id được hỏi, nên nếu sau này code lấy trình tự của loài khác thì test sẽ fail.
+- Không đổi output.
