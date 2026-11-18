@@ -254,3 +254,29 @@ Riêng `summary.cross_species_excluded` (chỉ hiển thị) có thể đổi. L
 - Thêm comment trong `_classify_hits` giải thích vì sao phép so "giống hệt" chỉ gặp hit cùng loài.
 - Thêm test `test_identical_is_same_species_only` (`tests/test_blast_rt_step.py`), chạy cả đường gộp lẫn đường từng mồi. Hàm fetch giả trả trình tự cho **mọi** id được hỏi, nên nếu sau này code lấy trình tự của loài khác thì test sẽ fail.
 - Không đổi output.
+
+## 7. Bước 1: đo lại mốc thời gian (2026-11-18)
+
+Giao thức giống `benchmark/tiered_design_timing.json`:
+- 20 miRNA hsa, thứ tự random.Random(2026), cùng 20 miRNA và cùng 1 ca bị bỏ qua như mốc;
+- chạy `design_pipeline.run` trong cùng tiến trình, tắt cache BLAST, 1 thiết kế khởi động không tính.
+
+Kết quả ghi ra scratchpad, **không ghi đè** file benchmark đã commit. Trước khi đo đã tắt Vite, Flask, Playwright; không còn tiến trình node hay python nào.
+
+Đã đo 2 lần:
+
+| | Mốc (QĐ 24c) | **Cắm sạc (dùng số này)** | Chạy pin (bỏ) |
+|---|---|---|---|
+| Tổng, p50 / p90 | 9,78 / 11,89 s | **9,59 / 11,56 s** | 14,84 / 20,63 s |
+| BLAST, p50 / p90 | 8,07 / 10,04 s | **7,88 / 9,89 s** | 12,19 / 17,77 s |
+| Tổng, nhanh nhất / chậm nhất | 4,93 / 13,38 s | 4,88 / 13,09 s | 7,09 / 28,66 s |
+| mmu-miR-1a-3p | — | **10,16 s** (BLAST 8,53 s) | 16,35 s |
+| Trình tự tự nhập, loài "Other" | — | **7,55 s** (BLAST 6,11 s) | 11,84 s |
+
+- **Lần cắm sạc:** CPU rảnh (tải 0–8 %), xung nhịp khoảng 107 % danh định, chế độ nguồn Balanced.
+- **Lần chạy pin:** pin đang xả, còn 46 %, CPU 1,8 GHz, tải khoảng 60 %.
+
+**Kết luận:**
+- Máy cắm sạc tái lập đúng mốc (chênh ≤ 3 %).
+- BLAST chiếm khoảng 82 % thời gian thiết kế khi không có cache.
+- Chạy bằng pin làm chậm khoảng 1,5 lần. Từ nay mọi phép đo trước/sau phải cắm sạc.
