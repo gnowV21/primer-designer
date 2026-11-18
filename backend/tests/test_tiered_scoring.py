@@ -389,3 +389,26 @@ def test_blast_cache_uses_wal_and_a_busy_timeout(tmp_path):
         assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
     c.set_results({"ACGT": {"x": 1}}, "REV", "db", "hsa-miR-1-3p", "ctx")
     assert c.get_results(["ACGT", "TTTT"], "REV", "db", "hsa-miR-1-3p", "ctx") == {"ACGT": {"x": 1}}
+
+
+# ── review fixes (Giai đoạn 3 G) ─────────────────────────────────
+
+def test_explanation_names_the_qd33_anchor(monkeypatch):
+    _stub_blast(monkeypatch, lambda s: "SAFE")
+    s = _run()["top3"][0]
+    assert "linear to 0 at 25 °C" in s["explanations"]["tm_binding_accuracy"]
+
+
+def test_cache_not_used_without_db_metadata(monkeypatch, tmp_path):
+    from algorithm.specificity_check import blast_cache
+    called = []
+    monkeypatch.setattr(bo, "_METADATA", str(tmp_path / "missing.json"))
+    monkeypatch.setattr(bo, "blast_available", lambda: (True, None))
+    monkeypatch.setattr(blast_cache.BlastCache, "get_results",
+                        lambda *a, **k: called.append(1) or {})
+    monkeypatch.setattr(bo, "check_offtarget_batch",
+                        lambda seqs, *a, **k: {s: _blast_result("SAFE") for s in seqs})
+    monkeypatch.delenv("BLAST_CACHE_DISABLED", raising=False)
+    assert tiered_pipeline._blast_db_version() is None
+    d = _run()
+    assert d["ranking_summary"]["blast_available"] is True and not called

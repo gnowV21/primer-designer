@@ -19,14 +19,13 @@
 import json
 import os
 import time
-from functools import lru_cache
 
 from . import tiered_scoring as ts
 from .constants import (
     CANDIDATES_TOP_N, TM_ANNEALING_TEMP_DEFAULT, TM_BINDING_TARGET,
     OVERHANG_LENGTH_DEFAULT, OVERHANG_LENGTH_MIN, OVERHANG_LENGTH_MAX,
     BLAST_CLASSIFIER_VERSION, SCORING_SYSTEM_DEFAULT, SCORING_SYSTEMS,
-    TIERED_DETAIL_WEIGHTS, TIERED_RT_CAPTURE_BELOW,
+    TIERED_DETAIL_WEIGHTS, TIERED_RT_CAPTURE_BELOW, TIERED_DETAIL_TM_BINDING_FLOOR,
 )
 from .forward_primer import _prefilter, _GC_PREFILTER_REASONS, select_diverse_top
 from .hard_filters import apply_hard_filters
@@ -91,13 +90,16 @@ def _metrics(c: dict, v4_scores: dict, screen_l: dict, ta: float, tm_rev: float)
 
 # ── BLAST (S1) ───────────────────────────────────────────────────
 
-@lru_cache(maxsize=1)
-def _blast_db_version() -> str:
+def _blast_db_version() -> str | None:
+    """Build date of the BLAST DB (part of the cache key), read on every design so a DB
+    rebuilt while the server runs gets new keys. None when the metadata is missing or
+    unreadable — the cache is then not used, since its entries could belong to
+    another DB build."""
     try:
         with open(bo._METADATA, encoding="utf-8") as f:
-            return json.load(f).get("build_date", "unknown")
+            return json.load(f).get("build_date") or None
     except (OSError, ValueError):
-        return "unknown"
+        return None
 
 
 def _cache_enabled() -> bool:
@@ -131,7 +133,7 @@ def blast_candidates(seqs: list[str], target_rna: str, mirna_name: str, reverse_
     db_version = _blast_db_version()
     # The cache is optional: a locked / unreadable sqlite file only skips it.
     cache, cached = None, {}
-    if _cache_enabled():
+    if _cache_enabled() and db_version:
         try:
             cache = BlastCache()
             cached = cache.get_results(seqs, reverse_seq, db_version, mirna_name, context)
@@ -361,7 +363,8 @@ def _explanations(m: dict, parts: dict) -> dict:
     if K.TIERED_F4_FLOOR:
         out["tm_binding_accuracy"] = (
             f"Specific-region (cycle-1) Tm {m['tm_binding']:g} °C; floor {TM_BINDING_TARGET:g} °C "
-            "(100 at or above, linear to 0 at 35 °C; QD 29).")
+            f"(100 at or above, linear to 0 at {TIERED_DETAIL_TM_BINDING_FLOOR[0][0]:g} °C; "
+            "QD 29, QD 33).")
     return {k: v for k, v in out.items() if k in parts}
 
 

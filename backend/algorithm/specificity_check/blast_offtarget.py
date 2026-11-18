@@ -851,6 +851,10 @@ def check_offtarget_batch(
         ident_seqs = {sid: all_seqs[sid] for sid in fwd[4] if sid in all_seqs}
         out[p] = _assemble(fwd, rev, ident_seqs, ctx, tm[p][0], tm[p][1], rt_stats,
                            skip_reverse, safe_margin, critical_margin)
+    # keyed by the caller's spelling too (the batch works on upper-case sequences)
+    for p in forward_primers:
+        if p and p not in out and p.upper() in out:
+            out[p] = out[p.upper()]
     return out
 
 

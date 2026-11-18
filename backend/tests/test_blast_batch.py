@@ -94,3 +94,12 @@ def test_batch_classifies_with_the_shared_code(monkeypatch):
         single = bo.check_offtarget(p, UNIVERSAL_REVERSE, mirna_id="hsa-miR-21-5p",
                                     target_sequence=target, species="hsa")
         assert json.dumps(out[p], sort_keys=True) == json.dumps(single, sort_keys=True)
+
+
+def test_batch_results_keyed_by_the_callers_spelling(monkeypatch):
+    monkeypatch.setattr(bo, "run_blastn_multi", lambda primers, db, timeout=60, processes=None: {p: [] for p in primers})
+    monkeypatch.setattr(bo, "fetch_sequences", lambda ids, db, timeout=60: {})
+    monkeypatch.setattr(bo, "_db_exists", lambda p: True)
+    out = bo.check_offtarget_batch(["acgtacgtacgtacg"], UNIVERSAL_REVERSE, mirna_id="hsa-miR-1-3p",
+                                   species="hsa")
+    assert out["acgtacgtacgtacg"] is out["ACGTACGTACGTACG"]
