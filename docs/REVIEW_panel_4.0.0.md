@@ -202,3 +202,52 @@ Sửa:
 **Chưa làm (ghi nhận):**
 - Số ứng viên bị `_candidate_pool` cắt (20 mỗi độ dài) vẫn không được đếm trong metadata.
 - `controls_advice` và `protocol_advice` có trong API, nhưng UI chỉ hiển thị qua PDF.
+
+## 6. Bước 0: hit loài khác trong `identical_sequence` (2026-11-18, chỉ đọc)
+
+**Kết luận: (a). Không đổi số liệu đóng băng, và cũng không phải lỗi hiển thị.** Tức là 0 trường hợp trong dữ liệu thật.
+
+### Điều nghi ngờ
+
+Trong `_classify_hits` (`blast_offtarget.py`), phép kiểm tra "giống hệt / lệch đầu" chạy **trước** bộ lọc loài.
+
+### Vì sao không có hậu quả
+
+`subject_seqs` (trình tự đầy đủ của hit) chỉ được lấy cho hit thuộc loài đang sàng lọc. Loài này là `ctx["screen_prefixes"]`: loài của thiết kế, cộng loài chủ trong `VIRUS_HOST_SPECIES` với miRNA virus. Điều này đúng ở cả 2 đường:
+- đường gộp lúc thiết kế: `check_offtarget_batch`, khoảng dòng 835;
+- đường "Show all hits": `_check_primer`, khoảng dòng 907.
+
+Phép so "giống hệt" cần `subject_full`. Hit loài khác không có `subject_full`, nên luôn đi tiếp xuống `_same_species` và bị loại. Thứ tự trong code gây hiểu lầm, nhưng không đổi kết quả.
+
+### `identical_sequence` được dùng ở đâu
+
+- `identical_sequence_risk`: mục lệch đầu 5′ được tính HIGH; mục lệch đầu 3′ xét theo bước RT. Các mức này **nâng `overall_risk`** (`_assemble`).
+- Từ `overall_risk`, chúng đi vào S1 (`blast_s1_inputs`, gồm cả số MEDIUM), rồi vào tổng S, khóa xếp hạng và grade.
+- UI: OffTargetPanel. Export: phần BLAST của PDF.
+
+Vì vậy, nếu có hit loài khác lọt vào danh sách này thì số liệu sẽ đổi. Thực tế không có.
+
+### Số liệu
+
+Cách đếm:
+- Đọc chỉ-đọc `backend/data/blast_cache.sqlite`, các ngữ cảnh `design-clf7`, muối mặc định, RT 50 nt.
+- Đối chiếu với pool của bản đóng băng (`outputs/freeze_cache/`).
+- Script: scratchpad `step0_identical.py`, không commit.
+
+| Phạm vi | Ứng viên đã BLAST | Có hit loài khác trong `identical_sequence` | S1 / `overall_risk` đổi | #1 / top 3 đổi |
+|---|---|---|---|---|
+| 2472 thiết kế hsa (4.0.0) | 215.860 | **0** | 0 | 0 |
+| Các thiết kế khác trong cache (validation, benchmark: ssc, mmu, ebv, osa, ath, gga, bta, cel; 140 ngữ cảnh) | — | **0** | 0 | 0 |
+| miRNA virus EBV, sàng lọc cùng loài chủ hsa | 3.067 | 0 hit loài khác; 0 mục hsa giống hệt | — | — |
+
+Ghi chú về cách đếm:
+- 1.920 ứng viên hsa không có trong cache. Cả 1.920 đều bị S2 loại trong một thiết kế không phải fallback, nên API không BLAST chúng; điều này đúng thiết kế (SPEC §5).
+- Với 2.630 ngữ cảnh thiết kế, giá trị trong cache trùng file BLAST đầy đủ của Giai đoạn 2. Lần đếm đầu từng có 19 ứng viên hsa-miR-23b-3p lệch, nhưng đó là do script gộp ngữ cảnh 21 nt của validation với ngữ cảnh 23 nt của miRBase 22.1. Khi thêm trình tự đích vào khóa thì hết lệch.
+
+### Hệ quả cho "cách 2" (loại hit khác loài ngay khi đọc output BLAST)
+
+Kết quả rủi ro và `identical_sequence` sẽ giữ nguyên.
+
+Riêng `summary.cross_species_excluded` (chỉ hiển thị) có thể đổi. Lý do: hiện nay một hit loài khác có tên trùng tên đích theo `_is_self_hit` bị bỏ qua mà không được đếm vào trường này. Nếu loại hit khác loài trước, nó sẽ được đếm. Muốn output trùng byte thì phải giữ nguyên cách đếm này.
+
+**Đề xuất:** chỉ sửa docstring/comment cho đúng thực tế, và thêm một test khóa bất biến "hit loài khác không bao giờ vào `identical_sequence`". Không đổi output, nên không cần tăng phiên bản. Chờ chủ dự án quyết.
