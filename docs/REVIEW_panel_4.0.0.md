@@ -280,3 +280,51 @@ Kết quả ghi ra scratchpad, **không ghi đè** file benchmark đã commit. T
 - Máy cắm sạc tái lập đúng mốc (chênh ≤ 3 %).
 - BLAST chiếm khoảng 82 % thời gian thiết kế khi không có cache.
 - Chạy bằng pin làm chậm khoảng 1,5 lần. Từ nay mọi phép đo trước/sau phải cắm sạc.
+
+## 8. Bước 2: ghi nhớ ΔCq của bộ lọc assay (2026-11-20, nhánh `perf/design-speed`)
+
+**Thay đổi** (commit `8df6d8f`, không đổi `ALGORITHM_VERSION`, không đổi khóa cache BLAST):
+- `overhang_collision.py`: `functools.lru_cache` (tối đa 65 536 mục mỗi bảng) cho Tm duplex và ΔCq forward chỉ-theo-bảng của `assay_screen`. Đây là hàm thuần, nên trả đúng cùng số float.
+- Công cụ kiểm tra:
+  - `BLAST_CACHE_PATH` (chỉ đổi file cache);
+  - `freeze_pipeline.py --blast-cache --log-prefix`;
+  - `backend/scripts/design_equivalence.py`;
+  - danh sách 200 hsa cố định `benchmark/logs/design_equivalence_hsa200.txt` (random.Random(2026)).
+
+Tiền đề ban đầu sai một phần: lần gọi `assay_screen` thứ hai là cho các overhang **khác** (5/7 nt), không phải tính lại overhang hiện tại.
+
+### Kiểm tra tương đương (đều đạt)
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 200 hsa, cache BLAST trống: code mới so với code đóng băng (bỏ thời gian và đếm cache) | **0/200 bản ghi khác** |
+| 200 hsa: #1 (forward, RT, total_score, grade) so với bản ghi đóng băng | **0/200 khác** |
+| 2656 hsa thiết kế lại từ đầu (cache BLAST như trước) so với `freeze_matrix_4.0.0` | **0/2656 bản ghi khác** |
+| Ma trận dựng lại so với `outputs/crossreactivity_*` đã commit | Parquet trùng từng byte; CSV trùng sau khi bỏ CRLF; metadata chỉ khác ngày, commit, số giây; diagonal check đạt |
+| Validation 201 mục, cache BLAST trống, qua `freeze_pipeline` @ `8df6d8f` (cây sạch) | **2439/2439**; `git diff` chỉ khác `run_date` và số đếm cache, đã trả về bản commit |
+| Test backend | 936 passed, 3 skipped |
+
+### Thời gian (cắm sạc, giao thức Bước 1)
+
+| | Trước (Bước 1) | Sau |
+|---|---|---|
+| Tổng, p50 / p90 | 9,59 / 11,56 s | 9,68 / 12,19 s |
+| BLAST, p50 / p90 | 7,88 / 9,89 s | 7,88 / 10,14 s |
+| Phần ngoài BLAST, trung vị | 1,67 s | 1,73 s |
+| mmu-miR-1a-3p | 10,16 s | 10,45 s |
+| Trình tự tự nhập | 7,55 s | 8,01 s |
+| 2656 hsa có cache, 8 worker (`design_all`) | 847 s (lượt đóng băng) | 825 s (−2,6 %) |
+| Thiết kế lại **cùng** miRNA trong cùng tiến trình (Re-run) | 2,14 s | 1,47 s |
+
+Tỉ lệ trúng bộ nhớ đệm trong một thiết kế mới:
+
+| | Trúng | Tổng số lần gọi |
+|---|---|---|
+| Tm duplex | 547 | 3 878 |
+| ΔCq forward | 2 775 | 15 930 |
+
+**Kết luận:**
+- **Thiết kế mới:** Bước 2 không làm nhanh hơn đo được; chênh lệch nằm trong nhiễu đo. Số −0,41 s/thiết kế ở thử nghiệm trước là do đo lại cùng miRNA, khi bộ nhớ đệm đã đầy.
+- **Re-run cùng miRNA:** nhanh hơn khoảng 0,7 s.
+- **Ma trận:** nhanh hơn khoảng 2,6 %.
+- **Hướng tiếp theo:** BLAST vẫn chiếm khoảng 82 % thời gian, nên muốn nhanh hơn thật phải nhắm vào BLAST và phân loại hit (Bước 3).

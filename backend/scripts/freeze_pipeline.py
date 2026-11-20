@@ -98,14 +98,25 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip", nargs="*", default=[],
                     choices=["validation", "v4", "benchmark", "export", "sensitivity", "matrix"])
+    ap.add_argument("--blast-cache", default=None,
+                    help="BLAST cache file for this run (BLAST_CACHE_PATH), e.g. a new empty "
+                         "file so every design BLASTs again; default: backend/data/blast_cache.sqlite")
+    ap.add_argument("--log-prefix", default="freeze",
+                    help="name of the run log and step logs (<prefix>_run.json, <prefix>_<step>.log); "
+                         "a verification run uses another prefix so benchmark/logs/freeze_run.json "
+                         "(the freeze record) is not overwritten")
     args = ap.parse_args(argv)
     os.makedirs(LOGS, exist_ok=True)
+    if args.blast_cache:
+        # Inherited by Flask and every step (step() passes os.environ).
+        os.environ["BLAST_CACHE_PATH"] = os.path.abspath(args.blast_cache)
     prov = provenance()
+    prov["blast_cache_path"] = os.environ.get("BLAST_CACHE_PATH") or "backend/data/blast_cache.sqlite"
     if not prov["working_tree_clean"]:
         print("STOP: the working tree is not clean; the freeze run must be at one commit.")
         return 2
     run = {"provenance": prov, "steps": []}
-    out_path = os.path.join(LOGS, "freeze_run.json")
+    out_path = os.path.join(LOGS, f"{args.log_prefix}_run.json")
 
     def save():
         with open(out_path, "w", encoding="utf-8", newline="\n") as f:
@@ -114,7 +125,7 @@ def main(argv=None) -> int:
 
     def step(name: str, cmd: list[str], cwd: str = ROOT) -> None:
         t0 = time.time()
-        log = os.path.join(LOGS, f"freeze_{name}.log")
+        log = os.path.join(LOGS, f"{args.log_prefix}_{name}.log")
         with open(log, "w", encoding="utf-8") as f:
             rc = subprocess.call(cmd, cwd=cwd, stdout=f, stderr=subprocess.STDOUT,
                                  env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"})
@@ -130,7 +141,7 @@ def main(argv=None) -> int:
         if health():
             print("STOP: something already serves :5000; stop it first.")
             return 2
-        flask_log = open(os.path.join(LOGS, "freeze_flask.log"), "w", encoding="utf-8")
+        flask_log = open(os.path.join(LOGS, f"{args.log_prefix}_flask.log"), "w", encoding="utf-8")
         flask = subprocess.Popen(
             [PY, "-c", "from app import app; app.run(host='127.0.0.1', port=5000, debug=False, "
                        "use_reloader=False, threaded=True)"],
