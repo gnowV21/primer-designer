@@ -627,6 +627,13 @@ BLAST_TASK             = "blastn-short"  # for queries <30 nt
 # for any split (benchmark/blast_batch_equivalence.json). hsa-miR-21-5p, 100
 # candidates: 1 process 8.5 s, 4 → 3.4 s, 8 → 2.5 s, 12 → 2.5 s.
 BLAST_BATCH_PROCESSES  = 8
+# Hit classification of a batch (check_offtarget_batch) in a pool of worker processes
+# that lives for the whole run (Bước 3, docs/REVIEW_panel_4.0.0.md §9). Performance
+# only — every primer is classified on its own by the same _classify_hits and the
+# results are merged in input order. Used for batches of ≥ BLAST_CLASSIFY_MIN_PRIMERS
+# forward primers; 1 (or env BLAST_CLASSIFY_PROCESSES=1) = in-process.
+BLAST_CLASSIFY_PROCESSES   = 12
+BLAST_CLASSIFY_MIN_PRIMERS = 16
 
 # [Ye12] Primer-BLAST default specificity thresholds
 PRIMER_BLAST_MIN_TOTAL_MISMATCHES    = 2   # ≥2 total mm required for "specific enough"
