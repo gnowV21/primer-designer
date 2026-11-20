@@ -17,10 +17,14 @@
 # ================================================================
 
 import concurrent.futures
+import logging
 import math
+import multiprocessing
 import os
 import re
 import subprocess
+import threading
+from concurrent.futures.process import BrokenProcessPool
 from typing import Optional
 
 import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
@@ -28,6 +32,7 @@ import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_saf
 from algorithm.constants import (
     BLAST_WORD_SIZE, BLAST_EVALUE_CUTOFF, BLAST_MAX_TARGET_SEQS,
     BLAST_REWARD, BLAST_PENALTY, BLAST_TASK, BLAST_BATCH_PROCESSES,
+    BLAST_CLASSIFY_PROCESSES, BLAST_CLASSIFY_MIN_PRIMERS,
     PRIMER_BLAST_IGNORE_ABOVE_MISMATCHES,
     PRIMER_BLAST_3PRIME_WINDOW, PRIMER_BLAST_3PRIME_MIN_MISMATCHES,
     PRIMER_BLAST_MIN_TOTAL_MISMATCHES,
@@ -51,6 +56,8 @@ _METADATA    = os.path.join(_DB_DIR, "metadata.json")
 
 _RISK_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
 _RISK_RANK = {"SAFE": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
+
+logger = logging.getLogger(__name__)
 
 
 def overhang_len_from_rt_primer(rt_primer: str) -> int:
@@ -838,13 +845,24 @@ def check_offtarget_batch(
         for p in primers:
             needs_seqs = ctx["target_sequence"] or tm[p][0] is not None
             per_db[p].append((db, raw_by.get(p, []), subject_seqs if needs_seqs else {}))
+    # One task per (primer, DB), in input order; each task gets only the subject
+    # sequences of its own hits (_classify_hits looks up nothing else).
+    tasks = [(p, raw, {h["subject_id"]: seqs[h["subject_id"]] for h in raw
+                       if h["subject_id"] in seqs},
+              db, *common, tm[p][0], ctx["p3"], ctx["margins"], ctx["target_sequence"],
+              ctx["rt_len"])
+             for p in primers for db, raw, seqs in per_db[p]]
+    results = iter(_classify_many(tasks, len(primers)))
     out = {}
     for p in primers:
         rt_stats: dict = {}
-        fwd = _merge_db_results([
-            _classify_hits(p, raw, seqs, db, *common, tm[p][0], ctx["p3"], ctx["margins"],
-                           ctx["target_sequence"], ctx["rt_len"], rt_stats)
-            for db, raw, seqs in per_db[p]])
+        parts = []
+        for _ in per_db[p]:
+            part, stats = next(results)
+            parts.append(part)
+            for k, v in stats.items():
+                rt_stats[k] = rt_stats.get(k, 0) + v
+        fwd = _merge_db_results(parts)
         # Same-molecule entries are same-species hits, so their sequences are already
         # in subject_seqs (check_offtarget fetches them a second time).
         all_seqs = {k: v for _, _, s in per_db[p] for k, v in s.items()}
@@ -856,6 +874,64 @@ def check_offtarget_batch(
         if p and p not in out and p.upper() in out:
             out[p] = out[p.upper()]
     return out
+
+
+# ── Hit classification in worker processes (Bước 3) ─────────────────────────────
+# One pool for the whole run (Flask process, script), created on first use; worker
+# processes import this module, so primer3 still goes through primer3_safe there.
+
+_POOL: Optional[concurrent.futures.ProcessPoolExecutor] = None
+_POOL_LOCK = threading.Lock()
+
+
+def _classify_processes() -> int:
+    """Worker processes for hit classification: BLAST_CLASSIFY_PROCESSES (env
+    BLAST_CLASSIFY_PROCESSES overrides), capped at the CPU count; 1 inside a worker
+    process of another pool (crossreactivity design_all), so pools never nest."""
+    if multiprocessing.parent_process() is not None:
+        return 1
+    try:
+        k = int(os.environ.get("BLAST_CLASSIFY_PROCESSES") or BLAST_CLASSIFY_PROCESSES)
+    except ValueError:
+        k = BLAST_CLASSIFY_PROCESSES
+    return max(1, min(k, os.cpu_count() or 1))
+
+
+def _classify_pool(k: int) -> concurrent.futures.ProcessPoolExecutor:
+    global _POOL
+    with _POOL_LOCK:
+        if _POOL is None:
+            _POOL = concurrent.futures.ProcessPoolExecutor(max_workers=k)
+        return _POOL
+
+
+def _discard_pool() -> None:
+    global _POOL
+    with _POOL_LOCK:
+        pool, _POOL = _POOL, None
+    if pool is not None:
+        pool.shutdown(wait=False, cancel_futures=True)
+
+
+def _classify_task(args: tuple) -> tuple[tuple, dict]:
+    """_classify_hits for one (primer, DB) task; returns its result and its own rt_stats."""
+    rt_stats: dict = {}
+    return _classify_hits(*args, rt_stats), rt_stats
+
+
+def _classify_many(tasks: list[tuple], n_primers: int) -> list[tuple[tuple, dict]]:
+    """_classify_task for every task, results in input order. A batch of
+    ≥ BLAST_CLASSIFY_MIN_PRIMERS primers goes to the process pool; a pool that cannot
+    start or breaks is dropped and the batch is classified in-process (same result)."""
+    k = _classify_processes()
+    if k > 1 and n_primers >= BLAST_CLASSIFY_MIN_PRIMERS and len(tasks) > 1:
+        try:
+            chunk = max(1, len(tasks) // (k * 4))
+            return list(_classify_pool(k).map(_classify_task, tasks, chunksize=chunk))
+        except (BrokenProcessPool, OSError, RuntimeError) as e:
+            logger.warning("hit classification pool unavailable (%s); classifying in-process", e)
+            _discard_pool()
+    return [_classify_task(t) for t in tasks]
 
 
 def _same_species(sid: str, db: str, species_prefix) -> bool:

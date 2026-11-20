@@ -328,3 +328,65 @@ Tỉ lệ trúng bộ nhớ đệm trong một thiết kế mới:
 - **Re-run cùng miRNA:** nhanh hơn khoảng 0,7 s.
 - **Ma trận:** nhanh hơn khoảng 2,6 %.
 - **Hướng tiếp theo:** BLAST vẫn chiếm khoảng 82 % thời gian, nên muốn nhanh hơn thật phải nhắm vào BLAST và phân loại hit (Bước 3).
+
+## 9. Bước 3: phân loại hit song song bằng tiến trình (2026-11-20, nhánh `perf/parallel-classify`)
+
+Đo trước khi sửa (cache tắt, 3 miRNA hsa), thời gian bước BLAST khoảng 9 s chia ra:
+- `_classify_hits`: 4,0–4,7 s;
+- `blastn`: 3,2–3,6 s;
+- `blastdbcmd`: 0,5–1,1 s.
+
+**Thay đổi** (commit `cb2c2f8`, không đổi `ALGORITHM_VERSION`, không đổi khóa cache BLAST):
+- `check_offtarget_batch`:
+  - mỗi cặp (mồi, DB) là một tác vụ `_classify_hits` (vẫn là hàm đó);
+  - tác vụ chạy trong `ProcessPoolExecutor`;
+  - kết quả gộp theo thứ tự đầu vào (`map`);
+  - mỗi tác vụ chỉ nhận trình tự subject của chính các hit của nó.
+- **Pool:**
+  - tạo một lần khi cần lần đầu và sống suốt lượt chạy (tiến trình Flask hoặc script);
+  - trong worker, primer3 vẫn đi qua `primer3_safe`.
+- **Hằng số:**
+  - `BLAST_CLASSIFY_PROCESSES = 12` (env `BLAST_CLASSIFY_PROCESSES` ghi đè, tối đa bằng số CPU);
+  - `BLAST_CLASSIFY_MIN_PRIMERS = 16`.
+  - Đã đo 12, 14 và 16 tiến trình: 12 và 14 nhanh ngang nhau, 16 chậm hơn.
+- **Chạy tuần tự khi:**
+  - batch có dưới 16 mồi;
+  - đang ở trong worker của pool khác (`crossreactivity.design_all`), để pool không lồng nhau;
+  - pool không khởi động được hoặc bị hỏng. Khi đó pool bị bỏ và batch được phân loại tuần tự, cho cùng kết quả.
+- **Test:** `backend/tests/test_design_speed.py` có thêm 5 test:
+  - pool cho kết quả trùng tuần tự (BLAST giả và BLAST thật), đúng thứ tự, một pool cho cả lượt chạy;
+  - batch nhỏ không tạo pool;
+  - không lồng pool;
+  - pool hỏng thì chạy tuần tự.
+- **Script:** mọi script trong repo chạy thiết kế trong tiến trình đều có `if __name__ == "__main__"`. Điều này cần trên Windows, vì worker được tạo kiểu spawn sẽ nạp lại script chính.
+
+### Kiểm tra tương đương (đều đạt)
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 200 hsa, cache BLAST trống, so với bản tham chiếu của Bước 2 (code master) | **0/200 bản ghi khác**; #1 so với bản đóng băng 0/200 khác |
+| 2656 hsa thiết kế lại từ đầu (cache như trước) | **0/2656 bản ghi khác**; Parquet trùng từng byte, CSV trùng sau khi bỏ CRLF, metadata chỉ khác ngày, commit, số giây |
+| Validation 201 mục, cache trống, `freeze_pipeline` @ `cb2c2f8` (cây sạch) | **2439/2439**; `git diff` chỉ khác `run_date` và số đếm cache, đã trả về bản commit |
+| Top 3 của 20 miRNA trong phép đo thời gian | trùng Bước 1 |
+| Test | backend 941 passed, 3 skipped; crossreactivity 29 |
+
+Với 2656 hsa có cache, bước phân loại không chạy (kết quả lấy từ cache), và `design_all` chạy trong worker nên không dùng pool. Pool được kiểm bằng lượt 200 hsa và lượt validation, cả hai đều với cache trống.
+
+### Thời gian (cắm sạc, giao thức Bước 1)
+
+| | Trước (Bước 1) | Sau |
+|---|---|---|
+| Tổng, p50 / p90 | 9,59 / 11,56 s | **7,53 / 8,39 s** (−21 % / −27 %) |
+| BLAST (blastn + phân loại), p50 / p90 | 7,88 / 9,89 s | **5,30 / 6,20 s** |
+| Phần ngoài BLAST, trung vị | 1,67 s | 2,13 s |
+| mmu-miR-1a-3p | 10,16 s | 7,86 s |
+| Trình tự tự nhập | 7,55 s | 6,08 s |
+| Thiết kế đầu tiên của tiến trình (gồm khởi động pool) | — | 7,77 s (lần sau 7,29 s) |
+| 200 hsa, cache trống, tuần tự | 1692 s | 1206 s |
+| Validation 201 mục, cache trống | 2172 s | 1785 s |
+
+**Kết luận:**
+- **Tốc độ:** thiết kế mới nhanh hơn khoảng 2 s (p50) và khoảng 3 s (p90), kết quả trùng từng byte.
+- **Khởi động pool:** tốn dưới 0,5 s, chỉ ở thiết kế đầu tiên.
+- **Phần ngoài BLAST:** tăng khoảng 0,45 s dù code phần này không đổi. Giả thuyết là CPU hạ xung sau đợt chạy 12 tiến trình; chưa tách được nguyên nhân.
+- **Phần còn lại:** blastn khoảng 3,5 s. Cách 2 vẫn chờ chủ dự án quyết định.
