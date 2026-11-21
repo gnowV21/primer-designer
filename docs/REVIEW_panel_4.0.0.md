@@ -467,3 +467,41 @@ Ghi chú về phân loại hit:
 - `context` (`tiered_pipeline.py:112`) = `design-clf7` | trình tự đích (DNA) | mã loài | trình tự mồi RT | `dna_conc` | `dntp_conc` | `dv_conc` | `mv_conc`.
 - Giá trị lưu là kết quả đã phân loại, không phải hit thô. TTL 30 ngày.
 - Không có trong khóa: các tham số blastn (chỉ gián tiếp qua phiên bản bộ phân loại), phiên bản BLAST+, và Ta (đúng, vì không dùng).
+
+## 11. Kế hoạch tăng tốc 2, Bước 2: tắt báo cáo sử dụng của BLAST+ (2026-11-21, nhánh `perf/design-speed`)
+
+**Thay đổi:**
+- `blast_offtarget.blast_subprocess_env()` tạo env cho mọi tiến trình con BLAST+ của engine (`run_blastn`, `run_blastn_multi`, `fetch_sequences`). Hàm đặt `BLAST_USAGE_REPORT=false` bằng `setdefault`, nên giá trị người dùng đã tự đặt được giữ nguyên.
+- `BLASTDB` và tên DB trả về y như cũ.
+- `build_blast_db.py` (makeblastdb, `blastdbcmd -info`, `makeblastdb -version`) và `freeze_pipeline.py` (`blastn -version`) đặt cùng biến.
+- Không còn lệnh gọi BLAST+ nào khác trong `backend/`, `crossreactivity/`, `validation/`, `benchmark/`.
+- Không đổi `ALGORITHM_VERSION` hay khóa cache BLAST.
+- Test mới: `tests/test_blast_usage_report.py` (7 test).
+
+### Kiểm tra tương đương (bộ rút gọn)
+
+Bộ kiểm được rút gọn vì bước này chỉ đổi biến môi trường của tiến trình con, không đổi tham số blastn hay code phân loại.
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 200 hsa (cùng danh sách seed Bước 2/3), cache BLAST trống | 186/200 khác bản tham chiếu Bước 2, **chỉ ở `specificity_warnings.data_note`**: chữ "7 entries" → "8 entries" của PR #22, gộp sau khi tạo tham chiếu. Thay đúng chuỗi đó trong tham chiếu (186 chỗ) thì **0/200 khác**; bộ #1 trùng bản đóng băng 200/200 |
+| Validation 201 mục, cache trống, qua `freeze_pipeline` | **2439/2439**; diff chỉ khác ngày chạy và thống kê cache (đã trả lại file) |
+| 2656 hsa có cache | Không chạy lại. Đường thiết kế chỉ gọi BLAST ở `tiered_pipeline.py:147-149` (`... if missing else {}`), nên khi mọi mồi đã có trong cache thì không có blastn hay blastdbcmd nào chạy. `blast_available()` chỉ gọi `shutil.which` |
+| Test | backend **948 passed**, 3 skipped (941 + 7) |
+
+### Thời gian
+
+Giao thức QĐ 24c: cắm sạc, không có Vite, Playwright hay python/blastn thừa. 20 hsa seed 2026 không cache, cộng mmu-miR-1a-3p và 1 trình tự tự nhập. Hai lượt đo bắt đầu lúc 12:43 và 13:27.
+
+| | Trước: Bước 3, số đo ngày 20/11 | Trước: hôm nay, báo cáo bật (§10) | Sau, lượt 1 | Sau, lượt 2 |
+|---|---|---|---|---|
+| Tổng p50 / p90 (s) | 7,53 / 8,39 | 38,0 / 43,5 | **5,02 / 6,21** | **5,10 / 6,29** |
+| blastn p50 / p90 (s) | — | 19,3 / 37,9 | 2,02 / 2,65 | 2,13 / 2,72 |
+| blastdbcmd p50 / p90 (s) | — | 1,00 / 5,26 | 0,038 / 0,050 | 0,040 / 0,046 |
+| Thiết kế treo > 20 s | — | 11/20 | **0/20** | **0/20** |
+| mmu-miR-1a-3p / tự nhập (s) | 7,86 / 6,08 | 40,8 / 40,2 | 5,51 / 4,18 | 5,45 / 4,00 |
+| 200 hsa cache trống, tuần tự | 1206 s | — | 857 s | — |
+| Validation 201 mục cache trống | 1785 s | — | 1490 s | — |
+
+- Top 3 của 20 thiết kế đo thời gian trùng Bước 1 ở cả hai lượt.
+- Số thời gian trong `docs/THESIS_FREEZE_4.0.0.md` không sửa.
