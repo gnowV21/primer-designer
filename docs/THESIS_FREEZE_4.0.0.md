@@ -151,3 +151,28 @@ Phần này chỉ thêm thông tin; mọi số ở các mục trên giữ nguyê
   - `ALGORITHM_VERSION` vẫn là 4.0.0.
 
 Chi tiết ở `docs/REVIEW_panel_4.0.0.md` §9–11.
+
+## 7. Thay đổi hiển thị isomiR sau tag (không đổi output)
+
+Nhánh `feat/isomir-variants`, 2026-11-21 (`docs/PROMPT_isomir_variants_4.0.0.md`). `ALGORITHM_VERSION` vẫn là 4.0.0. Chỉ thêm thông tin hiển thị; mồi, điểm, tầng, thứ hạng và BLAST không đổi.
+
+- **Thêm:**
+  - Top 3 isoform 3′ (isomiRdb, pooled) được so với trình tự thiết kế, kèm loại và mức bắt dự kiến. Khoảng ΔCq chỉ lấy từ `ASSAY_DCQ_RT_SHIFT_RANGE`; lệch ≥ 3 nt ghi "not measured".
+  - Cảnh báo isoform trội khi top 1 ≥ 0,8 × share đầu 3′ của 22.1. Mốc 0,8 là mốc riêng của tool, chưa hiệu chỉnh.
+  - Hiển thị trong nút "Why", trong PDF và CSV. AUDIT ISO-07/08/09.
+- **Sửa câu chữ:** cảnh báo 3′ không còn viết ±1 nt được bắt "about as well as the canonical form"; nay ghi khoảng đo được (ISO-01).
+- **Không làm:** "độ tinh khiết tín hiệu %" (ISO-05 vẫn mở, ghi vào Thảo luận), bảng nhập phân bố isoform, chế độ cặp assay, dựng lại chỉ mục 5′ (ISO-06), đổi hằng số ΔCq, đổi chấm điểm.
+- **Chứng minh không đổi output** (cache BLAST trống):
+
+  | Kiểm tra | Kết quả |
+  |---|---|
+  | 200 hsa, `design_equivalence.py fields` so với bản tham chiếu | 186/200 bản ghi khác, **chỉ** dưới `stemloop_rt.three_prime_isomir` (khóa mới) và `stemloop_rt.warnings[field=three_prime_isomir*]`. Không còn đường dẫn nào khác lệch |
+  | Chuỗi đã đổi | 43 câu cảnh báo 3′ (và 43 `message` tương ứng), mỗi câu chỉ khác đúng một cụm: "detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later" → "detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured)" |
+  | Mục mới trong `warnings[]` | 27 `three_prime_isomir_dominant` |
+  | Bộ #1 so với bản đóng băng | 200/200 trùng |
+  | Validation 201 mục | **2439/2439**; `results.csv` không đổi dòng nào; file khác chỉ đổi ngày chạy và thống kê cache (đã trả lại) |
+  | Benchmark 50 miRNA | **50/50**; `compare_tools.md` không đổi |
+
+  Bản tham chiếu `benchmark/logs/design_equivalence_ref_hsa200.jsonl` được thay bằng output mới; báo cáo từng đường dẫn ở `benchmark/logs/isomir_design_equivalence_fields.json`, ghi chú ở `design_equivalence_ref_hsa200.md`.
+- **Chạy tay thay vì `freeze_pipeline.py`:** working tree có một file người dùng chưa được git theo dõi, nên script dừng. Validation và benchmark được chạy bằng đúng các lệnh của script, với Flask mới và cache trống.
+- **Báo cáo kèm theo:** `docs/ISOMIR_VARIANTS_DRYRUN.md` (dry-run, luật đã duyệt), `docs/ISOMIR_CASE_CHECK.md` (9 ca đã công bố; báo cáo, không phải kiểm chứng pass/fail).

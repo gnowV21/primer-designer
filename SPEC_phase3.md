@@ -1133,6 +1133,8 @@ Nguyên văn: miR-877-5p — *"Assays specific for the 'GACA' and 'GAC' 3′ end
 - Chỉ mục 5′ từ nhãn `lv5p` của isomiRdb: cần tải lại ma trận 1,2 GB; danh sách 5′ hiện vẫn là 8 miRNA tự tuyển.
 - Phân tầng theo loại mẫu.
 
+**Ghi chú 2026-11-21 (không đổi output thiết kế, AUDIT ISO-07/08/09).** Câu cảnh báo 3′ không còn viết ±1 nt được bắt "about as well as the canonical form"; khoảng đọc từ `ASSAY_DCQ_RT_SHIFT_RANGE`. Top 3 isoform 3′ của isomiRdb nay được so với trình tự thiết kế và hiện trong nút "Why" (bảng "Most common 3′ isoforms (isomiRdb, pooled)"), kèm lớp mức bắt: khoảng đo được (theo khuôn ±1–2 nt), giả định như dài thêm (NTA 1–2 nt), không có số đo (lệch ≥ 3 nt, NTA sau khi cắt, mlv3p/mv), hoặc không đánh giá (khác 22.1). Cảnh báo isoform trội: top 1 ≥ 0,8 × share đầu 3′ của 22.1 (pooled; mốc riêng của tool, chưa hiệu chỉnh). Lệch ≥ 3 nt không đi qua `rt_axis` ở đường hiển thị (giả tạo ±2 nt, ISO-08). Mục "ghép isomiRdb với mô hình ΔCq" ở trên vẫn chưa làm (ISO-05). Chi tiết: `docs/ISOMIR_VARIANTS_DRYRUN.md`, `docs/ISOMIR_CASE_CHECK.md`.
+
 **Thí nghiệm hiệu chỉnh đề xuất.** Oligo RNA tổng hợp miR-21-5p gồm dạng chuẩn, +1, −1, −2 và +U, cùng số bản sao, đo bằng một assay stem-loop của dạng chuẩn; 5 oligo, 1 đường chuẩn, 3 lặp. Điểm mấu chốt: **chạy ở lượng mẫu cho Ct 20–30**, trong vùng định lượng tin cậy. Kết quả sẽ thay bảng lệch đầu hiện tại bằng số đo trên một trình tự xác định.
 
 ### 8.19 BLAST classifier v7 — bước RT và mục lệch đầu (2026-11-10)

@@ -1,0 +1,662 @@
+{
+ "records": [
+  200,
+  200
+ ],
+ "records_differing": 186,
+ "paths": [
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.canonical_3prime_share_note",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.canonical_3prime_share_pooled",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.canonical_end_rna",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].added_nt",
+   "records": 29,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].end_diff_at",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].end_rna",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].relation",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].rt_capture",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].shift_3p",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].templated_nt",
+   "records": 5,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].trimmed_nt",
+   "records": 29,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_3prime_variants[].type_label",
+   "records": 83,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_isoform_risk",
+   "records": 186,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_isoform_short",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.dominant_isoform_warning",
+   "records": 186,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.reference_note",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.reference_status",
+   "records": 142,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  },
+  {
+   "path": "response.stemloop_rt.three_prime_isomir.warning",
+   "records": 43,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 43,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": [
+    {
+     "old": "In isomiRdb, a median 77% of hsa-miR-100-5p reads are 3'-end isoforms (IQR 53%–92%, 38226 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 77% of hsa-miR-100-5p reads are 3'-end isoforms (IQR 53%–92%, 38226 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 89% of hsa-miR-122b-5p reads are 3'-end isoforms (IQR 80%–95%, 421 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 89% of hsa-miR-122b-5p reads are 3'-end isoforms (IQR 80%–95%, 421 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 60% of hsa-miR-1260b reads are 3'-end isoforms (IQR 51%–73%, 22414 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 60% of hsa-miR-1260b reads are 3'-end isoforms (IQR 51%–73%, 22414 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 69% of hsa-miR-128-1-5p reads are 3'-end isoforms (IQR 54%–84%, 8773 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 69% of hsa-miR-128-1-5p reads are 3'-end isoforms (IQR 54%–84%, 8773 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-17-3p reads are 3'-end isoforms (IQR 22%–86%, 34347 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-17-3p reads are 3'-end isoforms (IQR 22%–86%, 34347 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 56% of hsa-miR-181b-2-3p reads are 3'-end isoforms (IQR 46%–65%, 1442 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 56% of hsa-miR-181b-2-3p reads are 3'-end isoforms (IQR 46%–65%, 1442 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 87% of hsa-miR-188-5p reads are 3'-end isoforms (IQR 67%–95%, 9285 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 87% of hsa-miR-188-5p reads are 3'-end isoforms (IQR 67%–95%, 9285 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 88% of hsa-miR-18b-5p reads are 3'-end isoforms (IQR 59%–96%, 3941 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 88% of hsa-miR-18b-5p reads are 3'-end isoforms (IQR 59%–96%, 3941 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-190a-5p reads are 3'-end isoforms (IQR 69%–92%, 13305 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-190a-5p reads are 3'-end isoforms (IQR 69%–92%, 13305 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 69% of hsa-miR-195-3p reads are 3'-end isoforms (IQR 58%–79%, 8073 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 69% of hsa-miR-195-3p reads are 3'-end isoforms (IQR 58%–79%, 8073 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-195-5p reads are 3'-end isoforms (IQR 66%–89%, 25317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-195-5p reads are 3'-end isoforms (IQR 66%–89%, 25317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 84% of hsa-miR-19b-1-5p reads are 3'-end isoforms (IQR 34%–94%, 5317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 84% of hsa-miR-19b-1-5p reads are 3'-end isoforms (IQR 34%–94%, 5317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 66% of hsa-miR-22-5p reads are 3'-end isoforms (IQR 55%–84%, 30810 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 66% of hsa-miR-22-5p reads are 3'-end isoforms (IQR 55%–84%, 30810 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-2277-5p reads are 3'-end isoforms (IQR 65%–84%, 3466 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-2277-5p reads are 3'-end isoforms (IQR 65%–84%, 3466 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 80% of hsa-miR-302b-5p reads are 3'-end isoforms (IQR 0%–89%, 781 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 80% of hsa-miR-302b-5p reads are 3'-end isoforms (IQR 0%–89%, 781 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 71% of hsa-miR-30c-5p reads are 3'-end isoforms (IQR 53%–86%, 41401 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 71% of hsa-miR-30c-5p reads are 3'-end isoforms (IQR 53%–86%, 41401 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 85% of hsa-miR-31-5p reads are 3'-end isoforms (IQR 75%–92%, 16841 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 85% of hsa-miR-31-5p reads are 3'-end isoforms (IQR 75%–92%, 16841 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-345-5p reads are 3'-end isoforms (IQR 63%–88%, 36440 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-345-5p reads are 3'-end isoforms (IQR 63%–88%, 36440 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 51% of hsa-miR-370-5p reads are 3'-end isoforms (IQR 41%–67%, 2019 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 51% of hsa-miR-370-5p reads are 3'-end isoforms (IQR 41%–67%, 2019 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 54% of hsa-miR-3928-3p reads are 3'-end isoforms (IQR 22%–75%, 2393 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 54% of hsa-miR-3928-3p reads are 3'-end isoforms (IQR 22%–75%, 2393 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 99% of hsa-miR-4326 reads are 3'-end isoforms (IQR 93%–100%, 14761 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 99% of hsa-miR-4326 reads are 3'-end isoforms (IQR 93%–100%, 14761 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 53% of hsa-miR-4446-3p reads are 3'-end isoforms (IQR 39%–67%, 5567 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 53% of hsa-miR-4446-3p reads are 3'-end isoforms (IQR 39%–67%, 5567 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 60% of hsa-miR-450a-5p reads are 3'-end isoforms (IQR 44%–77%, 18435 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 60% of hsa-miR-450a-5p reads are 3'-end isoforms (IQR 44%–77%, 18435 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 91% of hsa-miR-450b-5p reads are 3'-end isoforms (IQR 81%–96%, 19834 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 91% of hsa-miR-450b-5p reads are 3'-end isoforms (IQR 81%–96%, 19834 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 97% of hsa-miR-4521 reads are 3'-end isoforms (IQR 88%–99%, 6237 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 97% of hsa-miR-4521 reads are 3'-end isoforms (IQR 88%–99%, 6237 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 90% of hsa-miR-4685-3p reads are 3'-end isoforms (IQR 88%–95%, 6688 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 90% of hsa-miR-4685-3p reads are 3'-end isoforms (IQR 88%–95%, 6688 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 59% of hsa-miR-486-5p reads are 3'-end isoforms (IQR 55%–66%, 40228 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 59% of hsa-miR-486-5p reads are 3'-end isoforms (IQR 55%–66%, 40228 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 81% of hsa-miR-488-5p reads are 3'-end isoforms (IQR 0%–93%, 1185 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 81% of hsa-miR-488-5p reads are 3'-end isoforms (IQR 0%–93%, 1185 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 61% of hsa-miR-5000-3p reads are 3'-end isoforms (IQR 48%–71%, 337 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 61% of hsa-miR-5000-3p reads are 3'-end isoforms (IQR 48%–71%, 337 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-511-3p reads are 3'-end isoforms (IQR 41%–84%, 1940 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-511-3p reads are 3'-end isoforms (IQR 41%–84%, 1940 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-548ay-5p reads are 3'-end isoforms (IQR 100%–100%, 122 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-548ay-5p reads are 3'-end isoforms (IQR 100%–100%, 122 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 66% of hsa-miR-548u reads are 3'-end isoforms (IQR 51%–84%, 470 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 66% of hsa-miR-548u reads are 3'-end isoforms (IQR 51%–84%, 470 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 76% of hsa-miR-552-3p reads are 3'-end isoforms (IQR 65%–88%, 2267 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 76% of hsa-miR-552-3p reads are 3'-end isoforms (IQR 65%–88%, 2267 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 97% of hsa-miR-6131 reads are 3'-end isoforms (IQR 88%–100%, 5029 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 97% of hsa-miR-6131 reads are 3'-end isoforms (IQR 88%–100%, 5029 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 63% of hsa-miR-6511a-3p reads are 3'-end isoforms (IQR 57%–70%, 10636 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 63% of hsa-miR-6511a-3p reads are 3'-end isoforms (IQR 57%–70%, 10636 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-652-3p reads are 3'-end isoforms (IQR 61%–88%, 40550 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-652-3p reads are 3'-end isoforms (IQR 61%–88%, 40550 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-6529-5p reads are 3'-end isoforms (IQR 100%–100%, 655 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-6529-5p reads are 3'-end isoforms (IQR 100%–100%, 655 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-6774-3p reads are 3'-end isoforms (IQR 71%–87%, 468 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-6774-3p reads are 3'-end isoforms (IQR 71%–87%, 468 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-6793-3p reads are 3'-end isoforms (IQR 0%–93%, 48 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-6793-3p reads are 3'-end isoforms (IQR 0%–93%, 48 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 63% of hsa-miR-708-5p reads are 3'-end isoforms (IQR 55%–71%, 20653 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 63% of hsa-miR-708-5p reads are 3'-end isoforms (IQR 55%–71%, 20653 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 78% of hsa-miR-92a-2-5p reads are 3'-end isoforms (IQR 0%–96%, 613 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 78% of hsa-miR-92a-2-5p reads are 3'-end isoforms (IQR 0%–96%, 613 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 64% of hsa-miR-9902 reads are 3'-end isoforms (IQR 55%–73%, 1752 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 64% of hsa-miR-9902 reads are 3'-end isoforms (IQR 55%–73%, 1752 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-9985 reads are 3'-end isoforms (IQR 100%–100%, 301 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-9985 reads are 3'-end isoforms (IQR 100%–100%, 301 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    }
+   ]
+  },
+  {
+   "path": "response.stemloop_rt.warnings[field=three_prime_isomir].message",
+   "records": 43,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 43,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": [
+    {
+     "old": "In isomiRdb, a median 77% of hsa-miR-100-5p reads are 3'-end isoforms (IQR 53%–92%, 38226 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 77% of hsa-miR-100-5p reads are 3'-end isoforms (IQR 53%–92%, 38226 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 89% of hsa-miR-122b-5p reads are 3'-end isoforms (IQR 80%–95%, 421 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 89% of hsa-miR-122b-5p reads are 3'-end isoforms (IQR 80%–95%, 421 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 60% of hsa-miR-1260b reads are 3'-end isoforms (IQR 51%–73%, 22414 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 60% of hsa-miR-1260b reads are 3'-end isoforms (IQR 51%–73%, 22414 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 69% of hsa-miR-128-1-5p reads are 3'-end isoforms (IQR 54%–84%, 8773 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 69% of hsa-miR-128-1-5p reads are 3'-end isoforms (IQR 54%–84%, 8773 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-17-3p reads are 3'-end isoforms (IQR 22%–86%, 34347 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-17-3p reads are 3'-end isoforms (IQR 22%–86%, 34347 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 56% of hsa-miR-181b-2-3p reads are 3'-end isoforms (IQR 46%–65%, 1442 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 56% of hsa-miR-181b-2-3p reads are 3'-end isoforms (IQR 46%–65%, 1442 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 87% of hsa-miR-188-5p reads are 3'-end isoforms (IQR 67%–95%, 9285 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 87% of hsa-miR-188-5p reads are 3'-end isoforms (IQR 67%–95%, 9285 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 88% of hsa-miR-18b-5p reads are 3'-end isoforms (IQR 59%–96%, 3941 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 88% of hsa-miR-18b-5p reads are 3'-end isoforms (IQR 59%–96%, 3941 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-190a-5p reads are 3'-end isoforms (IQR 69%–92%, 13305 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-190a-5p reads are 3'-end isoforms (IQR 69%–92%, 13305 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 69% of hsa-miR-195-3p reads are 3'-end isoforms (IQR 58%–79%, 8073 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 69% of hsa-miR-195-3p reads are 3'-end isoforms (IQR 58%–79%, 8073 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-195-5p reads are 3'-end isoforms (IQR 66%–89%, 25317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-195-5p reads are 3'-end isoforms (IQR 66%–89%, 25317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 84% of hsa-miR-19b-1-5p reads are 3'-end isoforms (IQR 34%–94%, 5317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 84% of hsa-miR-19b-1-5p reads are 3'-end isoforms (IQR 34%–94%, 5317 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 66% of hsa-miR-22-5p reads are 3'-end isoforms (IQR 55%–84%, 30810 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 66% of hsa-miR-22-5p reads are 3'-end isoforms (IQR 55%–84%, 30810 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-2277-5p reads are 3'-end isoforms (IQR 65%–84%, 3466 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-2277-5p reads are 3'-end isoforms (IQR 65%–84%, 3466 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 80% of hsa-miR-302b-5p reads are 3'-end isoforms (IQR 0%–89%, 781 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 80% of hsa-miR-302b-5p reads are 3'-end isoforms (IQR 0%–89%, 781 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 71% of hsa-miR-30c-5p reads are 3'-end isoforms (IQR 53%–86%, 41401 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 71% of hsa-miR-30c-5p reads are 3'-end isoforms (IQR 53%–86%, 41401 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 85% of hsa-miR-31-5p reads are 3'-end isoforms (IQR 75%–92%, 16841 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 85% of hsa-miR-31-5p reads are 3'-end isoforms (IQR 75%–92%, 16841 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-345-5p reads are 3'-end isoforms (IQR 63%–88%, 36440 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-345-5p reads are 3'-end isoforms (IQR 63%–88%, 36440 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 51% of hsa-miR-370-5p reads are 3'-end isoforms (IQR 41%–67%, 2019 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 51% of hsa-miR-370-5p reads are 3'-end isoforms (IQR 41%–67%, 2019 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 54% of hsa-miR-3928-3p reads are 3'-end isoforms (IQR 22%–75%, 2393 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 54% of hsa-miR-3928-3p reads are 3'-end isoforms (IQR 22%–75%, 2393 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 99% of hsa-miR-4326 reads are 3'-end isoforms (IQR 93%–100%, 14761 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 99% of hsa-miR-4326 reads are 3'-end isoforms (IQR 93%–100%, 14761 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 53% of hsa-miR-4446-3p reads are 3'-end isoforms (IQR 39%–67%, 5567 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 53% of hsa-miR-4446-3p reads are 3'-end isoforms (IQR 39%–67%, 5567 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 60% of hsa-miR-450a-5p reads are 3'-end isoforms (IQR 44%–77%, 18435 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 60% of hsa-miR-450a-5p reads are 3'-end isoforms (IQR 44%–77%, 18435 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 91% of hsa-miR-450b-5p reads are 3'-end isoforms (IQR 81%–96%, 19834 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 91% of hsa-miR-450b-5p reads are 3'-end isoforms (IQR 81%–96%, 19834 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 97% of hsa-miR-4521 reads are 3'-end isoforms (IQR 88%–99%, 6237 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 97% of hsa-miR-4521 reads are 3'-end isoforms (IQR 88%–99%, 6237 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 90% of hsa-miR-4685-3p reads are 3'-end isoforms (IQR 88%–95%, 6688 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 90% of hsa-miR-4685-3p reads are 3'-end isoforms (IQR 88%–95%, 6688 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 59% of hsa-miR-486-5p reads are 3'-end isoforms (IQR 55%–66%, 40228 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 59% of hsa-miR-486-5p reads are 3'-end isoforms (IQR 55%–66%, 40228 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 81% of hsa-miR-488-5p reads are 3'-end isoforms (IQR 0%–93%, 1185 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 81% of hsa-miR-488-5p reads are 3'-end isoforms (IQR 0%–93%, 1185 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 61% of hsa-miR-5000-3p reads are 3'-end isoforms (IQR 48%–71%, 337 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 61% of hsa-miR-5000-3p reads are 3'-end isoforms (IQR 48%–71%, 337 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-511-3p reads are 3'-end isoforms (IQR 41%–84%, 1940 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-511-3p reads are 3'-end isoforms (IQR 41%–84%, 1940 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-548ay-5p reads are 3'-end isoforms (IQR 100%–100%, 122 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-548ay-5p reads are 3'-end isoforms (IQR 100%–100%, 122 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 66% of hsa-miR-548u reads are 3'-end isoforms (IQR 51%–84%, 470 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 66% of hsa-miR-548u reads are 3'-end isoforms (IQR 51%–84%, 470 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 76% of hsa-miR-552-3p reads are 3'-end isoforms (IQR 65%–88%, 2267 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 76% of hsa-miR-552-3p reads are 3'-end isoforms (IQR 65%–88%, 2267 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 97% of hsa-miR-6131 reads are 3'-end isoforms (IQR 88%–100%, 5029 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 97% of hsa-miR-6131 reads are 3'-end isoforms (IQR 88%–100%, 5029 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 63% of hsa-miR-6511a-3p reads are 3'-end isoforms (IQR 57%–70%, 10636 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 63% of hsa-miR-6511a-3p reads are 3'-end isoforms (IQR 57%–70%, 10636 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 75% of hsa-miR-652-3p reads are 3'-end isoforms (IQR 61%–88%, 40550 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 75% of hsa-miR-652-3p reads are 3'-end isoforms (IQR 61%–88%, 40550 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-6529-5p reads are 3'-end isoforms (IQR 100%–100%, 655 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-6529-5p reads are 3'-end isoforms (IQR 100%–100%, 655 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 83% of hsa-miR-6774-3p reads are 3'-end isoforms (IQR 71%–87%, 468 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 83% of hsa-miR-6774-3p reads are 3'-end isoforms (IQR 71%–87%, 468 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 67% of hsa-miR-6793-3p reads are 3'-end isoforms (IQR 0%–93%, 48 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 67% of hsa-miR-6793-3p reads are 3'-end isoforms (IQR 0%–93%, 48 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 63% of hsa-miR-708-5p reads are 3'-end isoforms (IQR 55%–71%, 20653 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 63% of hsa-miR-708-5p reads are 3'-end isoforms (IQR 55%–71%, 20653 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 78% of hsa-miR-92a-2-5p reads are 3'-end isoforms (IQR 0%–96%, 613 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 78% of hsa-miR-92a-2-5p reads are 3'-end isoforms (IQR 0%–96%, 613 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 64% of hsa-miR-9902 reads are 3'-end isoforms (IQR 55%–73%, 1752 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 64% of hsa-miR-9902 reads are 3'-end isoforms (IQR 55%–73%, 1752 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    },
+    {
+     "old": "In isomiRdb, a median 100% of hsa-miR-9985 reads are 3'-end isoforms (IQR 100%–100%, 301 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected about as well as the canonical form and 2-nt-shorter ones ~3 Ct later [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "new": "In isomiRdb, a median 100% of hsa-miR-9985 reads are 3'-end isoforms (IQR 100%–100%, 301 human samples). The stem-loop RT primer pairs with the canonical 3'-terminal 6 nt, yet variants 1 nt shorter or 1–2 nt longer are detected 0–4 Ct later (two miRNAs measured) and 2-nt-shorter ones 3–4 Ct later (one miRNA measured) [Schamberger14]. The signal is therefore a capture-weighted sum of 3' isoforms, not the canonical form alone — here the canonical form is a minority. Report the result as the sum of isoforms [Magee17]; isoform-resolved quantification needs sequencing.",
+     "records": 1
+    }
+   ]
+  },
+  {
+   "path": "response.stemloop_rt.warnings[field=three_prime_isomir_dominant]",
+   "records": 27,
+   "kinds": [
+    "added"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": true,
+   "pairs": []
+  }
+ ],
+ "outside_allowed": []
+}
