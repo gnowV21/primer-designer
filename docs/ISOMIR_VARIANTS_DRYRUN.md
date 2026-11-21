@@ -23,7 +23,14 @@ Nguồn: `backend/data/known_3prime_isomir_mirnas.json` (isomiRdb) và `backend/
 
 - **Lý do có lớp `not_measured` cho "cắt rồi thêm NTA":** NTA ở đầu sát thân stem chưa được đo bằng qPCR. Giá trị 3,5 Ct của Czimmerer 2013 chỉ đo mismatch nằm bên trong, nên không áp dụng cho trường hợp này.
 - **Cảnh báo isoform trội = R2:** so trên giá trị đã làm tròn 3 chữ số, bật khi top 1 ≥ 0,8 × share đầu 3′ chuẩn. **0,8 là mốc riêng của tool, chưa hiệu chỉnh.** Không bật ở miRNA mà tham chiếu có thể khác 22.1.
-- **"Tham chiếu có thể khác 22.1" (phương án B):** miRNA có biến thể lệch đầu 5′ hoặc khác ở giữa (hoặc nhãn lv3pT/lv3pE mà đuôi khác 22.1), **và** không có biến thể lv3pT/lv3pE nào khớp đúng 22.1. Biến thể mang nhãn `mv` không tính.
+- **"Tham chiếu có thể khác 22.1" (phương án B, đã siết ngày 2026-11-21):**
+  - **Bị nghi:** miRNA có biến thể lệch 22.1 ở đầu 5′ hoặc ở giữa, hoặc có nhãn lv3pT/lv3pE mà đuôi 3′ khác 22.1. Biến thể mang nhãn `mv` không tính.
+  - **Được xác nhận:** có một biến thể lv3pT/lv3pE khớp đúng 22.1 (cùng tiền tố, độ lệch trên nhãn bằng độ lệch tính từ trình tự), **và** biến thể đó phủ mọi vị trí đang bị nghi.
+  - **Lý do:** nhãn lv3p của isomiRdb tính theo trình tự tham chiếu của chính isomiRdb.
+    - `lv3pE#k` = tham chiếu + k nt. Nếu biến thể đó đúng bằng 22.1 + k nt, thì tham chiếu chính là 22.1, toàn bộ.
+    - `lv3pT#-k` = tham chiếu bỏ k nt cuối. Nó chỉ chứng minh được L−k nt đầu của tham chiếu.
+    - Vì vậy nghi ngờ chỉ được gỡ khi vị trí bị nghi nằm trong đoạn đã chứng minh. Ban đầu luật B chưa có điều kiện phủ này; thêm vào thì 3 ca chuyển sang nhóm "có thể khác": miR-378c (đã chứng minh nt 1–21, nghi ở nt 22/25), miR-4443 (1–15, nghi ở 16/17), miR-4791 (1–16, nghi ở 17/18).
+  - **Giới hạn chung:** nếu chỉ có lv3pT thì không kiểm được k nt cuối của tham chiếu. Giới hạn này cũng đúng với mọi miRNA không bị nghi.
 
 ## Tổng quan và đối chiếu số
 
@@ -46,19 +53,21 @@ Nguồn: `backend/data/known_3prime_isomir_mirnas.json` (isomiRdb) và `backend/
   - 112 biến thể khác ở giữa, thường đúng 1 nt. Ví dụ A→G ở vị trí 6 của miR-376a/b/c-3p, trông như RNA editing hoặc SNP.
 - **Nhãn lệch với độ lệch tính từ trình tự: 68 ca, đều là `nta`.** Ví dụ nhãn `nta#A#1` nhưng trình tự dài thêm 2–4 nt (theo khuôn + NTA). Nhãn lv3pT/lv3pE có tiền tố khớp: 0 ca lệch.
 - **Nghi tham chiếu khác: 179 miRNA**, gồm 175 miRNA có biến thể lệch 5′ hoặc khác ở giữa, và 5 miRNA có nhãn lv3p nhưng đuôi khác 22.1 (miR-4443 thuộc cả hai nhóm).
-  - Trong đó 91 miRNA có biến thể lv3p khớp đúng 22.1, tức tham chiếu là 22.1 và nhãn isomiRdb chỉ ghi thiếu.
-  - **Còn 88 miRNA "tham chiếu có thể khác 22.1".**
+  - Trong đó **88 miRNA được xác nhận**: một biến thể lv3p khớp đúng 22.1 phủ vị trí bị nghi. Ở các miRNA này tham chiếu là 22.1, chỉ là nhãn isomiRdb ghi thiếu (ví dụ nhãn `nta` bỏ tag 5′, hoặc lệch 1 nt kiểu editing/SNP mà không có nhãn `mv`).
+    - 25 ca xác nhận bằng lv3pE (phủ cả tham chiếu), 63 ca bằng lv3pT.
+    - Danh sách nằm trong JSON (`reference_check.confirmed`).
+  - **Còn 91 miRNA "tham chiếu có thể khác 22.1"**: 102 biến thể lệch 5′, 81 biến thể khác ở giữa, 4 biến thể có nhãn lv3p mà đuôi khác.
 
 ## 1.2 Lớp mức bắt
 
 | Lớp | Tất cả biến thể | Top 1 |
 |---|---|---|
-| `measured_range` | 1855 | 923 |
+| `measured_range` | 1853 | 922 |
 | `assumed_templated` | 313 | 58 |
-| `outside_measured_range` | 213 | 49 |
+| `outside_measured_range` | 211 | 48 |
 | `not_measured` | 243 | 39 |
 | `other` | 0 | 0 |
-| `not_assessed` | 303 | 108 |
+| `not_assessed` | 307 | 110 |
 | **Tổng** | **2927** | **1177** |
 
 ## Kiểm register của `rt_axis` ở overhang 5, 6 và 7 nt
@@ -76,7 +85,7 @@ Bốn ca lệch ở 5 nt đều do đầu 3′ lặp lại, nên một register 
 - miR-498-5p `…UUUUUC`: −2 nt.
 - miR-7-5p `…UUGUU`: −2 nt.
 
-Theo luật 2.1, bốn ca này xếp lớp `other` kèm lý do. Phần 2 có test cho cả ba độ dài overhang.
+Theo luật 2.1, bốn ca này xếp lớp `other` kèm lý do. Phần 2 có test cho cả ba độ dài overhang. Sau khi siết luật, 2 trong 1855 biến thể thuộc miRNA có tham chiếu không đánh giá, nên test đếm 1853.
 
 ## 1.3 Giả tạo ±2 nt của `rt_axis`
 
@@ -92,14 +101,18 @@ Theo luật 2.1, bốn ca này xếp lớp `other` kèm lý do. Phần 2 có tes
 | R1 `>` | 256 |
 | R1 `≥` | 257 |
 | R2, chưa loại ca tham chiếu nghi ngờ | 322 |
-| **R2 đã duyệt** (loại 18 miRNA tham chiếu có thể khác 22.1) | **304** — high 289, moderate 13, low 2 |
+| R2, luật B trước khi siết (loại 18 miRNA) | 304 |
+| **R2 đã duyệt** (loại 20 miRNA tham chiếu có thể khác 22.1) | **302** — high 287, moderate 13, low 2 |
 
-Lớp mức bắt của top 1 trong 304 ca: đo được 253, ngoài khoảng 19, `not_measured` 14, NTA giả định 13, `not_assessed` (ở mức biến thể) 5.
+- Lớp mức bắt của top 1 trong 302 ca: đo được 253, ngoài khoảng 18, `not_measured` 14, NTA giả định 13, `not_assessed` (ở mức biến thể) 4.
+- 322 − 302 = 20 miRNA bị loại, đúng bằng số ca vừa bật R2 vừa thuộc nhóm 91:
+  - 18 ca của luật B: miR-10399-3p, miR-10524-5p, miR-1246, miR-1260a, miR-1261, miR-1290, miR-2681-5p, miR-3118, miR-3123, miR-3142, miR-3162-3p, miR-3190-3p, miR-384, miR-4448, miR-4451, miR-4483, miR-4707-5p, miR-6129.
+  - 2 ca thêm do siết luật: miR-378c, miR-4791.
 
-## (a) 88 miRNA tham chiếu có thể khác 22.1 đang có cảnh báo cũ
+## (a) 91 miRNA tham chiếu có thể khác 22.1 đang có cảnh báo cũ
 
-- Cảnh báo 3′ mức high: **26**. Cờ fold-change: **31**. Có ít nhất một trong hai: **42**.
-- Danh sách 42 ca này và đủ 88 miRNA được ghi ở `AUDIT_REPORT.md` ISO-09 và trong JSON (`reference_check`).
+- Cảnh báo 3′ mức high: **28**. Cờ fold-change: **32**. Có ít nhất một trong hai: **44**.
+- Danh sách 44 ca này và đủ 91 miRNA được ghi ở `AUDIT_REPORT.md` ISO-09 và trong JSON (`reference_check`).
 - PR này không sửa các cảnh báo cũ.
 
 ## 1.5 Chín ca đã công bố

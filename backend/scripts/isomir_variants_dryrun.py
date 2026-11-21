@@ -22,7 +22,8 @@ Approved rules (owner, 2026-11-21):
     not_measured (no rt_axis call).
   - mlv3p / mv: relation "other", class not_measured.
   - miRNA whose isomiRdb reference may differ from 22.1 (a variant differs at the
-    5' end / inside, and no lv3pT/lv3pE variant matches 22.1 exactly — option B):
+    5' end / inside, and no lv3pT/lv3pE variant that matches 22.1 exactly covers the
+    questioned position — option B, tightened on 2026-11-21):
     no dominant-isoform warning; every variant not_assessed (the table shows one line).
   - any other variant differing from 22.1 at the 5' end or inside: relation
     "reference_mismatch", class not_assessed.
@@ -263,15 +264,21 @@ def main() -> None:
             caps = {str(oh): classify(target, var, lab, rel, oh) for oh in OVERHANGS}
             why = reference_suspect_reason(lab, rel)
             if why:
-                suspect.append({"rank": rank, "reason": why})
+                suspect.append({"rank": rank, "reason": why,
+                                "questioned_pos": _lcp(target, var) + 1})
             vs.append({"rank": rank, "sequence_rna": to_rna(var), "label": v["label"],
                        "pooled_share": v["pooled_share"], **lab, **rel,
                        "label_agrees_with_sequence": label_agrees(lab, rel),
                        "capture_before_override": caps[str(OVERHANG)],
                        "capture_by_overhang": caps})
-        # A templated-label variant that matches 22.1 exactly confirms the reference.
-        confirmed = any(v["kind"] in ("trimmed", "extended") and v["label_agrees_with_sequence"]
-                        for v in vs)
+        # A templated-label variant that matches 22.1 exactly proves the reference's first
+        # nt equal to 22.1: all of it for lv3pE, the first L-k nt for lv3pT#-k. The
+        # reference counts as confirmed only if that covers every questioned position
+        # (rule tightened by the owner, 2026-11-21: miR-378c, miR-4443, miR-4791).
+        covered = max([len(target) if v["kind"] == "extended" else len(target) + v["shift_3p"]
+                       for v in vs if v["kind"] in ("trimmed", "extended")
+                       and v["label_agrees_with_sequence"]] or [0])
+        confirmed = bool(suspect) and covered >= max(x["questioned_pos"] for x in suspect)
         ref_differs = bool(suspect) and not confirmed
         for v in vs:      # miRNA-level override (approved rule b, option B)
             v["capture"] = ({"relation": v["capture_before_override"]["relation"],
@@ -396,8 +403,11 @@ def main() -> None:
                                "inside the sequence, or carries a templated label (lv3pT/lv3pE) "
                                "while its 3' tail differs from 22.1; a labelled mismatch "
                                "variant (mv) does not count"),
-        "definition_may_differ": ("suspect AND no templated-label (lv3pT/lv3pE) variant matches "
-                                  "the 22.1 sequence exactly (option B, owner 2026-11-21)"),
+        "definition_may_differ": ("suspect AND no templated-label variant that matches 22.1 "
+                                  "exactly covers every questioned position (lv3pE covers the "
+                                  "whole reference, lv3pT#-k its first L-k nt) — option B, "
+                                  "tightened by the owner on 2026-11-21"),
+        "confirmed": sorted(n for n in sus_all if n not in sus),
         "n_suspect": len(sus_all),
         "n_suspect_confirmed_by_lv3p": len(sus_all) - len(sus),
         "n_reference_may_differ": len(sus),

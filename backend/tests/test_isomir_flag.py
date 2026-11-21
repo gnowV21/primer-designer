@@ -379,7 +379,7 @@ def test_rt_axis_register_matches_sequence_shift_at_5_6_7_nt():
                     else:
                         assert v["rt_capture"]["class"] == "measured_range"
         assert other == exp, oh
-        assert checked == 1855
+        assert checked == 1853      # 1855 minus 2 in miRNAs whose reference is not assessed
 
 
 def test_matches_dry_run_counts():
@@ -395,7 +395,11 @@ def test_matches_dry_run_counts():
             cls[c] = cls.get(c, 0) + 1
     assert {k: v for k, v in d["1_2_capture_class"]["final"].items() if v} == cls
     assert sum(cls.values()) == 2927
-    assert fired == d["1_4_rules"]["R2"]["n_fire"] == 304
+    assert fired == d["1_4_rules"]["R2"]["n_fire"] == 302
+    refs = {n for n in _all_names()
+            if _iso3.check_3prime_isomir_flag(n, 6)["reference_status"]
+            == "isomirdb_reference_may_differ"}
+    assert refs == set(d["reference_check"]["mirnas"]) and len(refs) == 91
 
 
 def test_stemloop_emits_dominant_warning_for_mir222():
@@ -404,3 +408,81 @@ def test_stemloop_emits_dominant_warning_for_mir222():
     assert "three_prime_isomir_dominant" in [w["field"] for w in sl["warnings"]]
     sl21 = design_stemloop_rt("UAGCUUAUCAGACUGAUGUUGA", {}, mirna_name="hsa-miR-21-5p")
     assert "three_prime_isomir_dominant" not in [w["field"] for w in sl21["warnings"]]
+
+
+# ── follow-up checks requested on 2026-11-21 ──────────────────────
+
+def test_nta_capture_class_follows_the_total_end_difference():
+    """nta#X#k whose tail is longer than k (templated nt, then NTA): the class goes by
+    the TOTAL 3' end difference; a tail > 2 nt is never assumed_templated."""
+    seen = {"le2": 0, "gt2": 0}
+    for n in _all_names():
+        for v in _variants(n):
+            if v["relation"] != "nta" or not v.get("templated_nt"):
+                continue
+            cls = v["rt_capture"]["class"]
+            if cls == "not_assessed":                 # reference not assessed
+                continue
+            if v["shift_3p"] <= 2:
+                seen["le2"] += 1
+                assert cls == "assumed_templated", (n, v["type_label"])
+            else:
+                seen["gt2"] += 1
+                assert cls == "outside_measured_range", (n, v["type_label"])
+                assert v["rt_capture"]["delta_cq_low"] is None
+    assert seen["le2"] > 0 and seen["gt2"] > 0
+
+
+def test_nta_label_on_3nt_tail_is_outside_measured_range():
+    """hsa-miR-1179: nta#A#1 on a 2-nt tail (UA) stays 'assumed like +2 nt'; an
+    artificial 3-nt tail with the same label must be outside the measured range."""
+    lab = {"kind": "nta", "label_shift": 1}
+    t = "TAGCTTATCAGACTGATGTTGA"
+    for tail, cls in (("TA", "assumed_templated"), ("TTA", "outside_measured_range"),
+                      ("TTTA", "outside_measured_range")):
+        rel = _iso3._seq_relation(t, t + tail)
+        out = _iso3._classify(t, t + tail, lab, rel, 6)
+        assert out["rt_capture"]["class"] == cls, tail
+        assert out["templated_nt"] == len(tail) - 1 and out["added_nt"] == "A"
+
+
+def test_reference_confirmation_must_cover_the_questioned_position():
+    """A lv3pT#-k variant proves only the first L-k nt of isomiRdb's reference; it
+    does not clear a variant that differs further 3' (miR-378c, miR-4443, miR-4791)."""
+    for n in ("hsa-miR-378c", "hsa-miR-4443", "hsa-miR-4791"):
+        r = _iso3.check_3prime_isomir_flag(n, 6)
+        assert r["reference_status"] == "isomirdb_reference_may_differ", n
+        assert r["dominant_isoform_risk"] is False
+    assert _iso3.check_3prime_isomir_flag("hsa-miR-133a-3p", 6)["reference_status"] == "matches"
+
+
+@pytest.fixture
+def _client():
+    from app import app
+    app.config["TESTING"] = True
+    return app.test_client()
+
+
+def test_design_with_pasted_sequence_compares_variants_with_it(_client):
+    """A named design whose pasted sequence is not the 22.1 entry: the variant table
+    is computed against the PASTED sequence (miR-877-5p typed as the 24-nt GACA form,
+    Schamberger 2014), and nothing is assessed against the 22.1 end."""
+    pasted = "GUAGAGGAGAUGGCGCAGGGGACA"                 # 22.1 is GUAGAGGAGAUGGCGCAGGG
+    r = _client.post("/api/design", json={"sequence": {
+        "matureSequence": pasted, "mirnaName": "hsa-miR-877-5p"}})
+    assert r.status_code == 200
+    body = r.get_json()
+    assert any(w["field"] == "sequence_not_in_mirbase_release"
+               for w in body.get("global_warnings", []))
+    tpi = body["stemloop_rt"]["three_prime_isomir"]
+    assert tpi["reference_status"] == "design_sequence_differs"
+    assert tpi["reference_note"] == "design sequence differs from miRBase 22.1 — not assessed"
+    assert tpi["dominant_isoform_risk"] is False
+    vs = tpi["dominant_3prime_variants"]
+    # isomiRdb top 3 are 23, 22 and 24 nt: +3/+2/+4 against 22.1, but -1/-2/0 here
+    assert [len(v["sequence_dna"]) for v in vs] == [23, 22, 24]
+    assert [v["shift_3p"] for v in vs] == [-1, -2, 0]
+    assert vs[2]["relation"] == "same_as_target"
+    assert {v["rt_capture"]["class"] for v in vs} == {"not_assessed"}
+    fields = [w["field"] for w in body["stemloop_rt"]["warnings"]]
+    assert "three_prime_isomir_dominant" not in fields

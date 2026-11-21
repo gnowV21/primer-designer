@@ -283,7 +283,9 @@ def _parse_label(label: str | None) -> dict:
 def _seq_relation(target: str, var: str) -> dict:
     """Variant vs target by sequence alone (DNA). seq: 'trimmed' / 'extended' / 'same'
     (full 5' prefix shared), 'tail_replaced' (diverges only in the target's last
-    _TAIL_MAX nt: trimmed_nt removed, `added` appended), '5p_offset', 'internal'."""
+    _TAIL_MAX nt: trimmed_nt removed, `added` appended), '5p_offset', 'internal'.
+    first_diff: 1-based first target position the variant does not match (the last
+    three kinds only)."""
     shift = len(var) - len(target)
     p = 0
     while p < min(len(var), len(target)) and var[p] == target[p]:
@@ -296,30 +298,39 @@ def _seq_relation(target: str, var: str) -> dict:
                 "added": _rna(var[len(target):])}
     if p >= len(target) - _TAIL_MAX:
         return {"seq": "tail_replaced", "shift_3p": shift, "trimmed_nt": len(target) - p,
-                "added": _rna(var[p:])}
+                "added": _rna(var[p:]), "first_diff": p + 1}
     for off in (1, -1, 2, -2, 3, -3):
         lo = max(0, -off)
         hi = min(len(target), len(var) - off, lo + _ANCHOR)
         if hi - lo >= 10 and all(var[i + off] == target[i] for i in range(lo, hi)):
             return {"seq": "5p_offset", "shift_3p": shift - off, "trimmed_nt": None,
-                    "added": None}
-    return {"seq": "internal", "shift_3p": shift, "trimmed_nt": None, "added": None}
+                    "added": None, "first_diff": p + 1}
+    return {"seq": "internal", "shift_3p": shift, "trimmed_nt": None, "added": None,
+            "first_diff": p + 1}
 
 
-def _is_reference_suspect(lab: dict, rel: dict) -> bool:
-    """A variant that hints that isomiRdb's reference is not the target sequence: it
-    differs at the 5' end or inside, or a templated label sits on a different 3' tail.
-    A labelled mismatch variant (mv) is expected to differ."""
+def _suspect_position(lab: dict, rel: dict) -> int | None:
+    """Target position (1-based) that a variant calls into question when it hints that
+    isomiRdb's reference is not the target: it differs at the 5' end or inside, or a
+    templated label sits on a different 3' tail. A labelled mismatch variant (mv) is
+    expected to differ. None = no hint."""
     if lab["kind"] == "mv":
-        return False
-    return rel["seq"] in ("5p_offset", "internal") or (
-        lab["kind"] in ("trimmed", "extended") and rel["seq"] == "tail_replaced")
+        return None
+    if rel["seq"] in ("5p_offset", "internal") or (
+            lab["kind"] in ("trimmed", "extended") and rel["seq"] == "tail_replaced"):
+        return rel["first_diff"]
+    return None
 
 
-def _confirms_reference(lab: dict, rel: dict) -> bool:
-    """A templated variant (lv3pT/lv3pE) that matches the target exactly."""
-    return (lab["kind"] in ("trimmed", "extended") and rel["seq"] == lab["kind"]
-            and lab["label_shift"] == rel["shift_3p"])
+def _confirmed_length(lab: dict, rel: dict, target_len: int) -> int:
+    """How many 5' nt of isomiRdb's reference a variant proves equal to the target.
+
+    lv3pE#k that is the target + k nt → reference = target (all of it). lv3pT#-k that
+    is the target minus its last k nt → only the first L−k nt (the reference's last k
+    nt are not seen). Anything else proves nothing (0)."""
+    if lab["kind"] not in ("trimmed", "extended") or rel["seq"] != lab["kind"]             or lab["label_shift"] != rel["shift_3p"]:
+        return 0
+    return target_len if lab["kind"] == "extended" else target_len + rel["shift_3p"]
 
 
 def _capture(cls: str, label: str, note: str | None, key: str | None = None) -> dict:
@@ -343,7 +354,10 @@ def _classify(target: str, var: str, lab: dict, rel: dict, overhang_len: int) ->
     if lab["kind"] in ("mlv3p", "mv", "unknown"):
         return {"relation": "other", "type_label": "other",
                 "rt_capture": _capture("not_measured", "not measured", _MIXED_NOTE)}
-    if sr in ("5p_offset", "internal", "same") or (
+    if sr == "same":       # only when the design sequence is not the 22.1 entry
+        return {"relation": "same_as_target", "type_label": "same as design sequence",
+                "rt_capture": _capture("not_assessed", "not assessed", _VARIANT_DIFFERS_NOTE)}
+    if sr in ("5p_offset", "internal") or (
             lab["kind"] in ("trimmed", "extended") and sr == "tail_replaced"):
         return {"relation": "reference_mismatch", "type_label": "differs from miRBase 22.1",
                 "rt_capture": _capture("not_assessed", "not assessed", _VARIANT_DIFFERS_NOTE)}
@@ -415,16 +429,20 @@ def assess_3prime_variants(mirna_name: str, variants: list, overhang_len: int,
     if not target:
         return {"variants": [dict(v) for v in variants], "reference_status": "unknown",
                 "reference_note": None}
-    out, suspect, confirmed = [], False, False
+    # The reference counts as confirmed only if a templated variant that matches the
+    # target covers every position questioned by another variant (owner, 2026-11-21).
+    out, questioned, confirmed = [], [], 0
     for v in variants:
         var = _dna(v.get("sequence_dna"))
         lab, rel = _parse_label(v.get("label")), _seq_relation(target, var)
-        suspect = suspect or _is_reference_suspect(lab, rel)
-        confirmed = confirmed or _confirms_reference(lab, rel)
+        pos = _suspect_position(lab, rel)
+        if pos is not None:
+            questioned.append(pos)
+        confirmed = max(confirmed, _confirmed_length(lab, rel, len(target)))
         out.append({**v, "shift_3p": rel["shift_3p"],
                     **_classify(target, var, lab, rel, overhang_len)})
     status = ("design_sequence_differs" if ref and target != ref
-              else "isomirdb_reference_may_differ" if suspect and not confirmed
+              else "isomirdb_reference_may_differ" if questioned and max(questioned) > confirmed
               else "matches")
     note = REFERENCE_NOTES.get(status)
     if note:                       # the table shows this one line instead
