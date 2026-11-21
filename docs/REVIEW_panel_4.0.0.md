@@ -505,3 +505,33 @@ Giao thức QĐ 24c: cắm sạc, không có Vite, Playwright hay python/blastn 
 
 - Top 3 của 20 thiết kế đo thời gian trùng Bước 1 ở cả hai lượt.
 - Số thời gian trong `docs/THESIS_FREEZE_4.0.0.md` không sửa.
+
+### Bằng chứng cho bản tham chiếu đã sửa (200 hsa)
+
+Phép so: bản tham chiếu **gốc** (tạo ngày 2026-11-19, trước PR #22, chưa thay chuỗi) với output Bước 2, so từng trường, cả trạng thái của bản ghi.
+
+| Trường | Số bản ghi khác | Chuỗi cũ → mới |
+|---|---|---|
+| `specificity_warnings.data_note` | 186 / 200 | "isoMiR data: curated from literature (**7** entries, partial coverage)" → "(**8** entries, partial coverage)" |
+
+- Không có trường nào khác bị lệch, không có giá trị không phải chuỗi bị lệch, và chỉ có đúng 1 cặp chuỗi cũ → mới.
+- 14 bản ghi còn lại là thiết kế trả lỗi, không có `data_note`.
+- Bản tham chiếu đã sửa được commit tại `benchmark/logs/design_equivalence_ref_hsa200.jsonl`; dòng ghi nguồn gốc nằm ở `design_equivalence_ref_hsa200.md`.
+  - Bản này được tạo bằng cách thay đúng chuỗi trên ở 186 chỗ, ghi ở chế độ nhị phân để giữ LF.
+  - Nó **trùng từng byte** với output Bước 2.
+
+### E2E
+
+`npx playwright test`, chạy với cả hai dev server và máy cắm sạc: **109/109 passed** trong 1,7 phút, không có lần thử lại.
+- `global-setup` làm nóng cache: miR-21-5p 2,0 s, let-7a-5p 1,9 s, miR-590-3p 1,0 s.
+- Khi tắt server thì thấy 12 worker của pool phân loại (Bước 3) còn sống sau khi tiến trình Flask bị dừng cưỡng bức, và mình đã tắt tay.
+  - Lúc tắt bình thường (Ctrl+C) thì pool được đóng.
+  - Đây chỉ là chuyện dọn dẹp tiến trình; output không bị ảnh hưởng.
+
+### Provenance
+
+`freeze_pipeline.provenance()` ghi thêm `env_BLAST_USAGE_REPORT`: giá trị mà `blast_subprocess_env()` trả về, tức "false" trừ khi người dùng tự đặt. Có test tương ứng trong `tests/test_blast_usage_report.py` (thêm 2 test, tổng 9).
+
+### Đóng kế hoạch
+
+**Kế hoạch tăng tốc 2 đóng ngày 2026-11-21; Bước 3–5 không làm vì lợi ≤ 1,4 s, không đáng rủi ro sau tag.**

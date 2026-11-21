@@ -64,3 +64,19 @@ def test_build_script_env(monkeypatch):
                                                      "BLAST_USAGE_REPORT": "false"}
     monkeypatch.setenv("BLAST_USAGE_REPORT", "true")
     assert build_blast_db._blast_env()["BLAST_USAGE_REPORT"] == "true"
+
+
+@pytest.mark.parametrize("user_value, recorded", [(None, "false"), ("true", "true")])
+def test_freeze_provenance_records_usage_report(monkeypatch, user_value, recorded):
+    """freeze_pipeline.provenance() records the value blast_subprocess_env() gives."""
+    import shutil
+    if not shutil.which("blastn") or not bo._db_exists(bo._MIRBASE_DB):
+        pytest.skip("BLAST+ or the miRBase BLAST DB not available")
+    import freeze_pipeline
+    if user_value is None:
+        monkeypatch.delenv("BLAST_USAGE_REPORT", raising=False)
+    else:
+        monkeypatch.setenv("BLAST_USAGE_REPORT", user_value)
+    prov = freeze_pipeline.provenance()
+    assert prov["env_BLAST_USAGE_REPORT"] == recorded
+    assert "env_BLAST_CACHE_DISABLED" in prov

@@ -83,6 +83,8 @@ def provenance() -> dict:
         "blast_db_metadata": db_meta,
         "blast_db_files_sha256": h.hexdigest(),
         "env_BLAST_CACHE_DISABLED": os.environ.get("BLAST_CACHE_DISABLED"),
+        # what every BLAST+ subprocess of the run gets ("false" unless the user set it)
+        "env_BLAST_USAGE_REPORT": blast_subprocess_env().get("BLAST_USAGE_REPORT"),
         "env_SCORING_SYSTEM": os.environ.get("SCORING_SYSTEM"),
     }
 

@@ -135,3 +135,19 @@ Bước của khóa xếp hạng quyết định #1 đứng trên #2, tính trê
 ## 5. Sau tag
 - Chỉ sửa lỗi không đổi output. Muốn kiểm tra thì chạy lại `freeze_pipeline.py` và so với bản đã commit (`git diff --stat` phải rỗng, trừ ngày chạy và thống kê cache).
 - Wet-lab: xem `docs/WETLAB_CANDIDATES.md` (Phần 5 của PROMPT, chờ chủ dự án chốt danh sách ứng viên).
+
+## 6. Sau tag: hiệu năng
+
+Phần này chỉ thêm thông tin; mọi số ở các mục trên giữ nguyên.
+
+- **Số ở §3 giữ nguyên.** Thời gian 9,8 s / 11,9 s ở §3 được đo khi BLAST+ còn gửi báo cáo sử dụng về NCBI.
+- **Sau PR #20 và PR #23:**
+  - PR #20 chạy phân loại hit song song.
+  - PR #23 đặt `BLAST_USAGE_REPORT=false`.
+  - Đo cùng giao thức (20 hsa, seed 2026, không cache): p50 / p90 = **5,02 / 6,21 s**, và 0/20 thiết kế treo quá 20 s.
+- **Output vẫn trùng bản đóng băng:**
+  - 200 hsa với cache trống: 0/200 bản ghi khác;
+  - validation: 2439/2439;
+  - `ALGORITHM_VERSION` vẫn là 4.0.0.
+
+Chi tiết ở `docs/REVIEW_panel_4.0.0.md` §9–11.
