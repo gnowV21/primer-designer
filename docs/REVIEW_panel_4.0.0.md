@@ -535,3 +535,27 @@ Phép so: bản tham chiếu **gốc** (tạo ngày 2026-11-19, trước PR #22,
 ### Đóng kế hoạch
 
 **Kế hoạch tăng tốc 2 đóng ngày 2026-11-21; Bước 3–5 không làm vì lợi ≤ 1,4 s, không đáng rủi ro sau tag.**
+
+## 12. Worker của pool phân loại bị mồ côi (2026-11-21, nhánh `fix/pool-orphan-workers`)
+
+**Lỗi:** tiến trình sở hữu pool phân loại (Flask, hoặc một script) bị dừng cưỡng bức thì một phần worker vẫn chạy mãi.
+- Khi tắt server sau lượt E2E ở §11 còn 12 worker.
+- Khi dựng lại với pool 3 worker thì còn 1/3 sau 15 s.
+
+**Nguyên nhân:** mỗi worker chờ trên hàng đợi lệnh của pool, mà chính nó cũng giữ mở pipe của hàng đợi đó. Vì vậy khi tiến trình cha chết, worker không nhận được EOF. Tắt bình thường (Ctrl+C, `shutdown`) thì không gặp lỗi này.
+
+**Sửa:**
+- Initializer của pool là `_exit_with_parent` (`blast_offtarget.py`). Nó khởi một luồng daemon chờ `multiprocessing.parent_process()` kết thúc rồi gọi `os._exit(0)`.
+- Không đổi phần tính toán, `ALGORITHM_VERSION` hay khóa cache BLAST.
+
+**Kiểm tra:**
+
+| | Kết quả |
+|---|---|
+| Dựng lại lỗi, pool 3 worker, kill tiến trình sở hữu | trước: 1/3 worker còn sống sau 15 s; sau: 0/3 sau 1 s (3 lần) |
+| Flask thật, cache tắt, 1 thiết kế rồi dừng cưỡng bức | 13 tiến trình con; 0/13 còn sống sau 3 s; cổng 5000 trống |
+| Test mới `test_workers_exit_when_owner_is_killed` | fail khi chưa sửa (1 worker còn sống), pass khi đã sửa |
+| 200 hsa, cache BLAST trống, đi qua pool | **trùng từng byte** với `benchmark/logs/design_equivalence_ref_hsa200.jsonl`; bộ #1 trùng bản đóng băng 200/200 (887 s) |
+| Test backend | 951 passed, 3 skipped |
+
+**Ngoài phạm vi:** các script offline dùng `mp.Pool` (`crossreactivity/design_all.py`, `build_matrix.py`, một số script trong `backend/scripts/`) chưa được kiểm với trường hợp bị kill cưỡng bức.
