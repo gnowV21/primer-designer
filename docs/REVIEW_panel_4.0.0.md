@@ -558,4 +558,31 @@ Phép so: bản tham chiếu **gốc** (tạo ngày 2026-11-19, trước PR #22,
 | 200 hsa, cache BLAST trống, đi qua pool | **trùng từng byte** với `benchmark/logs/design_equivalence_ref_hsa200.jsonl`; bộ #1 trùng bản đóng băng 200/200 (887 s) |
 | Test backend | 951 passed, 3 skipped |
 
-**Ngoài phạm vi:** các script offline dùng `mp.Pool` (`crossreactivity/design_all.py`, `build_matrix.py`, một số script trong `backend/scripts/`) chưa được kiểm với trường hợp bị kill cưỡng bức.
+### Các script offline dùng `mp.Pool` khi bị kill (2026-11-21, chỉ đọc)
+
+**Kết luận: không sửa.** Sau khi tiến trình cha bị kill, worker làm nốt phần việc đang nhận rồi tự thoát. Kết quả chúng ghi ra trong lúc đó đều đúng.
+
+Cách thử:
+- Script `kill_check.py` (trong scratchpad, không commit) dừng tiến trình cha bằng TerminateProcess khi các worker đã chạy.
+- Mọi cache và output đều trỏ vào thư mục trống trong scratchpad.
+
+| Phép thử | Worker còn sống | Sau khi kill, worker còn làm gì |
+|---|---|---|
+| `mp.Pool` tối thiểu, việc 0,5 s (2 lần) | 0/4 sau 1 s | — |
+| `design_all`, 4 worker, cache trống (3 lần) | 4/4 sau 60 s, 0/4 trước mốc 120 s | Chạy hết chunk đang có (`chunksize=4`) và ghi 1460 mục vào cache BLAST trong 1–2 phút sau khi kill |
+| `build_matrix`, 4 worker, bản sao cache đóng băng đã xóa block | 2/4 sau 5 s, 0/4 sau 15 s | Ghi xong 4 block, không còn `.part`; cả 4 trùng từng byte với block của bản đóng băng |
+
+**Vì sao khác `ProcessPoolExecutor` (phần trên của §12):**
+- Worker `ProcessPoolExecutor` đang rảnh thì chờ mãi trên hàng đợi lệnh.
+- Worker `mp.Pool` chỉ phát hiện tiến trình cha đã mất khi gửi kết quả về. Vì vậy nó sống thêm đúng bằng thời gian làm nốt phần việc đang có:
+  - `design_all`, `scoring_weight_sensitivity`, `ui_top3_dump`: 4 thiết kế mỗi chunk;
+  - `thesis_freeze_impact`, `tiered_scoring_dryrun` (phần thiết kế): 2;
+  - `build_matrix`, `blast_batch_equivalence`, `tiered_stage2_report`: 1.
+- Chỉ đo thật `design_all` và `build_matrix`; thời gian của các script còn lại được suy từ chunksize.
+
+**Kết quả không bị ảnh hưởng:**
+- **Cache BLAST:** mục do worker mồ côi ghi là kết quả đúng. Cache dùng WAL và chờ khóa 60 s, vốn dành cho nhiều tiến trình cùng ghi.
+- **Block ma trận:** được ghi vào `.part` rồi mới `os.replace`, nên lần chạy sau không đọc phải block dở dang.
+- **Thiết kế của chunk bị kill:** không vào `designs_<species>.jsonl` (file này do tiến trình cha ghi). Lần chạy sau sẽ thiết kế lại các miRNA đó.
+
+**Hậu quả còn lại:** nếu chạy lại ngay sau khi kill thì trong khoảng 1–2 phút đầu sẽ tốn thêm CPU. Không thêm cơ chế thoát theo tiến trình cha cho các script này: nó sẽ dừng worker giữa lúc đang ghi cache, đổi một phiền toái nhỏ lấy rủi ro mới cho các script dùng để sinh số liệu khóa luận.
