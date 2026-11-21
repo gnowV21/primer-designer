@@ -113,6 +113,28 @@ Bước của khóa xếp hạng quyết định #1 đứng trên #2, tính trê
 - **D-3:** khung đọc của RT và FWD được chọn độc lập (cách bảo thủ), nên ngầm cho phép indel bên trong phân tử. Ví dụ miR-30b ↔ 30c cho R = 1.
 - **D-4:** ΔCq_FWD có trần 8,3 Cq (Stadhouders 2010), nên R của cặp mà RT bắt được nhưng FWD không bám không bao giờ dưới 0,32 % (đỉnh LOW của histogram).
 - **ISO-05:** chưa ghép isomiRdb với mô hình ΔCq; cảnh báo isomiR 3′ chỉ định tính (n = 2 miRNA đo được).
+- **ISO-08:** `rt_axis` chỉ thử register lệch ±2 nt ở đầu 3′. Với hai mục miRBase mà một mục bằng mục kia cộng thêm ≥ 3 nt ở đầu 3′, nó không tới được register mà overhang khớp hoàn toàn, nên gán 7,75–8,0 Ct. Chưa có số đo qPCR cho lệch ≥ 3 nt, nên không sửa trong 4.0.0: sửa thì phải tự đặt một ΔCq. Kiểm chỉ đọc (`backend/scripts/iso08_pairs.py` → `benchmark/iso08_pairs.json`): trên 2656 mục hsa có 8 cặp (7 cặp trình tự khác nhau), tức 16 cặp có hướng thuộc 15 thiết kế. Ma trận xếp cả 16 cặp ở mức LOW. Ở 12/16 cặp, mục này quyết định min ΔCq của S2, và 1 cặp bằng điểm, nên S2 và grade của các thiết kế dưới đây có thể lạc quan quá. Phần lớn là tên trùng hoặc mục cùng locus. Đường hiển thị isoform không dùng `rt_axis` cho lệch > 2 nt (§7).
+
+  | Đích (thiết kế) | Mục miRBase | Lệch 3′ của mục (nt) | ΔCq_RT | Mục quyết định min S2? | Grade |
+  |---|---|---|---|---|---|
+  | hsa-miR-151b | hsa-miR-151a-5p | +3 | 8,0 | có | A |
+  | hsa-miR-151a-5p | hsa-miR-151b | −3 | 8,0 | có | A |
+  | hsa-miR-3155b | hsa-miR-3155a | +3 | 8,0 | có | A |
+  | hsa-miR-3155a | hsa-miR-3155b | −3 | 7,75 | có | A |
+  | hsa-miR-3180 | hsa-miR-3180-3p | +3 | 8,0 | có | B |
+  | hsa-miR-3180-3p | hsa-miR-3180 | −3 | 8,0 | có | B |
+  | hsa-miR-548ap-3p | hsa-miR-548aa | +6 | 8,0 | có | B |
+  | hsa-miR-548aa | hsa-miR-548ap-3p | −6 | 8,0 | có | A |
+  | hsa-miR-548ap-3p | hsa-miR-548t-3p | +6 | 8,0 | bằng điểm (với 548aa, cùng trình tự) | B |
+  | hsa-miR-548t-3p | hsa-miR-548ap-3p | −6 | 8,0 | có | A |
+  | hsa-miR-548ap-5p | hsa-miR-548j-5p | +3 | 8,0 | không (548ar-5p, 7,0) | B |
+  | hsa-miR-548j-5p | hsa-miR-548ap-5p | −3 | 8,0 | không (548au-5p, 5,05) | B |
+  | hsa-miR-548av-5p | hsa-miR-548k | +4 | 8,0 | có | B |
+  | hsa-miR-548k | hsa-miR-548av-5p | −4 | 8,0 | có | B |
+  | hsa-miR-550a-3-5p | hsa-miR-550a-5p | +3 | 8,0 | không (550b-2-5p, 3,5) | B |
+  | hsa-miR-550a-5p | hsa-miR-550a-3-5p | −3 | 8,0 | có | A |
+
+  "Lệch 3′ của mục": dương khi mục dài hơn đích, âm khi ngắn hơn. 16 cặp thuộc 15 thiết kế (7 grade A, 8 grade B): miR-548ap-3p có hai dòng vì miR-548aa và miR-548t-3p cùng trình tự. Khi mục không quyết định min S2, dấu ngoặc ghi mục quyết định thật và ΔCq của nó.
 - Chỉ mục họ / overhang chú giải đủ cho hsa/mmu/rno. Ở loài khác, paralog không được gộp.
 - miRBase 22.1, chưa nâng lên 23.1. miR-155-5p dài 24 nt là chú giải đúng của 22.1 (REV-28).
 

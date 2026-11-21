@@ -163,6 +163,7 @@
 - BLAST: phân tích độ nhạy biên CRITICAL (3/5/7 °C) — biên này mới quyết định số CRITICAL.
 - ~~Bug dữ liệu miR-155-5p 24 nt~~ — không phải lỗi: miRBase 22.1 chú giải MIMAT0000646 dài 24 nt (AUDIT REV-28).
 - ~~BLAST: thay ngưỡng neo 10 nt bằng cổng Tm~~ — xong 2026-10-28 (so với Tm đúng đích, không phải Ta: SPEC_phase3 §8.13).
+- **ISO-08** — mở rộng register `rt_axis` lên lệch ≥ 3 nt với lớp `not_measured`; làm cùng lần nâng miRBase 23.1 hoặc khi có dữ liệu. Hiện là giới hạn đã biết: 16 cặp có hướng trên hsa (`benchmark/iso08_pairs.json`, `docs/THESIS_FREEZE_4.0.0.md` §4).
 - Self-host font IBM Plex (đang dùng Google Fonts CDN).
 - Family lookup dựa vào tên → dán trình tự trần không tìm được family.
 
