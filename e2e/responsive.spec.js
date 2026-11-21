@@ -67,6 +67,28 @@ for (const width of [320, 360, 390]) {
   }
 }
 
+// The 3′ isoform table inside the isomiR "Why" (isomiRdb, pooled) fits at phone widths.
+for (const width of [360, 390]) {
+  for (const name of ['hsa-miR-21-5p', 'hsa-miR-222-3p']) {
+    test(`/results ${name} at ${width} px: 3′ isoform table fits`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto('/design');
+      await page.getByPlaceholder(PLACEHOLDER).fill(WARM_MIRNAS.find((m) => m.name === name).sequence);
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
+        if (b) b.click();
+      });
+      const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+      await expect(designBtn).toBeEnabled({ timeout: 8000 });
+      await designBtn.click();
+      await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });
+      await page.getByTestId('isomir-note').getByText('Why').click();
+      await expect(page.getByTestId('isomir-table')).toBeVisible();
+      expect(await horizontalOverflow(page)).toEqual({ main: 0, nav: 0 });
+    });
+  }
+}
+
 test('unknown address shows a not-found page with a way back', async ({ page }) => {
   await page.goto('/no-such-page');
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();

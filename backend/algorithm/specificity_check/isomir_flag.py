@@ -173,6 +173,11 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = OVERHANG_LENGT
                                       overhang_len, target_seq)
     dominant = _dominant_isoform_warning(mirna_name, assessed, canonical, overhang_len,
                                          base["sample_type_note"])
+    short = None
+    if dominant:
+        top_pct, can_pct = _pct_pair(assessed["variants"][0]["pooled_share"], canonical)
+        short = (f"most common 3′ form {assessed['variants'][0]['type_label']}, {top_pct} of "
+                 f"reads (pooled) vs {can_pct} with the miRBase end")
     return {
         **base,
         "three_prime_isomir_risk": level == "high",
@@ -191,6 +196,8 @@ def check_3prime_isomir_flag(mirna_name: str, overhang_len: int = OVERHANG_LENGT
         "reference_note": assessed["reference_note"],
         "dominant_isoform_risk": dominant is not None,
         "dominant_isoform_warning": dominant,
+        "dominant_isoform_short": short,
+        "canonical_end_rna": assessed.get("canonical_end_rna"),
         "rt_capture_impact": level,
         "fold_change_bias_risk": bias is not None,
         "fold_change_bias_warning": bias,
@@ -440,7 +447,8 @@ def assess_3prime_variants(mirna_name: str, variants: list, overhang_len: int,
             questioned.append(pos)
         confirmed = max(confirmed, _confirmed_length(lab, rel, len(target)))
         out.append({**v, "shift_3p": rel["shift_3p"],
-                    **_classify(target, var, lab, rel, overhang_len)})
+                    **_classify(target, var, lab, rel, overhang_len),
+                    **_end_display(target, var, rel)})
     status = ("design_sequence_differs" if ref and target != ref
               else "isomirdb_reference_may_differ" if questioned and max(questioned) > confirmed
               else "matches")
@@ -448,7 +456,24 @@ def assess_3prime_variants(mirna_name: str, variants: list, overhang_len: int,
     if note:                       # the table shows this one line instead
         for v in out:
             v["rt_capture"] = _capture("not_assessed", "not assessed", note)
-    return {"variants": out, "reference_status": status, "reference_note": note}
+    return {"variants": out, "reference_status": status, "reference_note": note,
+            "canonical_end_rna": _rna(target[-_END_WINDOW:])}
+
+
+_END_WINDOW = 5     # nt of the target's 3' end shown in the isoform table
+
+
+def _end_display(target: str, var: str, rel: dict) -> dict:
+    """The variant's 3' end for the table (RNA): from the same start as the target's
+    last _END_WINDOW nt, and the index where it stops matching the target (null when it
+    only ends earlier). A variant that differs at the 5' end or inside shows its own
+    last nt, unaligned."""
+    start = max(0, len(target) - _END_WINDOW)
+    if rel["seq"] in ("5p_offset", "internal"):
+        return {"end_rna": _rna(var[-(_END_WINDOW + 2):]), "end_diff_at": None}
+    tail = _rna(var[start:])
+    diff = rel.get("first_diff", len(target) + 1) - 1 if rel["seq"] == "tail_replaced"         else len(target)
+    return {"end_rna": tail, "end_diff_at": (diff - start) if diff - start < len(tail) else None}
 
 
 def _capture_phrase(cap: dict) -> str:
@@ -467,6 +492,13 @@ def _capture_phrase(cap: dict) -> str:
     return "not assessed"
 
 
+def _pct_pair(a: float, b: float) -> tuple[str, str]:
+    """Whole percents, or one decimal when the whole percents would read the same
+    (miR-27b-3p: 0.380 vs 0.381 → '38.0%' vs '38.1%', not '38%' vs '38%')."""
+    fa, fb = f"{a:.0%}", f"{b:.0%}"
+    return (f"{a:.1%}", f"{b:.1%}") if fa == fb else (fa, fb)
+
+
 def _dominant_isoform_warning(mirna_name: str, assessed: dict, canonical: float | None,
                               overhang_len: int, sample_type_note: str | None) -> str | None:
     """Rule R2 (owner, 2026-11-21): the most common 3' isoform's pooled share is
@@ -479,10 +511,11 @@ def _dominant_isoform_warning(mirna_name: str, assessed: dict, canonical: float 
     top = vs[0]
     if top["pooled_share"] < ISOMIR_DOMINANT_RATIO * canonical - 1e-9:
         return None
+    top_pct, can_pct = _pct_pair(top["pooled_share"], canonical)
     return (
         f"Dominant 3' isoform: the most common 3' form of {mirna_name} in isomiRdb is "
-        f"{top['type_label']} ({top['pooled_share']:.0%} of reads, pooled), against "
-        f"{canonical:.0%} (pooled) with the miRBase 22.1 3' end. The RT primer's "
+        f"{top['type_label']} ({top_pct} of reads, pooled), against "
+        f"{can_pct} (pooled) with the miRBase 22.1 3' end. The RT primer's "
         f"{overhang_len}-nt overhang pairs with the miRBase 22.1 3' end; this isoform is "
         f"{_capture_phrase(top['rt_capture'])}. The measured value can therefore follow "
         "the reference form more than the dominant one: if the isoform mix differs between "

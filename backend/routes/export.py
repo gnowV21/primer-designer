@@ -313,6 +313,15 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         if tpi.get("median_3prime_fraction") is not None:
             writer.writerow(["three_prime_isomir_median_fraction", tpi["median_3prime_fraction"]])
             writer.writerow(["three_prime_isomir_source", tpi.get("source", "")])
+            writer.writerow(["three_prime_isomir_dominant_risk",
+                             str(tpi.get("dominant_isoform_risk", False))])
+            writer.writerow(["three_prime_canonical_share_pooled",
+                             tpi.get("canonical_3prime_share_pooled", "")])
+            # one row per top-3 isomiRdb variant: sequence|relation|pooled share|capture class
+            for i, v in enumerate(tpi.get("dominant_3prime_variants") or [], 1):
+                writer.writerow([f"three_prime_isomir_variant_{i}", "|".join(str(x) for x in (
+                    v.get("sequence_dna", ""), v.get("relation", ""), v.get("pooled_share", ""),
+                    (v.get("rt_capture") or {}).get("class", "")))])
 
     if include_checklist:
         _append_checklist_csv(writer, buf, results, blast_result)
@@ -580,6 +589,9 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
             # 3' isomiRs (isomiRdb): a warning when the canonical 3' form is a minority.
             text = tpi.get("warning") or tpi.get("summary")
             notes.append(f"<b>3' isomiRs:</b> {esc(text)} Source: {esc(str(tpi.get('source', '')))}.")
+        if tpi.get("dominant_isoform_risk") and tpi.get("dominant_isoform_warning"):
+            notes.append(f"<b>Dominant 3' isoform:</b> "
+                         f"{esc(_pdf_text(tpi['dominant_isoform_warning']))}")
         oc_rows, oc_interp = _overhang_axis_summary(results)
         if oc_interp:
             oc = results.get("specificity_warnings", {}).get("overhang_collision", {})
@@ -598,6 +610,8 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
             story.append(Paragraph("Scientific notes", h3))
             for n in notes:
                 story.append(Paragraph(f"• {n}", body))
+        story.extend(_isoform_pdf_table(tpi, h3, body, teal, rl_colors, Paragraph, Table,
+                                        TableStyle, ParagraphStyle, cm))
         story.append(Spacer(1, 0.4*cm))
 
     # ── Comparison table (Tab A summary) ─────────────────────────
@@ -927,6 +941,58 @@ def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, bl
 
 
 # ── Scientific-content helpers (shared by CSV + PDF) ──────────────
+
+_PDF_GLYPHS = {"−": "-", "′": "'", "≥": ">=", "≤": "<="}
+
+
+def _pdf_text(text: str) -> str:
+    """Glyphs the built-in PDF fonts (WinAnsi) lack: minus sign, prime, >=, <=."""
+    for a, b in _PDF_GLYPHS.items():
+        text = text.replace(a, b)
+    return text
+
+
+def _isoform_pdf_table(tpi: dict, h3, body, teal, rl_colors, Paragraph, Table, TableStyle,
+                       ParagraphStyle, cm) -> list:
+    """'Most common 3' isoforms (isomiRdb, pooled)': the miRBase 22.1 end + top 3, with
+    the API's type and capture labels; one line when the reference is not assessed."""
+    variants = tpi.get("dominant_3prime_variants") or []
+    if not variants or "rt_capture" not in variants[0]:
+        return []
+    esc = _html.escape
+    out = [Paragraph("Most common 3' isoforms (isomiRdb, pooled)", h3)]
+    if tpi.get("reference_note"):
+        return out + [Paragraph(esc(_pdf_text(tpi["reference_note"])) + ".", body)]
+    cell = ParagraphStyle("isocell", parent=body, fontSize=8, leading=9.5)
+    mono = ParagraphStyle("isomono", parent=cell, fontName="Courier")
+
+    def pct(x):
+        return "-" if x is None else f"{100 * x:.{1 if x < 0.1 else 0}f} %"
+
+    def end(rna, at):
+        rna = esc(rna or "")
+        return rna if at is None else f"{rna[:at]}<b><u>{rna[at:]}</u></b>"
+
+    rows = [["3' end", "Type", "Share of reads", "Expected RT capture"],
+            [Paragraph(end(tpi.get("canonical_end_rna"), None), mono),
+             Paragraph("miRBase 22.1 end", cell),
+             pct(tpi.get("canonical_3prime_share_pooled")), Paragraph("primer target", cell)]]
+    for v in variants:
+        rows.append([Paragraph(end(v.get("end_rna"), v.get("end_diff_at")), mono),
+                     Paragraph(esc(_pdf_text(v.get("type_label", ""))), cell),
+                     pct(v.get("pooled_share")),
+                     Paragraph(esc(_pdf_text(v["rt_capture"].get("label", ""))), cell)])
+    tbl = Table(rows, colWidths=[3.0*cm, 4.2*cm, 2.6*cm, 6.7*cm])
+    tbl.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), teal),
+        ("TEXTCOLOR", (0, 0), (-1, 0), rl_colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, -1), 0.5, rl_colors.grey),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    return out + [tbl]
+
 
 def _rt_tm_note(sl: dict) -> str:
     """

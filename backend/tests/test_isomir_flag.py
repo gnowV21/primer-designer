@@ -323,6 +323,8 @@ def test_dominant_isoform_uses_the_full_range_for_measured_variants():
     w = _iso3.check_3prime_isomir_flag("hsa-miR-27b-3p", 6)["dominant_isoform_warning"]
     lo, hi, _ = _RANGE["short1"]
     assert f"captured {lo:g}–{hi:g} Ct later" in w and "two miRNAs measured" in w
+    # 0.380 vs 0.381 would both read 38%: one decimal when the whole percents tie
+    assert "(38.0% of reads, pooled), against 38.1% (pooled)" in w
 
 
 def test_dominant_isoform_rule_r2_boundary(monkeypatch):
@@ -486,3 +488,44 @@ def test_design_with_pasted_sequence_compares_variants_with_it(_client):
     assert {v["rt_capture"]["class"] for v in vs} == {"not_assessed"}
     fields = [w["field"] for w in body["stemloop_rt"]["warnings"]]
     assert "three_prime_isomir_dominant" not in fields
+
+
+# ── export: isoform table + dominant isoform (Part 3.3) ───────────
+
+def _design(client, seq, name):
+    r = client.post("/api/design", json={"sequence": {"matureSequence": seq, "mirnaName": name}})
+    assert r.status_code == 200
+    return r.get_json()
+
+
+def test_csv_export_lists_dominant_risk_canonical_share_and_variants(_client):
+    res = _design(_client, "AGCUACAUCUGGCUACUGGGU", "hsa-miR-222-3p")
+    csv_text = _client.post("/api/export", json={"format": "csv", "results": res}).data.decode()
+    assert "three_prime_isomir_dominant_risk,True" in csv_text
+    assert "three_prime_canonical_share_pooled,0.088" in csv_text
+    assert ("three_prime_isomir_variant_1,AGCTACATCTGGCTACTGGGTCTC|extended|0.359|"
+            "outside_measured_range") in csv_text
+    assert "three_prime_isomir_variant_3," in csv_text
+
+
+def test_pdf_export_has_isoform_table_and_dominant_warning(_client):
+    from reportlab.platypus import Paragraph, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from routes import export as ex
+    res = _design(_client, "AGCUACAUCUGGCUACUGGGU", "hsa-miR-222-3p")
+    pdf = _client.post("/api/export", json={"format": "pdf", "results": res})
+    assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"
+    st = getSampleStyleSheet()
+    tpi = res["stemloop_rt"]["three_prime_isomir"]
+    parts = ex._isoform_pdf_table(tpi, st["Heading3"], st["BodyText"], colors.teal, colors,
+                                  Paragraph, Table, TableStyle, ParagraphStyle, cm)
+    tables = [p for p in parts if isinstance(p, Table)]
+    assert len(tables) == 1 and len(tables[0]._cellvalues) == 5     # header + 22.1 end + 3
+    # a miRNA whose isomiRdb reference may differ: one line, no table
+    one = ex._isoform_pdf_table(_iso3.check_3prime_isomir_flag("hsa-miR-1246", 6),
+                                st["Heading3"], st["BodyText"], colors.teal, colors,
+                                Paragraph, Table, TableStyle, ParagraphStyle, cm)
+    assert not any(isinstance(p, Table) for p in one) and len(one) == 2
+    assert "−" not in ex._pdf_text("−1 nt then +U")

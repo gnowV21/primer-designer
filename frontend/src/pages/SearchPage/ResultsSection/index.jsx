@@ -9,6 +9,7 @@ import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.j
 import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
 import TierBanners, { TIER_WARNING_FIELDS } from './TierBanners.jsx';
 import SetComparison from './SetComparison.jsx';
+import IsoformTable from './IsoformTable.jsx';
 import { rankReason } from '../../../utils/rankReason.js';
 import { equivalentRanks } from '../../../utils/tierRank.js';
 
@@ -187,7 +188,7 @@ const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)} %`);
 
 function SharedPrimers({ stemloopRt: rt, reverse }) {
   const iso = rt?.three_prime_isomir;
-  const isoShown = iso?.three_prime_isomir_risk || iso?.fold_change_bias_risk;
+  const isoShown = iso?.three_prime_isomir_risk || iso?.fold_change_bias_risk || iso?.dominant_isoform_risk;
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3" data-testid="shared-primers">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Shared by all sets</p>
@@ -222,18 +223,26 @@ function SharedPrimers({ stemloopRt: rt, reverse }) {
 
           {isoShown && (
             <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1" data-testid="isomir-note">
-              <p>
-                <span className="font-semibold">3′ isomiRs:</span> {pct(iso.median_3prime_fraction)} of reads
-                {iso.iqr_3prime_fraction && <> (IQR {pct(iso.iqr_3prime_fraction[0])}–{pct(iso.iqr_3prime_fraction[1])} across samples)</>}
-                {' '}— fold changes can mix isoform shifts with level changes.
-              </p>
+              {iso.dominant_isoform_risk ? (
+                <p data-testid="isomir-dominant">
+                  <span className="font-semibold">3′ isomiRs:</span> {iso.dominant_isoform_short}.
+                </p>
+              ) : (
+                <p>
+                  <span className="font-semibold">3′ isomiRs:</span> {pct(iso.median_3prime_fraction)} of reads
+                  {iso.iqr_3prime_fraction && <> (IQR {pct(iso.iqr_3prime_fraction[0])}–{pct(iso.iqr_3prime_fraction[1])} across samples)</>}
+                  {' '}— fold changes can mix isoform shifts with level changes.
+                </p>
+              )}
               <details className="group">
                 <summary className="cursor-pointer text-amber-700 hover:text-amber-900 list-none marker:hidden">
                   <span className="inline-block transition-transform group-open:rotate-90">▸</span> Why
                 </summary>
                 <div className="mt-1 space-y-1 leading-relaxed">
+                  <IsoformTable iso={iso} />
                   {iso.three_prime_isomir_risk && iso.warning && <p>{iso.warning}</p>}
                   {iso.fold_change_bias_risk && iso.fold_change_bias_warning && <p>{iso.fold_change_bias_warning}</p>}
+                  {iso.dominant_isoform_risk && iso.dominant_isoform_warning && <p>{iso.dominant_isoform_warning}</p>}
                   {iso.source && <p className="text-amber-700">Source: {iso.source}.</p>}
                 </div>
               </details>
