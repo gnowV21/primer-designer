@@ -54,6 +54,7 @@ def provenance() -> dict:
     import RNA
     from algorithm import constants as K
     from algorithm.design_pipeline import _provenance
+    from algorithm.specificity_check.blast_offtarget import blast_subprocess_env
     db = os.path.join(ROOT, "backend", "data", "blast_db")
     db_files = sorted(f for f in os.listdir(db) if f.startswith("mirbase_multi"))
     h = hashlib.sha256()
@@ -78,10 +79,12 @@ def provenance() -> dict:
         "python": sys.version.split()[0],
         "primer3_py": primer3.__version__,
         "viennarna": RNA.__version__,
-        "blastn": sh(["blastn", "-version"]).splitlines()[0],
+        "blastn": sh(["blastn", "-version"], env=blast_subprocess_env()).splitlines()[0],
         "blast_db_metadata": db_meta,
         "blast_db_files_sha256": h.hexdigest(),
         "env_BLAST_CACHE_DISABLED": os.environ.get("BLAST_CACHE_DISABLED"),
+        # what every BLAST+ subprocess of the run gets ("false" unless the user set it)
+        "env_BLAST_USAGE_REPORT": blast_subprocess_env().get("BLAST_USAGE_REPORT"),
         "env_SCORING_SYSTEM": os.environ.get("SCORING_SYSTEM"),
     }
 

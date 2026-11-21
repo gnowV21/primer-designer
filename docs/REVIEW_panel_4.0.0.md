@@ -390,3 +390,148 @@ Với 2656 hsa có cache, bước phân loại không chạy (kết quả lấy 
 - **Khởi động pool:** tốn dưới 0,5 s, chỉ ở thiết kế đầu tiên.
 - **Phần ngoài BLAST:** tăng khoảng 0,45 s dù code phần này không đổi. Giả thuyết là CPU hạ xung sau đợt chạy 12 tiến trình; chưa tách được nguyên nhân.
 - **Phần còn lại:** blastn khoảng 3,5 s. Cách 2 vẫn chờ chủ dự án quyết định.
+
+## 10. Kế hoạch tăng tốc 2, Bước 1: đo theo giai đoạn (2026-11-21, chỉ đọc, nhánh `perf/design-speed`)
+
+Cách 2 đã bỏ (chủ dự án, 2026-11-21). Bước này không sửa code.
+
+**Giao thức:** giống Bước 1, đo sau Bước 3.
+- 20 hsa, seed 2026, không cache BLAST, 1 lượt khởi động; thêm mmu-miR-1a-3p và 1 trình tự tự nhập.
+- Máy cắm sạc, không còn tiến trình python/blastn nào khác.
+- Mỗi giai đoạn được đo bằng cách bọc các hàm của module, tính thời gian riêng của từng hàm (không cộng phần hàm con đã bọc).
+- Phần hit loài khác được tách bằng cách chạy lại `_classify_hits` trong tiến trình chính, sau mỗi thiết kế.
+- Script nằm ở scratchpad, không commit: `speed_stages.py`, `blastn_probe.py`.
+
+### Phát hiện: BLAST+ gửi báo cáo sử dụng về NCBI ở mỗi lần gọi
+
+BLAST+ 2.17 mặc định gửi một báo cáo sử dụng lên NCBI mỗi khi blastn hay blastdbcmd chạy. Trong repo chưa đặt `BLAST_USAGE_REPORT`, nên chức năng này đang bật.
+
+- **Lượt bình thường:** mỗi lần gọi tốn thêm khoảng 1 s.
+- **Mạng chậm:** một tiến trình bị treo thêm khoảng 30–35 s.
+  - Hôm nay có 11 trên 20 thiết kế hsa bị treo, nên p50 là 38 s.
+  - Thử blastn riêng 6 lượt (20 mồi, 8 tiến trình): 2 lượt mất 36 s, 4 lượt mất 1,6 s.
+- **Với `BLAST_USAGE_REPORT=false`** (chỉ đặt cho tiến trình đo):
+  - blastn còn 0,5 s mỗi lượt, 10 trên 10 lượt không treo;
+  - blastdbcmd còn 0,02 s, so với khoảng 1 s trước đó.
+- **Kết quả không đổi:** top 3 của cả 22 thiết kế trùng nhau khi bật hay tắt báo cáo, và trùng Bước 1.
+- **Hệ quả cho số đo cũ:** các số đo Bước 1–3 đều gồm phần gọi mạng này, khoảng 2 s mỗi thiết kế.
+
+### Thời gian theo giai đoạn, p50 trên 20 hsa (giây)
+
+| Giai đoạn | Hiện trạng (báo cáo bật) | `BLAST_USAGE_REPORT=false` |
+|---|---|---|
+| Sinh ứng viên forward | 0,16 | 0,14 |
+| Kiểm tra cấu trúc (mồi, heterodimer, template) | 0,64 | 0,62 |
+| ΔCq + biên Tm (S2/S3, `assay_screen`) | 0,90 | 0,81 |
+| Điểm phụ V4 | 0,05 | 0,05 |
+| blastn | 19,3 (2,9 ở 9 thiết kế không treo) | **2,11** |
+| Phân loại hit (pool, thời gian thực) | 0,73 | 0,70 |
+| — trong đó hit loài khác (ước tính) | 0,08 | 0,08 |
+| blastdbcmd | 1,00 (34 s ở 3 thiết kế) | 0,04 |
+| BLAST khác (Tm_on, ghép task, gộp kết quả) | 0,41 | 0,40 |
+| ΔCq báo cáo cấp thiết kế (sau xếp hạng) | 0,11 | 0,09 |
+| Phần còn lại | 0,02 | 0,01 |
+| **Tổng** p50 / p90 | 38,0 / 43,1 (7,0 ở thiết kế không treo) | **5,01 / 6,25** |
+| mmu-miR-1a-3p / trình tự tự nhập | 40,8 / 40,2 | 5,9 / 4,9 |
+
+Ghi chú về phân loại hit:
+- **Hit thô:** trung vị 8.537 hit cùng loài và 131.545 hit loài khác mỗi thiết kế.
+- **Thời gian CPU nếu chạy tuần tự:** tổng 4,08 s; hit cùng loài 3,55 s; hit loài khác 0,44 s (11 %).
+- **Dữ liệu gửi sang pool:** khoảng 15,9 MB pickle mỗi thiết kế, trong đó chỉ 1,2 MB là hit cùng loài.
+- **S2 không loại ứng viên nào** trong 20 thiết kế (0/1875), nên mọi ứng viên đều được BLAST.
+
+### Phụ thuộc giữa các giai đoạn (đọc code)
+
+**ΔCq và cấu trúc không dùng kết quả BLAST.**
+- Kiểm tra cấu trúc chạy ở `design_pipeline.py:162-176`, trước khi xếp hạng (`:212`).
+- `assay_screen` (S2 + biên Tm S3) chạy ở `tiered_pipeline.py:187`; điểm phụ V4 ở `:191-193`. Cả hai chạy trước BLAST (`:202`).
+- Các module `structure_check/*`, `template_structure.py`, `overhang_collision.py` và `assay_model.py` không import `blast_offtarget`.
+- `family_crossreactivity.py:59` chỉ mượn hàm tách tiền tố loài.
+
+**Chiều phụ thuộc ngược lại có tồn tại:** S2 quyết định mồi nào được BLAST.
+- `tiered_pipeline.py:200-201`: `s2_kept`.
+- Nhánh fallback ở `:206-214` BLAST thêm phần còn lại.
+- Sau xếp hạng, `overhang_suggestion` (`:267`) và `check_overhang_collision` (`design_pipeline.py:220`) dùng độ dài của bộ #1, tức là gián tiếp phụ thuộc BLAST.
+
+**Hit thô của blastn không phụ thuộc điều kiện phản ứng.**
+- Dòng lệnh `_blastn_cmd` (`blast_offtarget.py:433-446`) chỉ gồm tên DB và các hằng số:
+  - `blastn-short`, word size 7, e-value 30000, max_target_seqs 50000, reward 1 / penalty −1.
+- `run_blastn_multi` (`:470`) chỉ nhận mồi, DB, timeout và số tiến trình. Cách chia mồi cho các tiến trình không đổi hit (`benchmark/blast_batch_equivalence.json`).
+- Điều kiện phản ứng (`mv_conc`, `dv_conc`, `dntp_conc`, `dna_conc`) chỉ vào `_tm_on` (`:660`) và cổng Tm trong `_classify_hits`.
+- Ta không dùng ở đâu trong BLAST: ngưỡng neo 3′ là hằng số `PRIMER_BLAST_MIN_3PRIME_ANCHOR` = 10.
+- Danh sách id gửi cho blastdbcmd chỉ phụ thuộc loài sàng lọc.
+
+**Khóa cache BLAST hiện tại** (`blast_cache.py:127-135`):
+- Công thức: `sha256(FWD | REV | db_version | mirna_id.lower() | context)[:32]`.
+- `db_version` là `build_date` trong metadata của DB (`tiered_pipeline.py:96`), không phải sha của DB.
+- `context` (`tiered_pipeline.py:112`) = `design-clf7` | trình tự đích (DNA) | mã loài | trình tự mồi RT | `dna_conc` | `dntp_conc` | `dv_conc` | `mv_conc`.
+- Giá trị lưu là kết quả đã phân loại, không phải hit thô. TTL 30 ngày.
+- Không có trong khóa: các tham số blastn (chỉ gián tiếp qua phiên bản bộ phân loại), phiên bản BLAST+, và Ta (đúng, vì không dùng).
+
+## 11. Kế hoạch tăng tốc 2, Bước 2: tắt báo cáo sử dụng của BLAST+ (2026-11-21, nhánh `perf/design-speed`)
+
+**Thay đổi:**
+- `blast_offtarget.blast_subprocess_env()` tạo env cho mọi tiến trình con BLAST+ của engine (`run_blastn`, `run_blastn_multi`, `fetch_sequences`). Hàm đặt `BLAST_USAGE_REPORT=false` bằng `setdefault`, nên giá trị người dùng đã tự đặt được giữ nguyên.
+- `BLASTDB` và tên DB trả về y như cũ.
+- `build_blast_db.py` (makeblastdb, `blastdbcmd -info`, `makeblastdb -version`) và `freeze_pipeline.py` (`blastn -version`) đặt cùng biến.
+- Không còn lệnh gọi BLAST+ nào khác trong `backend/`, `crossreactivity/`, `validation/`, `benchmark/`.
+- Không đổi `ALGORITHM_VERSION` hay khóa cache BLAST.
+- Test mới: `tests/test_blast_usage_report.py` (7 test).
+
+### Kiểm tra tương đương (bộ rút gọn)
+
+Bộ kiểm được rút gọn vì bước này chỉ đổi biến môi trường của tiến trình con, không đổi tham số blastn hay code phân loại.
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 200 hsa (cùng danh sách seed Bước 2/3), cache BLAST trống | 186/200 khác bản tham chiếu Bước 2, **chỉ ở `specificity_warnings.data_note`**: chữ "7 entries" → "8 entries" của PR #22, gộp sau khi tạo tham chiếu. Thay đúng chuỗi đó trong tham chiếu (186 chỗ) thì **0/200 khác**; bộ #1 trùng bản đóng băng 200/200 |
+| Validation 201 mục, cache trống, qua `freeze_pipeline` | **2439/2439**; diff chỉ khác ngày chạy và thống kê cache (đã trả lại file) |
+| 2656 hsa có cache | Không chạy lại. Đường thiết kế chỉ gọi BLAST ở `tiered_pipeline.py:147-149` (`... if missing else {}`), nên khi mọi mồi đã có trong cache thì không có blastn hay blastdbcmd nào chạy. `blast_available()` chỉ gọi `shutil.which` |
+| Test | backend **948 passed**, 3 skipped (941 + 7) |
+
+### Thời gian
+
+Giao thức QĐ 24c: cắm sạc, không có Vite, Playwright hay python/blastn thừa. 20 hsa seed 2026 không cache, cộng mmu-miR-1a-3p và 1 trình tự tự nhập. Hai lượt đo bắt đầu lúc 12:43 và 13:27.
+
+| | Trước: Bước 3, số đo ngày 20/11 | Trước: hôm nay, báo cáo bật (§10) | Sau, lượt 1 | Sau, lượt 2 |
+|---|---|---|---|---|
+| Tổng p50 / p90 (s) | 7,53 / 8,39 | 38,0 / 43,5 | **5,02 / 6,21** | **5,10 / 6,29** |
+| blastn p50 / p90 (s) | — | 19,3 / 37,9 | 2,02 / 2,65 | 2,13 / 2,72 |
+| blastdbcmd p50 / p90 (s) | — | 1,00 / 5,26 | 0,038 / 0,050 | 0,040 / 0,046 |
+| Thiết kế treo > 20 s | — | 11/20 | **0/20** | **0/20** |
+| mmu-miR-1a-3p / tự nhập (s) | 7,86 / 6,08 | 40,8 / 40,2 | 5,51 / 4,18 | 5,45 / 4,00 |
+| 200 hsa cache trống, tuần tự | 1206 s | — | 857 s | — |
+| Validation 201 mục cache trống | 1785 s | — | 1490 s | — |
+
+- Top 3 của 20 thiết kế đo thời gian trùng Bước 1 ở cả hai lượt.
+- Số thời gian trong `docs/THESIS_FREEZE_4.0.0.md` không sửa.
+
+### Bằng chứng cho bản tham chiếu đã sửa (200 hsa)
+
+Phép so: bản tham chiếu **gốc** (tạo ngày 2026-11-19, trước PR #22, chưa thay chuỗi) với output Bước 2, so từng trường, cả trạng thái của bản ghi.
+
+| Trường | Số bản ghi khác | Chuỗi cũ → mới |
+|---|---|---|
+| `specificity_warnings.data_note` | 186 / 200 | "isoMiR data: curated from literature (**7** entries, partial coverage)" → "(**8** entries, partial coverage)" |
+
+- Không có trường nào khác bị lệch, không có giá trị không phải chuỗi bị lệch, và chỉ có đúng 1 cặp chuỗi cũ → mới.
+- 14 bản ghi còn lại là thiết kế trả lỗi, không có `data_note`.
+- Bản tham chiếu đã sửa được commit tại `benchmark/logs/design_equivalence_ref_hsa200.jsonl`; dòng ghi nguồn gốc nằm ở `design_equivalence_ref_hsa200.md`.
+  - Bản này được tạo bằng cách thay đúng chuỗi trên ở 186 chỗ, ghi ở chế độ nhị phân để giữ LF.
+  - Nó **trùng từng byte** với output Bước 2.
+
+### E2E
+
+`npx playwright test`, chạy với cả hai dev server và máy cắm sạc: **109/109 passed** trong 1,7 phút, không có lần thử lại.
+- `global-setup` làm nóng cache: miR-21-5p 2,0 s, let-7a-5p 1,9 s, miR-590-3p 1,0 s.
+- Khi tắt server thì thấy 12 worker của pool phân loại (Bước 3) còn sống sau khi tiến trình Flask bị dừng cưỡng bức, và mình đã tắt tay.
+  - Lúc tắt bình thường (Ctrl+C) thì pool được đóng.
+  - Đây chỉ là chuyện dọn dẹp tiến trình; output không bị ảnh hưởng.
+
+### Provenance
+
+`freeze_pipeline.provenance()` ghi thêm `env_BLAST_USAGE_REPORT`: giá trị mà `blast_subprocess_env()` trả về, tức "false" trừ khi người dùng tự đặt. Có test tương ứng trong `tests/test_blast_usage_report.py` (thêm 2 test, tổng 9).
+
+### Đóng kế hoạch
+
+**Kế hoạch tăng tốc 2 đóng ngày 2026-11-21; Bước 3–5 không làm vì lợi ≤ 1,4 s, không đáng rủi ro sau tag.**

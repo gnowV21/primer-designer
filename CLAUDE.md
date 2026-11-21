@@ -44,7 +44,7 @@ In production, `/api/*` must be reverse-proxied to the Flask server separately (
 ### Backend (`backend/`)
 - `app.py` — Flask entry point; registers blueprints; CORS allowed for `localhost:5173` and `localhost:3000`; exposes `GET /api/health`
 - `routes/mirbase.py` — `GET /api/mirbase/<mirna_id>`: tries `?accession=<id>` first, then `?name=<id>`, returns `{id, accession, sequence, family, species, length}` or 404
-- Stack: **Flask 3 + flask-cors + requests + primer3-py + ViennaRNA + biopython + numpy + flask-limiter + reportlab** (see `requirements.txt`); BLAST+ is a system binary. Do not add dependencies beyond these without a reason recorded in the PR.
+- Stack: **Flask 3 + flask-cors + requests + primer3-py + ViennaRNA + biopython + numpy + flask-limiter + reportlab** (see `requirements.txt`); BLAST+ is a system binary; every BLAST+ subprocess gets its env from `blast_offtarget.blast_subprocess_env()`, which sets `BLAST_USAGE_REPORT=false` unless the user set it (NCBI's usage report added ~1 s per call and hung 30–35 s on a slow network, `docs/REVIEW_panel_4.0.0.md` §10). Do not add dependencies beyond these without a reason recorded in the PR.
 
 ### Frontend (`frontend/src/`)
 - Fixed stack: **React 18 + Vite 5 + Tailwind 3 + React Router DOM v6 + Axios** — no Redux, no Formik, no UI component libraries

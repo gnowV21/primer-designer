@@ -53,6 +53,15 @@ def download(url: str, dest: str):
 
 # ── makeblastdb ───────────────────────────────────────────────────
 
+def _blast_env(**extra: str) -> dict:
+    """os.environ + `extra`, NCBI usage report off unless already set — the same rule
+    as algorithm/specificity_check/blast_offtarget.blast_subprocess_env (this script
+    stays free of engine imports)."""
+    env = dict(os.environ, **extra)
+    env.setdefault("BLAST_USAGE_REPORT", "false")
+    return env
+
+
 def run_makeblastdb(fasta_path: str, db_out: str, title: str) -> dict:
     """
     Run makeblastdb and return {ok, sequences_count, size_mb}.
@@ -73,7 +82,7 @@ def run_makeblastdb(fasta_path: str, db_out: str, title: str) -> dict:
         "-parse_seqids",
     ]
     print(f"  Running (in {out_dir}): {' '.join(cmd)}", flush=True)
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=out_dir)
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=out_dir, env=_blast_env())
     if result.returncode != 0:
         print(result.stderr or result.stdout, file=sys.stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd, result.stdout, result.stderr)
@@ -87,7 +96,7 @@ def verify_db_build(db_path: str) -> dict:
     """
     try:
         # BLASTDB locates the directory (spaces allowed); -db gets the bare name.
-        env = dict(os.environ, BLASTDB=os.path.dirname(os.path.abspath(db_path)))
+        env = _blast_env(BLASTDB=os.path.dirname(os.path.abspath(db_path)))
         result = subprocess.run(
             ["blastdbcmd", "-db", os.path.basename(db_path), "-info"],
             capture_output=True, text=True, timeout=30, env=env,
@@ -127,7 +136,8 @@ def main():
 
     # Detect makeblastdb version
     try:
-        ver = subprocess.run(["makeblastdb", "-version"], capture_output=True, text=True)
+        ver = subprocess.run(["makeblastdb", "-version"], capture_output=True, text=True,
+                             env=_blast_env())
         metadata["makeblastdb_version"] = ver.stdout.strip().splitlines()[0] if ver.stdout else "unknown"
     except FileNotFoundError:
         print("ERROR: makeblastdb not found. Install NCBI BLAST+.", file=sys.stderr)
