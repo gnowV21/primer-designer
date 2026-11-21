@@ -7,10 +7,14 @@ Tạo bởi `backend/scripts/isomir_case_check.py` ngày 2026-11-21, algorithm 4
 > - isomiRdb gộp mẫu người thuộc mọi loại mô và dịch; share ở đây là pooled.
 > - Tham chiếu 22.1 của miR-877-5p và miR-33b-5p dài 20 nt, khác tham chiếu trong bài (miR-877-5p: dạng GACA 24 nt).
 > - Tool không đo mức bắt; khoảng ΔCq chỉ lấy từ `ASSAY_DCQ_RT_SHIFT_RANGE` (Schamberger 2014, n = 1–2 miRNA). Lệch ≥ 3 nt không có số đo.
+> - **Mốc 0,8 của cảnh báo isoform trội được chọn sau khi đã thấy miR-27b-3p và miR-107** (dry-run Phần 1, `docs/ISOMIR_VARIANTS_DRYRUN.md`). Vì vậy kết quả 6/9 dưới đây không phải đánh giá độc lập của luật: ít nhất hai ca đã ảnh hưởng tới việc chọn mốc.
+> - Cột "Nhận xét" do người viết tay, chỉ so sánh định tính; dòng "Tool" sinh tự động từ output của API.
 
 Cách chạy: mỗi miRNA được thiết kế qua Flask test client với mặc định của backend (overhang 6 nt), trình tự lấy từ miRBase 22.1 cục bộ.
 
 **Tóm tắt:** cảnh báo isoform trội bật ở 6/9 ca (miR-877-5p, miR-222-3p, miR-221-3p, miR-27b-3p, miR-27a-3p, miR-107); cờ fold-change ở 8/9; cảnh báo 3′ mức high ở 8/9. Ca không có cảnh báo nào: không có.
+
+**Tỉ lệ nền** trên toàn bộ 2032 miRNA hsa có dữ liệu 3′ (overhang 6 nt, trình tự 22.1): có ít nhất một cảnh báo isomiR 3′ 782/2032 (38.5 %); cảnh báo isoform trội 302/2032 (14.9 %); mức high 500/2032 (24.6 %); cờ fold-change 658/2032 (32.4 %). Chín ca ở đây được chọn vì đã có bài báo về isomiR, nên tỉ lệ cảnh báo cao hơn nền là điều có thể đoán trước.
 
 ## Số liệu từ API
 
@@ -89,4 +93,4 @@ Cách chạy: mỗi miRNA được thiết kế qua Flask test client với mặ
 - **Đã công bố (Pillman 2019):** Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.
 - **Tham chiếu:** Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.
 - **Tool:** mức 3′ **high** (median 0.782); cờ fold-change **có**; isoform trội **không**: top 1 +2 nt 0.185 so với đầu 22.1 0.459 (tỉ lệ 0.403 < 0.8).
-- **Nhận xét:** Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Sai lệch trong bài có thể đến từ tỉ lệ isoform đổi theo kích thích ở đại thực bào, điều mà dữ liệu gộp không thấy.
+- **Nhận xét:** Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Lý do bỏ sót là **giả thuyết, chưa kiểm**: tỉ lệ isoform của miR-30a-5p có thể đổi theo kích thích ở đại thực bào, điều mà dữ liệu isomiRdb gộp mọi mẫu không thấy.

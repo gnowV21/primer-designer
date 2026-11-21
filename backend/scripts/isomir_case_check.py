@@ -77,9 +77,9 @@ CASES = [
      "Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.",
      "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
      "Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều "
-     "hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Sai "
-     "lệch trong bài có thể đến từ tỉ lệ isoform đổi theo kích thích ở đại thực bào, điều "
-     "mà dữ liệu gộp không thấy."),
+     "hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. "
+     "Lý do bỏ sót là **giả thuyết, chưa kiểm**: tỉ lệ isoform của miR-30a-5p có thể đổi "
+     "theo kích thích ở đại thực bào, điều mà dữ liệu isomiRdb gộp mọi mẫu không thấy."),
 ]
 
 
@@ -158,7 +158,29 @@ def _pct(x):
     return f"{100 * x:.1f} %"
 
 
-def _md(records: list, notes: dict) -> str:
+def _base_rates() -> dict:
+    """Share of all hsa miRNAs with 3' data that raise each isomiR warning (overhang 6 nt,
+    miRBase 22.1 sequence) — the background against which 9 published cases are read."""
+    from algorithm.specificity_check.isomir_flag import check_3prime_isomir_flag, _load_db3
+    names = [k for k, v in _load_db3().items()
+             if not k.startswith("_") and "median_3prime_fraction" in v]
+    n = dict(any=0, dominant=0, high=0, fold_change=0)
+    for name in names:
+        r = check_3prime_isomir_flag(name, 6)
+        h, f, d = r["three_prime_isomir_risk"], bool(r["fold_change_bias_risk"]), r["dominant_isoform_risk"]
+        n["any"] += h or f or d
+        n["dominant"] += d
+        n["high"] += h
+        n["fold_change"] += f
+    return {"n_mirnas": len(names), **n}
+
+
+def _md(records: list, notes: dict, base: dict) -> str:
+    N = base["n_mirnas"]
+
+    def rate(k):
+        return f"{base[k]}/{N} ({100 * base[k] / N:.1f} %)"
+
     L = [
         "# Kiểm in silico các ca isomiR 3′ đã công bố",
         "",
@@ -174,6 +196,11 @@ def _md(records: list, notes: dict) -> str:
         "(miR-877-5p: dạng GACA 24 nt).",
         "> - Tool không đo mức bắt; khoảng ΔCq chỉ lấy từ `ASSAY_DCQ_RT_SHIFT_RANGE` "
         "(Schamberger 2014, n = 1–2 miRNA). Lệch ≥ 3 nt không có số đo.",
+        "> - **Mốc 0,8 của cảnh báo isoform trội được chọn sau khi đã thấy miR-27b-3p và "
+        "miR-107** (dry-run Phần 1, `docs/ISOMIR_VARIANTS_DRYRUN.md`). Vì vậy kết quả 6/9 dưới "
+        "đây không phải đánh giá độc lập của luật: ít nhất hai ca đã ảnh hưởng tới việc chọn mốc.",
+        "> - Cột \"Nhận xét\" do người viết tay, chỉ so sánh định tính; dòng \"Tool\" sinh tự "
+        "động từ output của API.",
         "",
         "Cách chạy: mỗi miRNA được thiết kế qua Flask test client với mặc định của backend "
         "(overhang 6 nt), trình tự lấy từ miRBase 22.1 cục bộ.",
@@ -187,6 +214,12 @@ def _md(records: list, notes: dict) -> str:
         + (", ".join(r["mirna"].replace("hsa-", "") for r in records
                      if not (r["dominant_isoform_risk"] or r["fold_change_bias_risk"]
                              or r["three_prime_isomir_risk"])) or "không có") + ".",
+        "",
+        f"**Tỉ lệ nền** trên toàn bộ {N} miRNA hsa có dữ liệu 3′ (overhang 6 nt, trình tự "
+        f"22.1): có ít nhất một cảnh báo isomiR 3′ {rate('any')}; cảnh báo isoform trội "
+        f"{rate('dominant')}; mức high {rate('high')}; cờ fold-change {rate('fold_change')}. "
+        "Chín ca ở đây được chọn vì đã có bài báo về isomiR, nên tỉ lệ cảnh báo cao hơn nền là "
+        "điều có thể đoán trước.",
         "",
         "## Số liệu từ API",
         "",
@@ -225,15 +258,20 @@ def main() -> None:
         notes[name] = (src, obs, ref, cmp_)
         print(f"{name}: level={records[-1]['level']} dominant={records[-1]['dominant_isoform_risk']}"
               f" fc={records[-1]['fold_change_bias_risk']}")
+    base = _base_rates()
     with open(OUT_JSON, "w", encoding="utf-8") as fh:
         json.dump({"_about": ("In silico report of published 3' isomiR cases (not a pass/fail "
                               "validation); values from /api/design with backend defaults."),
                    "published": {n: {"source": s, "observation": o, "reference": r,
                                      "comparison": c}
                                  for n, (s, o, r, c) in notes.items()},
+                   "base_rates": base,
+                   "dominant_threshold_note": ("0.8 was chosen after miR-27b-3p and miR-107 had "
+                                               "been seen in the Part 1 dry-run; the 6/9 is not "
+                                               "an independent evaluation."),
                    "cases": records}, fh, indent=1, ensure_ascii=False)
     with open(OUT_MD, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(_md(records, notes))
+        fh.write(_md(records, notes, base))
     print("wrote", OUT_JSON, "and", OUT_MD)
 
 

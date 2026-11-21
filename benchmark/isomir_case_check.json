@@ -53,9 +53,17 @@
    "source": "Pillman 2019",
    "observation": "Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.",
    "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
-   "comparison": "Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Sai lệch trong bài có thể đến từ tỉ lệ isoform đổi theo kích thích ở đại thực bào, điều mà dữ liệu gộp không thấy."
+   "comparison": "Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Lý do bỏ sót là **giả thuyết, chưa kiểm**: tỉ lệ isoform của miR-30a-5p có thể đổi theo kích thích ở đại thực bào, điều mà dữ liệu isomiRdb gộp mọi mẫu không thấy."
   }
  },
+ "base_rates": {
+  "n_mirnas": 2032,
+  "any": 782,
+  "dominant": 302,
+  "high": 500,
+  "fold_change": 658
+ },
+ "dominant_threshold_note": "0.8 was chosen after miR-27b-3p and miR-107 had been seen in the Part 1 dry-run; the 6/9 is not an independent evaluation.",
  "cases": [
   {
    "mirna": "hsa-miR-21-5p",
