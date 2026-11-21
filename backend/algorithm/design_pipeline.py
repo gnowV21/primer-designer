@@ -479,7 +479,7 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "data_note": (
                 "Family data: miRBase CURRENT, seed-based grouping (positions 2-8). "
                 "Overhang index: scripts/build_overhang_index.py (full per-species mature set). "
-                "isoMiR data: curated from literature (7 entries, partial coverage). "
+                "isoMiR data: curated from literature (8 entries, partial coverage). "
                 "Re-run the build scripts after miRBase updates."
             ),
         },
