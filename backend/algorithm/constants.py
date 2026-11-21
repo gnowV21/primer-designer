@@ -450,6 +450,12 @@ ISOMIR_3P_BIAS_MIN_IQR      = 0.15   # IQR width of that share across samples
 ISOMIR_3P_FRACTION_HIGH     = 0.50
 ISOMIR_3P_FRACTION_MODERATE = 0.20
 
+# Dominant 3' isoform (display only, not scored; owner decision 2026-11-21, rule R2 of
+# docs/ISOMIR_VARIANTS_DRYRUN.md): warn when the most common 3' isoform's pooled share
+# is >= this factor x the pooled share of reads with the miRBase 22.1 3' end, both
+# rounded to 3 decimals. Own threshold of the tool, not calibrated.
+ISOMIR_DOMINANT_RATIO = 0.8
+
 # Controls & contamination (audit SCI-11) — lab policy, not literature values.
 NTC_DELTA_CQ_MIN          = 10   # cycles: NTC must be ≥10 Cq later than the latest sample (HG Lab, 2026-09-19)
 ABUNDANCE_PERCENTILE_HIGH = 95   # miRNA in the top 5 % by median isomiRdb RPM → elevated contamination risk

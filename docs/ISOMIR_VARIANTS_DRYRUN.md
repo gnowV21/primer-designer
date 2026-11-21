@@ -17,6 +17,9 @@ Nguồn: `backend/data/known_3prime_isomir_mirnas.json` (isomiRdb) và `backend/
 | mlv3p, mv | `other` | `not_measured` |
 | Lệch đầu 5′ / khác ở giữa (ở miRNA có tham chiếu đã xác nhận) | `reference_mismatch` | `not_assessed`: "differs from miRBase 22.1 — not assessed" |
 | Mọi biến thể của miRNA mà tham chiếu isomiRdb có thể khác 22.1 | (giữ) | `not_assessed`: bảng hiện một dòng "isomiRdb reference may differ from miRBase 22.1 — not assessed" |
+| Trình tự thiết kế khác bản 22.1 của tên đó (ví dụ dán dạng GACA 24 nt của miR-877-5p) | (giữ) | `not_assessed`: "design sequence differs from miRBase 22.1 — not assessed"; không bật cảnh báo isoform trội |
+
+- Nhãn hiển thị: nhãn `nta#X#k` chỉ đếm số nt không theo khuôn. Khi đuôi dài hơn k, phần đầu của đuôi là nt theo khuôn. Ví dụ `nta#T#1` trên đuôi `UU` hiện là "+1 nt then +U". Lớp vẫn xếp theo tổng độ dài.
 
 - **Lý do có lớp `not_measured` cho "cắt rồi thêm NTA":** NTA ở đầu sát thân stem chưa được đo bằng qPCR. Giá trị 3,5 Ct của Czimmerer 2013 chỉ đo mismatch nằm bên trong, nên không áp dụng cho trường hợp này.
 - **Cảnh báo isoform trội = R2:** so trên giá trị đã làm tròn 3 chữ số, bật khi top 1 ≥ 0,8 × share đầu 3′ chuẩn. **0,8 là mốc riêng của tool, chưa hiệu chỉnh.** Không bật ở miRNA mà tham chiếu có thể khác 22.1.

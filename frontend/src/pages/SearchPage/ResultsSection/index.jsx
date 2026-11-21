@@ -18,7 +18,7 @@ const DEDICATED_WARNING_FIELDS = new Set(['signalMethod', 'bindingRegion3prime',
 // Warnings with their own panel on /results (Assay Specificity, Seed Family, the
 // 3′-isomiR line of "Shared by all sets"): not repeated as a banner.
 const PANEL_WARNING_FIELDS = new Set(['overhang_collision', 'cross_reactivity', 'three_prime_isomir',
-  'three_prime_isomir_fold_change']);
+  'three_prime_isomir_fold_change', 'three_prime_isomir_dominant']);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
   if (error) return <ErrorPanel error={error} />;
