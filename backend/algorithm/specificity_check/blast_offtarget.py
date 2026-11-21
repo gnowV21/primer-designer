@@ -122,7 +122,21 @@ def _blast_env_and_name(db_path: str) -> tuple[dict, str]:
     takes the directory verbatim, spaces included.
     """
     db_dir = os.path.normpath(os.path.dirname(os.path.abspath(db_path)))
-    return dict(os.environ, BLASTDB=db_dir), os.path.basename(db_path)
+    return blast_subprocess_env(BLASTDB=db_dir), os.path.basename(db_path)
+
+
+def blast_subprocess_env(**extra: str) -> dict:
+    """Environment for a BLAST+ subprocess: os.environ + `extra`, with NCBI's usage
+    report off unless the caller's environment sets BLAST_USAGE_REPORT itself.
+
+    BLAST+ (2.17 here) reports each run to NCBI by default. That network call added
+    about 1 s to every blastn / blastdbcmd call, and on a slow network a process hung
+    30–35 s (docs/REVIEW_panel_4.0.0.md §10). NCBI documents BLAST_USAGE_REPORT=false
+    as the switch; it does not change the hits.
+    """
+    env = dict(os.environ, **extra)
+    env.setdefault("BLAST_USAGE_REPORT", "false")
+    return env
 
 
 # ── 3'-terminal mismatch classification ──────────────────────────

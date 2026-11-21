@@ -6,6 +6,7 @@ Automated primer design tool for Stem-loop RT-qPCR miRNA quantification.
 - Node.js 20+
 - Python 3.11+
 - Internet connection (for miRBase API)
+- NCBI BLAST+ (`blastn`, `blastdbcmd` on PATH) for the off-target check. The backend runs it with `BLAST_USAGE_REPORT=false` unless you set that variable yourself: BLAST+ otherwise reports every run to NCBI, which added about 1 s per call and hung 30–35 s on a slow network (NCBI documents this variable as the switch; the hits do not change).
 
 ## Running (open 2 terminals)
 
