@@ -213,6 +213,33 @@ test('results read verdict → comparison → shared primers → cards, without 
   await expect(page.getByText('Nejad et al. 2018')).toBeHidden();
 });
 
+// ── 3′ isoforms (isomiRdb): table in "Why", dominant isoform on the main line ──
+
+test('miR-21-5p: "Why" shows the 3′ isoform table with three variants', async ({ page }) => {
+  await design(page, MIR21);
+  const note = page.getByTestId('isomir-note');
+  await expect(note).toContainText('3′ isomiRs:');
+  await expect(page.getByTestId('isomir-table')).toBeHidden();
+  await note.getByText('Why').click();
+  const table = page.getByTestId('isomir-table');
+  await expect(table).toContainText('Most common 3′ isoforms (isomiRdb, pooled)');
+  await expect(table.getByTestId('isomir-row')).toHaveCount(3);
+  await expect(table).toContainText('miRBase 22.1 end');
+  await expect(table).toContainText('0–4 Ct later · n = 2 miRNAs');
+  await expect(page.getByTestId('isomir-dominant')).toHaveCount(0);
+});
+
+test('miR-222-3p: the dominant 3′ isoform is on the main line, no extra banner', async ({ page }) => {
+  await design(page, WARM_MIRNAS.find((m) => m.name === 'hsa-miR-222-3p').sequence);
+  const line = page.getByTestId('isomir-dominant');
+  await expect(line).toContainText('most common 3′ form +3 nt, 36% of reads (pooled) vs 9% with the miRBase end');
+  await expect(page.getByText(/^Dominant 3' isoform:/)).toBeHidden();      // full text behind "Why"
+  await expect(page.getByTestId('critical-warning').filter({ hasText: 'Dominant' })).toHaveCount(0);
+  await page.getByTestId('isomir-note').getByText('Why').click();
+  await expect(page.getByTestId('isomir-table')).toContainText('not measured (≥ 3 nt)');
+  await expect(page.getByText(/^Dominant 3' isoform:/)).toBeVisible();
+});
+
 test('species "Other": the screen fell back to human and the page says so', async ({ page }) => {
   await mockDesign(page, (j) => {
     j.ranking_summary.screen_species = 'hsa';

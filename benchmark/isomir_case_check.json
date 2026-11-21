@@ -1,0 +1,595 @@
+{
+ "_about": "In silico report of published 3' isomiR cases (not a pass/fail validation); values from /api/design with backend defaults.",
+ "published": {
+  "hsa-miR-21-5p": {
+   "source": "Magee 2017",
+   "observation": "Stem-loop TaqMan cho dạng chuẩn bắt cả 0|+1, −1|0, −1|+1; trong tế bào chuyển nạp không phân biệt được các dạng.",
+   "reference": "Ký hiệu 5′|3′ của bài gồm cả lệch đầu 5′; tool chỉ xét đầu 3′.",
+   "comparison": "Khớp: bảng xếp ±1/+2 nt vào khoảng đo được 0–4 Ct, tức assay đo tổng các dạng. Đầu 22.1 vẫn là dạng nhiều nhất nên không có cảnh báo isoform trội."
+  },
+  "hsa-miR-33b-5p": {
+   "source": "Schamberger 2014",
+   "observation": "Assay \"GC\" và \"GCA\" bắt chéo nhau, trễ 2–4 Ct; giải trình tự thấy dạng dài hơn nhiều hơn tham chiếu.",
+   "reference": "\"GC\" = đầu 3′ của 22.1 (20 nt); \"GCA\" = +1 nt so với 22.1.",
+   "comparison": "Khớp về mức bắt: khoảng 0–4 Ct của ±1 nt chứa chính số đo 2–4 Ct của miRNA này. Khác về tỉ lệ: isomiRdb (pooled) cho dạng +1 ít hơn đầu 22.1, còn bài thấy dạng dài hơn nhiều hơn. Mẫu khác nhau, nên tool không bật cảnh báo isoform trội."
+  },
+  "hsa-miR-877-5p": {
+   "source": "Schamberger 2014",
+   "observation": "Assay GACA/GAC bắt nhau gần 0 Ct; GA trễ khoảng 3 Ct; assay GA bắt cả ba dạng.",
+   "reference": "Bài dùng dạng GACA (24 nt) làm tham chiếu; 22.1 dài 20 nt (…CAGGG). So với 22.1: GA = +2, GAC = +3, GACA = +4 nt. Dạng 20 nt của 22.1 không được thử trong bài.",
+   "comparison": "Khớp với cách ghi: bài chỉ so các dạng 22–24 nt với nhau, không có assay nhắm đầu 20 nt của 22.1, nên +3/+4 ghi \"not measured\" là đúng. isomiRdb cũng thấy dạng dài nhiều hơn đầu 22.1, nên cảnh báo isoform trội bật."
+  },
+  "hsa-miR-222-3p": {
+   "source": "Nejad 2018; Pillman 2019",
+   "observation": "TaqMan 21 nt bắt isoform 22–25 nt; isoform dài trội; không thấy mức giảm 70 % sau IFN.",
+   "reference": "TaqMan 21 nt = độ dài 22.1; isoform 22–25 nt = +1 đến +4 nt so với 22.1.",
+   "comparison": "Khớp: cảnh báo isoform trội và cờ fold-change đều bật. Tool ghi +3/+4 là \"not measured\", không nói assay bắt kém; Nejad thấy TaqMan vẫn bắt các dạng này nhưng không có số Ct theo từng dạng, nên tool không có số để dùng."
+  },
+  "hsa-miR-221-3p": {
+   "source": "Pillman 2019",
+   "observation": "Assay nhắm dạng dài hơn dạng trội 1 nt; báo \"giảm\" trong khi tổng tăng.",
+   "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
+   "comparison": "Khớp: dạng trội là −1 nt, tức đầu 22.1 mà mồi RT nhắm dài hơn dạng trội 1 nt như bài mô tả; cảnh báo isoform trội bật."
+  },
+  "hsa-miR-27b-3p": {
+   "source": "Pillman 2019",
+   "observation": "Assay nhắm dạng dài hơn dạng trội 1 nt; báo \"giảm\" trong khi tổng tăng.",
+   "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
+   "comparison": "Khớp nhưng sát ngưỡng: dạng −1 nt gần bằng đầu 22.1; cảnh báo chỉ bật nhờ mốc 0,8 (luật R1 \"> 1\" sẽ bỏ sót ca này)."
+  },
+  "hsa-miR-27a-3p": {
+   "source": "Pillman 2019",
+   "observation": "Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.",
+   "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
+   "comparison": "Khớp: dạng −1 nt nhiều hơn đầu 22.1; cảnh báo isoform trội bật."
+  },
+  "hsa-miR-107": {
+   "source": "Pillman 2019",
+   "observation": "Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.",
+   "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
+   "comparison": "Khớp nhưng sát ngưỡng: dạng −1 nt gần bằng đầu 22.1; cảnh báo chỉ bật nhờ mốc 0,8."
+  },
+  "hsa-miR-30a-5p": {
+   "source": "Pillman 2019",
+   "observation": "Kết luận RT-qPCR đã công bố lệch so với RNA-seq mức isoform.",
+   "reference": "Đại thực bào người/chuột, assay thương mại không công bố trình tự mồi.",
+   "comparison": "Cảnh báo isoform trội không bắt được: trong isomiRdb (pooled), đầu 22.1 vẫn nhiều hơn hẳn biến thể lớn nhất. Tool vẫn có cảnh báo 3′ mức high và cờ fold-change. Lý do bỏ sót là **giả thuyết, chưa kiểm**: tỉ lệ isoform của miR-30a-5p có thể đổi theo kích thích ở đại thực bào, điều mà dữ liệu isomiRdb gộp mọi mẫu không thấy."
+  }
+ },
+ "base_rates": {
+  "n_mirnas": 2032,
+  "any": 782,
+  "dominant": 302,
+  "high": 500,
+  "fold_change": 658
+ },
+ "dominant_threshold_note": "0.8 was chosen after miR-27b-3p and miR-107 had been seen in the Part 1 dry-run; the 6/9 is not an independent evaluation.",
+ "cases": [
+  {
+   "mirna": "hsa-miR-21-5p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "UAGCUUAUCAGACUGAUGUUGA",
+   "length": 22,
+   "overhang_rna": "UGUUGA",
+   "overhang_len": 6,
+   "level": "moderate",
+   "median_3prime_fraction": 0.487,
+   "iqr_3prime_fraction": [
+    0.347,
+    0.708
+   ],
+   "three_prime_isomir_risk": false,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.519,
+   "reference_status": "matches",
+   "dominant_isoform_risk": false,
+   "dominant_isoform_short": null,
+   "dominant_ratio": 0.437,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "TAGCTTATCAGACTGATGTTGAC",
+     "label": "lv3p|lv3pE|lv3p#1",
+     "type_label": "+1 nt",
+     "relation": "extended",
+     "shift_3p": 1,
+     "pooled_share": 0.227,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TAGCTTATCAGACTGATGTTG",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.114,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TAGCTTATCAGACTGATGTTGACT",
+     "label": "lv3p|lv3pE|lv3p#2",
+     "type_label": "+2 nt",
+     "relation": "extended",
+     "shift_3p": 2,
+     "pooled_share": 0.041,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir_fold_change"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-33b-5p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "GUGCAUUGCUGUUGCAUUGC",
+   "length": 20,
+   "overhang_rna": "CAUUGC",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.968,
+   "iqr_3prime_fraction": [
+    0.667,
+    0.998
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.465,
+   "reference_status": "matches",
+   "dominant_isoform_risk": false,
+   "dominant_isoform_short": null,
+   "dominant_ratio": 0.559,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "GTGCATTGCTGTTGCATTG",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.26,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "GTGCATTGCTGTTGCATTGCA",
+     "label": "lv3p|lv3pE|lv3p#1",
+     "type_label": "+1 nt",
+     "relation": "extended",
+     "shift_3p": 1,
+     "pooled_share": 0.231,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "GTGCATTGCTGTTGCATT",
+     "label": "lv3p|lv3pT|lv3p#-2",
+     "type_label": "−2 nt",
+     "relation": "trimmed",
+     "shift_3p": -2,
+     "pooled_share": 0.015,
+     "capture_class": "measured_range",
+     "capture_label": "3–4 Ct later · n = 1 miRNA"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-877-5p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "GUAGAGGAGAUGGCGCAGGG",
+   "length": 20,
+   "overhang_rna": "GCAGGG",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.887,
+   "iqr_3prime_fraction": [
+    0.807,
+    0.943
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": false,
+   "canonical_3prime_share_pooled": 0.127,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form +3 nt, 17% of reads (pooled) vs 13% with the miRBase end",
+   "dominant_ratio": 1.323,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "GTAGAGGAGATGGCGCAGGGGAC",
+     "label": "lv3p|lv3pE|lv3p#3",
+     "type_label": "+3 nt",
+     "relation": "extended",
+     "shift_3p": 3,
+     "pooled_share": 0.168,
+     "capture_class": "outside_measured_range",
+     "capture_label": "not measured (≥ 3 nt)"
+    },
+    {
+     "sequence_dna": "GTAGAGGAGATGGCGCAGGGGA",
+     "label": "lv3p|lv3pE|lv3p#2",
+     "type_label": "+2 nt",
+     "relation": "extended",
+     "shift_3p": 2,
+     "pooled_share": 0.138,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "GTAGAGGAGATGGCGCAGGGGACA",
+     "label": "lv3p|lv3pE|lv3p#4",
+     "type_label": "+4 nt",
+     "relation": "extended",
+     "shift_3p": 4,
+     "pooled_share": 0.118,
+     "capture_class": "outside_measured_range",
+     "capture_label": "not measured (≥ 3 nt)"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-222-3p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "AGCUACAUCUGGCUACUGGGU",
+   "length": 21,
+   "overhang_rna": "CUGGGU",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.797,
+   "iqr_3prime_fraction": [
+    0.677,
+    0.922
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.088,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form +3 nt, 36% of reads (pooled) vs 9% with the miRBase end",
+   "dominant_ratio": 4.08,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "AGCTACATCTGGCTACTGGGTCTC",
+     "label": "lv3p|lv3pE|lv3p#3",
+     "type_label": "+3 nt",
+     "relation": "extended",
+     "shift_3p": 3,
+     "pooled_share": 0.359,
+     "capture_class": "outside_measured_range",
+     "capture_label": "not measured (≥ 3 nt)"
+    },
+    {
+     "sequence_dna": "AGCTACATCTGGCTACTGGGTCTCT",
+     "label": "lv3p|lv3pE|lv3p#4",
+     "type_label": "+4 nt",
+     "relation": "extended",
+     "shift_3p": 4,
+     "pooled_share": 0.169,
+     "capture_class": "outside_measured_range",
+     "capture_label": "not measured (≥ 3 nt)"
+    },
+    {
+     "sequence_dna": "AGCTACATCTGGCTACTGGGTCT",
+     "label": "lv3p|lv3pE|lv3p#2",
+     "type_label": "+2 nt",
+     "relation": "extended",
+     "shift_3p": 2,
+     "pooled_share": 0.153,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-221-3p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "AGCUACAUUGUCUGCUGGGUUUC",
+   "length": 23,
+   "overhang_rna": "GGUUUC",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.843,
+   "iqr_3prime_fraction": [
+    0.743,
+    0.917
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.296,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form −1 nt, 30.0% of reads (pooled) vs 29.6% with the miRBase end",
+   "dominant_ratio": 1.014,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "AGCTACATTGTCTGCTGGGTTT",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.3,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "AGCTACATTGTCTGCTGGGTT",
+     "label": "lv3p|lv3pT|lv3p#-2",
+     "type_label": "−2 nt",
+     "relation": "trimmed",
+     "shift_3p": -2,
+     "pooled_share": 0.108,
+     "capture_class": "measured_range",
+     "capture_label": "3–4 Ct later · n = 1 miRNA"
+    },
+    {
+     "sequence_dna": "AGCTACATTGTCTGCTGGGTTTCT",
+     "label": "nta#T|nta#T#1",
+     "type_label": "+U non-templated",
+     "relation": "nta",
+     "shift_3p": 1,
+     "pooled_share": 0.067,
+     "capture_class": "assumed_templated",
+     "capture_label": "assumed like +1 nt (non-templated, not measured)"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-27b-3p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "UUCACAGUGGCUAAGUUCUGC",
+   "length": 21,
+   "overhang_rna": "UUCUGC",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.637,
+   "iqr_3prime_fraction": [
+    0.492,
+    0.797
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.381,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form −1 nt, 38.0% of reads (pooled) vs 38.1% with the miRBase end",
+   "dominant_ratio": 0.997,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCTG",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.38,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCTGCT",
+     "label": "nta#T|nta#T#1",
+     "type_label": "+U non-templated",
+     "relation": "nta",
+     "shift_3p": 1,
+     "pooled_share": 0.048,
+     "capture_class": "assumed_templated",
+     "capture_label": "assumed like +1 nt (non-templated, not measured)"
+    },
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCT",
+     "label": "lv3p|lv3pT|lv3p#-2",
+     "type_label": "−2 nt",
+     "relation": "trimmed",
+     "shift_3p": -2,
+     "pooled_share": 0.041,
+     "capture_class": "measured_range",
+     "capture_label": "3–4 Ct later · n = 1 miRNA"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-27a-3p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "UUCACAGUGGCUAAGUUCCGC",
+   "length": 21,
+   "overhang_rna": "UUCCGC",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.792,
+   "iqr_3prime_fraction": [
+    0.618,
+    0.948
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.282,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form −1 nt, 34% of reads (pooled) vs 28% with the miRBase end",
+   "dominant_ratio": 1.213,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCCG",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.342,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCC",
+     "label": "lv3p|lv3pT|lv3p#-2",
+     "type_label": "−2 nt",
+     "relation": "trimmed",
+     "shift_3p": -2,
+     "pooled_share": 0.054,
+     "capture_class": "measured_range",
+     "capture_label": "3–4 Ct later · n = 1 miRNA"
+    },
+    {
+     "sequence_dna": "TTCACAGTGGCTAAGTTCCGCT",
+     "label": "nta#T|nta#T#1",
+     "type_label": "+U non-templated",
+     "relation": "nta",
+     "shift_3p": 1,
+     "pooled_share": 0.051,
+     "capture_class": "assumed_templated",
+     "capture_label": "assumed like +1 nt (non-templated, not measured)"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-107",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "AGCAGCAUUGUACAGGGCUAUCA",
+   "length": 23,
+   "overhang_rna": "CUAUCA",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.662,
+   "iqr_3prime_fraction": [
+    0.512,
+    0.863
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.432,
+   "reference_status": "matches",
+   "dominant_isoform_risk": true,
+   "dominant_isoform_short": "most common 3′ form −1 nt, 40% of reads (pooled) vs 43% with the miRBase end",
+   "dominant_ratio": 0.933,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "AGCAGCATTGTACAGGGCTATC",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.403,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "AGCAGCATTGTACAGGGCTATCT",
+     "label": "nta#T|nta#T#1",
+     "type_label": "−1 nt then +U",
+     "relation": "nta",
+     "shift_3p": 0,
+     "pooled_share": 0.106,
+     "capture_class": "not_measured",
+     "capture_label": "not measured"
+    },
+    {
+     "sequence_dna": "AGCAGCATTGTACAGGGCTATCAT",
+     "label": "nta#T|nta#T#1",
+     "type_label": "+U non-templated",
+     "relation": "nta",
+     "shift_3p": 1,
+     "pooled_share": 0.01,
+     "capture_class": "assumed_templated",
+     "capture_label": "assumed like +1 nt (non-templated, not measured)"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change",
+    "three_prime_isomir_dominant"
+   ]
+  },
+  {
+   "mirna": "hsa-miR-30a-5p",
+   "algorithm_version": "4.0.0",
+   "sequence_rna_22_1": "UGUAAACAUCCUCGACUGGAAG",
+   "length": 22,
+   "overhang_rna": "UGGAAG",
+   "overhang_len": 6,
+   "level": "high",
+   "median_3prime_fraction": 0.782,
+   "iqr_3prime_fraction": [
+    0.367,
+    0.938
+   ],
+   "three_prime_isomir_risk": true,
+   "fold_change_bias_risk": true,
+   "canonical_3prime_share_pooled": 0.459,
+   "reference_status": "matches",
+   "dominant_isoform_risk": false,
+   "dominant_isoform_short": null,
+   "dominant_ratio": 0.403,
+   "dominant_threshold": 0.8,
+   "top3": [
+    {
+     "sequence_dna": "TGTAAACATCCTCGACTGGAAGCT",
+     "label": "lv3p|lv3pE|lv3p#2",
+     "type_label": "+2 nt",
+     "relation": "extended",
+     "shift_3p": 2,
+     "pooled_share": 0.185,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TGTAAACATCCTCGACTGGAAGC",
+     "label": "lv3p|lv3pE|lv3p#1",
+     "type_label": "+1 nt",
+     "relation": "extended",
+     "shift_3p": 1,
+     "pooled_share": 0.142,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    },
+    {
+     "sequence_dna": "TGTAAACATCCTCGACTGGAA",
+     "label": "lv3p|lv3pT|lv3p#-1",
+     "type_label": "−1 nt",
+     "relation": "trimmed",
+     "shift_3p": -1,
+     "pooled_share": 0.053,
+     "capture_class": "measured_range",
+     "capture_label": "0–4 Ct later · n = 2 miRNAs"
+    }
+   ],
+   "warning_fields": [
+    "three_prime_isomir",
+    "three_prime_isomir_fold_change"
+   ]
+  }
+ ]
+}

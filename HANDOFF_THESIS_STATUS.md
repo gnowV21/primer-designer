@@ -1,4 +1,4 @@
-# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-18, đóng băng algorithm 4.0.0)
+# HANDOFF — Trạng thái dự án khóa luận (cập nhật 2026-11-21, đóng băng algorithm 4.0.0)
 
 > File này dùng để gửi lại cho Claude ở phiên mới, để Claude biết đã làm được gì, đang ở bước nào và còn gì phải làm cho khóa luận.
 > Ngôn ngữ trao đổi: **tiếng Việt** (giải thích, feedback). UI labels và code giữ **tiếng Anh**.
@@ -69,6 +69,7 @@
 | 2026-11-21 | **Kế hoạch tăng tốc 2 đóng** (`docs/REVIEW_panel_4.0.0.md` §11). Bằng chứng tham chiếu 200 hsa: so bản gốc với output Bước 2 thì có 186 bản ghi khác, tất cả ở `data_note`, và chỉ 1 cặp chuỗi ("7 entries" → "8 entries" của PR #22). Bản tham chiếu đã sửa (`benchmark/logs/design_equivalence_ref_hsa200.jsonl`) trùng từng byte với output Bước 2. E2E 109/109. `freeze_pipeline` provenance ghi `env_BLAST_USAGE_REPORT`. `docs/THESIS_FREEZE_4.0.0.md` có thêm §6 (hiệu năng sau tag: p50 / p90 5,02 / 6,21 s), số cũ giữ nguyên. Bước 3–5 (số tiến trình blastn, blastn chạy nền, cache 2 tầng) **không làm**: lợi ≤ 1,4 s, không đáng rủi ro sau tag. Test backend 950 |
 | 2026-11-21 | **Sửa worker pool mồ côi** (nhánh `fix/pool-orphan-workers`, `docs/REVIEW_panel_4.0.0.md` §12; không đổi output). Khi tiến trình sở hữu pool phân loại bị dừng cưỡng bức, worker còn chạy (12 sau khi tắt Flask). Initializer `_exit_with_parent` cho mỗi worker một luồng chờ tiến trình cha rồi thoát. Kiểm tra: dựng lại lỗi 1/3 → 0/3; Flask thật 0/13 còn sống; 200 hsa cache trống trùng từng byte với bản tham chiếu đã commit. Test backend 951 |
 | 2026-11-21 | **Kiểm tra `mp.Pool` của script offline khi bị kill** (chỉ đọc, `docs/REVIEW_panel_4.0.0.md` §12). Worker làm nốt chunk đang có rồi tự thoát: `design_all` 0/4 còn sống trước mốc 120 s, `build_matrix` 0/4 sau 15 s. Mục cache BLAST và block ma trận ghi ra sau khi kill đều đúng (block ghi qua `.part` + `os.replace`, trùng từng byte với bản đóng băng). Không sửa |
+| 2026-11-21 | **Hiện isoform 3′ từ isomiRdb + cảnh báo isoform trội** (nhánh `feat/isomir-variants`, `docs/PROMPT_isomir_variants_4.0.0.md`; không đổi output thiết kế, algorithm vẫn 4.0.0). Top 3 isoform 3′ so với trình tự thiết kế, kèm loại và mức bắt (khoảng từ `ASSAY_DCQ_RT_SHIFT_RANGE`; lệch ≥ 3 nt "not measured", tránh giả tạo ±2 nt của `rt_axis`). Cảnh báo isoform trội: top 1 ≥ 0,8 × share đầu 3′ của 22.1 (pooled; mốc riêng, chưa hiệu chỉnh) bật ở 302/2032 hsa; không bật ở 91 miRNA mà tham chiếu isomiRdb có thể khác 22.1. Hiện trong nút "Why", PDF, CSV. Sửa câu "about as well". Kiểm 9 ca đã công bố (`docs/ISOMIR_CASE_CHECK.md`, 6/9 bật, không phải đánh giá độc lập). Chứng minh: 200 hsa chỉ khác ở `three_prime_isomir*`, #1 trùng bản đóng băng 200/200, validation 2439/2439, benchmark 50/50. AUDIT ISO-07/08/09, `docs/THESIS_FREEZE_4.0.0.md` §7 |
 
 ## 3. Kiểm chứng (số liệu dùng được cho chương Kết quả)
 
@@ -107,7 +108,7 @@
 | Độ nhạy BLAST — 100 mồi stem-loop, biên 10 °C, có bước RT (như app chạy): hit CRITICAL / mồi có hit CRITICAL | **15 / 8** | 17 / 11 | `benchmark/blast_tm_gate_sensitivity.json`, `summary.stem_loop["10_rt_step"]` |
 | Độ nhạy BLAST — 175 mồi (100 stem-loop + 75 Busk poly(A)), biên 10 °C, chỉ mồi xuôi, không bước RT: số mồi SAFE / MEDIUM / HIGH / CRITICAL | 105 / 15 / 4 / 51 | 95 / 22 / 4 / 54 | như trên, `summary.all["10"]` |
 | Thiết kế không cache (20 hsa, seed 2026) | p50 9,8 s, p90 11,9 s (BLAST p50 8,1 s) | p50 1,4 s (không BLAST) | `benchmark/tiered_design_timing.json` |
-| Backend tests / e2e / `crossreactivity/tests` | 908 passed, 3 skipped / **109/109** (cache làm nóng bằng `e2e/global-setup.js`, chờ thiết kế 30 s) / 29 — sau review 2026-11-18: 930 / 112/112 / 29; sau Bước 2 (2026-11-20): backend 936; sau Bước 3: backend 941; sau KH2 Bước 2 (2026-11-21): backend 948, sau khi đóng KH2: backend 950, e2e 109/109; sau sửa pool mồ côi: backend 951 | 733 / 74 / 29 | 2026-11-18 |
+| Backend tests / e2e / `crossreactivity/tests` | 908 passed, 3 skipped / **109/109** (cache làm nóng bằng `e2e/global-setup.js`, chờ thiết kế 30 s) / 29 — sau review 2026-11-18: 930 / 112/112 / 29; sau Bước 2 (2026-11-20): backend 936; sau Bước 3: backend 941; sau KH2 Bước 2 (2026-11-21): backend 948, sau khi đóng KH2: backend 950, e2e 109/109; sau sửa pool mồ côi: backend 951; sau isoform 3′ (2026-11-21): backend 978, e2e 118/118, crossreactivity 29 | 733 / 74 / 29 | 2026-11-18 |
 
 - **Validation in-silico:** `validation/results.json` — 2439/2439 check pass, 201 target (197 mục `mirnas` + 4 edge case trong `reference_mirnas.json`; report ghi "193 miRNAs + 4 edge cases"). Bộ gốc ban đầu: 783/783, 62 miRNA + 4 edge case. Báo cáo: `validation/VALIDATION_REPORT.md`, phương pháp: `validation/VALIDATION_PLAN.md`.
   - Ground truth tất định theo Chen 2005: RT primer = body universal cố định + revcomp 6 nt đầu 3'; reverse = hằng số; vùng đặc hiệu forward = tiền tố 5' của miRNA. Tính lại độc lập từ trình tự tool thực dùng.
@@ -162,6 +163,7 @@
 - BLAST: phân tích độ nhạy biên CRITICAL (3/5/7 °C) — biên này mới quyết định số CRITICAL.
 - ~~Bug dữ liệu miR-155-5p 24 nt~~ — không phải lỗi: miRBase 22.1 chú giải MIMAT0000646 dài 24 nt (AUDIT REV-28).
 - ~~BLAST: thay ngưỡng neo 10 nt bằng cổng Tm~~ — xong 2026-10-28 (so với Tm đúng đích, không phải Ta: SPEC_phase3 §8.13).
+- **ISO-08** — mở rộng register `rt_axis` lên lệch ≥ 3 nt với lớp `not_measured`; làm cùng lần nâng miRBase 23.1 hoặc khi có dữ liệu. Hiện là giới hạn đã biết: 16 cặp có hướng trên hsa (`benchmark/iso08_pairs.json`, `docs/THESIS_FREEZE_4.0.0.md` §4).
 - Self-host font IBM Plex (đang dùng Google Fonts CDN).
 - Family lookup dựa vào tên → dán trình tự trần không tìm được family.
 

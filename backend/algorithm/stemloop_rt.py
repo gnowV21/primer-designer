@@ -130,7 +130,8 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
     # affected isoforms. Data-driven now — only miRNAs with a documented entry raise a
     # warning; others get a neutral info note (absence of evidence != evidence of absence).
     three_prime_isomir = check_3prime_isomir_flag(
-        mirna_name, binding_len, sample_type=params.get("sampleType"))
+        mirna_name, binding_len, sample_type=params.get("sampleType"),
+        target_seq=mature_sequence)
     if three_prime_isomir["three_prime_isomir_risk"]:
         warnings.append({
             "field": "three_prime_isomir",
@@ -168,6 +169,15 @@ def design_stemloop_rt(mature_sequence: str, params: dict, mirna_name: str = "")
                 "for affected isoforms."
             ),
             "coverage_note": three_prime_isomir.get("coverage_note"),
+        })
+    # Dominant 3' isoform (display only): the most common 3' form rivals the miRBase
+    # 22.1 end, so the RT primer targets a minority form (Pillman 2019).
+    if three_prime_isomir.get("dominant_isoform_risk"):
+        warnings.append({
+            "field": "three_prime_isomir_dominant",
+            "severity": "warning",
+            "message": three_prime_isomir["dominant_isoform_warning"],
+            "source": "Pillman KA et al. RNA 2019;25(2):232-238 [PMID:30487268]; isomiRdb (PMID 36243964)",
         })
 
     # [RESEARCH_QUESTIONS_UX A2] Compute DNA:RNA hybrid Tm for the RT overhang.

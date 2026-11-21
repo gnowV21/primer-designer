@@ -29,4 +29,6 @@ export const WARM_MIRNAS = [
   { name: 'hsa-let-7a-5p', sequence: 'UGAGGUAGUAGGUUGUAUAGUU' },
   // #1 below the 39 °C binding-Tm floor and outside a V4 rule (gc_clamp_fail), grade B
   { name: 'hsa-miR-590-3p', sequence: 'UAAUUUUAUGUAUAAGCUAGU' },
+  // most common 3′ isoform +3 nt (36 % pooled) vs 9 % with the miRBase end: dominant-isoform line
+  { name: 'hsa-miR-222-3p', sequence: 'AGCUACAUCUGGCUACUGGGU' },
 ];
