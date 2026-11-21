@@ -166,3 +166,48 @@ def test_broken_pool_falls_back(monkeypatch, fresh_pool):
     monkeypatch.setattr(bo, "_classify_pool", broken)
     monkeypatch.setenv("BLAST_CLASSIFY_PROCESSES", "3")
     assert _dump(_batch(primers)) == _dump(seq)
+
+
+_OWNER = r'''
+import os, sys, time
+sys.path.insert(0, os.getcwd())
+from algorithm.specificity_check import blast_offtarget as bo
+pool = bo._classify_pool(3)
+list(pool.map(abs, range(30)))          # start the workers
+print(" ".join(str(p) for p in pool._processes), flush=True)
+time.sleep(600)
+'''
+
+
+def test_workers_exit_when_owner_is_killed():
+    """A process that owns the classify pool and is killed without shutting it down
+    (a dev server stopped hard) must not leave its workers running."""
+    import subprocess
+    import sys
+    import time
+    psutil = pytest.importorskip("psutil")
+    backend = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    owner = subprocess.Popen([sys.executable, "-c", _OWNER], cwd=backend, text=True,
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                             stdin=subprocess.DEVNULL)
+    pids = []
+    try:
+        pids = [int(x) for x in owner.stdout.readline().split()]
+        assert len(pids) == 3
+        owner.kill()
+        owner.wait(timeout=30)
+        deadline = time.monotonic() + 15
+        alive = pids
+        while alive and time.monotonic() < deadline:
+            time.sleep(0.2)
+            alive = [p for p in pids if psutil.pid_exists(p)
+                     and psutil.Process(p).status() != psutil.STATUS_ZOMBIE]
+        assert alive == [], f"pool workers still running after the owner was killed: {alive}"
+    finally:
+        owner.kill()
+        owner.stdout.close()
+        for p in pids:
+            try:
+                psutil.Process(p).kill()
+            except psutil.Error:
+                pass

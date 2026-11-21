@@ -915,8 +915,25 @@ def _classify_pool(k: int) -> concurrent.futures.ProcessPoolExecutor:
     global _POOL
     with _POOL_LOCK:
         if _POOL is None:
-            _POOL = concurrent.futures.ProcessPoolExecutor(max_workers=k)
+            _POOL = concurrent.futures.ProcessPoolExecutor(
+                max_workers=k, initializer=_exit_with_parent)
         return _POOL
+
+
+def _exit_with_parent() -> None:
+    """Pool worker initializer: end this worker when the process that owns the pool
+    ends. A worker waits on the pool's call queue, whose pipe it also holds open, so
+    a parent killed without shutting the pool down (a dev server stopped hard) left
+    its workers running. A daemon thread waits on the parent's sentinel and exits.
+    Nothing a worker computes depends on this thread."""
+    parent = multiprocessing.parent_process()
+    if parent is None:
+        return
+
+    def _watch() -> None:
+        parent.join()
+        os._exit(0)
+    threading.Thread(target=_watch, name="exit-with-parent", daemon=True).start()
 
 
 def _discard_pool() -> None:
