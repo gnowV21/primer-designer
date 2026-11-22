@@ -16,7 +16,7 @@ from flask import Blueprint, jsonify, request
 
 from algorithm.specificity_check.blast_offtarget import (
     is_mirbase_species, overhang_len_from_rt_primer,
-    check_offtarget, resolve_p3_conditions, _METADATA,
+    check_offtarget, resolve_p3_conditions, _METADATA, blast_db_release_problem,
 )
 from algorithm.specificity_check.blast_cache import BlastCache
 from algorithm.sequence_utils import rna_to_dna
@@ -28,6 +28,7 @@ from algorithm.constants import (
 
 blast_check_bp = Blueprint("blast_check", __name__)
 log = logging.getLogger(__name__)
+
 
 # Module-level singletons (reset on server restart, not persisted)
 _cache           = BlastCache()
@@ -207,6 +208,10 @@ def blast_status():
     metadata_path = os.path.join(db_dir, "metadata.json")
 
     available = all(os.path.exists(os.path.join(db_dir, f)) for f in required)
+    # A DB from another miRBase file than the overhang index is not used (pinned 22.1).
+    release_problem = blast_db_release_problem() if available else None
+    if release_problem:
+        available = False
 
     sequences_count = None
     build_date = None
@@ -225,7 +230,9 @@ def blast_status():
         except Exception:
             pass
 
-    if not available:
+    if release_problem:
+        message = f"Off-target database unavailable: {release_problem}."
+    elif not available:
         message = "Off-target database is being prepared. Please try again shortly."
     elif outdated_warning:
         message = (
