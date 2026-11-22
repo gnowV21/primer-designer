@@ -9,6 +9,7 @@
 
 import hashlib
 import json
+import logging
 import os
 import re
 
@@ -33,11 +34,38 @@ _CACHE_TTL_DAYS = 30                                      # SPEC §E.2
 #       melting-curve headroom, gel header/lane overlap.
 _RENDER_VERSION = 11
 
-_CACHE = SQLiteKVCache(
-    db_path=os.path.join(os.path.dirname(__file__), "..", "data", "visualize_cache.sqlite"),
-    table_name="visualize",
-    default_ttl_days=_CACHE_TTL_DAYS,
-)
+# VISUALIZE_CACHE_PATH: another cache file (the deployed image sets one under /tmp,
+# the only writable place there). The cache is optional: it is opened on first use,
+# and a cache that cannot be opened, read or written only skips caching.
+_DEFAULT_CACHE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "visualize_cache.sqlite")
+_CACHE = None
+_log = logging.getLogger(__name__)
+
+
+def _cache():
+    global _CACHE
+    if _CACHE is None:
+        _CACHE = SQLiteKVCache(
+            db_path=os.environ.get("VISUALIZE_CACHE_PATH") or _DEFAULT_CACHE_PATH,
+            table_name="visualize",
+            default_ttl_days=_CACHE_TTL_DAYS,
+        )
+    return _CACHE
+
+
+def _cache_get(key):
+    try:
+        return _cache().get(key)
+    except Exception as e:  # noqa: BLE001 — a cache failure never fails the request
+        _log.warning("visualize cache read failed: %s", e)
+        return None
+
+
+def _cache_set(key, value):
+    try:
+        _cache().set(key, value, ttl_days=_CACHE_TTL_DAYS)
+    except Exception as e:  # noqa: BLE001
+        _log.warning("visualize cache write failed: %s", e)
 
 
 def _err(error_code, detail, status=422, **extra):
@@ -76,7 +104,7 @@ def visualize():
 
     # ── 2. Cache ──────────────────────────────────────────────────────────────
     key = _cache_key(data)
-    hit = _CACHE.get(key)
+    hit = _cache_get(key)
     if hit:
         return jsonify(json.loads(hit["value"]))
 
@@ -134,5 +162,5 @@ def visualize():
             "size_warning": model.size_warning,
         },
     }
-    _CACHE.set(key, json.dumps(resp), ttl_days=_CACHE_TTL_DAYS)
+    _cache_set(key, json.dumps(resp))
     return jsonify(resp)

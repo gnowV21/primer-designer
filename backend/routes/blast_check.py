@@ -30,8 +30,29 @@ blast_check_bp = Blueprint("blast_check", __name__)
 log = logging.getLogger(__name__)
 
 
+
+class _LazyBlastCache:
+    """BlastCache opened on first use. Opening creates the sqlite file, so a cache path
+    that cannot be written (a read-only image without BLAST_CACHE_PATH) must not stop
+    the app from importing; every call site below is guarded and skips the cache."""
+
+    def __init__(self):
+        self._cache = None
+
+    def _get(self) -> BlastCache:
+        if self._cache is None:
+            self._cache = BlastCache()
+        return self._cache
+
+    def get_result(self, *args, **kwargs):
+        return self._get().get_result(*args, **kwargs)
+
+    def set_result(self, *args, **kwargs):
+        return self._get().set_result(*args, **kwargs)
+
+
 # Module-level singletons (reset on server restart, not persisted)
-_cache           = BlastCache()
+_cache           = _LazyBlastCache()
 _circuit_breaker = CircuitBreaker()
 # Override defaults from constants
 _circuit_breaker.FAILURE_THRESHOLD = BLAST_CB_FAILURE_THRESHOLD
