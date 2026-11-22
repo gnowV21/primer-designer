@@ -16,6 +16,7 @@
 #   [Kwok90] Kwok et al. 1990 Nucleic Acids Research 18(4):999-1005
 # ================================================================
 
+import atexit
 import concurrent.futures
 import logging
 import math
@@ -920,9 +921,32 @@ def _classify_pool(k: int) -> concurrent.futures.ProcessPoolExecutor:
     global _POOL
     with _POOL_LOCK:
         if _POOL is None:
+            # spawn, not Linux's default fork: the pool is created from a request
+            # thread of a multi-threaded server (gunicorn --threads), and a forked
+            # child inherits every lock another thread held at that moment (the
+            # primer3_safe lock, logging) in the locked state — a worker would hang
+            # on its first primer3 call. Windows always spawns, so this is the start
+            # method the pool was verified with (docs/REVIEW_panel_4.0.0.md §9).
             _POOL = concurrent.futures.ProcessPoolExecutor(
-                max_workers=k, initializer=_exit_with_parent)
+                max_workers=k, initializer=_exit_with_parent,
+                mp_context=multiprocessing.get_context("spawn"))
         return _POOL
+
+
+def shutdown_classify_pool(wait: bool = True) -> None:
+    """Shut the classification pool down (queued tasks cancelled, running ones
+    finished, workers joined). Registered with atexit, so a server stopped with
+    SIGTERM — gunicorn ends its worker with a normal interpreter exit after the
+    graceful timeout — leaves no worker process behind; a worker whose owner is
+    killed outright exits by itself (_exit_with_parent)."""
+    global _POOL
+    with _POOL_LOCK:
+        pool, _POOL = _POOL, None
+    if pool is not None:
+        pool.shutdown(wait=wait, cancel_futures=True)
+
+
+atexit.register(shutdown_classify_pool)
 
 
 def _exit_with_parent() -> None:

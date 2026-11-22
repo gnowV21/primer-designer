@@ -5,8 +5,12 @@
   .git) are never returned, whatever the path spelling.
 - Unknown /api/* is a JSON 404; an /api route keeps its own 404/405.
 - CORS origins from CORS_ORIGINS; debug only with FLASK_DEBUG=1; port from PORT.
+- The BLAST classification pool is spawned (not forked) and shut down at exit.
 """
+import importlib
 import os
+import subprocess
+import sys
 
 import pytest
 
@@ -167,3 +171,41 @@ def test_visualize_cache_path_from_env_and_failure_tolerated(monkeypatch, tmp_pa
     rv._cache_set("k", "{}")
     assert rv._cache_get("k") is None
 
+
+# ── the BLAST classification pool ─────────────────────────────────
+
+def test_pool_is_spawned_and_registered_for_exit(monkeypatch):
+    from algorithm.specificity_check import blast_offtarget as bo
+    bo.shutdown_classify_pool()
+    try:
+        pool = bo._classify_pool(2)
+        assert pool._mp_context.get_start_method() == "spawn"
+    finally:
+        bo.shutdown_classify_pool()
+    assert bo._POOL is None
+
+
+_EXITING_OWNER = r'''
+import os, sys
+sys.path.insert(0, os.getcwd())
+from algorithm.specificity_check import blast_offtarget as bo
+pool = bo._classify_pool(2)
+list(pool.map(abs, range(20)))
+print(" ".join(str(p) for p in pool._processes), flush=True)
+sys.exit(0)        # a normal exit, as gunicorn's worker after SIGTERM
+'''
+
+
+def test_workers_gone_after_normal_exit():
+    psutil = pytest.importorskip("psutil")
+    p = subprocess.run([sys.executable, "-c", _EXITING_OWNER], cwd=BACKEND, text=True,
+                       capture_output=True, timeout=120)
+    assert p.returncode == 0, p.stderr
+    pids = [int(x) for x in p.stdout.split()]
+    assert len(pids) == 2
+    import time
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline and any(psutil.pid_exists(x) for x in pids):
+        time.sleep(0.2)
+    assert not [x for x in pids if psutil.pid_exists(x)
+                and psutil.Process(x).status() != psutil.STATUS_ZOMBIE]
