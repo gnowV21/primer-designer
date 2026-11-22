@@ -159,7 +159,7 @@ Tất cả constants trong spec này có nguồn rõ ràng. Ký hiệu:
 - [SL07] = SantaLucia 2007 bound fraction method
 - [Chen05] = Chen et al. 2005 stem-loop RT-qPCR foundational paper
 - [R2] = Report 2 (tài liệu kỹ thuật nội bộ HG Lab)
-- [PAST24] = PrimerAST paper 2024 (PMC13172444)
+- [PAST24] = PrimerAST: Al-Mahrami N et al., Sci Rep 2026;16:14980, doi:10.1038/s41598-026-38238-8 (PMC13172444, PMID 41881996). Nhãn `[PAST24]` giữ nguyên trong code; năm đúng là 2026
 - [Kor07] = Koressaar & Remm 2007 Bioinformatics — Primer3 divalent correction paper
 
 ---
@@ -1858,7 +1858,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
     scores["gc_content"] = round(gc_score, 1)
     explanations["gc_content"] = (
         f"GC content = {gc}% (optimal range: {GC_MIN}–{GC_MAX}%, target: {GC_OPTIMAL}%). "
-        f"Source: IDT guidelines, PrimerAST 2024."
+        f"Source: IDT guidelines, PrimerAST 2026."
     )
 
     # ── 4. MFE of stem-loop hairpin (weight 0.20) ─────────────────
@@ -1964,7 +1964,7 @@ def score_candidate(forward: dict, stemloop: dict, reverse: dict, params: dict) 
     explanations["tm_pair_match"] = (
         f"Tm difference: forward {tm}°C vs. reverse {tm_rev}°C = {tm_diff_pair:.1f}°C difference "
         f"(recommended: < {TM_PAIR_DIFF_MAX}°C). "
-        f"Source: PrimerAST 2024 — 'max Tm difference of 2°C between primers'."
+        f"Source: PrimerAST 2026 — 'max Tm difference of 2°C between primers'."
     )
 
     # ── 9. Primer size (weight 0.05) ─────────────────────────────
@@ -2102,7 +2102,7 @@ def design_primers():
             "elapsed_seconds": elapsed,
             "algorithm_version": "2.0",
             "sources": ["Chen et al. 2005", "Primer3Plus", "IDT OligoAnalyzer",
-                       "SantaLucia 1998", "PrimerAST 2024"],
+                       "SantaLucia 1998", "PrimerAST 2026"],
         }
     })
 ```
@@ -2188,13 +2188,13 @@ def design_primers():
       "explanations": {
         "tm_accuracy": "Forward primer Tm = 60.1°C (target: 60.0°C, tolerance ±2.0°C). Difference: 0.1°C. Method: SantaLucia 1998 nearest-neighbor with Mg²⁺ salt correction.",
         "tm_binding_accuracy": "Binding region Tm = 34.8°C (specific 11 nt region only). Based on Primer3Plus SEQUENCE_OVERHANG_LEFT principle.",
-        "gc_content": "GC content = 48.0% (optimal range: 40–60%, target: 50%). Source: IDT guidelines, PrimerAST 2024.",
+        "gc_content": "GC content = 48.0% (optimal range: 40–60%, target: 50%). Source: IDT guidelines, PrimerAST 2026.",
         "mfe_stemloop": "Stem-loop MFE = -11.40 kcal/mol (optimal: -13 to -10 kcal/mol). MFE sweet spot balances RT efficiency vs. PCR denaturability. Calculated by ViennaRNA.",
         "hairpin_penalty": "Forward primer hairpin ΔG = -1.20 kcal/mol (threshold: > -3.0 kcal/mol). Severity: safe.",
         "dimer_penalty": "Worst 3'-end dimer ΔG = -2.00 kcal/mol (threshold: > -5.0 kcal/mol for qPCR). Source: IDT OligoAnalyzer.",
         "end_stability": "3' end stability (last 5 bases: 'TGATG') = 4.20 kcal/mol (threshold: ≤ 9.0 kcal/mol). Source: Primer3Plus PRIMER_MAX_END_STABILITY.",
         "amplicon_size": "Predicted amplicon size: 68 bp (IDT recommended: 60–150 bp, target: 80 bp).",
-        "tm_pair_match": "Tm difference: forward 60.1°C vs. reverse 60.4°C = 0.3°C (recommended: < 2.0°C). Source: PrimerAST 2024."
+        "tm_pair_match": "Tm difference: forward 60.1°C vs. reverse 60.4°C = 0.3°C (recommended: < 2.0°C). Source: PrimerAST 2026."
       }
     }
   ],
@@ -2251,7 +2251,7 @@ def design_primers():
     "elapsed_seconds": 3.8,
     "algorithm_version": "2.0",
     "sources": ["Chen et al. 2005", "Primer3Plus", "IDT OligoAnalyzer",
-                "SantaLucia 1998", "PrimerAST 2024"]
+                "SantaLucia 1998", "PrimerAST 2026"]
   }
 }
 ```
@@ -3421,7 +3421,7 @@ elif gc_last3 == 1: gc_clamp_score = 60    # relaxed fallback — suboptimal
 else:               gc_clamp_score = 0     # no anchor — không nên reach scoring
 
 # Weight: SCORING_WEIGHTS_V3["gc_clamp"] = 0.03
-# Nguồn: IDT PrimerQuest "3' GC clamp(nt) = 2", PrimerAST 2024 feature importance
+# Nguồn: IDT PrimerQuest "3' GC clamp(nt) = 2", PrimerAST 2026 feature importance
 
 # Unit test:
 def test_gc_clamp_scoring():
