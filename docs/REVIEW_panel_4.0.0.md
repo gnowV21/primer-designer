@@ -608,4 +608,63 @@ Muối hóa trị 1 hiệu dụng = [Na⁺] + [K⁺] + [Tris]·1/(1 + 10^(pH −
 
 **Nồng độ mồi** (Na⁺ 50, Mg²⁺ 1,5, dNTP 0,8 mM; #1 bản đóng băng của 20 hsa seed 2026). Mồi ngược 200 nM → 0,7 µM: +1,84 °C. Mồi xuôi 200 nM → 1,5 µM: trung bình +2,77 °C (+2,39 … +3,35). Tm_R − Tm_F: 2,88 °C (1,70–3,07) ở 200/200 nM, 1,95 °C (0,25–2,46) ở nồng độ Chen 2005; 0/20 ≥ 3 °C. Ô nồng độ trên UI tối đa 1000 nM và dùng chung cho cả hai mồi.
 
-**Quyết định chờ chủ dự án:** điều kiện mặc định (UI và API cho mồi khác nhau ở 20/20 ca). Bước 1 (đổi trình bày) chưa làm.
+**Quyết định (chủ dự án, 2026-11-22): hướng 2 — UI gửi đúng điều kiện của API.** Điều kiện mặc định chuẩn = mặc định API (cation hóa trị 1 50 mM, Mg²⁺ 1,5 mM, dNTP 0,8 mM, mồi 200 nM). API, thuật toán 4.0.0, JSON và số liệu đóng băng không đổi.
+
+### 13.1 Mặc định của UI (C1–C4)
+
+- `frontend/src/constants/defaults.js`: `kPlusConc` 50 → **0**. `bufferPH` vẫn hiện 8,4 nhưng chỉ được gửi khi người dùng đổi nó (`frontend/src/utils/designRequest.js`: `phApplied`, `thermoForRequest`, dùng trong `buildDesignBody` và `computeDerived`). Không gửi pH thì backend không cộng Tris (`thermodynamics.py:43-49`), nên muối hiệu dụng = `saltConcentration` = 50 mM, giống request rỗng. Primer Analyzer dùng cùng quy tắc (`AnalyzePage/index.jsx`).
+- Nhãn: "Monovalent cations (Na⁺/K⁺ total), mM"; K⁺ thành "Extra [K⁺]" ("Leave 0 if the total above already includes KCl"); pH "Only used if you change it". Chip tóm tắt: "Na⁺/K⁺ 50 mM".
+- Bản ghi History cũ (K⁺ 50 mM, pH 8,4) không bị sửa. Khi mở lại, `/results` hiện một dòng "Designed with K⁺ 50 mM + Na⁺ 50 mM (effective 103.1 mM); current default is 50 mM total." (`legacySaltNote`). Draft của `/design` chỉ nằm trong bộ nhớ (mất khi tải lại trang), nên không có draft cũ nào bền.
+- **Kiểm tra C4** (`backend/scripts/ui_default_check.py`; body lấy từ chính frontend qua `frontend/scripts/ui_default_body.mjs`; cache BLAST tắt): 20 hsa seed 2026 với body mặc định mới → **#1 trùng bản đóng băng 20/20, top 3 trùng 20/20**, hsa-miR-210-5p thiết kế được (HTTP 200, trùng). `benchmark/ui_default_vs_api_hsa20.json`: khối `before` (body cũ, 0/20) và `after` (20/20).
+
+### 13.2 Bước 1 — trình bày Required / Flexible
+
+Chỉ đổi frontend và nhãn file xuất. `tierRank.js` không đổi byte nào; khóa xếp hạng và JSON `ranking.*` giữ nguyên.
+
+- **Thẻ bộ mồi** (`TierSummary.jsx`). Grade A/B/C giữ nguyên.
+  - **Required:** "Built to the Chen 2005 assay structure", "Forward Tm … inside the Tm window", thanh Specificity S1–S3 và dòng báo fallback khi bộ đó bị loại.
+  - **Flexible**, theo thứ tự của khóa:
+    1. **No critical weakness:** một dòng; tooltip liệt kê 3 điều kiện; mỗi điều kiện trượt hiện một chip (`utils/criteriaGroups.js`).
+    2. **PCR:** P2 có điểm; ΔTm F–R, cycle-1 occupancy, Tm amplicon gắn "not scored".
+    3. **Composition & structure:** F1, F2, F4, F5; F3 "not scored"; F4 có ghi chú "PCR cycle-1 binding; scored with F, ranked after P2".
+- **ΔTm F–R:** trên thẻ chỉ ghi giá trị, không cảnh báo. "Shared by all sets" ghi Tm_R một lần, kèm câu "ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions, the same for every set." Tm_R lấy từ `ranking.pcr.tm_pair.tm_reverse` (62,93 °C). **Phát hiện:** `universal_reverse.tm` trong JSON là hằng `UNIVERSAL_REVERSE_TM_PRECALC = 60.4` (`constants.py:153`), engine không dùng. Trước đây UI hiện "Tm 60.4 °C" ở chỗ này. Không sửa backend (sẽ đổi JSON); UI chỉ còn dùng hằng này cho bộ không có `ranking`.
+- **Panel "How sets are ranked"** (`CriteriaPanel.jsx`), mở từ thẻ: bảng Required / Flexible với ngưỡng, và đoạn "Why the default Ta equals the forward-primer Tm".
+  - Ta 60 °C theo chu trình 2 bước của Chen 2005 (PMC1292995).
+  - Primer3: PRIMER_OPT_TM 60,0 °C (MIN 57,0, MAX 63,0). Bản primer3-py 2.0.3 đi kèm libprimer3 **2.6.1** (`primer3_core --about`). Giá trị đo trực tiếp trên thư viện này: đặt Tm mặc định thì opt = 60,000 °C và các mồi được nhận nằm trong 57,06–62,98 °C. Trang manual không được đọc lại trong đợt này.
+  - PrimerAST là nguồn phụ; không dẫn [R2].
+  - Tm_R 62,93 °C ở 50 mM; IDT "Ta 3–5 °C below the lowest primer Tm"; nồng độ Chen làm Tm tăng 2,4–3,4 °C.
+- **"Why #1 over #2":** câu do `rankReason.groupReason` dựng, dùng `decidingStep`/`KEY_STEPS`, và cùng bước quyết định với `tierReason` ở cả 8 nhánh (test). `tierReason` giữ lại cho `check_tier_order.mjs`.
+- **Parameters**, chia theo tác dụng:
+  - Required (`RequiredGroup.jsx`): cửa sổ Tm, amplicon, overhang RT.
+  - Flexible (`FlexibleGroup.jsx`):
+    1. Luật chuẩn: GC window, GC clamp.
+    2. PCR: Ta.
+    3. Điều kiện phản ứng.
+  - Assay setup (`AssaySetupGroup.jsx`): độ dài mồi "not used by the ranking (engine uses 18–27 nt)", số chu kỳ, hiệu suất. Sau đó là Detection Method và Experimental Context như cũ.
+  - Không đổi tên field hay giá trị mặc định. `PrimerConstraintsGroup.jsx` và `QpcrConditionsGroup.jsx` được tách vào ba nhóm trên.
+- **Chữ (C1–C3, B9):**
+  - Tooltip Ta theo C1.
+  - Cảnh báo mới khi Ta < tmMin − 1 hoặc Ta > tmMax + 1 (`utils/paramChecks.js`; ±1 °C = mức 5 của P2, `TIERED_P2_BEST_C`).
+  - Cảnh báo cũ (Ta > tmMin + 5) giữ điều kiện, đổi chữ.
+  - Tooltip nồng độ mồi theo B3, thêm vế cho mồi ngược. Đo trên 20 mồi #1: 1000 nM cho Tm mồi xuôi thấp hơn 1,5 µM 0,56 °C (0,48–0,68); mồi ngược ở 1000 nM thì cao hơn 0,7 µM 0,53 °C.
+  - Tooltip hiệu suất: "reported in the MIQE export, not used by the ranking".
+  - Ghi chú GC clamp: "the 3′ end is set by the miRNA; GC clamp is scored, not adjusted".
+  - Comment ở `design_pipeline.py:515-517` nằm trong code, không trong output, nhưng file thuộc engine nên **không sửa** trong PR này; đã ghi ở đầu mục 13.
+- **Không chữ "V4" trên UI:** nhãn luật là "Standard primer rule not met: …". Tên trường trong code và API giữ nguyên.
+- **Xuất file:** chỉ đổi tên cột CSV/TSV, thứ tự và giá trị giữ nguyên.
+  - S1 → `Req_S1_BLAST`, S2 → `Req_S2_dCq`, S3 → `Req_S3_Tm_margin`, S_total → `Req_S_total`
+  - P_total → `Flex2_PCR`, F_total → `Flex3_composition_structure`
+  - structure_veto → `Flex1_structure`, binding_floor_fail → `Flex1_binding_floor`, v4_rule_violations → `Flex1_standard_rules`
+
+  Đã grep `benchmark/`, `validation/`, `crossreactivity/`, `backend/scripts/`, `e2e/`: không script nào đọc các cột cũ; chỉ test e2e kiểm tiêu đề. TSV: `Req_S_total`, `Flex2_PCR`, `Flex3_composition_structure`. PDF: "Standard primer rules not met", "Grade · criteria groups", ghi chú "Required S … · PCR P … · Composition & structure F …".
+
+### 13.3 Kiểm tra
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `node frontend/scripts/check_tier_order.mjs` | 2472/2472 trùng thứ tự API |
+| JSON `/api/design`, 20 hsa seed 2026, `design_equivalence.py run` trên `master` và trên nhánh | trùng từng byte (sha256 `56059233…`, `compare`: 0 khác) |
+| C4: body mặc định mới của UI | #1 20/20, top 3 20/20, miR-210-5p thiết kế được |
+| Backend `pytest tests visualization` | 978 passed, 3 skipped |
+| E2E Playwright | **137/137** passed, 0 flaky (thêm `e2e/criteria-groups.spec.js`, 11 test `groupReason`) |
+| Ảnh chụp | `docs/screenshots/criteria-groups/`: thẻ #1 ở 390 và 1280 px cho grade A (miR-21-5p), fallback (let-7a-5p), ΔTm 3,03 °C (miR-647); Flexible · PCR ở Ta 60 và Ta 56; panel tiêu chí; khối mồi ngược |
