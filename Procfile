@@ -1,1 +1,1 @@
-web: cd backend && python -m scripts.bootstrap_blast_db && python app.py
+web: cd backend && (python -m scripts.bootstrap_blast_db || echo "bootstrap failed: BLAST unavailable") && exec gunicorn app:app -w 1 --threads 4 --timeout 280 --graceful-timeout 25 --bind 0.0.0.0:${PORT:-5000}

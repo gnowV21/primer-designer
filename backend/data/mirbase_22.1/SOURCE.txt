@@ -1,0 +1,19 @@
+miRBase Release 22.1 — mature.fa (all species, 48,885 mature miRNAs)
+
+File        mature.fa.gz  (gzip -n -9 of mature.fa; the .gz bytes depend on the
+                           compressor, so only the uncompressed sha256 is pinned)
+sha256      3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342
+            of the UNCOMPRESSED mature.fa (see SHA256, `sha256sum -c` after gunzip)
+Entries     48,885  (">" header lines)
+Source      https://www.mirbase.org/download_version_files/22/mature.fa
+            (miRBase download page -> "Previous Releases" -> "22"; the site lists
+            20, 21, 22 there and serves the 22.1 file under "22"; the sha256 above
+            is what identifies it as the file behind the 4.0.0 freeze)
+Fetched     2026-11-22; byte-identical to the mature.fa the BLAST DB, the overhang
+            index (backend/data/mirbase_overhang_index.json, _metadata) and the local
+            lookup DB were built from in 2026-06/07.
+
+Used by     backend/scripts/build_blast_db.py, backend/scripts/build_db.py and
+            backend/scripts/bootstrap_blast_db.py. They check the sha256 before every
+            build and refuse a file that does not match. miRBase CURRENT is 23.1
+            (61,007 entries) since 2026-09: never build from CURRENT for 4.0.0.

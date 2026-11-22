@@ -2,7 +2,7 @@
 
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -54,40 +54,27 @@ class TestDbIsPresent:
 
 
 class TestRun:
+    """run() never raises; it returns False when a build fails. Release checks:
+    tests/test_mirbase_pin.py."""
+
     def test_db_present_skip(self, tmp_path, monkeypatch):
-        """If DB is already present, build should NOT be called."""
-        _make_present(tmp_path, monkeypatch)
-        build_called = []
-
-        def fake_build():
-            build_called.append(True)
-
-        with patch("scripts.bootstrap_blast_db.db_is_present", return_value=True):
+        """BLAST DB and lookup DB on the pinned release → nothing is built."""
+        with patch("scripts.bootstrap_blast_db.blast_db_ok", return_value=True),              patch("scripts.bootstrap_blast_db.lookup_db_ok", return_value=True),              patch("scripts.bootstrap_blast_db.db_is_present", return_value=True),              patch("scripts.bootstrap_blast_db.metadata_sha256",
+                   return_value=__import__("scripts.mirbase_pin").mirbase_pin.pinned_sha256()),              patch("scripts.bootstrap_blast_db._build_blast") as b1,              patch("scripts.bootstrap_blast_db._build_lookup") as b2:
             result = run()
-
         assert result is True
-        assert len(build_called) == 0
-
-    def test_db_absent_build_success(self, tmp_path, monkeypatch):
-        """If DB absent, build is called; returns True when DB appears after build."""
-        call_count = [0]
-
-        def fake_is_present():
-            call_count[0] += 1
-            return call_count[0] > 1  # first call False (absent), second call True (built)
-
-        with patch("scripts.bootstrap_blast_db.db_is_present", side_effect=fake_is_present):
-            with patch.dict("sys.modules", {"scripts.build_blast_db": MagicMock()}):
-                sys.modules["scripts.build_blast_db"].main = lambda: None
-                result = run()
-
-        assert result is True
+        b1.assert_not_called()
+        b2.assert_not_called()
 
     def test_build_failure_does_not_crash(self, tmp_path, monkeypatch):
         """Build failure must log error and return False — app should not crash."""
-        with patch("scripts.bootstrap_blast_db.db_is_present", return_value=False):
-            with patch.dict("sys.modules", {"scripts.build_blast_db": MagicMock()}):
-                sys.modules["scripts.build_blast_db"].main = MagicMock(side_effect=RuntimeError("network down"))
-                result = run()
+        with patch("scripts.bootstrap_blast_db.blast_db_ok", return_value=False),              patch("scripts.bootstrap_blast_db.db_is_present", return_value=False),              patch("scripts.bootstrap_blast_db.lookup_db_ok", return_value=True),              patch("scripts.bootstrap_blast_db._build_blast",
+                   side_effect=RuntimeError("makeblastdb crashed")):
+            result = run()
+        assert result is False
 
+    def test_build_exit_does_not_crash(self, tmp_path, monkeypatch):
+        """build_blast_db exits (sha256 wrong / no makeblastdb) → False, no SystemExit."""
+        with patch("scripts.bootstrap_blast_db.blast_db_ok", return_value=False),              patch("scripts.bootstrap_blast_db.db_is_present", return_value=False),              patch("scripts.bootstrap_blast_db.lookup_db_ok", return_value=True),              patch("scripts.bootstrap_blast_db._build_blast", side_effect=SystemExit(2)):
+            result = run()
         assert result is False

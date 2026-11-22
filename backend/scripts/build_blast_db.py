@@ -1,5 +1,5 @@
 """
-build_blast_db.py — Build BLAST+ database for /api/blast-check
+build_blast_db.py — Build BLAST+ database for /api/blast-check and the design BLAST
 
 Database:
   miRBase multi-species (mature.fa) — ~2 MB index
@@ -8,47 +8,50 @@ Ensembl human cDNA is excluded: DNase treatment prior to RT removes all
 genomic DNA. The only off-target risk remaining is miRNA family cross-
 reactivity, which is fully covered by miRBase multi-species.
 
+Input is the PINNED mature.fa of miRBase 22.1 (backend/data/mirbase_22.1/
+mature.fa.gz, sha256 in SHA256 — scripts/mirbase_pin.py): the overhang and family
+indexes were built from that file, so the BLAST DB must be too. The sha256 is
+checked before anything is built; a different file exits with code 2.
+
 Steps:
-  1. Download miRBase mature.fa
-  2. Run makeblastdb
-  3. Delete FASTA after indexing (keep only .nhr/.nin/.nsq/etc.)
-  4. Write metadata.json
-  5. Verify with blastdbcmd -info
+  1. Read the pinned mature.fa (or --fasta FILE, or --download), check its sha256
+  2. Run makeblastdb (in a temporary directory, then move the volumes into place)
+  3. Check the DB holds as many sequences as the FASTA
+  4. Write metadata.json (release, mature_fa_sha256, counts, makeblastdb version)
 
 Usage:
-  python scripts/build_blast_db.py
+  python scripts/build_blast_db.py                      # pinned file
+  python scripts/build_blast_db.py --fasta mature.fa    # another copy, same sha256
+  python scripts/build_blast_db.py --download           # miRBase archive copy of 22.1
   python scripts/build_blast_db.py --out-dir backend/data/blast_db
 """
 
 import argparse
-import hashlib
+import glob
 import json
 import os
 import re
 import shutil
 import subprocess
 import sys
-import urllib.request
-from datetime import datetime
+import tempfile
+from datetime import datetime, timezone
+
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
+
+from scripts import mirbase_pin as pin  # noqa: E402
 
 # ── Constants ────────────────────────────────────────────────────
 
-MIRBASE_MATURE_URL = "https://www.mirbase.org/download/mature.fa"
-
+# Never build from miRBase CURRENT (23.1 since 2026-09; the indexes are 22.1):
+# --download fetches the archive copy of 22.1 (pin.ARCHIVE_URL) and checks it too.
 DEFAULT_OUT_DIR = os.path.join(
     os.path.dirname(__file__), "..", "data", "blast_db"
 )
+DB_NAME = "mirbase_multi"
 BLAST_DB_STALE_WARN_DAYS = 90
-
-
-# ── Download helper ───────────────────────────────────────────────
-
-def download(url: str, dest: str):
-    print(f"Downloading {url} ...", flush=True)
-    os.makedirs(os.path.dirname(os.path.abspath(dest)), exist_ok=True)
-    urllib.request.urlretrieve(url, dest)
-    size_mb = os.path.getsize(dest) / 1024 / 1024
-    print(f"  -> {dest} ({size_mb:.1f} MB)")
 
 
 # ── makeblastdb ───────────────────────────────────────────────────
@@ -118,22 +121,38 @@ def verify_db_build(db_path: str) -> dict:
 
 # ── Main ──────────────────────────────────────────────────────────
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description="Build miRBase BLAST database for primer off-target check")
     parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
-    args = parser.parse_args()
+    parser.add_argument("--fasta", default=None,
+                        help=f"local mature.fa or mature.fa.gz (default: {pin.PINNED_FASTA})")
+    parser.add_argument("--download", action="store_true",
+                        help="fetch mature.fa from --url instead of reading a local file")
+    parser.add_argument("--url", default=pin.ARCHIVE_URL)
+    parser.add_argument("--sha256", default=None,
+                        help="expected sha256 of the uncompressed file (default: the pinned one)")
+    args = parser.parse_args(argv)
 
     out_dir = os.path.abspath(args.out_dir)
-    tmp_dir = os.path.join(out_dir, "_tmp")
-    os.makedirs(tmp_dir, exist_ok=True)
 
     metadata = {
-        "mirbase_version": "CURRENT",
-        "build_date": datetime.utcnow().strftime("%Y-%m-%d"),
+        "mirbase_version": "",
+        "build_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "sequences_count": {},
         "makeblastdb_version": "",
     }
 
+    # ── 1. mature.fa, sha256 checked before anything is built ────
+    try:
+        data, sha = pin.load_mature_fa(args.fasta,
+                                       download_url=args.url if args.download else None,
+                                       expected_sha256=args.sha256)
+    except pin.PinMismatch as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        sys.exit(2)
+    except OSError as e:
+        print(f"ERROR: cannot read mature.fa: {e}", file=sys.stderr)
+        sys.exit(2)
     # Detect makeblastdb version
     try:
         ver = subprocess.run(["makeblastdb", "-version"], capture_output=True, text=True,
@@ -143,30 +162,58 @@ def main():
         print("ERROR: makeblastdb not found. Install NCBI BLAST+.", file=sys.stderr)
         sys.exit(1)
 
-    # ── 1. miRBase mature.fa ─────────────────────────────────────
-    mirbase_fa = os.path.join(tmp_dir, "mature.fa")
-    if not os.path.exists(mirbase_fa):
-        download(MIRBASE_MATURE_URL, mirbase_fa)
-    # miRBase does not stamp a release in mature.fa; the hash pins the exact input.
-    with open(mirbase_fa, "rb") as f:
-        metadata["mature_fa_sha256"] = hashlib.sha256(f.read()).hexdigest()
+    n_fasta = pin.count_entries(data)
+    metadata["mirbase_version"] = pin.PINNED_RELEASE if sha == pin.pinned_sha256() else "unknown"
+    metadata["mature_fa_sha256"] = sha
+    if args.download:
+        metadata["mature_fa_source"] = args.url
+    else:
+        src = os.path.abspath(args.fasta or pin.PINNED_FASTA)
+        try:
+            src = os.path.relpath(src, _BACKEND_DIR)
+        except ValueError:   # another drive (Windows)
+            pass
+        metadata["mature_fa_source"] = src.replace(os.sep, "/")
 
-    mirbase_db = os.path.join(out_dir, "mirbase_multi")
-    print("Building miRBase BLAST db ...", flush=True)
-    mb_info = run_makeblastdb(mirbase_fa, mirbase_db, "miRBase_mature_multi_species")
-    metadata["sequences_count"]["mirbase_multi"] = mb_info["sequences_count"]
+    # ── 2. makeblastdb in a temporary directory, then move the volumes ──
+    # The system temp directory, not out_dir: makeblastdb 2.17 with -parse_seqids
+    # fails when its working directory contains a space (it re-opens the new DB by a
+    # path it splits on spaces), e.g. a Windows user folder "C:\Users\First Last"; Windows gives the
+    # temp directory as an 8.3 short path. metadata.json goes last: a build that stops
+    # half-way leaves no metadata, so bootstrap_blast_db sees the DB as missing.
+    os.makedirs(out_dir, exist_ok=True)
+    meta_path = os.path.join(out_dir, "metadata.json")
+    if os.path.exists(meta_path):
+        os.remove(meta_path)
+    tmp_dir = tempfile.mkdtemp(prefix="blastdb_build_")
+    try:
+        mirbase_fa = os.path.join(tmp_dir, "mature.fa")
+        with open(mirbase_fa, "wb") as f:
+            f.write(data)
+
+        print("Building miRBase BLAST db ...", flush=True)
+        mb_info = run_makeblastdb(mirbase_fa, os.path.join(tmp_dir, DB_NAME),
+                                  "miRBase_mature_multi_species")
+        if mb_info["sequences_count"] != n_fasta:
+            print(f"ERROR: BLAST DB holds {mb_info['sequences_count']:,} sequences, "
+                  f"mature.fa {n_fasta:,}.", file=sys.stderr)
+            sys.exit(3)
+        for old in glob.glob(os.path.join(out_dir, DB_NAME + ".*")):
+            os.remove(old)
+        for vol in glob.glob(os.path.join(tmp_dir, DB_NAME + ".*")):
+            shutil.move(vol, os.path.join(out_dir, os.path.basename(vol)))
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+    metadata["sequences_count"][DB_NAME] = mb_info["sequences_count"]
     print(f"  miRBase: {mb_info['sequences_count']:,} sequences, {mb_info['size_mb']:.1f} MB")
 
-    # Clean up tmp
-    if os.path.exists(mirbase_fa):
-        os.remove(mirbase_fa)
-
-    # ── 2. Write metadata.json ────────────────────────────────────
-    metadata_path = os.path.join(out_dir, "metadata.json")
-    with open(metadata_path, "w") as f:
+    # ── 3. Write metadata.json ────────────────────────────────────
+    with open(meta_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(metadata, f, indent=2)
-    print(f"\nmetadata.json written: {metadata_path}")
+        f.write("\n")
+    print(f"\nmetadata.json written: {meta_path}")
     print(f"Build complete. Database dir: {out_dir}")
+    return 0
 
 
 def check_db_freshness(metadata_path: str) -> dict:

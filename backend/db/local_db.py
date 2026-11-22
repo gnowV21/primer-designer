@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 
@@ -81,8 +82,15 @@ def upsert(data: dict):
 
 
 def init_schema():
-    """Create DB file + schema if they do not already exist. Idempotent — safe to call at startup."""
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    with _conn() as c:
-        c.executescript(_SCHEMA)
-        c.commit()
+    """Create DB file + schema if they do not already exist. Idempotent — safe to call at startup.
+
+    A database that cannot be written (the deployed image ships db/mirbase.db
+    read-only, built by scripts/build_db.py with this schema) is left as it is."""
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        with _conn() as c:
+            c.executescript(_SCHEMA)
+            c.commit()
+    except (OSError, sqlite3.Error) as e:
+        logging.getLogger(__name__).warning("local miRBase DB schema not updated (%s): %s",
+                                            DB_PATH, e)

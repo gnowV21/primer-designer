@@ -1,0 +1,52 @@
+# Build context of Dockerfile.vercel. Everything is left out except what the image
+# build reads; the explicit list below repeats the exclusions so they stay excluded
+# even if the allow-list grows.
+*
+!frontend/
+!backend/
+!benchmark/benchmark_results.json
+
+# ── never in the context ──────────────────────────────────────────
+.git
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+test-results
+playwright-report
+outputs
+Claude outputs
+primer-designer.zip
+.claude
+.vscode
+.idea
+.env
+**/.env
+SPEC_*.md
+AUDIT_REPORT.md
+HANDOFF_THESIS_STATUS.md
+CLAUDE.md
+**/*.md
+docs
+validation
+calibration
+crossreactivity
+e2e
+benchmark/*
+!benchmark/benchmark_results.json
+
+# frontend: rebuilt in the image; only the logo ships from public/
+frontend/dist
+frontend/public/*
+!frontend/public/logo.png
+
+# backend: tests, offline scripts and local state stay out
+backend/tests
+backend/benchmark
+backend/visualization/test_*.py
+backend/scripts/.mirbase_cache
+backend/data/blast_db
+backend/data/blast_cache*
+backend/data/visualize_cache.sqlite
+backend/db/mirbase.db
+backend/db/mirbase.db-*

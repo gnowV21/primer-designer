@@ -42,6 +42,9 @@ test-results/
 *.png
 *.jpeg
 *.jpg
+# ...except the logo the frontend ships (Navbar, Home, favicon): a deploy built from
+# the repository needs it (deploy/vercel)
+!frontend/public/logo.png
 
 # Local miRBase SQLite DB (built by scripts/build_db.py — not committed)
 backend/db/mirbase.db

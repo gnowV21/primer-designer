@@ -1,0 +1,34 @@
+# Files Vercel uploads to its build machine: only what Dockerfile.vercel builds from
+# (same allow-list as .dockerignore).
+/*
+!/Dockerfile.vercel
+!/.dockerignore
+!/frontend
+!/backend
+!/benchmark
+
+# benchmark: only the file /api/benchmark reads
+/benchmark/*
+!/benchmark/benchmark_results.json
+
+# never uploaded
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.env
+*.md
+
+# frontend: rebuilt in the image; only the logo ships from public/
+/frontend/dist
+/frontend/public/*
+!/frontend/public/logo.png
+
+# backend: tests, offline scripts' caches and local state
+/backend/tests
+/backend/benchmark
+/backend/scripts/.mirbase_cache
+/backend/data/blast_db
+/backend/data/blast_cache*
+/backend/data/visualize_cache.sqlite
+/backend/db/mirbase.db

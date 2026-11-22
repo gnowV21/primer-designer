@@ -16,6 +16,7 @@
 #   [Kwok90] Kwok et al. 1990 Nucleic Acids Research 18(4):999-1005
 # ================================================================
 
+import atexit
 import concurrent.futures
 import logging
 import math
@@ -641,6 +642,11 @@ def _context(
             f"BLAST database not found at {_MIRBASE_DB!r}. "
             "Run 'python scripts/build_blast_db.py' to build it first."
         )
+    problem = blast_db_release_problem()
+    if problem:   # never BLAST against a DB of another miRBase file than the index
+        raise FileNotFoundError(
+            f"BLAST database not usable: {problem}. "
+            "Run 'python scripts/build_blast_db.py' to build it from the pinned file.")
 
     if species and not is_mirbase_species(species):
         raise ValueError(f"species must be a miRBase species code, got {species!r}")
@@ -915,9 +921,32 @@ def _classify_pool(k: int) -> concurrent.futures.ProcessPoolExecutor:
     global _POOL
     with _POOL_LOCK:
         if _POOL is None:
+            # spawn, not Linux's default fork: the pool is created from a request
+            # thread of a multi-threaded server (gunicorn --threads), and a forked
+            # child inherits every lock another thread held at that moment (the
+            # primer3_safe lock, logging) in the locked state — a worker would hang
+            # on its first primer3 call. Windows always spawns, so this is the start
+            # method the pool was verified with (docs/REVIEW_panel_4.0.0.md §9).
             _POOL = concurrent.futures.ProcessPoolExecutor(
-                max_workers=k, initializer=_exit_with_parent)
+                max_workers=k, initializer=_exit_with_parent,
+                mp_context=multiprocessing.get_context("spawn"))
         return _POOL
+
+
+def shutdown_classify_pool(wait: bool = True) -> None:
+    """Shut the classification pool down (queued tasks cancelled, running ones
+    finished, workers joined). Registered with atexit, so a server stopped with
+    SIGTERM — gunicorn ends its worker with a normal interpreter exit after the
+    graceful timeout — leaves no worker process behind; a worker whose owner is
+    killed outright exits by itself (_exit_with_parent)."""
+    global _POOL
+    with _POOL_LOCK:
+        pool, _POOL = _POOL, None
+    if pool is not None:
+        pool.shutdown(wait=wait, cancel_futures=True)
+
+
+atexit.register(shutdown_classify_pool)
 
 
 def _exit_with_parent() -> None:
@@ -1349,4 +1378,50 @@ def blast_available() -> tuple[bool, str | None]:
         return False, f"BLAST+ binary not found on PATH: {', '.join(missing)}"
     if not _db_exists(_MIRBASE_DB):
         return False, f"BLAST database not found at {os.path.normpath(_MIRBASE_DB)!r}"
+    problem = blast_db_release_problem()
+    if problem:
+        return False, problem
     return True, None
+
+
+_RELEASE_CHECK: dict = {"key": None, "problem": None}
+
+
+def blast_db_release_problem() -> str | None:
+    """None when the BLAST DB was built from the same mature.fa as the overhang index
+    (metadata.json mature_fa_sha256 == the index's); otherwise why not. A DB without a
+    recorded sha256 counts as a mismatch: its miRBase release is unknown, and a DB
+    from another release would silently disagree with the assay screen
+    (scripts/mirbase_pin.py). Re-read only when metadata.json changes."""
+    try:
+        st = os.stat(_METADATA)
+    except OSError:
+        return f"BLAST database metadata missing at {os.path.normpath(_METADATA)!r}"
+    key = (os.path.normpath(_METADATA), st.st_mtime_ns, st.st_size)
+    if _RELEASE_CHECK["key"] == key:
+        return _RELEASE_CHECK["problem"]
+    try:
+        import json
+        with open(_METADATA, encoding="utf-8") as f:
+            sha = (json.load(f) or {}).get("mature_fa_sha256")
+    except (OSError, ValueError) as e:
+        sha, problem = None, f"BLAST database metadata unreadable: {e}"
+    else:
+        from algorithm.mirbase_source import release_info
+        info = release_info()
+        idx = info.get("mature_fa_sha256")
+        if not sha:
+            problem = ("BLAST database metadata records no mature_fa_sha256, so its miRBase "
+                       "release is unknown; rebuild it from the pinned miRBase "
+                       f"{info.get('mirbase_release')} file (python -m scripts.bootstrap_blast_db)")
+        elif idx and sha.lower() != idx.lower():
+            problem = (f"BLAST database was built from another miRBase file (mature.fa sha256 "
+                       f"{sha[:12]}…) than the overhang index (miRBase "
+                       f"{info.get('mirbase_release')}, {idx[:12]}…); rebuild it with "
+                       "python -m scripts.bootstrap_blast_db")
+        else:
+            problem = None
+    if problem and problem != _RELEASE_CHECK["problem"]:
+        logger.error("BLAST unavailable: %s", problem)
+    _RELEASE_CHECK.update(key=key, problem=problem)
+    return problem
