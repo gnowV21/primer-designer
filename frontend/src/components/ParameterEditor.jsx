@@ -5,13 +5,20 @@
  * the "Adjust parameters" bar on /results. Using the same component in both is
  * what keeps the two pages in step — a parameter added here appears in both.
  *
- * Each group is its own collapsible section, so the editor stays short until
- * the user opens the part they care about. `openRequests` opens groups
- * programmatically ({ constraints: 1 } opens Primer Design Constraints).
+ * Grouped by what a parameter does in the tiered engine (2026-11-22,
+ * docs/REVIEW_panel_4.0.0.md §13): Required (hard limits), Flexible (changes the
+ * Flexible scores: standard primer rules, Ta, reaction conditions), Assay setup
+ * (not used by the ranking), then Detection Method and Experimental Context as before.
+ * Field names, form groups and defaults are unchanged.
+ *
+ * Each group is its own collapsible section, so the editor stays short until the user
+ * opens the part they care about. `openRequests` opens groups programmatically
+ * ({ required: 1 } — or the older key `constraints` — opens Required).
  */
-import PrimerConstraintsGroup from '../pages/SearchPage/PrimerConstraintsGroup.jsx';
+import RequiredGroup from '../pages/SearchPage/RequiredGroup.jsx';
+import FlexibleGroup from '../pages/SearchPage/FlexibleGroup.jsx';
+import AssaySetupGroup from '../pages/SearchPage/AssaySetupGroup.jsx';
 import DetectionMethodGroup from '../pages/SearchPage/DetectionMethodGroup.jsx';
-import QpcrConditionsGroup from '../pages/SearchPage/QpcrConditionsGroup.jsx';
 import ExperimentalContextGroup from '../pages/SearchPage/ExperimentalContextGroup.jsx';
 
 export default function ParameterEditor({
@@ -24,34 +31,50 @@ export default function ParameterEditor({
   openRequests = {},
 }) {
   const set = (group) => (field, value) => onChange(group, field, value);
+  const thermoErrors = {
+    saltConcentration:      errors.saltConcentration,
+    primerConcentration:    errors.primerConcentration,
+    magnesiumConcentration: errors.magnesiumConcentration,
+    dntpTotal:              errors.dntpTotal,
+    kPlusConc:              errors.kPlusConc,
+    bufferPH:               errors.bufferPH,
+  };
 
   return (
     <div className="space-y-3">
-      <PrimerConstraintsGroup
-        data={params.primerConstraints}
-        onChange={set('primerConstraints')}
+      <RequiredGroup
+        constraints={params.primerConstraints}
+        onConstraintChange={set('primerConstraints')}
+        thermoData={params.thermodynamic}
+        onThermoChange={set('thermodynamic')}
+        qpcrData={params.qpcr}
+        onQpcrChange={set('qpcr')}
         seqAnalysis={seqAnalysis}
         mirnaFamily={params.sequence?.family}
+        openRequested={openRequests.required || openRequests.constraints || 0}
+      />
+      <FlexibleGroup
+        constraints={params.primerConstraints}
+        onConstraintChange={set('primerConstraints')}
+        seqAnalysis={seqAnalysis}
         thermoData={params.thermodynamic}
-        thermoErrors={{
-          saltConcentration:      errors.saltConcentration,
-          primerConcentration:    errors.primerConcentration,
-          magnesiumConcentration: errors.magnesiumConcentration,
-          dntpTotal:              errors.dntpTotal,
-          kPlusConc:              errors.kPlusConc,
-          bufferPH:               errors.bufferPH,
-        }}
+        thermoErrors={thermoErrors}
         onThermoChange={set('thermodynamic')}
         onThermoError={onError}
-        openRequested={openRequests.constraints || 0}
+        qpcrData={params.qpcr}
+        qpcrErrors={{ annealingTemp: errors.annealingTemp }}
+        onQpcrChange={set('qpcr')}
+        onQpcrError={onError}
+        openRequested={openRequests.flexible || 0}
       />
-      <QpcrConditionsGroup
-        data={params.qpcr}
+      <AssaySetupGroup
+        constraints={params.primerConstraints}
+        onConstraintChange={set('primerConstraints')}
+        qpcrData={params.qpcr}
         errors={errors}
-        onChange={set('qpcr')}
+        onQpcrChange={set('qpcr')}
         onError={onError}
-        tmMin={params.thermodynamic.tmMin}
-        openRequested={openRequests.qpcr || 0}
+        openRequested={openRequests.assay || 0}
       />
       <DetectionMethodGroup
         data={params.detectionMethod}

@@ -15,7 +15,7 @@ test("binding-region warning follows the 3' overhang length, not a fixed 6", asy
   await expect(warn).toHaveCount(0);                       // 6 nt default → silent
 
   await openParameters(page);
-  await page.getByText('Primer Design Constraints').click();
+  await page.getByText('Required', { exact: true }).click();
   await page.getByRole('button', { name: '7 nt', exact: true }).click();
   await expect(warn).toBeVisible();
   await expect(page.getByText(/most 7 nt contain only 2 G\/C/)).toBeVisible();

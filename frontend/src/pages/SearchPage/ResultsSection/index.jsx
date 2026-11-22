@@ -2,7 +2,9 @@
 // Shows global warnings, top-3 primer sets, stem-loop RT info, rejection log,
 // and specificity warnings (cross-reactivity, heterodimer, isoMiR) from v2.8.2.
 
+import { useState } from 'react';
 import PrimerSetCard from './PrimerSetCard.jsx';
+import CriteriaPanel from './CriteriaPanel.jsx';
 import RejectionLog from './RejectionLog.jsx';
 import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
@@ -22,6 +24,7 @@ const PANEL_WARNING_FIELDS = new Set(['overhang_collision', 'cross_reactivity', 
   'three_prime_isomir_fold_change', 'three_prime_isomir_dominant']);
 
 export default function ResultsSection({ results, error, hideHeader = false }) {
+  const [criteriaOpen, setCriteriaOpen] = useState(false);
   if (error) return <ErrorPanel error={error} />;
   if (!results) return null;
 
@@ -99,7 +102,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
       {/* 3. RT primer + universal reverse: identical for every set, shown once */}
       {(stemloop_rt || universal_reverse) && (
-        <SharedPrimers stemloopRt={stemloop_rt} reverse={universal_reverse} />
+        <SharedPrimers stemloopRt={stemloop_rt} reverse={universal_reverse}
+          tmReverse={top3?.[0]?.ranking?.pcr?.tm_pair?.tm_reverse} />
       )}
 
       {/* 4. Per-set cards (#1 open) */}
@@ -116,9 +120,12 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
             species={metadata?.species_code}
             blastAvailable={blastAvailable}
             equivalentTo={equivalentRanks(set, top3)}
+            tmWindow={metadata?.design_settings?.tm_target_c}
+            onExplain={() => setCriteriaOpen(true)}
           />
         ))}
       </div>
+      <CriteriaPanel open={criteriaOpen} onClose={() => setCriteriaOpen(false)} />
 
       {/* ── Assay specificity (ΔCq model): the headline specificity verdict, drives scoring ──
            Collapsed by default; the worst label stays visible in the header so a
@@ -186,7 +193,12 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
 const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)} %`);
 
-function SharedPrimers({ stemloopRt: rt, reverse }) {
+/** tmReverse: Tm of the universal reverse primer at the design's conditions, as the
+ *  ranking computed it (ranking.pcr.tm_pair.tm_reverse). universal_reverse.tm is a
+ *  pre-calculated constant (60.4 °C) the engine does not use; it is shown only for
+ *  sets without a ranking block. */
+function SharedPrimers({ stemloopRt: rt, reverse, tmReverse }) {
+  const tmR = tmReverse ?? reverse?.tm;
   const iso = rt?.three_prime_isomir;
   const isoShown = iso?.three_prime_isomir_risk || iso?.fold_change_bias_risk || iso?.dominant_isoform_risk;
   return (
@@ -258,8 +270,14 @@ function SharedPrimers({ stemloopRt: rt, reverse }) {
           </p>
           <code className="font-mono text-xs text-slate-800">5'–{reverse.sequence}–3'</code>
           <span className="text-xs text-slate-500 tabular-nums">
-            Tm {reverse.tm?.toFixed(1)}°C · GC {reverse.gc_percent}% · {reverse.length} nt
+            GC {reverse.gc_percent}% · {reverse.length} nt
           </span>
+          {tmR != null && (
+            <p className="basis-full text-xs text-slate-600 tabular-nums" data-testid="reverse-tm-note">
+              Tm_R {Number(tmR).toFixed(2)} °C. ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions,
+              the same for every set.
+            </p>
+          )}
         </div>
       )}
     </div>

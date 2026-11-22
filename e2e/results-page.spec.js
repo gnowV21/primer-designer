@@ -113,8 +113,9 @@ test('ThermoTable Tab A shows by default', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
   await expect(page.getByRole('button', { name: /Tab A.*Comparison/i })).toBeVisible();
-  // Tiered (4.0.0): the V4 "Total score" row is replaced by the tiers (SPEC_ui_tiered_4.0.0 §2.5).
-  await expect(page.getByRole('cell', { name: 'Specificity (S)' })).toBeVisible();
+  // Tiered (4.0.0): the V4 "Total score" row is replaced by the criteria groups (2026-11-22).
+  await expect(page.getByRole('cell', { name: 'Required · specificity (S)' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Flexible 2 · PCR (P)' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Tie-break score' })).toBeVisible();
   await expect(page.getByText('Total score')).toHaveCount(0);
 });

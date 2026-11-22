@@ -241,17 +241,22 @@ def _csv_rows(text):
 def test_export_csv_tiered_columns():
     r = _post("csv", _tiered_results())
     header, rows = _csv_rows(r.data.decode("utf-8"))
-    for col in ("scoring_system", "grade", "grade_reasons", "S1", "S2", "S3", "S_total", "P_total",
-                "F_total", "structure_veto", "binding_floor_fail", "v4_rule_violations",
-                "tie_break_score"):
-        assert col in header, col
+    # Column titles follow the criteria groups (2026-11-22); order and values unchanged.
+    cols = ("scoring_system", "grade", "grade_reasons", "Req_S1_BLAST", "Req_S2_dCq", "Req_S3_Tm_margin",
+            "Req_S_total", "Flex2_PCR", "Flex3_composition_structure", "Flex1_structure",
+            "Flex1_binding_floor", "Flex1_standard_rules", "tie_break_score")
+    i0 = header.index("scoring_system")
+    assert tuple(header[i0:i0 + len(cols)]) == cols
+    for old in ("S1", "S_total", "P_total", "F_total", "structure_veto", "v4_rule_violations"):
+        assert old not in header, old
     assert "Total_Score" not in header
     rec = {h: v for h, v in zip(header, rows[0])}
-    assert (rec["scoring_system"], rec["grade"], rec["S1"], rec["S_total"]) == ("tiered", "A", "5", "14/15")
+    assert (rec["scoring_system"], rec["grade"], rec["Req_S1_BLAST"], rec["Req_S_total"]) == \
+        ("tiered", "A", "5", "14/15")
     assert rec["tie_break_score"] == "81.5"
     rec3 = {h: v for h, v in zip(header, rows[2])}
-    assert (rec3["S1"], rec3["S_total"], rec3["binding_floor_fail"], rec3["v4_rule_violations"]) == \
-        ("n/a", "9/10", "True", "gc_clamp_fail")
+    assert (rec3["Req_S1_BLAST"], rec3["Req_S_total"], rec3["Flex1_binding_floor"],
+            rec3["Flex1_standard_rules"]) == ("n/a", "9/10", "True", "gc_clamp_fail")
     # The shared RT / reverse rows stay aligned with the header.
     assert all(len(r_) == len(header) for r_ in rows[:5])
 

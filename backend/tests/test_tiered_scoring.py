@@ -277,7 +277,7 @@ def test_export_carries_scoring_system_thresholds_and_v4_rules(monkeypatch):
     text = r.get_data(as_text=True)
     assert r.status_code == 200
     assert "scoring system tiered" in text and "tiered thresholds #" in text
-    assert "Tiered S " in text and "V4 rules broken: gc_out_of_range" in text
+    assert "Required S " in text and "Standard primer rules not met: gc_out_of_range" in text
 
 
 # ── live BLAST ───────────────────────────────────────────────────

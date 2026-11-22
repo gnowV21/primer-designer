@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { thermoForRequest } from '../../utils/designRequest.js';
 import { DEFAULTS } from '../../constants/defaults.js';
 import OffTargetPanel from '../SearchPage/ResultsSection/OffTargetPanel.jsx';
 import LnaPanel from '../../components/LnaPanel/index.jsx';
@@ -30,8 +31,8 @@ const ION_DEFAULTS = {
 };
 
 const ION_FIELDS = [
-  { key: 'saltConcentration',      label: 'Na⁺',        unit: 'mM', step: 1 },
-  { key: 'kPlusConc',              label: 'K⁺',         unit: 'mM', step: 1 },
+  { key: 'saltConcentration',      label: 'Na⁺/K⁺ total', unit: 'mM', step: 1 },
+  { key: 'kPlusConc',              label: 'Extra K⁺',   unit: 'mM', step: 1 },
   { key: 'magnesiumConcentration', label: 'Mg²⁺',      unit: 'mM', step: 0.1 },
   { key: 'dntpTotal',              label: 'dNTP total', unit: 'mM', step: 0.1 },
   { key: 'primerConcentration',    label: 'Primer',     unit: 'nM', step: 10 },
@@ -86,7 +87,8 @@ export default function AnalyzePage() {
         primers: { rt, forward, reverse },
         matureSequence: mature,
         mirnaId,
-        params,
+        // Default pH is not sent (no Tris term), as on /design: designRequest.thermoForRequest.
+        params: thermoForRequest(params),
       });
       setResult(data);
       setStatus('done');

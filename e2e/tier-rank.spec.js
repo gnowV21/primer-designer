@@ -6,7 +6,7 @@ import {
   bestRunIndices, compareTiered, decidingStep, equivalentInSilico, equivalentRanks, hasTiers,
   KEY_STEPS, tierKey, tierReason,
 } from '../frontend/src/utils/tierRank.js';
-import { rankReason } from '../frontend/src/utils/rankReason.js';
+import { groupReason, rankReason } from '../frontend/src/utils/rankReason.js';
 
 /** A tiered set; `o` overrides tier totals and flags. */
 function mk(o = {}) {
@@ -134,9 +134,49 @@ test.describe('rankReason — 8 branches (SPEC_ui §2.4)', () => {
     expect(r.step).toBe('tm_vs_ta');
   });
   test('rankReason dispatches: tiered vs V4 (U5)', () => {
-    expect(rankReason(mk(), mk({ s2: 3 }))).toMatch(/^#1 is more specific/);
+    expect(rankReason(mk(), mk({ s2: 3 }))).toMatch(/^Required: #1 is more specific/);
     const v4a = { total_score: 92, scores: { gc_clamp: 100 }, weights: { gc_clamp: 0.06 } };
     const v4b = { total_score: 85, scores: { gc_clamp: 50 }, weights: { gc_clamp: 0.06 } };
     expect(rankReason(v4a, v4b)).toMatch(/^#1 ranks 7\.0 points above #2/);
+  });
+});
+
+// "Why #1 over #2" with the criteria-group names (2026-11-22): rankReason.groupReason.
+// Same deciding step as tierReason on every branch; only the words differ; no "V4".
+test.describe('groupReason — criteria-group wording, same steps as tierReason', () => {
+  const cases = [
+    ['specificity', mk(), mk({ s1: 3, risk: 'MEDIUM' }),
+      'Required: #1 is more specific (S 15 vs 13): S1 BLAST SAFE vs MEDIUM.'],
+    ['structure_veto', mk(), mk({ veto: true, f5: 1, sub: { hairpin_tm: 5, dimer_dg: 1, end_dimer_tm: 5 } }),
+      'Same Required specificity; #2 fails No critical weakness: secondary structure too strong (dimer ΔG).'],
+    ['binding_floor_fail', mk(), mk({ floor: true, f4: 1 }),
+      'Same Required specificity; #2 fails No critical weakness: cycle-1 binding Tm below 39 °C.'],
+    ['v4_violation', mk(), mk({ v4: ['gc_clamp_fail'] }),
+      'Same Required specificity; #2 fails No critical weakness: it does not meet the standard primer rules (No G/C in the last 3 nt (all-A/T 3′ end)).'],
+    ['pcr', mk(), mk({ p: 4, tm: 61.4 }),
+      'Same Required specificity and no critical weakness; PCR: #1 is closer to Ta (|Tm − Ta| 0.0 vs 1.4 °C).'],
+    ['flexible', mk(), mk({ f2: 3 }),
+      'Same Required specificity, no critical weakness and PCR; #1 scores higher on composition & structure (F 20 vs 18): F2 GC clamp 5 vs 3.'],
+    ['tie_break', mk({ detailed: 92.3 }), mk({ detailed: 90.1 }),
+      'Equivalent in silico on every group; ordered by tie-break score (+2.2).'],
+    ['identical', mk({ sequence: 'AACGT' }), mk({ sequence: 'TTCGT' }),
+      'Identical on every criterion (5′-tail variants); the order is arbitrary but fixed.'],
+  ];
+  for (const [step, a, b, text] of cases) {
+    test(`${step}`, () => {
+      const r = groupReason(a, b);
+      expect(r.step).toBe(step);
+      expect(r.step).toBe(tierReason(a, b).step);
+      expect(r.text).toBe(text);
+      expect(r.text).not.toContain('V4');
+    });
+  }
+  test('tm_vs_ta step', () => {
+    const r = groupReason(mk({ tm: 60.2 }), mk({ tm: 60.4 }));
+    expect(r.step).toBe('tm_vs_ta');
+    expect(r.text).toContain('closer to Ta');
+  });
+  test('rankReason uses groupReason for tiered sets', () => {
+    expect(rankReason(mk(), mk({ v4: ['gc_out_of_range'] }))).toBe(groupReason(mk(), mk({ v4: ['gc_out_of_range'] })).text);
   });
 });
