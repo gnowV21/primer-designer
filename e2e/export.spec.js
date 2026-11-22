@@ -141,7 +141,7 @@ test('POST /api/export with csv returns text/csv', async ({ request }) => {
       sources: ['Chen et al. 2005'] },
   };
 
-  const resp = await request.post('http://localhost:5000/api/export', {
+  const resp = await request.post('/api/export', {
     data: { format: 'csv', results: minResults },
   });
 
@@ -156,7 +156,7 @@ test('POST /api/export with csv returns text/csv', async ({ request }) => {
 });
 
 test('POST /api/export with invalid format returns 400', async ({ request }) => {
-  const resp = await request.post('http://localhost:5000/api/export', {
+  const resp = await request.post('/api/export', {
     data: { format: 'docx', results: {} },
   });
   expect(resp.status()).toBe(400);
@@ -165,7 +165,7 @@ test('POST /api/export with invalid format returns 400', async ({ request }) => 
 });
 
 test('POST /api/export with missing results returns 400', async ({ request }) => {
-  const resp = await request.post('http://localhost:5000/api/export', {
+  const resp = await request.post('/api/export', {
     data: { format: 'csv' },
   });
   expect(resp.status()).toBe(400);

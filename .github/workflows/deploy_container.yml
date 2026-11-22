@@ -1,0 +1,52 @@
+name: Deploy container (Dockerfile.vercel)
+
+on:
+  push:
+    branches: [master, "deploy/**"]
+  pull_request:
+    branches: [master]
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -f Dockerfile.vercel -t primer-designer:ci .
+
+      - name: Image size and contents
+        run: |
+          docker image inspect -f '{{.Size}}' primer-designer:ci | awk '{printf "image size: %.1f MB\n", $1/1048576}'
+          # no spec / docs / internal markdown in the image
+          md=$(docker run --rm --entrypoint sh primer-designer:ci -c 'find /app -name "*.md"')
+          if [ -n "$md" ]; then echo "markdown files in the image:"; echo "$md"; exit 1; fi
+          docker run --rm --entrypoint sh primer-designer:ci -c \
+            'for d in docs validation calibration crossreactivity e2e outputs backend/tests; do test ! -e /app/$d || { echo "/app/$d in image"; exit 1; }; done; ls /app /app/backend /app/backend/data'
+
+      - name: Run with Vercel Hobby-like limits
+        run: |
+          docker run -d --name pd --cpus=1 --memory=2g -e PORT=8080 -p 8080:8080 primer-designer:ci
+          t0=$(date +%s.%N)
+          for i in $(seq 1 600); do
+            curl -fsS http://127.0.0.1:8080/api/health >/dev/null 2>&1 && break
+            sleep 0.1
+          done
+          curl -fsS http://127.0.0.1:8080/api/health
+          echo; python3 -c "import sys,time; print(f'cold start: {time.time()-float(sys.argv[1]):.2f} s')" "$t0"
+
+      - name: Smoke test (health, design, SPA, no file leaks)
+        run: bash .github/scripts/container_smoke.sh http://127.0.0.1:8080
+
+      - name: SIGTERM stops the container in < 30 s
+        if: always()
+        run: |
+          docker top pd -eo pid,ppid,args || true
+          t0=$(date +%s)
+          docker stop -t 30 pd
+          dt=$(( $(date +%s) - t0 ))
+          code=$(docker inspect -f '{{.State.ExitCode}}' pd)
+          echo "stopped in ${dt} s, exit code ${code}"
+          docker logs --tail 30 pd
+          [ "$dt" -lt 30 ]

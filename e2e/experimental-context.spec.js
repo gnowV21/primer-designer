@@ -1,11 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { openParameters } from './helpers.js';
 
-const BASE = 'http://localhost:5173';
-
 test.describe('ExperimentalContextGroup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE}/design`);
+    await page.goto('/design');
     await openParameters(page);
     await page.getByText('Experimental Context').click();
   });

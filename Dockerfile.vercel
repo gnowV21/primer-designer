@@ -1,0 +1,88 @@
+# syntax=docker/dockerfile:1
+# ================================================================
+# Dockerfile.vercel — ONE container: the Flask API (gunicorn) and the built
+# frontend on the same origin (the frontend calls the relative /api).
+#
+# Named .vercel so Vercel picks its Container preset (the repository root has the
+# Playwright package.json). The same file runs anywhere Docker does:
+#   docker build -f Dockerfile.vercel -t primer-designer .
+#   docker run --rm -p 8080:8080 -e PORT=8080 primer-designer
+#
+# Design results are those of the 4.0.0 freeze: the BLAST DB and the miRBase
+# lookup DB are built HERE, at build time, from the pinned miRBase 22.1 mature.fa
+# (backend/data/mirbase_22.1, sha256 checked); a container start downloads and
+# builds nothing. Only /tmp is written at run time (caches).
+# ================================================================
+
+# ── Stage 1: frontend ───────────────────────────────────────────
+FROM node:20-slim AS frontend
+WORKDIR /src/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/ ./
+RUN npm run build
+
+# ── Stage 2: runtime ────────────────────────────────────────────
+FROM python:3.11-slim-trixie AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# NCBI BLAST+ (blastn, blastdbcmd, makeblastdb) from Debian; version printed to the log.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ncbi-blast+ \
+ && rm -rf /var/lib/apt/lists/* \
+ && echo "BLAST+ in image:" && blastn -version && makeblastdb -version
+
+WORKDIR /app
+COPY backend/requirements.txt backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt \
+ && python -c "import RNA, primer3; from importlib.metadata import version as v; print('ViennaRNA', v('ViennaRNA'), '| primer3-py', v('primer3-py'))"
+
+# Only what runs: backend code + data, the benchmark file /api/benchmark reads, and
+# the built frontend. No spec, docs, validation, calibration, crossreactivity, e2e
+# or outputs (see also .dockerignore).
+COPY backend/app.py backend/
+COPY backend/algorithm backend/algorithm
+COPY backend/routes backend/routes
+COPY backend/db backend/db
+COPY backend/utils backend/utils
+COPY backend/visualization backend/visualization
+COPY backend/static backend/static
+COPY backend/data backend/data
+COPY backend/scripts/__init__.py backend/scripts/mirbase_pin.py \
+     backend/scripts/build_blast_db.py backend/scripts/build_db.py \
+     backend/scripts/bootstrap_blast_db.py backend/scripts/
+COPY benchmark/benchmark_results.json benchmark/benchmark_results.json
+COPY --from=frontend /src/frontend/dist frontend/dist
+
+# BLAST DB + db/mirbase.db from the pinned 22.1 file; fails the build on any error
+# (sha256 mismatch, release differing from the overhang index, makeblastdb failure).
+# Then byte-compile, so a cold start does not compile at import time.
+RUN cd backend \
+ && python -m scripts.bootstrap_blast_db \
+ && python -m compileall -q /app/backend \
+ && useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin app
+
+ENV PORT=8080 \
+    HOME=/tmp \
+    BLAST_USAGE_REPORT=false \
+    BLAST_CLASSIFY_PROCESSES=2 \
+    BLAST_CACHE_PATH=/tmp/blast_cache.sqlite \
+    VISUALIZE_CACHE_PATH=/tmp/visualize_cache.sqlite \
+    PROXY_FIX_X_FOR=1
+
+# Files stay root-owned and read-only for the app user; it writes only to /tmp.
+USER app
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/api/health' % os.environ.get('PORT', '8080'), timeout=4)"
+
+# One worker process (rate limiter memory://, one BLAST classification pool per
+# process), 4 threads; requests up to 280 s (Vercel max duration 300 s); SIGTERM →
+# 25 s to finish in-flight requests (Vercel grace 30 s). exec: gunicorn is PID 1
+# and receives SIGTERM itself.
+CMD ["sh", "-c", "exec gunicorn --chdir backend app:app -w 1 --threads 4 --timeout 280 --graceful-timeout 25 --bind 0.0.0.0:${PORT}"]

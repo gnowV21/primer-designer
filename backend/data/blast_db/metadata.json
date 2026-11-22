@@ -1,9 +1,11 @@
 {
   "mirbase_version": "22.1",
-  "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade.",
+  "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade. mature_fa_sha256 added 2026-11-22 after a blastdbcmd dump of this DB matched the pinned backend/data/mirbase_22.1/mature.fa.gz entry by entry (48,885/48,885); new builds write it themselves.",
   "build_date": "2026-07-01",
   "sequences_count": {
     "mirbase_multi": 48885
   },
-  "makeblastdb_version": "makeblastdb: 2.17.0+"
+  "makeblastdb_version": "makeblastdb: 2.17.0+",
+  "mature_fa_sha256": "3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342",
+  "mature_fa_source": "data/mirbase_22.1/mature.fa.gz"
 }

@@ -30,3 +30,11 @@ reportlab>=4.0
 # Pure-Python PDF generation (no binary system deps vs WeasyPrint)
 # Rate limiting for /api/blast-check (10 req/min/IP) [spec §9.3]
 # blastn BLAST+ binary NOT installed via pip — use: sudo apt-get install -y ncbi-blast+
+
+# Deployment — production WSGI server (deploy/vercel)
+gunicorn==23.0.0
+# Flask's built-in server is for development only. Run with ONE worker process
+# (-w 1 --threads 4): the rate limiter keeps its counters in memory:// and the BLAST
+# hit-classification pool (blast_offtarget._classify_pool) is created per process,
+# so N workers would mean N separate rate-limit buckets and N pools. Linux/macOS only
+# (it imports fcntl); on Windows run `python app.py` as before.

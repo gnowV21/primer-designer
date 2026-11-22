@@ -1,0 +1,689 @@
+{
+ "what": "top 3 forward primers + grade + tiers + RT primer of the 20 hsa miRNAs of benchmark/tiered_design_timing.json: container vs this machine",
+ "date": "2026-11-22",
+ "image": "primer-designer:vercel",
+ "reference": {
+  "file": "benchmark/logs/deploy_reference_local.json",
+  "machine": {
+   "platform": "Windows-11-10.0.26300-SP0",
+   "python": "3.12.8"
+  },
+  "checks": {
+   "top3_vs_freeze_ui_top3_dump": {
+    "compared": 20,
+    "differ": [],
+    "file": "outputs/freeze_cache/ui_top3_hsa.jsonl.gz",
+    "fields": "forward, grade, specificity/pcr/flexible totals, eliminated, structure_veto, binding_floor_fail of sets #1-#3"
+   },
+   "top1_vs_freeze_designs": {
+    "compared": 20,
+    "differ": [],
+    "file": "outputs/freeze_matrix_4.0.0/cache/designs_hsa.jsonl",
+    "fields": "forward, grade, total_score, RT primer of #1"
+   },
+   "top3_vs_tiered_design_timing": {
+    "compared": 20,
+    "differ": [
+     "hsa-miR-6720-5p",
+     "hsa-miR-19b-2-5p",
+     "hsa-miR-7111-5p",
+     "hsa-miR-548an",
+     "hsa-miR-6875-3p",
+     "hsa-miR-5579-5p",
+     "hsa-let-7e-5p",
+     "hsa-miR-7705",
+     "hsa-miR-210-5p"
+    ],
+    "note": "informational only: the top3 of benchmark/tiered_design_timing.json were recorded at Giai đoạn 2 (commit af546b8), before QĐ 29–37 (Giai đoạn 2b/2c) changed the ranking; the freeze cites only its timing. The two freeze checks above are the reference."
+   }
+  }
+ },
+ "container_seconds": {
+  "hsa-miR-221-3p": 1.31,
+  "hsa-miR-4685-5p": 15.95,
+  "hsa-miR-653-3p": 18.49,
+  "hsa-miR-6720-5p": 23.82,
+  "hsa-miR-9986": 12.72,
+  "hsa-miR-19b-2-5p": 21.41,
+  "hsa-miR-3911": 16.7,
+  "hsa-miR-7111-5p": 17.73,
+  "hsa-miR-8058": 18.49,
+  "hsa-miR-6811-5p": 16.12,
+  "hsa-miR-548an": 12.81,
+  "hsa-miR-6793-5p": 17.4,
+  "hsa-miR-647": 15.43,
+  "hsa-miR-6875-3p": 20.65,
+  "hsa-miR-5579-5p": 11.32,
+  "hsa-miR-4254": 17.15,
+  "hsa-let-7e-5p": 19.56,
+  "hsa-miR-7705": 22.39,
+  "hsa-miR-155-3p": 19.47,
+  "hsa-miR-210-5p": 6.02
+ },
+ "result": "identical",
+ "compared": 20,
+ "identical": 20,
+ "differ": [],
+ "rows": [
+  {
+   "mirna": "hsa-miR-221-3p",
+   "identical": true,
+   "forward_top3": [
+    "ATGGACGAGCTACATTGTCTGC",
+    "ACGCTAGCTACATTGTCTGCTG",
+    "GCCATTCCGAGCTACATTGTCT"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     17
+    ],
+    [
+     14,
+     5,
+     16
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-4685-5p",
+   "identical": true,
+   "forward_top3": [
+    "CCTACCCCAGGGCTTGGA",
+    "CCTACCCAGGGCTTGGAGT",
+    "TACCCCCAGGGCTTGGAG"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     15
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-653-3p",
+   "identical": true,
+   "forward_top3": [
+    "CCGAGGTTCACTGGAGTTTGTT",
+    "GTTGCGTGTTCACTGGAGTTTG",
+    "GACACAGGCTTTCACTGGAGTT"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     15,
+     5,
+     16
+    ],
+    [
+     15,
+     5,
+     16
+    ],
+    [
+     15,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-6720-5p",
+   "identical": true,
+   "forward_top3": [
+    "GGAGAGTATTCCAGCCCTGGTA",
+    "AGAGTTCCAGCCCTGGTAGG",
+    "CATGCCTATTCCAGCCCTGG"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     15,
+     5,
+     18
+    ],
+    [
+     15,
+     5,
+     17
+    ],
+    [
+     15,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-9986",
+   "identical": true,
+   "forward_top3": [
+    "CCGTTGAGATGTGAGGTTGTCAT",
+    "CTGACAGCTTGTGAGGTTGTCA",
+    "CCTAGCTTGAGTGTGAGGTTGTC"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     19
+    ],
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     16
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-19b-2-5p",
+   "identical": true,
+   "forward_top3": [
+    "GGATGAGAGTTTTGCAGGTTTGC",
+    "ACGCCAAGTTTTGCAGGTTTG",
+    "TCCACACCAGTTTTGCAGGTT"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     19
+    ],
+    [
+     14,
+     5,
+     19
+    ],
+    [
+     14,
+     5,
+     16
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-3911",
+   "identical": true,
+   "forward_top3": [
+    "CAGCTTGTGTGGATCCTGGAG",
+    "GAATCGACTGTGTGGATCCTGG",
+    "AGTCTTGAGGTGTGTGGATCCT"
+   ],
+   "grades": [
+    "B",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     9,
+     5,
+     17
+    ],
+    [
+     9,
+     5,
+     15
+    ],
+    [
+     9,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-7111-5p",
+   "identical": true,
+   "forward_top3": [
+    "CAGATGGGGGAGGAAGGACA",
+    "TCACAGAGTGGGGGAGGAAG",
+    "GACGATGGGGGAGGAAGGA"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     17
+    ],
+    [
+     14,
+     5,
+     19
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-8058",
+   "identical": true,
+   "forward_top3": [
+    "GGTAGGAGCTGGACTTTGATCTTG",
+    "CGCCGTTCTGGACTTTGATCT",
+    "CCGTGTGTGTCTGGACTTTGAT"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     13
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-6811-5p",
+   "identical": true,
+   "forward_top3": [
+    "CACACATGCAGGCCTGTGTA",
+    "ACACATGCAGGCCTGTGTAC",
+    "CGTCTCTATGCAGGCCTGTG"
+   ],
+   "grades": [
+    "B",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     15
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-548an",
+   "identical": true,
+   "forward_top3": [
+    "CCGAACGAAAAGGCATTGTGG",
+    "CGCTTGGTCTAAAAGGCATTGTG",
+    "GTCCTCCTATCCAAAAGGCATTGT"
+   ],
+   "grades": [
+    "A",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-6793-5p",
+   "identical": true,
+   "forward_top3": [
+    "TCAGGTGTGGGTTCTGGGT",
+    "AGCTTGTGGGTTCTGGGTTG",
+    "GGATGAAGGTGTGGGTTCTGG"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     19
+    ],
+    [
+     14,
+     5,
+     19
+    ],
+    [
+     14,
+     5,
+     16
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-647",
+   "identical": true,
+   "forward_top3": [
+    "CATGGTGGCTGCACTCACT",
+    "CTCTGTACGTGGCTGCACTC",
+    "AGCTGTGGCTGCACTCAC"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     17
+    ],
+    [
+     14,
+     5,
+     15
+    ],
+    [
+     14,
+     5,
+     15
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-6875-3p",
+   "identical": true,
+   "forward_top3": [
+    "GATGAGCTATTCTTCCTGCCCTG",
+    "AAGGCTCAATTCTTCCTGCCC",
+    "CACAGATTCTTCCTGCCCTGG"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     15
+    ],
+    [
+     14,
+     5,
+     13
+    ],
+    [
+     14,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-5579-5p",
+   "identical": true,
+   "forward_top3": [
+    "ACCGAACTCAGATATGGTACTCCTT",
+    "CTGGTGACTGACTATGGTACTCCT",
+    "ACCGAACTCAGATATGGTACTCCTTAA"
+   ],
+   "grades": [
+    "B",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     15
+    ],
+    [
+     14,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-4254",
+   "identical": true,
+   "forward_top3": [
+    "CCTATCTGGCCTGGAGCTACT",
+    "TACCGCCTGGAGCTACTCC",
+    "CCTAGCCTGGAGCTACTCCAC"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     16
+    ],
+    [
+     14,
+     5,
+     14
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-let-7e-5p",
+   "identical": true,
+   "forward_top3": [
+    "CCTATCATGCTGAGGTAGGAGGT",
+    "AGCCATTAGGTGAGGTAGGAGG",
+    "AGCCATGAGGTAGGAGGTTGT"
+   ],
+   "grades": [
+    "A",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     13,
+     5,
+     17
+    ],
+    [
+     13,
+     5,
+     13
+    ],
+    [
+     9,
+     5,
+     20
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-7705",
+   "identical": true,
+   "forward_top3": [
+    "CCGCCAATAGCTCAGAATGTCA",
+    "GACGCCGAATAGCTCAGAATGT",
+    "CAAGGCGTCGAATAGCTCAGAA"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     20
+    ],
+    [
+     14,
+     5,
+     15
+    ],
+    [
+     14,
+     5,
+     16
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-155-3p",
+   "identical": true,
+   "forward_top3": [
+    "GCGTTGGCTCCTACATATTAGCA",
+    "CGAACGACCGCTCCTACATATTAG",
+    "ACTGGCGTCCCTCCTACATATT"
+   ],
+   "grades": [
+    "A",
+    "B",
+    "B"
+   ],
+   "tiers": [
+    [
+     14,
+     5,
+     18
+    ],
+    [
+     14,
+     5,
+     14
+    ],
+    [
+     14,
+     5,
+     11
+    ]
+   ]
+  },
+  {
+   "mirna": "hsa-miR-210-5p",
+   "identical": true,
+   "forward_top3": [
+    "CCTAGAGCCCCTGCCCAC",
+    "CTAGAGCCCCTGCCCACC",
+    "CTCTAGCCCCTGCCCACC"
+   ],
+   "grades": [
+    "A",
+    "A",
+    "A"
+   ],
+   "tiers": [
+    [
+     14,
+     4,
+     12
+    ],
+    [
+     14,
+     4,
+     12
+    ],
+    [
+     14,
+     4,
+     12
+    ]
+   ]
+  }
+ ]
+}

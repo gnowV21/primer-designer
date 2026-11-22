@@ -39,12 +39,12 @@ This is a **split-stack** web app: a Python/Flask backend and a React/Vite front
 ### Request flow
 Browser → Vite dev server (`:5173`) → `/api/*` proxy → Flask (`:5000`) → miRBase REST API (`https://mirbase.org/api/mirna/`)
 
-In production, `/api/*` must be reverse-proxied to the Flask server separately (Vite proxy is dev-only).
+In production there is one origin: Flask also serves the built `frontend/dist` (or `FRONTEND_DIST`) — files only from that directory, every other non-`/api` path → `index.html`, unknown `/api/*` → JSON 404 (`app.py`, tests in `backend/tests/test_deploy_runtime.py`). The deploy image is `Dockerfile.vercel` (gunicorn, 1 worker × 4 threads; README "Deploy lên Vercel"); it builds the BLAST DB and `db/mirbase.db` at image build time and writes only to `/tmp` at run time.
 
 ### Backend (`backend/`)
-- `app.py` — Flask entry point; registers blueprints; CORS allowed for `localhost:5173` and `localhost:3000`; exposes `GET /api/health`
+- `app.py` — Flask entry point; registers blueprints; CORS from `CORS_ORIGINS` (default `localhost:5173`/`3000`); debug only with `FLASK_DEBUG=1`, port from `PORT`; exposes `GET /api/health`; serves the built frontend when `frontend/dist` exists
 - `routes/mirbase.py` — `GET /api/mirbase/<mirna_id>`: tries `?accession=<id>` first, then `?name=<id>`, returns `{id, accession, sequence, family, species, length}` or 404
-- Stack: **Flask 3 + flask-cors + requests + primer3-py + ViennaRNA + biopython + numpy + flask-limiter + reportlab** (see `requirements.txt`); BLAST+ is a system binary; every BLAST+ subprocess gets its env from `blast_offtarget.blast_subprocess_env()`, which sets `BLAST_USAGE_REPORT=false` unless the user set it (NCBI's usage report added ~1 s per call and hung 30–35 s on a slow network, `docs/REVIEW_panel_4.0.0.md` §10). Do not add dependencies beyond these without a reason recorded in the PR.
+- Stack: **Flask 3 + flask-cors + requests + primer3-py + ViennaRNA + biopython + numpy + flask-limiter + reportlab + gunicorn (deploy only)** (see `requirements.txt`); BLAST+ is a system binary; every BLAST+ subprocess gets its env from `blast_offtarget.blast_subprocess_env()`, which sets `BLAST_USAGE_REPORT=false` unless the user set it (NCBI's usage report added ~1 s per call and hung 30–35 s on a slow network, `docs/REVIEW_panel_4.0.0.md` §10). Do not add dependencies beyond these without a reason recorded in the PR.
 
 ### Frontend (`frontend/src/`)
 - Fixed stack: **React 18 + Vite 5 + Tailwind 3 + React Router DOM v6 + Axios** — no Redux, no Formik, no UI component libraries
@@ -66,6 +66,9 @@ Colors are defined under `theme.extend.colors` (not `theme.colors`) to preserve 
 
 ### RangeSlider implementation note
 Two `<input type="range">` elements are stacked with `position: absolute`. The filled track between thumbs is a CSS `linear-gradient` computed from `leftPct` and `rightPct` as inline styles. The constraint `minVal ≤ maxVal - step` must be enforced in `onMinChange`/`onMaxChange` handlers.
+
+### miRBase release (pinned)
+The BLAST DB, `db/mirbase.db` and the overhang / family indexes all come from one file: miRBase **22.1** `mature.fa`, committed as `backend/data/mirbase_22.1/mature.fa.gz` (sha256 `3c521fc9…` in `SHA256`, `backend/scripts/mirbase_pin.py`). `build_blast_db.py` / `build_db.py` check the sha256 before building and download only with `--download`; `python -m scripts.bootstrap_blast_db` builds both. A BLAST DB whose `metadata.json` sha256 differs from the overhang index's (or records none) is reported as BLAST unavailable. Never build from miRBase CURRENT (23.1).
 
 ### Domain context
 Stem-loop RT-qPCR (Chen et al. 2005): designs three primers for mature miRNA quantification — a stem-loop RT primer, a forward qPCR primer, and a fixed universal reverse primer (`5'-CCAGTGCAGGGTCCGAGGTA-3'`). The RT 3′ overhang (binding region) is **6 nt by default** (Chen 2005). **5 and 7 nt are supported** (project decision 2026-09-18) and always carry an off-label warning; anything outside 5–7 nt is rejected with HTTP 400. The overhang length is read from the RT primer (`len(S) − 44`) wherever a primer is analysed or visualised — never assumed to be 6.
