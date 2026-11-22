@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// E2E_BASE_URL runs the suite against an already running server instead of the Vite
+// dev server, e.g. the Dockerfile.vercel container: E2E_BASE_URL=http://localhost:8080
+const externalBaseURL = process.env.E2E_BASE_URL;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -15,10 +19,10 @@ export default defineConfig({
   retries: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: externalBaseURL || 'http://localhost:5173',
     trace: 'on-first-retry',
   },
-  webServer: {
+  webServer: externalBaseURL ? undefined : {
     command: 'npm run dev --prefix frontend',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
