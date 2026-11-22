@@ -210,12 +210,14 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     writer = csv.writer(buf, lineterminator="\r\n")
     # Tiered sets (algorithm 4.0.0, SPEC_ui_tiered_4.0.0 §2.5): the tiers get their own
     # columns and total_score is named for what it is there, the tie-break score.
-    # A V4 result keeps the V4 header (Total_Score) unchanged.
+    # Column titles follow the criteria groups (2026-11-22): Req_ = Required, Flex1/2/3 =
+    # Flexible 1 No critical weakness / 2 PCR / 3 Composition & structure. Values and
+    # column order unchanged. A V4 result keeps the V4 header (Total_Score) unchanged.
     tiered = bool(top3) and all(s.get("ranking") for s in top3)
     system = meta.get("scoring_system") or ("tiered" if tiered else "v4")
-    score_cols = (["scoring_system", "grade", "grade_reasons", "S1", "S2", "S3", "S_total",
-                   "P_total", "F_total", "structure_veto", "binding_floor_fail",
-                   "v4_rule_violations", "tie_break_score"]
+    score_cols = (["scoring_system", "grade", "grade_reasons", "Req_S1_BLAST", "Req_S2_dCq",
+                   "Req_S3_Tm_margin", "Req_S_total", "Flex2_PCR", "Flex3_composition_structure",
+                   "Flex1_structure", "Flex1_binding_floor", "Flex1_standard_rules", "tie_break_score"]
                   if tiered else ["Total_Score", "Grade"])
     writer.writerow([
         "Set_Rank", "Primer_Role", "Sequence", "Length_nt",
@@ -630,11 +632,11 @@ def _build_pdf(results: dict, filename: str, blast_result=None, include_checklis
         ("Cycle-1 occupancy % (Ta)", lambda s: _fmt_pct(s.get('scores', {}).get('bound_fraction_binding_pct'))),
     ]
     if top3 and all(s.get("ranking") for s in top3):
-        criteria[0] = ("Grade · tiers", lambda s: _ranking_note(s) or "—")
+        criteria[0] = ("Grade · criteria groups", lambda s: _ranking_note(s) or "—")
         criteria.insert(1, ("Tie-break score", lambda s: _fmt(s["ranking"].get("detailed_score"))))
     elif any(s.get("ranking") for s in top3):
-        criteria.insert(1, ("Tiered ranking", lambda s: _ranking_note(s) or "—"))
-    criteria.append(("V4 rules broken", lambda s: ", ".join(s.get("v4_rule_violations") or []) or "none"))
+        criteria.insert(1, ("Criteria groups", lambda s: _ranking_note(s) or "—"))
+    criteria.append(("Standard primer rules not met", lambda s: ", ".join(s.get("v4_rule_violations") or []) or "none"))
     cmp_data = [cmp_header] + [
         [label] + [fn(s) for s in top3]
         for label, fn in criteria
@@ -1031,19 +1033,19 @@ def _selection_note(s: dict) -> str:
 
 
 def _ranking_note(s: dict) -> str:
-    """Tiered tier totals of one set (SPEC §4), '' for a V4 set."""
+    """Group totals of one tiered set (Required S, Flexible P and F; SPEC §4), '' for a V4 set."""
     rk = s.get("ranking")
     if not rk:
         return ""
     sp, pcr, fx = rk["specificity"], rk["pcr"], rk["flexible"]
-    note = (f"Tiered S {sp['total']}/{sp['max']} · P {pcr['total']}/{pcr['max']} · "
-            f"F {fx['total']}/{fx['max']}")
+    note = (f"Required S {sp['total']}/{sp['max']} · PCR P {pcr['total']}/{pcr['max']} · "
+            f"Composition & structure F {fx['total']}/{fx['max']}")
     if s.get("grade"):
         note = f"Grade {s['grade']} · " + note
     if rk.get("structure_veto"):
-        note += " · structure veto"
+        note += " · secondary structure too strong"
     if rk.get("binding_floor_fail"):
-        note += " · binding Tm < 39 °C"
+        note += " · cycle-1 binding Tm < 39 °C"
     if rk.get("eliminated"):
         note += " · fails specificity (fallback)"
     return note
@@ -1055,9 +1057,10 @@ def _lvl(v) -> str:
 
 
 def _v4_rules_note(s: dict) -> str:
-    """V4 rules this set breaks (SPEC QD 25); '' when none or not reported."""
+    """Standard primer rules (the V4 hard filters, SPEC QD 25) this set does not meet;
+    '' when none or not reported."""
     v = s.get("v4_rule_violations")
-    return f"V4 rules broken: {', '.join(v)}" if v else ""
+    return f"Standard primer rules not met: {', '.join(v)}" if v else ""
 
 
 def _family_provenance_note(results: dict) -> str:

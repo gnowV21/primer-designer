@@ -1,5 +1,5 @@
 // SetComparison — the returned tiered sets side by side (review panel 2026-11-18).
-// One row per set: grade, the three tier totals, the forward primer and the values a
+// One row per set: grade, the group totals (Required S, Flexible P and F), the forward primer and the values a
 // bench scientist compares first. Every value is already on the cards; this table is
 // the overview that replaces opening three cards.
 
@@ -29,9 +29,9 @@ export default function SetComparison({ top3, blastAvailable = true }) {
             <tr>
               <th className="text-left px-2 py-1.5 font-semibold">Set</th>
               <th className="text-left px-2 py-1.5 font-semibold">Grade</th>
-              <th className="text-right px-2 py-1.5 font-semibold" title="Specificity tier">S</th>
-              <th className="text-right px-2 py-1.5 font-semibold" title="PCR tier">P</th>
-              <th className="text-right px-2 py-1.5 font-semibold" title="Flexible tier">F</th>
+              <th className="text-right px-2 py-1.5 font-semibold" title="Required: specificity S1 + S2 + S3">S</th>
+              <th className="text-right px-2 py-1.5 font-semibold" title="Flexible 2: PCR (P2)">P</th>
+              <th className="text-right px-2 py-1.5 font-semibold" title="Flexible 3: composition & structure (F1 + F2 + F4 + F5)">F</th>
               <th className="text-left px-2 py-1.5 font-semibold">Forward primer 5′→3′</th>
               <th className="text-right px-2 py-1.5 font-semibold whitespace-nowrap" title="Tm of the miRNA-binding region (cycle 1)">Binding Tm</th>
               <th className="text-right px-2 py-1.5 font-semibold whitespace-nowrap">Tm</th>

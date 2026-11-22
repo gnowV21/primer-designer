@@ -176,21 +176,22 @@ const ROWS = [
   },
 ];
 
-// Tiered sets (4.0.0): the V4 "Total score" row is replaced by the tiers
-// (SPEC_ui_tiered_4.0.0 §2.5). total_score is only the final tie-break there.
+// Tiered sets (4.0.0): the V4 "Total score" row is replaced by the criteria groups, in
+// ranking-key order (Required, then Flexible 1 → 2 → 3; utils/criteriaGroups.js).
+// total_score is only the final tie-break there.
 const yesNo = (v) => (v ? 'Yes' : '—');
 const TIER_ROWS = [
   { label: 'Grade', extract: () => null, format: (s) => s.grade ?? '—', best: null },
-  { label: 'Specificity (S)', extract: (s) => s.ranking.specificity.total,
+  { label: 'Required · specificity (S)', extract: (s) => s.ranking.specificity.total,
     format: (s) => `${s.ranking.specificity.total}/${s.ranking.specificity.max}`, best: 'max' },
-  { label: 'PCR (P)', extract: (s) => s.ranking.pcr.total,
-    format: (s) => `${s.ranking.pcr.total}/${s.ranking.pcr.max}`, best: 'max' },
-  { label: 'Flexible (F)', extract: (s) => s.ranking.flexible.total,
-    format: (s) => `${s.ranking.flexible.total}/${s.ranking.flexible.max}`, best: 'max' },
-  { label: 'Structure veto', extract: () => null, format: (s) => yesNo(s.ranking.structure_veto), best: null },
-  { label: 'Binding Tm < 39 °C', extract: () => null, format: (s) => yesNo(s.ranking.binding_floor_fail), best: null },
-  { label: 'Outside V4 rules', extract: () => null,
+  { label: 'Flexible 1 · structure too strong', extract: () => null, format: (s) => yesNo(s.ranking.structure_veto), best: null },
+  { label: 'Flexible 1 · binding Tm < 39 °C', extract: () => null, format: (s) => yesNo(s.ranking.binding_floor_fail), best: null },
+  { label: 'Flexible 1 · standard primer rules not met', extract: () => null,
     format: (s) => (s.v4_rule_violations || []).join(', ') || '—', best: null },
+  { label: 'Flexible 2 · PCR (P)', extract: (s) => s.ranking.pcr.total,
+    format: (s) => `${s.ranking.pcr.total}/${s.ranking.pcr.max}`, best: 'max' },
+  { label: 'Flexible 3 · composition & structure (F)', extract: (s) => s.ranking.flexible.total,
+    format: (s) => `${s.ranking.flexible.total}/${s.ranking.flexible.max}`, best: 'max' },
   { label: 'Tie-break score', extract: (s) => s.ranking.detailed_score,
     format: (s) => fmt(s.ranking.detailed_score), best: 'max' },
 ];
@@ -361,7 +362,7 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           {hasTiers(set) ? (
             <>
               <PropRow label="Grade" value={set.grade} />
-              <PropRow label="Tiers S / P / F"
+              <PropRow label="Required S · PCR P · Composition F"
                 value={`${set.ranking.specificity.total}/${set.ranking.specificity.max} · ${set.ranking.pcr.total}/${set.ranking.pcr.max} · ${set.ranking.flexible.total}/${set.ranking.flexible.max}`} />
               <PropRow label="Tie-break score" value={fmt(set.ranking.detailed_score)} />
             </>

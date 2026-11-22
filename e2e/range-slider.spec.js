@@ -4,9 +4,9 @@ import { openParameters } from './helpers.js';
 test.describe('RangeSlider', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/design');
-    // Open Primer Design Constraints to access Tm slider
+    // Open Required to access the Tm window slider
     await openParameters(page);
-    await page.getByText('Primer Design Constraints').click();
+    await page.getByText('Required', { exact: true }).click();
   });
 
   test('Tm badge chips show default values 58°C and 62°C', async ({ page }) => {

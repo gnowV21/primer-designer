@@ -17,7 +17,7 @@ export default function ExportButtons({ set, stemloop, reverse }) {
 
   function tsvRow() {
     if (tiered) {
-      // Tiered (4.0.0): the V4 "Score" column is the tie-break score; tiers added.
+      // Tiered (4.0.0): the V4 "Score" column is the tie-break score; group totals added.
       const r = set.ranking;
       const cols = [
         `#${set.rank} Forward`, set.sequence, stemloop?.sequence ?? '', reverse?.sequence ?? '',
@@ -26,7 +26,10 @@ export default function ExportButtons({ set, stemloop, reverse }) {
         set.tm_full?.toFixed(1) ?? '', set.gc_percent ?? '', set.amplicon_size ?? '',
       ];
       return [
-        ['Rank', 'Forward Primer', 'RT Primer', 'Reverse Primer', 'Grade', 'S', 'P', 'F',
+        // Column titles follow the criteria groups (2026-11-22, same names as the CSV
+        // export); values and column order unchanged.
+        ['Rank', 'Forward Primer', 'RT Primer', 'Reverse Primer', 'Grade', 'Req_S_total', 'Flex2_PCR',
+          'Flex3_composition_structure',
           'Tie-break score', 'Tm (°C)', 'GC%', 'Amplicon (bp)'].join('\t'),
         cols.join('\t'),
       ].join('\n');

@@ -4,7 +4,7 @@
  *
  * Các biến trả về được dùng để:
  *   - Hiển thị thông tin phân tích trong SequenceGroup (seed, GC, flags)
- *   - Cảnh báo kỹ thuật trong PrimerConstraintsGroup (repeat, fwdRegionGC, fwdEndGC)
+ *   - Cảnh báo kỹ thuật trong RequiredGroup / FlexibleGroup (repeat, fwdRegionGC, fwdEndGC)
  *   - Ghi chú sinh học trong DetectionMethodGroup (startsWithU)
  *   - Gửi lên backend khi thiết kế primer (bindingRegion, fwdRegion*)
  *

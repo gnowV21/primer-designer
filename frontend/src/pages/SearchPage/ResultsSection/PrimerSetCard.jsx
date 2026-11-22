@@ -39,7 +39,7 @@ const RISK_STYLE = {
 
 export default function PrimerSetCard({
   set, stemloop, reverse, mirnaId, mirnaSequence, conditions, species,
-  blastAvailable = true, equivalentTo = [],
+  blastAvailable = true, equivalentTo = [], tmWindow = null, onExplain,
 }) {
   const [expanded, setExpanded] = useState(set.rank === 1);
   const tiered = hasTiers(set);
@@ -93,7 +93,7 @@ export default function PrimerSetCard({
             <span className="flex flex-col items-end gap-1" data-testid="card-tier-header">
               <span className="flex items-center gap-1.5">
                 <GradeBadge set={set} blastAvailable={blastAvailable} withTooltip={false} />
-                <span className="text-xs font-semibold text-slate-700 tabular-nums">
+                <span className="text-xs font-semibold text-slate-700 tabular-nums" title="Required: specificity S1 + S2 + S3">
                   S {set.ranking.specificity.total}/{set.ranking.specificity.max}
                 </span>
               </span>
@@ -108,7 +108,7 @@ export default function PrimerSetCard({
         <p className="px-4 sm:px-5 -mt-2 pb-3">
           <span
             className="text-xs px-2 py-0.5 rounded-full border text-slate-700 bg-slate-50 border-slate-300"
-            title="Same specificity, soft vetoes, V4-rule step, PCR and flexible tiers: the sets differ only in the tie-break score (SPEC QD 16)."
+            title="Same Required specificity, same No-critical-weakness result, same PCR and Composition & structure levels: the sets differ only in the tie-break score (SPEC QD 16)."
             data-testid="equivalent-label"
           >
             Equivalent in silico to #{equivalentTo.join(', #')}
@@ -126,7 +126,7 @@ export default function PrimerSetCard({
           {/* ── Tiers (4.0.0) or the V4 score (U5) + structure ── */}
           {tiered ? (
             <div className="space-y-3">
-              <TierSummary set={set} blastAvailable={blastAvailable} />
+              <TierSummary set={set} blastAvailable={blastAvailable} tmWindow={tmWindow} onExplain={onExplain} />
               <TierDetailTable set={set} />
               {set.structure_checks && (
                 <StructureChecks checks={set.structure_checks} />

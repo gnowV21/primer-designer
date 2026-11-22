@@ -34,9 +34,9 @@ async function mockDesign(page, mutate) {
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
-// ── (a) grade + 3 tiers, no gauge ────────────────────────────────────
+// ── (a) grade + criteria groups, no gauge ────────────────────────────
 
-test('(a) a tiered card shows grade + three tiers and no score gauge', async ({ page }) => {
+test('(a) a tiered card shows grade, Required and Flexible groups and no score gauge', async ({ page }) => {
   await design(page, MIR21);
   const first = page.getByTestId('card-tier-header').first();
   await expect(first).toBeVisible();
@@ -46,10 +46,28 @@ test('(a) a tiered card shows grade + three tiers and no score gauge', async ({ 
   await expect(summary.getByTestId('tier-specificity')).toContainText(/\d+\/15/);
   await expect(summary.getByTestId('tier-pcr')).toContainText(/\d+\/5/);
   await expect(summary.getByTestId('tier-flexible')).toContainText(/\d+\/20/);
+  // Required = assay structure + Tm window + S1–S3; Flexible = 1 → 2 → 3 (2026-11-22)
+  const required = summary.getByTestId('group-required');
+  await expect(required).toContainText('Built to the Chen 2005 assay structure');
+  await expect(required).toContainText(/inside the Tm window 58–62 °C/);
+  await expect(required.getByTestId('tier-specificity')).toBeVisible();
+  const flexible = summary.getByTestId('group-flexible');
+  const order = await flexible.evaluate((el) => ['ncw', 'tier-pcr', 'tier-flexible']
+    .map((id) => el.querySelector(`[data-testid="${id}"]`).getBoundingClientRect().top));
+  expect(order[0]).toBeLessThan(order[1]);
+  expect(order[1]).toBeLessThan(order[2]);
+  await expect(flexible).toContainText('1. No critical weakness');
+  await expect(flexible).toContainText('3. Composition & structure');
+  await expect(flexible.getByTestId('f4-note')).toContainText('PCR cycle-1 binding; scored with F, ranked after P2');
+  // ΔTm F–R: a value on the card, not scored, no chip warning; once in "Shared by all sets"
+  await expect(summary.getByTestId('dtm-fr')).toContainText('not scored');
+  await expect(page.getByTestId('reverse-tm-note')).toContainText('ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions, the same for every set.');
+  await expect(page.getByTestId('reverse-tm-note')).toContainText('Tm_R 62.93 °C');
+  await expect(summary).not.toContainText('V4');
   await expect(page.getByTestId('score-gauge')).toHaveCount(0);
   // The tie-break score is only in the collapsed detail table, with its label.
   await page.getByText('Criteria detail').first().click();
-  await expect(page.getByText('Tie-break score — used only when all tiers are equal').first()).toBeVisible();
+  await expect(page.getByText('Tie-break score — used only when every group is equal').first()).toBeVisible();
 });
 
 // ── (b) fallback banner on let-7a-5p ──────────────────────────────────
@@ -72,10 +90,10 @@ test('(c1) rank reason names the specificity tier when S decides', async ({ page
     r2.specificity.total = j.top3[0].ranking.specificity.total - 2;
   });
   await design(page, MIR21);
-  await expect(page.getByTestId('rank-reason')).toContainText(/^#1 is more specific \(S \d+ vs \d+\): BLAST \w+ vs MEDIUM/);
+  await expect(page.getByTestId('rank-reason')).toContainText(/^Required: #1 is more specific \(S \d+ vs \d+\): S1 BLAST \w+ vs MEDIUM/);
 });
 
-test('(c2) two sets equal on every tier are labelled "Equivalent in silico"', async ({ page }) => {
+test('(c2) two sets equal on every group are labelled "Equivalent in silico"', async ({ page }) => {
   await mockDesign(page, (j) => {
     const [a, b] = j.top3;
     b.ranking = { ...clone(a.ranking), detailed_score: a.ranking.detailed_score - 3 };
@@ -84,7 +102,7 @@ test('(c2) two sets equal on every tier are labelled "Equivalent in silico"', as
   });
   await design(page, MIR21);
   await expect(page.getByTestId('rank-reason'))
-    .toHaveText('Equivalent in silico on every tier; ordered by tie-break score (+3.0).');
+    .toHaveText('Equivalent in silico on every group; ordered by tie-break score (+3.0).');
   await expect(page.getByTestId('equivalent-label').first()).toContainText('Equivalent in silico to #');
 });
 
@@ -165,7 +183,7 @@ test('(f) a History record saved before 4.0.0 shows the V4 score and opens', asy
 
 // ── (g) CSV export columns ───────────────────────────────────────────
 
-test('(g) the CSV export carries the tier columns', async ({ page }) => {
+test('(g) the CSV export carries the criteria-group columns', async ({ page }) => {
   await design(page, MIR21);
   const [download] = await Promise.all([
     page.waitForEvent('download', { timeout: 15000 }),
@@ -173,22 +191,27 @@ test('(g) the CSV export carries the tier columns', async ({ page }) => {
   ]);
   const text = readFileSync(await download.path(), 'utf8');
   const header = text.split(/\r?\n/).find((l) => l.startsWith('Set_Rank'));
-  for (const col of ['scoring_system', 'grade', 'grade_reasons', 'S1', 'S2', 'S3', 'S_total', 'P_total',
-    'F_total', 'structure_veto', 'binding_floor_fail', 'v4_rule_violations', 'tie_break_score']) {
-    expect(header.split(',')).toContain(col);
-  }
+  // Titles renamed to the criteria groups (2026-11-22); order and values unchanged.
+  const cols = ['scoring_system', 'grade', 'grade_reasons', 'Req_S1_BLAST', 'Req_S2_dCq', 'Req_S3_Tm_margin',
+    'Req_S_total', 'Flex2_PCR', 'Flex3_composition_structure', 'Flex1_structure', 'Flex1_binding_floor',
+    'Flex1_standard_rules', 'tie_break_score'];
+  const h = header.split(',');
+  const i0 = h.indexOf('scoring_system');
+  expect(h.slice(i0, i0 + cols.length)).toEqual(cols);
   expect(header).not.toContain('Total_Score');
   const row1 = text.split(/\r?\n/).find((l) => l.startsWith('1,Forward'));
   expect(row1).toContain(',tiered,');
 });
 
-// ── soft-veto and V4-rule chips on a real design ─────────────────────
+// ── "No critical weakness" chips on a real design ───────────────────
 
-test('hsa-miR-590-3p #1 shows the binding-floor chip, the V4-rule chip and grade B', async ({ page }) => {
+test('hsa-miR-590-3p #1 fails No critical weakness on binding Tm and a standard rule; grade B', async ({ page }) => {
   await design(page, WARM_MIRNAS.find((m) => m.name === 'hsa-miR-590-3p').sequence);
   const flags = page.getByTestId('tier-flags').first();
-  await expect(flags).toContainText('Binding Tm < 39 °C');
-  await expect(flags).toContainText('Outside V4 rule: No G/C in the last 3 nt');
+  await expect(page.getByTestId('ncw-fail').first()).toBeVisible();
+  await expect(flags).toContainText(/Cycle-1 binding Tm .*< 39 °C/);
+  await expect(flags).toContainText('Standard primer rule not met: No G/C in the last 3 nt');
+  await expect(flags).not.toContainText('V4');
   await expect(page.getByTestId('grade-badge').first()).toHaveText(/^B/);
   // advice for a binding Tm below the floor (review panel A5): on the open #1 card
   await expect(page.getByTestId('low-binding-tm').first()).toContainText('Ta ≈ 50 °C');

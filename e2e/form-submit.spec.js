@@ -12,9 +12,9 @@ test.describe('Form submit button', () => {
   });
 
   test('submit button shows Fix errors state on validation error', async ({ page }) => {
-    // Open Primer Design Constraints to access thermodynamic inputs
+    // Open Flexible (reaction conditions) to access the salt input
     await openParameters(page);
-    await page.getByText('Primer Design Constraints').click();
+    await page.getByText('Flexible', { exact: true }).click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.fill('');
     await saltInput.blur();
@@ -23,7 +23,7 @@ test.describe('Form submit button', () => {
 
   test('NumInput clear shows empty field not zero', async ({ page }) => {
     await openParameters(page);
-    await page.getByText('Primer Design Constraints').click();
+    await page.getByText('Flexible', { exact: true }).click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     await saltInput.selectText();
@@ -33,7 +33,7 @@ test.describe('Form submit button', () => {
 
   test('NumInput focus selects all text', async ({ page }) => {
     await openParameters(page);
-    await page.getByText('Primer Design Constraints').click();
+    await page.getByText('Flexible', { exact: true }).click();
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     // After click, value should be selected (verify by typing immediately)
