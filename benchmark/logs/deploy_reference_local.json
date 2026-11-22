@@ -1,0 +1,1020 @@
+{
+ "what": "local reference for deploy_equivalence: 20 hsa miRNAs of benchmark/tiered_design_timing.json, designed on this machine",
+ "algorithm_version": "4.0.0",
+ "machine": {
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.8"
+ },
+ "method": "POST /api/design through the Flask test client, backend defaults, empty BLAST cache, sequential",
+ "checks": {
+  "top3_vs_freeze_ui_top3_dump": {
+   "compared": 20,
+   "differ": [],
+   "file": "outputs/freeze_cache/ui_top3_hsa.jsonl.gz",
+   "fields": "forward, grade, specificity/pcr/flexible totals, eliminated, structure_veto, binding_floor_fail of sets #1-#3"
+  },
+  "top1_vs_freeze_designs": {
+   "compared": 20,
+   "differ": [],
+   "file": "outputs/freeze_matrix_4.0.0/cache/designs_hsa.jsonl",
+   "fields": "forward, grade, total_score, RT primer of #1"
+  },
+  "top3_vs_tiered_design_timing": {
+   "compared": 20,
+   "differ": [
+    "hsa-miR-6720-5p",
+    "hsa-miR-19b-2-5p",
+    "hsa-miR-7111-5p",
+    "hsa-miR-548an",
+    "hsa-miR-6875-3p",
+    "hsa-miR-5579-5p",
+    "hsa-let-7e-5p",
+    "hsa-miR-7705",
+    "hsa-miR-210-5p"
+   ],
+   "note": "informational only: the top3 of benchmark/tiered_design_timing.json were recorded at Giai đoạn 2 (commit af546b8), before QĐ 29–37 (Giai đoạn 2b/2c) changed the ranking; the freeze cites only its timing. The two freeze checks above are the reference."
+  }
+ },
+ "designs": {
+  "hsa-miR-221-3p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAAACC",
+   "top3": [
+    {
+     "forward": "ATGGACGAGCTACATTGTCTGC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 95.0
+    },
+    {
+     "forward": "ACGCTAGCTACATTGTCTGCTG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 94.7
+    },
+    {
+     "forward": "GCCATTCCGAGCTACATTGTCT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 90.0
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 120,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-4685-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACCTT",
+   "top3": [
+    {
+     "forward": "CCTACCCCAGGGCTTGGA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 88.3
+    },
+    {
+     "forward": "CCTACCCAGGGCTTGGAGT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 86.0
+    },
+    {
+     "forward": "TACCCCCAGGGCTTGGAG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 88.3
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 80,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-653-3p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTATTGA",
+   "top3": [
+    {
+     "forward": "CCGAGGTTCACTGGAGTTTGTT",
+     "grade": "A",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 97.6
+    },
+    {
+     "forward": "GTTGCGTGTTCACTGGAGTTTG",
+     "grade": "A",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 95.8
+    },
+    {
+     "forward": "GACACAGGCTTTCACTGGAGTT",
+     "grade": "B",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 91.3
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-6720-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCGCGGC",
+   "top3": [
+    {
+     "forward": "GGAGAGTATTCCAGCCCTGGTA",
+     "grade": "A",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 96.9
+    },
+    {
+     "forward": "AGAGTTCCAGCCCTGGTAGG",
+     "grade": "A",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 97.3
+    },
+    {
+     "forward": "CATGCCTATTCCAGCCCTGG",
+     "grade": "A",
+     "specificity": 15,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 97.7
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 120,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-9986": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGCAGGC",
+   "top3": [
+    {
+     "forward": "CCGTTGAGATGTGAGGTTGTCAT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.6
+    },
+    {
+     "forward": "CTGACAGCTTGTGAGGTTGTCA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.0
+    },
+    {
+     "forward": "CCTAGCTTGAGTGTGAGGTTGTC",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 91.4
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 60,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-19b-2-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTGAAAT",
+   "top3": [
+    {
+     "forward": "GGATGAGAGTTTTGCAGGTTTGC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 94.3
+    },
+    {
+     "forward": "ACGCCAAGTTTTGCAGGTTTG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.7
+    },
+    {
+     "forward": "TCCACACCAGTTTTGCAGGTT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 90.2
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-3911": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTGCCTC",
+   "top3": [
+    {
+     "forward": "CAGCTTGTGTGGATCCTGGAG",
+     "grade": "B",
+     "specificity": 9,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 75.8
+    },
+    {
+     "forward": "GAATCGACTGTGTGGATCCTGG",
+     "grade": "B",
+     "specificity": 9,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 76.7
+    },
+    {
+     "forward": "AGTCTTGAGGTGTGTGGATCCT",
+     "grade": "B",
+     "specificity": 9,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 72.7
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-7111-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACATGGCC",
+   "top3": [
+    {
+     "forward": "CAGATGGGGGAGGAAGGACA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.0
+    },
+    {
+     "forward": "TCACAGAGTGGGGGAGGAAG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 90.0
+    },
+    {
+     "forward": "GACGATGGGGGAGGAAGGA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 86.3
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-8058": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTTATGG",
+   "top3": [
+    {
+     "forward": "GGTAGGAGCTGGACTTTGATCTTG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 93.0
+    },
+    {
+     "forward": "CGCCGTTCTGGACTTTGATCT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 90.8
+    },
+    {
+     "forward": "CCGTGTGTGTCTGGACTTTGAT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 13,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 86.3
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-6811-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAGTGCT",
+   "top3": [
+    {
+     "forward": "CACACATGCAGGCCTGTGTA",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": true,
+     "binding_floor_fail": false,
+     "total_score": 91.4
+    },
+    {
+     "forward": "ACACATGCAGGCCTGTGTAC",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": true,
+     "binding_floor_fail": false,
+     "total_score": 91.3
+    },
+    {
+     "forward": "CGTCTCTATGCAGGCCTGTG",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": true,
+     "binding_floor_fail": false,
+     "total_score": 92.3
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-548an": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCAAAAA",
+   "top3": [
+    {
+     "forward": "CCGAACGAAAAGGCATTGTGG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 94.3
+    },
+    {
+     "forward": "CGCTTGGTCTAAAAGGCATTGTG",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 91.9
+    },
+    {
+     "forward": "GTCCTCCTATCCAAAAGGCATTGT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 86.0
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 60,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-6793-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTCACCC",
+   "top3": [
+    {
+     "forward": "TCAGGTGTGGGTTCTGGGT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 94.4
+    },
+    {
+     "forward": "AGCTTGTGGGTTCTGGGTTG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 19,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.7
+    },
+    {
+     "forward": "GGATGAAGGTGTGGGTTCTGG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.4
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-647": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAAGGA",
+   "top3": [
+    {
+     "forward": "CATGGTGGCTGCACTCACT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 90.9
+    },
+    {
+     "forward": "CTCTGTACGTGGCTGCACTC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 89.9
+    },
+    {
+     "forward": "AGCTGTGGCTGCACTCAC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 87.0
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 80,
+    "eliminated_specificity": 2,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-6875-3p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACATGGAG",
+   "top3": [
+    {
+     "forward": "GATGAGCTATTCTTCCTGCCCTG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 91.3
+    },
+    {
+     "forward": "AAGGCTCAATTCTTCCTGCCC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 13,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 87.8
+    },
+    {
+     "forward": "CACAGATTCTTCCTGCCCTGG",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 93.1
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-5579-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGTTAGC",
+   "top3": [
+    {
+     "forward": "ACCGAACTCAGATATGGTACTCCTT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 87.5
+    },
+    {
+     "forward": "CTGGTGACTGACTATGGTACTCCT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 88.8
+    },
+    {
+     "forward": "ACCGAACTCAGATATGGTACTCCTTAA",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 87.8
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 80,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-4254": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACGAGATG",
+   "top3": [
+    {
+     "forward": "CCTATCTGGCCTGGAGCTACT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 92.0
+    },
+    {
+     "forward": "TACCGCCTGGAGCTACTCC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 88.7
+    },
+    {
+     "forward": "CCTAGCCTGGAGCTACTCCAC",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": true,
+     "binding_floor_fail": false,
+     "total_score": 82.8
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 120,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-let-7e-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACAACTAT",
+   "top3": [
+    {
+     "forward": "CCTATCATGCTGAGGTAGGAGGT",
+     "grade": "A",
+     "specificity": 13,
+     "pcr": 5,
+     "flexible": 17,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 83.0
+    },
+    {
+     "forward": "AGCCATTAGGTGAGGTAGGAGG",
+     "grade": "B",
+     "specificity": 13,
+     "pcr": 5,
+     "flexible": 13,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 80.9
+    },
+    {
+     "forward": "AGCCATGAGGTAGGAGGTTGT",
+     "grade": "B",
+     "specificity": 9,
+     "pcr": 5,
+     "flexible": 20,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 69.9
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-7705": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCAGAAC",
+   "top3": [
+    {
+     "forward": "CCGCCAATAGCTCAGAATGTCA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 20,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 93.8
+    },
+    {
+     "forward": "GACGCCGAATAGCTCAGAATGT",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 15,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 91.7
+    },
+    {
+     "forward": "CAAGGCGTCGAATAGCTCAGAA",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 16,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 86.7
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 120,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-155-3p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACTGTTAA",
+   "top3": [
+    {
+     "forward": "GCGTTGGCTCCTACATATTAGCA",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 18,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 93.5
+    },
+    {
+     "forward": "CGAACGACCGCTCCTACATATTAG",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 14,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 87.8
+    },
+    {
+     "forward": "ACTGGCGTCCCTCCTACATATT",
+     "grade": "B",
+     "specificity": 14,
+     "pcr": 5,
+     "flexible": 11,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": true,
+     "total_score": 83.1
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 100,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  },
+  "hsa-miR-210-5p": {
+   "status": 200,
+   "rt_primer": "GTCGTATCCAGTGCAGGGTCCGAGGTATTCGCACTGGATACGACCAGTGT",
+   "top3": [
+    {
+     "forward": "CCTAGAGCCCCTGCCCAC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 4,
+     "flexible": 12,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 82.5
+    },
+    {
+     "forward": "CTAGAGCCCCTGCCCACC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 4,
+     "flexible": 12,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 82.5
+    },
+    {
+     "forward": "CTCTAGCCCCTGCCCACC",
+     "grade": "A",
+     "specificity": 14,
+     "pcr": 4,
+     "flexible": 12,
+     "eliminated": false,
+     "structure_veto": false,
+     "binding_floor_fail": false,
+     "total_score": 82.5
+    }
+   ],
+   "ranking": {
+    "system": "tiered",
+    "blast_available": true,
+    "specificity_fallback": false,
+    "returned_sets": 3,
+    "candidates_scored": 35,
+    "eliminated_specificity": 0,
+    "screen_species": "hsa"
+   },
+   "error": null
+  }
+ }
+}

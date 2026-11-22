@@ -1,0 +1,118 @@
+{
+ "image": "primer-designer:vercel",
+ "image_size_bytes": 747763952,
+ "docker_version": "29.9.3",
+ "host": {
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu_count": 16
+ },
+ "limits": {
+  "cpus": 1,
+  "memory": "2g",
+  "env": {
+   "PORT": "8080"
+  }
+ },
+ "image_size_mb": 713.1,
+ "what": "deploy/vercel container on Vercel Hobby-like limits (README: Deploy lên Vercel)",
+ "date": "2026-11-22",
+ "cold_start_seconds": {
+  "runs": [
+   3.09,
+   1.21,
+   1.35
+  ],
+  "max": 3.09,
+  "definition": "docker start -> first HTTP 200 of /api/health"
+ },
+ "start_before_designs_seconds": 1.24,
+ "designs_empty_cache": [
+  {
+   "mirna": "hsa-miR-21-5p",
+   "http": 200,
+   "seconds": 22.3,
+   "blast_candidates": 100,
+   "blast_cache_hits": 0,
+   "top1": "ACCGCCTAGCTTATCAGACTGA",
+   "server_timing_ms": null
+  },
+  {
+   "mirna": "hsa-miR-16-5p",
+   "http": 200,
+   "seconds": 16.03,
+   "blast_candidates": 100,
+   "blast_cache_hits": 0,
+   "top1": "CCACCGTATAGCAGCACGTAAA",
+   "server_timing_ms": null
+  },
+  {
+   "mirna": "hsa-miR-221-3p",
+   "http": 200,
+   "seconds": 22.41,
+   "blast_candidates": 120,
+   "blast_cache_hits": 0,
+   "top1": "ATGGACGAGCTACATTGTCTGC",
+   "server_timing_ms": null
+  }
+ ],
+ "design_seconds_max": 22.41,
+ "design_limit_seconds": 50.0,
+ "design_within_limit": true,
+ "ram_peak_mb": {
+  "cgroup_memory_peak": 1216.9,
+  "docker_stats_max": 1153.0,
+  "limit_mb": 1600.0,
+  "within_limit": true,
+  "covers": "start + 3 timing designs + 20 equivalence designs"
+ },
+ "sigterm": {
+  "docker_stop_seconds": 2.45,
+  "exit_code": 0,
+  "oom_killed": false,
+  "within_30s": true
+ },
+ "processes_during_run": [
+  "PID                 PPID                COMMAND",
+  "3465                3442                /usr/local/bin/python3.11 /usr/local/bin/gunicorn --chdir backend app:app -w 1 --threads 4 --timeout 280 --graceful-timeout 25 --bind 0.0.0.0:8080",
+  "3487                3465                /usr/local/bin/python3.11 /usr/local/bin/gunicorn --chdir backend app:app -w 1 --threads 4 --timeout 280 --graceful-timeout 25 --bind 0.0.0.0:8080",
+  "3528                3487                /usr/local/bin/python3.11 -B -c from multiprocessing.resource_tracker import main;main(15)",
+  "3529                3487                /usr/local/bin/python3.11 -B -c from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=16, pipe_handle=20) --multiprocessing-fork",
+  "3532                3487                /usr/local/bin/python3.11 -B -c from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=16, pipe_handle=22) --multiprocessing-fork"
+ ],
+ "log_tail": [
+  "[2026-11-22 06:20:04 +0000] [1] [INFO] Starting gunicorn 23.0.0",
+  "[2026-11-22 06:20:04 +0000] [1] [INFO] Listening at: http://0.0.0.0:8080 (1)",
+  "[2026-11-22 06:20:04 +0000] [1] [INFO] Using worker: gthread",
+  "[2026-11-22 06:20:04 +0000] [7] [INFO] Booting worker with pid: 7",
+  "/usr/local/lib/python3.11/site-packages/Bio/pairwise2.py:278: BiopythonDeprecationWarning: Bio.pairwise2 has been deprecated, and we intend to remove it in a future release of Biopython. As an alternative, please consider using Bio.Align.PairwiseAligner as a replacement, and contact the Biopython developers if you still need the Bio.pairwise2 module.",
+  "  warnings.warn(",
+  "/usr/local/lib/python3.11/site-packages/Bio/pairwise2.py:278: BiopythonDeprecationWarning: Bio.pairwise2 has been deprecated, and we intend to remove it in a future release of Biopython. As an alternative, please consider using Bio.Align.PairwiseAligner as a replacement, and contact the Biopython developers if you still need the Bio.pairwise2 module.",
+  "  warnings.warn(",
+  "[2026-11-22 06:26:31 +0000] [1] [INFO] Handling signal: term",
+  "[2026-11-22 06:26:32 +0000] [7] [INFO] Worker exiting (pid: 7)",
+  "[2026-11-22 06:26:32 +0000] [1] [INFO] Shutting down: Master"
+ ],
+ "earlier_run_same_image": {
+  "date": "2026-11-22",
+  "cold_start_seconds": [
+   1.65,
+   1.33,
+   1.37
+  ],
+  "designs_empty_cache_seconds": {
+   "hsa-miR-21-5p": 20.54,
+   "hsa-miR-16-5p": 15.0,
+   "hsa-miR-221-3p": 21.06
+  },
+  "equivalence_designs_max_seconds": 24.05,
+  "ram_peak_mb_cgroup": 1104.1,
+  "docker_stop_seconds": 1.73,
+  "exit_code": 0,
+  "equivalence": "20/20 identical",
+  "sigterm_during_design": {
+   "in_flight_request": "HTTP 200 after 21.8 s",
+   "docker_stop_seconds": 18.17,
+   "exit_code": 0
+  }
+ }
+}
