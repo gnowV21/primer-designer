@@ -6,7 +6,7 @@
 // before the parallel workers start. A failure here only makes the first specs slower.
 import { request } from '@playwright/test';
 import { DEFAULTS } from '../frontend/src/constants/defaults.js';
-import { computeDerived } from '../frontend/src/utils/designRequest.js';
+import { buildDesignBody } from '../frontend/src/utils/designRequest.js';
 import { WARM_MIRNAS } from './helpers.js';
 
 export default async function globalSetup(config) {
@@ -17,7 +17,7 @@ export default async function globalSetup(config) {
     const t0 = Date.now();
     try {
       const r = await ctx.post('/api/design', {
-        data: { ...form, _computed: computeDerived(form.thermodynamic) },
+        data: buildDesignBody(form),
         timeout: 120_000,
       });
       const rs = (await r.json()).ranking_summary || {};

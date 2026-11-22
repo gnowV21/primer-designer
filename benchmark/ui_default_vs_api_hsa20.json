@@ -4,417 +4,840 @@
  "algorithm_version": "4.0.0",
  "sample": "first 20 hsa miRNAs with a design in random.Random(2026) order (tiered_design_timing.py sampling); hsa-miR-210-5p has no design under the UI body (422: tm_out_of_range 278, too_short 318), so hsa-miR-450b-3p is the 20th",
  "api_body": "empty groups (backend defaults): Na+ 50 mM, no K+, no pH -> effective monovalent 50 mM; Tm_reverse 62.93 C",
- "ui_body": "frontend DEFAULTS (constants/defaults.js): Na+ 50, K+ 50 mM, pH 8.4, Mg2+ 1.5, dNTP 0.8 mM, 200 nM, Ta 60, SYBR; effective monovalent 50 + 50 + 10/(1+10^(8.4-8.06)) = 103.14 mM; Tm_reverse 64.49 C",
  "api_reference": "outputs/freeze_cache/ui_top3_hsa.jsonl.gz",
  "method": "Flask test client, POST /api/design, BLAST_CACHE_DISABLED=1",
- "summary": {
-  "n": 20,
-  "identical_1": 0,
-  "same_specific_length": 15,
-  "ui_1_in_api_top3": 0,
-  "ui_1_dtm_fr_ge_3": 20,
-  "ui_top3_sets_dtm_fr_ge_3": "58/60"
+ "before": {
+  "ui_body": "frontend DEFAULTS (constants/defaults.js): Na+ 50, K+ 50 mM, pH 8.4, Mg2+ 1.5, dNTP 0.8 mM, 200 nM, Ta 60, SYBR; effective monovalent 50 + 50 + 10/(1+10^(8.4-8.06)) = 103.14 mM; Tm_reverse 64.49 C",
+  "summary": {
+   "n": 20,
+   "identical_1": 0,
+   "same_specific_length": 15,
+   "ui_1_in_api_top3": 0,
+   "ui_1_dtm_fr_ge_3": 20,
+   "ui_top3_sets_dtm_fr_ge_3": "58/60"
+  },
+  "designs": [
+   {
+    "mirna": "hsa-miR-221-3p",
+    "api_freeze_1": "ATGGACGAGCTACATTGTCTGC",
+    "api_specific_nt": 15,
+    "api_tail": "ATGGACG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "GTGACTCAGCTACATTGTCTGC",
+    "ui_specific_nt": 15,
+    "ui_tail": "GTGACTC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-4685-5p",
+    "api_freeze_1": "CCTACCCCAGGGCTTGGA",
+    "api_specific_nt": 13,
+    "api_tail": "CCTAC",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CCTACCCAGGGCTTGGAG",
+    "ui_specific_nt": 14,
+    "ui_tail": "CCTA",
+    "ui_tm_f": 59.9,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.59,
+    "ui_top3_dtm_fr": [
+     4.59,
+     2.89,
+     2.69
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-653-3p",
+    "api_freeze_1": "CCGAGGTTCACTGGAGTTTGTT",
+    "api_specific_nt": 16,
+    "api_tail": "CCGAGG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "AGCGCATTCACTGGAGTTTG",
+    "ui_specific_nt": 14,
+    "ui_tail": "AGCGCA",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-6720-5p",
+    "api_freeze_1": "GGAGAGTATTCCAGCCCTGGTA",
+    "api_specific_nt": 14,
+    "api_tail": "GGAGAGTA",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CACACTTCCAGCCCTGGTA",
+    "ui_specific_nt": 14,
+    "ui_tail": "CACAC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.59,
+     4.19
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-9986",
+    "api_freeze_1": "CCGTTGAGATGTGAGGTTGTCAT",
+    "api_specific_nt": 14,
+    "api_tail": "CCGTTGAGA",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "ATCCGACTGTGAGGTTGTCAT",
+    "ui_specific_nt": 14,
+    "ui_tail": "ATCCGAC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-19b-2-5p",
+    "api_freeze_1": "GGATGAGAGTTTTGCAGGTTTGC",
+    "api_specific_nt": 16,
+    "api_tail": "GGATGAG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CGCTTAGTTTTGCAGGTTTGC",
+    "ui_specific_nt": 16,
+    "ui_tail": "CGCTT",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-3911",
+    "api_freeze_1": "CAGCTTGTGTGGATCCTGGAG",
+    "api_specific_nt": 16,
+    "api_tail": "CAGCT",
+    "api_tm_f": 60.0,
+    "api_grade": "B",
+    "ui_1": "AAGGTGTGTGGATCCTGGAG",
+    "ui_specific_nt": 16,
+    "ui_tail": "AAGG",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-7111-5p",
+    "api_freeze_1": "CAGATGGGGGAGGAAGGACA",
+    "api_specific_nt": 16,
+    "api_tail": "CAGA",
+    "api_tm_f": 60.1,
+    "api_grade": "A",
+    "ui_1": "GAGTACGATGGGGGAGGAAG",
+    "ui_specific_nt": 12,
+    "ui_tail": "GAGTACGA",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     3.49,
+     4.39
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-8058",
+    "api_freeze_1": "GGTAGGAGCTGGACTTTGATCTTG",
+    "api_specific_nt": 16,
+    "api_tail": "GGTAGGAG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CACCGACTGGACTTTGATCTTG",
+    "ui_specific_nt": 16,
+    "ui_tail": "CACCGA",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-6811-5p",
+    "api_freeze_1": "CACACATGCAGGCCTGTGTA",
+    "api_specific_nt": 15,
+    "api_tail": "CACAC",
+    "api_tm_f": 60.0,
+    "api_grade": "B",
+    "ui_1": "TCACATGCAGGCCTGTGTA",
+    "ui_specific_nt": 15,
+    "ui_tail": "TCAC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     3.69
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-548an",
+    "api_freeze_1": "CCGAACGAAAAGGCATTGTGG",
+    "api_specific_nt": 14,
+    "api_tail": "CCGAACG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "AGAGCGAAAAGGCATTGTGG",
+    "ui_specific_nt": 14,
+    "ui_tail": "AGAGCG",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-6793-5p",
+    "api_freeze_1": "TCAGGTGTGGGTTCTGGGT",
+    "api_specific_nt": 14,
+    "api_tail": "TCAGG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CCTCTTGTGGGTTCTGGGT",
+    "ui_specific_nt": 14,
+    "ui_tail": "CCTCT",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-647",
+    "api_freeze_1": "CATGGTGGCTGCACTCACT",
+    "api_specific_nt": 15,
+    "api_tail": "CATG",
+    "api_tm_f": 59.9,
+    "api_grade": "A",
+    "ui_1": "CCTAGTGGCTGCACTCACT",
+    "ui_specific_nt": 15,
+    "ui_tail": "CCTA",
+    "ui_tm_f": 60.1,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.39,
+    "ui_top3_dtm_fr": [
+     4.39,
+     4.39,
+     4.59
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-6875-3p",
+    "api_freeze_1": "GATGAGCTATTCTTCCTGCCCTG",
+    "api_specific_nt": 15,
+    "api_tail": "GATGAGCT",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CAAGCATTCTTCCTGCCCTG",
+    "ui_specific_nt": 15,
+    "ui_tail": "CAAGC",
+    "ui_tm_f": 60.1,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.39,
+    "ui_top3_dtm_fr": [
+     4.39,
+     4.59,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-5579-5p",
+    "api_freeze_1": "ACCGAACTCAGATATGGTACTCCTT",
+    "api_specific_nt": 13,
+    "api_tail": "ACCGAACTCAGA",
+    "api_tm_f": 59.9,
+    "api_grade": "B",
+    "ui_1": "CCAGTGCTCTATGGTACTCCTTAA",
+    "ui_specific_nt": 15,
+    "ui_tail": "CCAGTGCTC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-4254",
+    "api_freeze_1": "CCTATCTGGCCTGGAGCTACT",
+    "api_specific_nt": 13,
+    "api_tail": "CCTATCTG",
+    "api_tm_f": 59.9,
+    "api_grade": "A",
+    "ui_1": "CCTATCTGGCCTGGAGCTAC",
+    "ui_specific_nt": 12,
+    "ui_tail": "CCTATCTG",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     3.29
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-let-7e-5p",
+    "api_freeze_1": "CCTATCATGCTGAGGTAGGAGGT",
+    "api_specific_nt": 13,
+    "api_tail": "CCTATCATGC",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CATTGTGGTGAGGTAGGAGGT",
+    "ui_specific_nt": 13,
+    "ui_tail": "CATTGTGG",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-7705",
+    "api_freeze_1": "CCGCCAATAGCTCAGAATGTCA",
+    "api_specific_nt": 17,
+    "api_tail": "CCGCC",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "ACCGAGAATAGCTCAGAATGTCA",
+    "ui_specific_nt": 17,
+    "ui_tail": "ACCGAG",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-155-3p",
+    "api_freeze_1": "GCGTTGGCTCCTACATATTAGCA",
+    "api_specific_nt": 16,
+    "api_tail": "GCGTTGG",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "CCGCTCCTCCTACATATTAGCA",
+    "ui_specific_nt": 16,
+    "ui_tail": "CCGCTC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   },
+   {
+    "mirna": "hsa-miR-450b-3p",
+    "api_freeze_1": "CACGGCTTGGGATCATTTTGC",
+    "api_specific_nt": 15,
+    "api_tail": "CACGGC",
+    "api_tm_f": 60.0,
+    "api_grade": "A",
+    "ui_1": "ACCGACTTGGGATCATTTTGC",
+    "ui_specific_nt": 15,
+    "ui_tail": "ACCGAC",
+    "ui_tm_f": 60.0,
+    "ui_tm_r": 64.49,
+    "ui_dtm_fr": 4.49,
+    "ui_top3_dtm_fr": [
+     4.49,
+     4.49,
+     4.49
+    ],
+    "ui_1_in_api_top3": false
+   }
+  ]
  },
- "designs": [
-  {
-   "mirna": "hsa-miR-221-3p",
-   "api_freeze_1": "ATGGACGAGCTACATTGTCTGC",
-   "api_specific_nt": 15,
-   "api_tail": "ATGGACG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "GTGACTCAGCTACATTGTCTGC",
-   "ui_specific_nt": 15,
-   "ui_tail": "GTGACTC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
+ "after": {
+  "algorithm_version": "4.0.0",
+  "ui_body": {
+   "thermodynamic": {
+    "tmMin": 58,
+    "tmMax": 62,
+    "saltConcentration": 50,
+    "primerConcentration": 200,
+    "magnesiumConcentration": 1.5,
+    "dntpTotal": 0.8,
+    "kPlusConc": 0
+   },
+   "primerConstraints": {
+    "gcMin": 40,
+    "gcMax": 60,
+    "lengthMin": 20,
+    "lengthMax": 27,
+    "gcClamp3prime": true,
+    "bindingRegion3prime": 6
+   },
+   "qpcr": {
+    "annealingTemp": 60,
+    "ampliconMin": 60,
+    "ampliconMax": 150,
+    "totalCycles": 40,
+    "pcrEfficiencyMin": 90,
+    "pcrEfficiencyMax": 110
+   },
+   "detectionMethod": {
+    "signalMethod": "sybr",
+    "quantMode": "relative",
+    "referenceGene": "miR-16",
+    "customReferenceGene": "",
+    "enableRefoldingProtocol": true
+   },
+   "experimentalContext": {
+    "sampleType": "tissue",
+    "qpcrSystem": "other"
+   },
+   "_computed": {
+    "freeMagnesium": 0.7,
+    "naEquivalent": 150.4
+   }
   },
-  {
-   "mirna": "hsa-miR-4685-5p",
-   "api_freeze_1": "CCTACCCCAGGGCTTGGA",
-   "api_specific_nt": 13,
-   "api_tail": "CCTAC",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CCTACCCAGGGCTTGGAG",
-   "ui_specific_nt": 14,
-   "ui_tail": "CCTA",
-   "ui_tm_f": 59.9,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.59,
-   "ui_top3_dtm_fr": [
-    4.59,
-    2.89,
-    2.69
-   ],
-   "ui_1_in_api_top3": false
+  "note": "UI defaults since 2026-11-22: kPlusConc 0, bufferPH not sent unless changed — effective monovalent 50 mM, the empty-request (API) conditions.",
+  "names": [
+   "hsa-miR-221-3p",
+   "hsa-miR-4685-5p",
+   "hsa-miR-653-3p",
+   "hsa-miR-6720-5p",
+   "hsa-miR-9986",
+   "hsa-miR-19b-2-5p",
+   "hsa-miR-3911",
+   "hsa-miR-7111-5p",
+   "hsa-miR-8058",
+   "hsa-miR-6811-5p",
+   "hsa-miR-548an",
+   "hsa-miR-6793-5p",
+   "hsa-miR-647",
+   "hsa-miR-6875-3p",
+   "hsa-miR-5579-5p",
+   "hsa-miR-4254",
+   "hsa-let-7e-5p",
+   "hsa-miR-7705",
+   "hsa-miR-155-3p",
+   "hsa-miR-210-5p"
+  ],
+  "summary": {
+   "n": 20,
+   "identical_1": 20,
+   "identical_top3": 20,
+   "extra_hsa-miR-210-5p": {
+    "status": 200,
+    "same_1": true,
+    "same_top3": true
+   },
+   "dtm_fr_ge_3_of_1": 3
   },
-  {
-   "mirna": "hsa-miR-653-3p",
-   "api_freeze_1": "CCGAGGTTCACTGGAGTTTGTT",
-   "api_specific_nt": 16,
-   "api_tail": "CCGAGG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "AGCGCATTCACTGGAGTTTG",
-   "ui_specific_nt": 14,
-   "ui_tail": "AGCGCA",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-6720-5p",
-   "api_freeze_1": "GGAGAGTATTCCAGCCCTGGTA",
-   "api_specific_nt": 14,
-   "api_tail": "GGAGAGTA",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CACACTTCCAGCCCTGGTA",
-   "ui_specific_nt": 14,
-   "ui_tail": "CACAC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.59,
-    4.19
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-9986",
-   "api_freeze_1": "CCGTTGAGATGTGAGGTTGTCAT",
-   "api_specific_nt": 14,
-   "api_tail": "CCGTTGAGA",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "ATCCGACTGTGAGGTTGTCAT",
-   "ui_specific_nt": 14,
-   "ui_tail": "ATCCGAC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-19b-2-5p",
-   "api_freeze_1": "GGATGAGAGTTTTGCAGGTTTGC",
-   "api_specific_nt": 16,
-   "api_tail": "GGATGAG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CGCTTAGTTTTGCAGGTTTGC",
-   "ui_specific_nt": 16,
-   "ui_tail": "CGCTT",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-3911",
-   "api_freeze_1": "CAGCTTGTGTGGATCCTGGAG",
-   "api_specific_nt": 16,
-   "api_tail": "CAGCT",
-   "api_tm_f": 60.0,
-   "api_grade": "B",
-   "ui_1": "AAGGTGTGTGGATCCTGGAG",
-   "ui_specific_nt": 16,
-   "ui_tail": "AAGG",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-7111-5p",
-   "api_freeze_1": "CAGATGGGGGAGGAAGGACA",
-   "api_specific_nt": 16,
-   "api_tail": "CAGA",
-   "api_tm_f": 60.1,
-   "api_grade": "A",
-   "ui_1": "GAGTACGATGGGGGAGGAAG",
-   "ui_specific_nt": 12,
-   "ui_tail": "GAGTACGA",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    3.49,
-    4.39
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-8058",
-   "api_freeze_1": "GGTAGGAGCTGGACTTTGATCTTG",
-   "api_specific_nt": 16,
-   "api_tail": "GGTAGGAG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CACCGACTGGACTTTGATCTTG",
-   "ui_specific_nt": 16,
-   "ui_tail": "CACCGA",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-6811-5p",
-   "api_freeze_1": "CACACATGCAGGCCTGTGTA",
-   "api_specific_nt": 15,
-   "api_tail": "CACAC",
-   "api_tm_f": 60.0,
-   "api_grade": "B",
-   "ui_1": "TCACATGCAGGCCTGTGTA",
-   "ui_specific_nt": 15,
-   "ui_tail": "TCAC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    3.69
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-548an",
-   "api_freeze_1": "CCGAACGAAAAGGCATTGTGG",
-   "api_specific_nt": 14,
-   "api_tail": "CCGAACG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "AGAGCGAAAAGGCATTGTGG",
-   "ui_specific_nt": 14,
-   "ui_tail": "AGAGCG",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-6793-5p",
-   "api_freeze_1": "TCAGGTGTGGGTTCTGGGT",
-   "api_specific_nt": 14,
-   "api_tail": "TCAGG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CCTCTTGTGGGTTCTGGGT",
-   "ui_specific_nt": 14,
-   "ui_tail": "CCTCT",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-647",
-   "api_freeze_1": "CATGGTGGCTGCACTCACT",
-   "api_specific_nt": 15,
-   "api_tail": "CATG",
-   "api_tm_f": 59.9,
-   "api_grade": "A",
-   "ui_1": "CCTAGTGGCTGCACTCACT",
-   "ui_specific_nt": 15,
-   "ui_tail": "CCTA",
-   "ui_tm_f": 60.1,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.39,
-   "ui_top3_dtm_fr": [
-    4.39,
-    4.39,
-    4.59
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-6875-3p",
-   "api_freeze_1": "GATGAGCTATTCTTCCTGCCCTG",
-   "api_specific_nt": 15,
-   "api_tail": "GATGAGCT",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CAAGCATTCTTCCTGCCCTG",
-   "ui_specific_nt": 15,
-   "ui_tail": "CAAGC",
-   "ui_tm_f": 60.1,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.39,
-   "ui_top3_dtm_fr": [
-    4.39,
-    4.59,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-5579-5p",
-   "api_freeze_1": "ACCGAACTCAGATATGGTACTCCTT",
-   "api_specific_nt": 13,
-   "api_tail": "ACCGAACTCAGA",
-   "api_tm_f": 59.9,
-   "api_grade": "B",
-   "ui_1": "CCAGTGCTCTATGGTACTCCTTAA",
-   "ui_specific_nt": 15,
-   "ui_tail": "CCAGTGCTC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-4254",
-   "api_freeze_1": "CCTATCTGGCCTGGAGCTACT",
-   "api_specific_nt": 13,
-   "api_tail": "CCTATCTG",
-   "api_tm_f": 59.9,
-   "api_grade": "A",
-   "ui_1": "CCTATCTGGCCTGGAGCTAC",
-   "ui_specific_nt": 12,
-   "ui_tail": "CCTATCTG",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    3.29
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-let-7e-5p",
-   "api_freeze_1": "CCTATCATGCTGAGGTAGGAGGT",
-   "api_specific_nt": 13,
-   "api_tail": "CCTATCATGC",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CATTGTGGTGAGGTAGGAGGT",
-   "ui_specific_nt": 13,
-   "ui_tail": "CATTGTGG",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-7705",
-   "api_freeze_1": "CCGCCAATAGCTCAGAATGTCA",
-   "api_specific_nt": 17,
-   "api_tail": "CCGCC",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "ACCGAGAATAGCTCAGAATGTCA",
-   "ui_specific_nt": 17,
-   "ui_tail": "ACCGAG",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-155-3p",
-   "api_freeze_1": "GCGTTGGCTCCTACATATTAGCA",
-   "api_specific_nt": 16,
-   "api_tail": "GCGTTGG",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "CCGCTCCTCCTACATATTAGCA",
-   "ui_specific_nt": 16,
-   "ui_tail": "CCGCTC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  },
-  {
-   "mirna": "hsa-miR-450b-3p",
-   "api_freeze_1": "CACGGCTTGGGATCATTTTGC",
-   "api_specific_nt": 15,
-   "api_tail": "CACGGC",
-   "api_tm_f": 60.0,
-   "api_grade": "A",
-   "ui_1": "ACCGACTTGGGATCATTTTGC",
-   "ui_specific_nt": 15,
-   "ui_tail": "ACCGAC",
-   "ui_tm_f": 60.0,
-   "ui_tm_r": 64.49,
-   "ui_dtm_fr": 4.49,
-   "ui_top3_dtm_fr": [
-    4.49,
-    4.49,
-    4.49
-   ],
-   "ui_1_in_api_top3": false
-  }
- ]
+  "designs": [
+   {
+    "mirna": "hsa-miR-221-3p",
+    "status": 200,
+    "ui_1": "ATGGACGAGCTACATTGTCTGC",
+    "api_freeze_1": "ATGGACGAGCTACATTGTCTGC",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-4685-5p",
+    "status": 200,
+    "ui_1": "CCTACCCCAGGGCTTGGA",
+    "api_freeze_1": "CCTACCCCAGGGCTTGGA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-653-3p",
+    "status": 200,
+    "ui_1": "CCGAGGTTCACTGGAGTTTGTT",
+    "api_freeze_1": "CCGAGGTTCACTGGAGTTTGTT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-6720-5p",
+    "status": 200,
+    "ui_1": "GGAGAGTATTCCAGCCCTGGTA",
+    "api_freeze_1": "GGAGAGTATTCCAGCCCTGGTA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-9986",
+    "status": 200,
+    "ui_1": "CCGTTGAGATGTGAGGTTGTCAT",
+    "api_freeze_1": "CCGTTGAGATGTGAGGTTGTCAT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-19b-2-5p",
+    "status": 200,
+    "ui_1": "GGATGAGAGTTTTGCAGGTTTGC",
+    "api_freeze_1": "GGATGAGAGTTTTGCAGGTTTGC",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-3911",
+    "status": 200,
+    "ui_1": "CAGCTTGTGTGGATCCTGGAG",
+    "api_freeze_1": "CAGCTTGTGTGGATCCTGGAG",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-7111-5p",
+    "status": 200,
+    "ui_1": "CAGATGGGGGAGGAAGGACA",
+    "api_freeze_1": "CAGATGGGGGAGGAAGGACA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.1,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.83,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-8058",
+    "status": 200,
+    "ui_1": "GGTAGGAGCTGGACTTTGATCTTG",
+    "api_freeze_1": "GGTAGGAGCTGGACTTTGATCTTG",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-6811-5p",
+    "status": 200,
+    "ui_1": "CACACATGCAGGCCTGTGTA",
+    "api_freeze_1": "CACACATGCAGGCCTGTGTA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-548an",
+    "status": 200,
+    "ui_1": "CCGAACGAAAAGGCATTGTGG",
+    "api_freeze_1": "CCGAACGAAAAGGCATTGTGG",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-6793-5p",
+    "status": 200,
+    "ui_1": "TCAGGTGTGGGTTCTGGGT",
+    "api_freeze_1": "TCAGGTGTGGGTTCTGGGT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-647",
+    "status": 200,
+    "ui_1": "CATGGTGGCTGCACTCACT",
+    "api_freeze_1": "CATGGTGGCTGCACTCACT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 59.9,
+    "tm_reverse": 62.93,
+    "dtm_fr": 3.03,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-6875-3p",
+    "status": 200,
+    "ui_1": "GATGAGCTATTCTTCCTGCCCTG",
+    "api_freeze_1": "GATGAGCTATTCTTCCTGCCCTG",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-5579-5p",
+    "status": 200,
+    "ui_1": "ACCGAACTCAGATATGGTACTCCTT",
+    "api_freeze_1": "ACCGAACTCAGATATGGTACTCCTT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 59.9,
+    "tm_reverse": 62.93,
+    "dtm_fr": 3.03,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-4254",
+    "status": 200,
+    "ui_1": "CCTATCTGGCCTGGAGCTACT",
+    "api_freeze_1": "CCTATCTGGCCTGGAGCTACT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 59.9,
+    "tm_reverse": 62.93,
+    "dtm_fr": 3.03,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-let-7e-5p",
+    "status": 200,
+    "ui_1": "CCTATCATGCTGAGGTAGGAGGT",
+    "api_freeze_1": "CCTATCATGCTGAGGTAGGAGGT",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-7705",
+    "status": 200,
+    "ui_1": "CCGCCAATAGCTCAGAATGTCA",
+    "api_freeze_1": "CCGCCAATAGCTCAGAATGTCA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-155-3p",
+    "status": 200,
+    "ui_1": "GCGTTGGCTCCTACATATTAGCA",
+    "api_freeze_1": "GCGTTGGCTCCTACATATTAGCA",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 60.0,
+    "tm_reverse": 62.93,
+    "dtm_fr": 2.93,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   },
+   {
+    "mirna": "hsa-miR-210-5p",
+    "status": 200,
+    "ui_1": "CCTAGAGCCCCTGCCCAC",
+    "api_freeze_1": "CCTAGAGCCCCTGCCCAC",
+    "same_1": true,
+    "same_top3": true,
+    "tm_forward": 61.2,
+    "tm_reverse": 62.93,
+    "dtm_fr": 1.73,
+    "effective_p3": {
+     "dna_conc": 200.0,
+     "dntp_conc": 0.8,
+     "dv_conc": 1.5,
+     "mv_conc": 50.0
+    }
+   }
+  ]
+ }
 }

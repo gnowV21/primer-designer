@@ -16,7 +16,12 @@ export const DEFAULTS = {
     primerConcentration: 200,
     magnesiumConcentration: 1.5,
     dntpTotal: 0.8,
-    kPlusConc: 50,
+    // 0 since 2026-11-22: saltConcentration is the TOTAL monovalent salt, so the
+    // form sends the conditions of an empty API request (50 mM), the ones every
+    // validation and thesis number uses. K+ here is extra on top of that value.
+    kPlusConc: 0,
+    // Shown in the form, but sent only when the user changes it (designRequest.phApplied):
+    // unchanged, no Tris term is added.
     bufferPH: 8.4,
   },
 
@@ -76,6 +81,10 @@ export const LIMITS = {
     efficiencyMin: 80, efficiencyMax: 120,
   },
 };
+
+// P2 |Tm − Ta| reaches level 5 at ≤ 1 °C — copy of backend constants.TIERED_P2_TM_TA_C[0]
+// (algorithm 4.0.0). Used only for the Ta-outside-the-Tm-window warning on /design.
+export const TIERED_P2_BEST_C = 1;
 
 export const SPECIES_OPTIONS = [
   { value: 'human', label: 'Human',  scientific: 'Homo sapiens' },

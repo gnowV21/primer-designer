@@ -15,7 +15,7 @@ import VisualizationPanel from '../../components/VisualizationPanel.jsx';
 import CollapsibleCard from '../../components/ui/CollapsibleCard.jsx';
 import useDraftState, { setDraft } from '../../hooks/useDraftState.js';
 import { saveDesign } from '../../utils/historyDb.js';
-import { bodyToForm, buildDesignBody, requestDesign } from '../../utils/designRequest.js';
+import { bodyToForm, buildDesignBody, legacySaltNote, requestDesign } from '../../utils/designRequest.js';
 import { DESIGN_DRAFT_KEY, addRun, readRunsState } from '../../utils/designRuns.js';
 
 export default function ResultsPage() {
@@ -121,6 +121,15 @@ export default function ResultsPage() {
         className={`space-y-6 transition-opacity duration-200 ${rerunning ? 'opacity-40 pointer-events-none' : ''}`}
         aria-busy={rerunning}
       >
+        {/* Run designed with extra K⁺ (History records before 2026-11-22 sent K⁺ 50 mM
+            and an applied pH): say what it was designed with. Stored data is not changed. */}
+        {legacySaltNote(params?.thermodynamic) && (
+          <p data-testid="legacy-salt-note"
+            className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {legacySaltNote(params.thermodynamic)}
+          </p>
+        )}
+
         {/* ── Edge-case banners (critical + warning) ── */}
         <EdgeCaseBanner edgeCases={edge_cases} />
 
