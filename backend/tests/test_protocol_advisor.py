@@ -25,7 +25,17 @@ def test_sybr_high_family_triggers_P1():
     ids = [a["id"] for a in advice]
     assert "P1" in ids, "P1 must fire for SYBR + HIGH family risk"
     p1 = next(a for a in advice if a["id"] == "P1")
-    assert p1["match"] in ("high", "medium")
+    assert p1["match"] == "high"
+
+
+def test_P1_needs_both_sybr_and_family_risk():
+    """P1 is SYBR AND a HIGH/IDENTICAL family risk (protocol_kb.json "when"); one
+    condition alone is not P1 (2026-11-23). SYBR alone still gets P3."""
+    sybr_only = [a["id"] for a in advise_protocol(_result(), {"signalMethod": "sybr"})]
+    assert "P1" not in sybr_only
+    assert "P3" in sybr_only
+    risk_only = [a["id"] for a in advise_protocol(_result(family_risk=True), {"signalMethod": "taqman"})]
+    assert "P1" not in risk_only
 
 
 def test_ffpe_low_input_triggers_P2():

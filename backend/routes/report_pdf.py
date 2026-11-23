@@ -302,8 +302,8 @@ def design_blast(results: dict) -> dict:
 
 
 def family_view(results: dict) -> dict:
-    """Seed group of the target as the report names it (the API's auto-generated family
-    label, e.g. 'miR-1' for the miR-15/16 seed, is not shown)."""
+    """Seed group of the target as the report names it: by its seed, which is what the
+    grouping uses (the API's family label is a derived name, e.g. 'miR-15')."""
     cr = (results.get("specificity_warnings") or {}).get("cross_reactivity") or {}
     seq = (results.get("metadata") or {}).get("mirna_sequence") or ""
     seed = seq[1:8].upper() if len(seq) >= 8 else ""
@@ -597,9 +597,6 @@ def build_pdf_bytes(results: dict, blast_result=None, include_checklist: bool = 
                 rec = item["recommendation"]
                 c = cite.auto(rec)
                 block.append(Paragraph(_text(rec) + (f" {c}" if c else ""), st["body"]))
-            why = _advisor_match_note(item, results)
-            if why:
-                block.append(Paragraph(why, st["small"]))
             block.append(Spacer(1, 4))
             story.append(KeepTogether(block))
 
@@ -652,19 +649,6 @@ def _advisor_ref(src: dict) -> str:
         bits.append(f"PMID {src['pmid']}")
     bits.append(f"doi:{src['doi']}")
     return ". ".join(bits)
-
-
-def _advisor_match_note(item: dict, results: dict) -> str:
-    """Why a rule matched when its title names a condition this design does not meet
-    (P1 'SYBR + high family cross-reactivity' matches on SYBR alone, at half weight)."""
-    if item.get("id") != "P1":
-        return ""
-    cr = ((results.get("specificity_warnings") or {}).get("cross_reactivity") or {})
-    risks = {r.get("risk") for r in cr.get("cross_reactivity") or []}
-    if risks & {"HIGH", "IDENTICAL"}:
-        return ""
-    return ("Matched on SYBR Green detection only: no seed-family member at high risk was found "
-            "for this design.")
 
 
 def _get(s, *keys):

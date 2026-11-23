@@ -1,6 +1,6 @@
 {
-  "kb_version": "1.2",
-  "updated": "2026-07-04",
+  "kb_version": "1.3",
+  "updated": "2026-11-23",
   "description": "Protocol/Evidence Advisor knowledge base — 8 evidence-backed rules (P1-P8) + normalization rules (N1-N4). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
   "rules": [
     {
@@ -10,7 +10,7 @@
         "signal_method": "sybr",
         "family_risk": ["HIGH", "IDENTICAL"]
       },
-      "recommendation": "SYBR Green cannot discriminate family members differing by 1 nt in the 3′ overhang region. Consider TaqMan probe-based detection, or design separate stem-loop RT primers for each family member.",
+      "recommendation": "A seed-family member is at high or identical cross-reactivity risk for this assay. In stem-loop RT-qPCR, members that differ near the 3′ end are told apart mainly at the RT step, by the stem-loop primer and its 3′ overhang, not by the detection chemistry (Chen et al. 2005); SYBR Green reports every amplified product and adds no discrimination of its own. Test the assay on synthetic templates of the close family members; if the cross-signal is too high, design a separate stem-loop RT primer for each member or use a probe-based (TaqMan) assay.",
       "match_weights": { "signal_method_sybr": 0.5, "family_risk_high": 0.5 },
       "pros": ["TaqMan eliminates non-specific signal", "Separate RT primers give single-member specificity"],
       "cons": ["TaqMan probes add cost", "Multiple RT reactions increase workload"],
