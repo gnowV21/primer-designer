@@ -5,10 +5,11 @@
 // `ranking` block, unchanged; tooltips reuse the backend `explanations`.
 
 import Tooltip from '../../../components/ui/Tooltip.jsx';
-import { F4_NOTE, GROUP, NCW_TOOLTIP, ncwFailures } from '../../../utils/criteriaGroups.js';
+import { F4_NOTE, GROUP, NCW_TOOLTIP, ncwFailures, standardRuleLabels } from '../../../utils/criteriaGroups.js';
+import { levelWord, STATUS_CLASSES } from '../../../utils/format.js';
 
 const GRADE_STYLE = {
-  A: 'text-teal-800 bg-teal-50 border-teal-300',
+  A: 'text-green-800 bg-green-50 border-green-300',
   B: 'text-amber-800 bg-amber-50 border-amber-300',
   C: 'text-red-700 bg-red-50 border-red-300',
 };
@@ -23,7 +24,7 @@ const fmt = (v, d = 1) => (v == null || Number.isNaN(Number(v)) ? 'n/a' : Number
 
 /** F4 is a one-sided floor (TIERED_F4_FLOOR, QD 29) or a two-sided target: read the mode. */
 const f4IsFloor = (bt) => !bt?.mode || String(bt.mode).startsWith('floor');
-const f4Label = (bt) => `${f4IsFloor(bt) ? 'floor' : 'target'} ${fmt(bt?.target, 0)} °C`;
+const f4Label = (bt) => `${f4IsFloor(bt) ? 'floor' : 'target'} ${fmt(bt?.target, 0)}\u00a0°C`;
 /** F3 specific length is report-only unless the backend scores it. */
 const f3ReportOnly = (fx) => fx?.specific_length?.report_only !== false;
 
@@ -46,97 +47,82 @@ export function GradeBadge({ set, blastAvailable = true, withTooltip = true, siz
   );
 }
 
-function levelTone(score) {
-  if (score == null) return 'text-slate-500 bg-slate-50 border-slate-200';
-  if (score >= 4) return 'text-teal-800 bg-teal-50 border-teal-200';
-  if (score >= 2) return 'text-amber-800 bg-amber-50 border-amber-200';
-  return 'text-red-700 bg-red-50 border-red-200';
+const NB = ' ';
+const deg = (v, d = 1) => `${fmt(v, d)}${NB}°C`;
+
+/** Level 1–5 → the status vocabulary: 4–5 Pass, 2–3 Warning, 1 Fail. */
+function levelStatus(score) {
+  if (score == null) return '';
+  if (score >= 4) return 'Pass';
+  if (score >= 2) return 'Warning';
+  return 'Fail';
 }
 
-/** One criterion: name, level 1–5, the value behind it. `title` is the hover text.
- *  notScored: a value shown for information, labelled "not scored". */
-function Chip({ name, score, value, title, notScored = false, testId }) {
-  const tone = notScored ? 'text-slate-600 bg-white border-slate-200 border-dashed' : levelTone(score);
+/** A status word in its colour (never the brand colour); "Info" for values not scored. */
+function Status({ status, info = false }) {
+  if (info) return <span className="text-xs font-medium text-slate-600 shrink-0">Not scored</span>;
+  if (!status) return <span className="text-xs font-medium text-slate-600 shrink-0">Not run</span>;
   return (
-    <span
-      className={`inline-flex flex-wrap items-baseline gap-x-1 text-xs rounded-md border px-1.5 py-0.5 max-w-full ${tone}`}
-      title={title}
-      data-testid={testId}
-    >
-      <span className="font-medium">{name}</span>
-      {!notScored && <span className="font-semibold tabular-nums">{score == null ? '—' : `L${score}`}</span>}
-      {value && <span className="opacity-80 break-words min-w-0">{value}</span>}
-      {notScored && <span className="text-slate-500 italic">not scored</span>}
+    <span className={`text-xs font-semibold rounded border px-1.5 py-0.5 shrink-0 ${STATUS_CLASSES[status]}`}>
+      {status}
     </span>
   );
 }
 
-/** A check every returned set passes by construction: a tick and its text. */
-function Check({ children, title, testId }) {
+/** One criterion in plain words: label · value · status. Codes and levels are in "Criteria detail". */
+function Row({ label, value, status, info = false, title, testId, children }) {
   return (
-    <p className="text-xs text-slate-700 flex items-baseline gap-1.5" title={title} data-testid={testId}>
-      <span className="text-teal-700 font-bold" aria-hidden>✓</span>
-      <span className="min-w-0">{children}</span>
-    </p>
-  );
-}
-
-/** A level bar with its total, and the criterion chips below it. */
-function Bar({ label, hint, total, max, testId, children }) {
-  const pct = max ? Math.max(0, Math.min(100, (100 * total) / max)) : 0;
-  return (
-    <div className="space-y-1.5" data-testid={testId}>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-slate-600 sm:w-44 shrink-0">
-          {label}{hint && <span className="font-normal text-slate-500"> · {hint}</span>}
-        </span>
-        <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden" aria-hidden>
-          <div className="h-full rounded-full bg-teal-600" style={{ width: `${pct}%` }} />
-        </div>
-        <span className="text-xs font-semibold tabular-nums text-slate-700 shrink-0">{total}/{max}</span>
+    <div className="flex items-start justify-between gap-3 py-1" title={title} data-testid={testId}>
+      <div className="min-w-0 text-xs">
+        <span className="text-slate-700">{label}</span>
+        {value != null && value !== '' && <span className="ml-2 font-medium text-slate-900 tabular-nums">{value}</span>}
+        {children}
       </div>
-      <div className="flex flex-wrap gap-1.5 sm:pl-[11.5rem]">{children}</div>
+      <Status status={status} info={info} />
     </div>
   );
 }
 
-function GroupBlock({ title, testId, tone = 'slate', children }) {
+/** A group heading with its total and a thin level bar (no box). */
+function GroupHead({ label, total, max }) {
+  const pct = max ? Math.max(0, Math.min(100, (100 * total) / max)) : 0;
   return (
-    <section className={`rounded-lg border px-3 py-2.5 space-y-2 ${tone === 'red' ? 'border-red-200' : 'border-slate-200'}`}
-      data-testid={testId}>
-      <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{title}</h4>
-      {children}
-    </section>
+    <div className="flex items-center gap-2 pt-1">
+      <span className="text-xs font-semibold text-slate-800 shrink-0">{label}</span>
+      <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden" aria-hidden>
+        <div className="h-full rounded-full bg-teal-600" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs font-semibold tabular-nums text-slate-800 shrink-0">{total}/{max}</span>
+    </div>
   );
 }
 
-const CHIP_TONE = {
-  structure_veto: 'text-red-700 bg-red-50 border-red-200',
-  binding_floor_fail: 'text-amber-800 bg-amber-50 border-amber-200',
-  rule: 'text-slate-700 bg-slate-50 border-slate-300',
-};
-
-/** Flexible 1: one line, "No critical weakness"; a chip per failed condition. */
+/** Flexible 1, "No critical weakness": one line. When a condition fails, the line names it
+ *  in plain words ("Standard primer rules: 1 not met (3′ GC clamp missing)"), no double negative. */
 export function NoCriticalWeakness({ set }) {
   const fails = ncwFailures(set);
+  const rules = (set?.v4_rule_violations || []);
+  const parts = [];
+  for (const f of fails) {
+    if (f.key === 'structure_veto') parts.push(f.text);
+    else if (f.key === 'binding_floor_fail') parts.push(f.text);
+  }
+  if (rules.length) {
+    parts.push(`Standard primer rules: ${rules.length} not met (${standardRuleLabels(set).join(', ')})`);
+  }
+  const worst = fails.some((f) => f.key === 'structure_veto') ? 'Fail' : (fails.length ? 'Warning' : 'Pass');
   return (
-    <div className="space-y-1.5" data-testid="ncw">
-      <p className="text-xs text-slate-700 flex flex-wrap items-center gap-1.5">
-        <span className="font-semibold text-slate-600">1. {GROUP.ncw}</span>
-        <Tooltip text={NCW_TOOLTIP} />
+    <div data-testid="ncw">
+      <Row label={<span className="inline-flex items-center gap-1">1. {GROUP.ncw}<Tooltip text={NCW_TOOLTIP} /></span>}
+        status={worst}>
         {fails.length === 0
-          ? <span className="text-teal-700 font-medium" data-testid="ncw-pass">✓ passed</span>
-          : <span className="text-amber-800 font-medium" data-testid="ncw-fail">not met</span>}
-      </p>
-      {fails.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 sm:pl-4" data-testid="tier-flags">
-          {fails.map((f) => (
-            <span key={f.key} title={f.title}
-              className={`text-xs font-medium rounded-full border px-2 py-0.5 max-w-full break-words ${CHIP_TONE[f.key] || CHIP_TONE.rule}`}>
-              {f.text}
-            </span>
-          ))}
-        </div>
+          ? <span className="sr-only" data-testid="ncw-pass">passed</span>
+          : <span className="sr-only" data-testid="ncw-fail">not met</span>}
+      </Row>
+      {parts.length > 0 && (
+        <ul className="text-xs text-slate-800 pl-3 space-y-0.5" data-testid="tier-flags">
+          {parts.map((p) => <li key={p}>{p}</li>)}
+        </ul>
       )}
     </div>
   );
@@ -155,15 +141,14 @@ export default function TierSummary({ set, blastAvailable = true, tmWindow = nul
   const ex = set.explanations || {};
   const blastRun = blastAvailable && sp.blast?.score != null;
   const st = fx.structure || {};
-  const sub = st.sub_scores || {};
   const [lo, hi] = tmWindow && tmWindow[0] != null && tmWindow[1] != null ? tmWindow : [58, 62];
   const occupancy = set.scores?.bound_fraction_binding_pct;
+  const dcq = sp.assay_dcq?.min_delta_cq;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-3 sm:px-4 py-3 space-y-3" data-testid="tier-summary">
+    <div className="space-y-3" data-testid="tier-summary">
       <div className="flex flex-wrap items-center gap-2">
         <GradeBadge set={set} blastAvailable={blastAvailable} />
-        <span className="text-xs text-slate-500">criterion levels L1–L5, L5 best</span>
         {onExplain && (
           <button type="button" onClick={onExplain} data-testid="open-criteria"
             className="ml-auto text-xs font-medium text-teal-700 underline decoration-dotted underline-offset-2 hover:text-teal-900">
@@ -173,80 +158,71 @@ export default function TierSummary({ set, blastAvailable = true, tmWindow = nul
       </div>
 
       {/* ── Required ── */}
-      <GroupBlock title={GROUP.required} testId="group-required" tone={r.eliminated ? 'red' : 'slate'}>
-        <Check testId="req-structure"
-          title="RT primer = 44-nt stem-loop body + 3′ overhang complementary to the miRNA 3′ end; forward primer = 5′ tail + miRNA 5′ region; fixed universal reverse primer (Chen et al. 2005).">
-          Built to the Chen 2005 assay structure
-        </Check>
-        <Check testId="req-tm-window" title="Hard limit: candidates outside the forward-primer Tm window are not generated.">
-          Forward Tm {fmt(set.tm_full)} °C, inside the Tm window {lo}–{hi} °C
-        </Check>
+      <section className="space-y-0.5" data-testid="group-required">
+        <h4 className="text-xs font-bold text-slate-800 border-b border-slate-200 pb-1">{GROUP.required}</h4>
+        <Row testId="req-structure" label="Built to the Chen 2005 assay structure" status="Pass"
+          title="RT primer = 44-nt stem-loop body + 3′ overhang complementary to the miRNA 3′ end; forward primer = 5′ tail + miRNA 5′ region; fixed universal reverse primer (Chen et al. 2005)." />
+        <Row testId="req-tm-window" label={<>Forward Tm {deg(set.tm_full)}, inside the Tm window {lo}–{hi}{NB}°C</>} status="Pass"
+          title="Hard limit: candidates outside the forward-primer Tm window are not generated." />
         {r.eliminated && (
           <p className="text-xs font-medium text-red-700" data-testid="req-fallback">
-            ✕ Fails the specificity screen (BLAST CRITICAL or assay ΔCq CO-AMPLIFIED). Shown only because
+            Fails the specificity screen (BLAST critical hit or a co-amplified miRNA). Shown only because
             every candidate failed (specificity fallback).
           </p>
         )}
-        <Bar label="Specificity" hint="ranks first" total={sp.total} max={sp.max} testId="tier-specificity">
-          <Chip
-            name="S1 BLAST"
-            score={blastRun ? sp.blast.score : null}
-            value={blastRun ? `${sp.blast.overall_risk}${sp.blast.worst_hit ? ` · ${sp.blast.worst_hit}` : ''}` : 'not run'}
+        <div data-testid="tier-specificity">
+          <GroupHead label="Specificity" total={sp.total} max={sp.max} />
+          <Row label="BLAST off-target screen"
+            value={blastRun ? `${levelWord(sp.blast.overall_risk)}${sp.blast.worst_hit ? `, worst hit ${sp.blast.worst_hit}` : ''}` : 'not run'}
+            status={blastRun ? levelStatus(sp.blast.score) : ''}
             title={blastRun
-              ? 'Same-species BLAST of the forward primer, with the RT step (classifier v7). CRITICAL is eliminated.'
-              : 'BLAST was not run: specificity ranking reduced to S2 + S3.'}
-          />
-          <Chip
-            name="S2 ΔCq"
-            score={sp.assay_dcq?.score}
-            value={`${sp.assay_dcq?.min_delta_cq == null ? '> 10' : fmt(sp.assay_dcq.min_delta_cq)}${sp.assay_dcq?.worst_target ? ` · ${sp.assay_dcq.worst_target}` : ''}`}
-            title={ex.min_delta_cq}
-          />
-          <Chip
-            name="S3 Tm margin"
-            score={sp.tm_margin?.score}
-            value={`${fmt(sp.tm_margin?.margin)} °C${sp.tm_margin?.worst_target ? ` · ${sp.tm_margin.worst_target}` : ''}`}
-            title={ex.tm_margin}
-          />
-        </Bar>
-      </GroupBlock>
+              ? 'Same-species BLAST of the forward primer, with the RT step. A critical hit is eliminated.'
+              : 'BLAST was not run: specificity ranking reduced to the assay ΔCq and the Tm margin.'} />
+          <Row label="Closest other miRNA, assay ΔCq"
+            value={<>{dcq == null ? '> 10' : fmt(dcq)}{sp.assay_dcq?.worst_target && <span className="whitespace-nowrap">{` (${sp.assay_dcq.worst_target})`}</span>}</>}
+            status={levelStatus(sp.assay_dcq?.score)} title={ex.min_delta_cq} />
+          <Row label="Tm margin over the closest other miRNA"
+            value={deg(sp.tm_margin?.margin)}
+            status={levelStatus(sp.tm_margin?.score)} title={ex.tm_margin} />
+        </div>
+      </section>
 
       {/* ── Flexible: 1 → 2 → 3, the order of the ranking key ── */}
-      <GroupBlock title={GROUP.flexible} testId="group-flexible">
+      <section className="space-y-0.5" data-testid="group-flexible">
+        <h4 className="text-xs font-bold text-slate-800 border-b border-slate-200 pb-1">{GROUP.flexible}</h4>
         <NoCriticalWeakness set={set} />
 
-        <Bar label={`2. ${GROUP.pcr}`} total={pcr.total} max={pcr.max} testId="tier-pcr">
-          <Chip name="P2 |Tm − Ta|" score={pcr.tm_vs_ta?.score} value={`${fmt(pcr.tm_vs_ta?.diff)} °C`} title={ex.tm_accuracy} />
-          <Chip name="ΔTm F–R" notScored value={`${fmt(pcr.tm_pair?.diff, 2)} °C`} testId="dtm-fr"
-            title="Forward vs universal reverse Tm. ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions, the same for every set." />
+        <div data-testid="tier-pcr">
+          <GroupHead label={`2. ${GROUP.pcr}`} total={pcr.total} max={pcr.max} />
+          <Row label="Forward Tm vs Ta" value={`${deg(pcr.tm_vs_ta?.diff)} apart`}
+            status={levelStatus(pcr.tm_vs_ta?.score)} title={ex.tm_accuracy} />
+          <Row testId="dtm-fr" label="Forward vs reverse Tm" value={deg(pcr.tm_pair?.diff, 2)} info
+            title="About Tm (reverse) − Ta: set by Ta and the reaction conditions, the same for every set (not scored)." />
           {occupancy != null && (
-            <Chip name="Cycle-1 occupancy" notScored value={`${fmt(occupancy, 2)} %`}
+            <Row label="Cycle-1 occupancy at Ta" value={`${fmt(occupancy, 2)}% of primer bound`} info
               title="Bound fraction of the miRNA-binding region on the cDNA at Ta (PCR cycle 1)." />
           )}
           {set.predicted_amplicon_tm != null && (
-            <Chip name="Amplicon Tm" notScored value={`${fmt(set.predicted_amplicon_tm)} °C`}
+            <Row label="Predicted amplicon Tm" value={deg(set.predicted_amplicon_tm)} info
               title="Predicted melt peak of the product (empirical long-duplex formula)." />
           )}
-        </Bar>
+        </div>
 
-        <Bar label={`3. ${GROUP.composition}`} total={fx.total} max={fx.max} testId="tier-flexible">
-          <Chip name="F1 GC" score={fx.gc?.score} value={`${fmt(fx.gc?.gc_percent)} %`} title={ex.gc_content} />
-          <Chip name="F2 GC clamp" score={fx.gc_clamp?.score} value={fx.gc_clamp?.last5} title={ex.gc_clamp} />
-          <Chip name="F4 binding Tm" score={fx.binding_tm?.score} testId="chip-f4"
-            value={`${fmt(fx.binding_tm?.tm_binding)} °C · ${f4Label(fx.binding_tm)}`}
-            title={`${F4_NOTE}. ${ex.tm_binding_accuracy || ''}`} />
-          <Chip name="F5 structure" score={st.score}
-            value={`min of hairpin ${sub.hairpin_tm ?? '—'}, dimer ${sub.dimer_dg ?? '—'}, 3′ dimer ${sub.end_dimer_tm ?? '—'}`}
-            title={ex.structure} />
-          {f3ReportOnly(fx) ? (
-            <Chip name="F3 length" notScored value={`${fx.specific_length?.length ?? set.specific_length} nt`} />
-          ) : (
-            <Chip name="F3 length" score={fx.specific_length?.score}
-              value={`${fx.specific_length?.length ?? set.specific_length} nt`} />
-          )}
-        </Bar>
-        <p className="text-xs text-slate-500 sm:pl-[11.5rem]" data-testid="f4-note">F4: {F4_NOTE}.</p>
-      </GroupBlock>
+        <div data-testid="tier-flexible">
+          <GroupHead label={`3. ${GROUP.composition}`} total={fx.total} max={fx.max} />
+          <Row label="GC content" value={`${fmt(fx.gc?.gc_percent)}%`} status={levelStatus(fx.gc?.score)} title={ex.gc_content} />
+          <Row label="3′ GC clamp (last 5 nt)" value={<span className="seq">{fx.gc_clamp?.last5}</span>}
+            status={levelStatus(fx.gc_clamp?.score)} title={ex.gc_clamp} />
+          <Row testId="chip-f4" label="Binding-region Tm (PCR cycle 1)"
+            value={`${deg(fx.binding_tm?.tm_binding)}, ${f4Label(fx.binding_tm)}`}
+            status={levelStatus(fx.binding_tm?.score)} title={`${F4_NOTE}. ${ex.tm_binding_accuracy || ''}`} />
+          <Row label="Secondary structure (hairpin, dimers)" value={st.score != null ? `level ${st.score} of 5` : ''}
+            status={levelStatus(st.score)} title={ex.structure} />
+          <Row label="miRNA-specific length" value={`${fx.specific_length?.length ?? set.specific_length}${NB}nt`}
+            info={f3ReportOnly(fx)} status={f3ReportOnly(fx) ? undefined : levelStatus(fx.specific_length?.score)} />
+          <p className="text-xs text-slate-600" data-testid="f4-note">Binding-region Tm: {F4_NOTE}.</p>
+        </div>
+      </section>
     </div>
   );
 }
@@ -273,8 +249,8 @@ export function TierDetailTable({ set }) {
     ]],
     [`${GROUP.flexible} · 2. ${GROUP.pcr}`, [
       ['P2 |Tm − Ta|', pcr.tm_vs_ta?.score, `${fmt(pcr.tm_vs_ta?.diff, 2)} °C`, ex.tm_accuracy],
-      ['ΔTm F–R (not scored)', null, `${fmt(pcr.tm_pair?.diff, 2)} °C`,
-        'ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions, the same for every set.'],
+      ['ΔTm forward–reverse (not scored)', null, `${fmt(pcr.tm_pair?.diff, 2)} °C`,
+        'About Tm (reverse) − Ta: set by Ta and the reaction conditions, the same for every set.'],
     ]],
     [`${GROUP.flexible} · 3. ${GROUP.composition}`, [
       ['F1 GC', fx.gc?.score, `${fmt(fx.gc?.gc_percent)} %`, ex.gc_content],
@@ -282,7 +258,7 @@ export function TierDetailTable({ set }) {
       [`F4 binding Tm (${f4Label(fx.binding_tm)})`, fx.binding_tm?.score, `${fmt(fx.binding_tm?.tm_binding)} °C`,
         `${F4_NOTE}. ${ex.tm_binding_accuracy || ''}`],
       ['F5 structure', fx.structure?.score,
-        `hairpin Tm ${fmt(fx.structure?.hairpin_tm)} °C · dimer ΔG ${fmt(fx.structure?.dimer_dg)} · 3′ dimer Tm ${fmt(fx.structure?.end_dimer_tm)} °C`,
+        `hairpin Tm ${fmt(fx.structure?.hairpin_tm)} °C · dimer ΔG ${fmt(fx.structure?.dimer_dg)} kcal/mol · 3′ dimer Tm ${fmt(fx.structure?.end_dimer_tm)} °C`,
         ex.structure],
       [`F3 specific length${f3ReportOnly(fx) ? ' (not scored)' : ''}`,
         f3ReportOnly(fx) ? null : fx.specific_length?.score,
@@ -291,8 +267,9 @@ export function TierDetailTable({ set }) {
   ];
   return (
     <details className="group rounded-lg border border-slate-200" data-testid="tier-detail">
-      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-600 hover:text-teal-700">
-        <span className="inline-block transition-transform group-open:rotate-90">▸</span> Criteria detail
+      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold text-slate-700 hover:text-teal-700">
+        <span aria-hidden className="inline-block transition-transform group-open:rotate-90">▸</span> Criteria detail
+        <span className="font-normal text-slate-600"> (codes and levels L1–L5, L5 best)</span>
       </summary>
       <div className="overflow-x-auto border-t border-slate-200">
         <table className="w-full text-xs">
@@ -307,14 +284,14 @@ export function TierDetailTable({ set }) {
           {groups.map(([title, rows]) => (
             <tbody key={title} className="divide-y divide-slate-100">
               <tr className="bg-slate-50">
-                <th colSpan={4} className="text-left px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">{title}</th>
+                <th colSpan={4} className="text-left px-2 py-1 text-[11px] font-bold text-slate-600">{title}</th>
               </tr>
               {rows.map(([name, lvl, val, why]) => (
                 <tr key={name}>
                   <td className="px-2 py-1.5 text-slate-700">{name}</td>
                   <td className="px-2 py-1.5 text-slate-700 tabular-nums break-words">{val ?? '—'}</td>
                   <td className="px-2 py-1.5 text-center tabular-nums font-semibold text-slate-700">{lvl ?? '—'}</td>
-                  <td className="px-2 py-1.5 text-slate-500 hidden sm:table-cell">{why}</td>
+                  <td className="px-2 py-1.5 text-slate-700 hidden sm:table-cell">{why}</td>
                 </tr>
               ))}
             </tbody>
@@ -322,7 +299,7 @@ export function TierDetailTable({ set }) {
           <tbody>
             <tr className="bg-slate-50">
               <td className="px-2 py-1.5 text-slate-700" colSpan={2}>
-                Tie-break score — used only when every group is equal
+                Tie-break score (used only when every group is equal)
               </td>
               <td className="px-2 py-1.5 text-center tabular-nums font-semibold text-slate-700" data-testid="tie-break-score">
                 {fmt(r.detailed_score)}

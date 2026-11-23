@@ -40,8 +40,8 @@ export default function OffTargetPanel({
   return (
     <div className="rounded-lg border border-slate-200 overflow-hidden">
       <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-          Off-target Check (BLAST)
+        <p className="text-xs font-semibold text-slate-500">
+          Off-target check (BLAST)
         </p>
         {status === 'done' && (
           <button
@@ -174,7 +174,7 @@ function RateLimitError({ error, onRetry }) {
     <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 space-y-1">
       <p className="text-xs font-semibold text-amber-700">Rate limit reached</p>
       <p className="text-xs text-amber-700">{error.message}</p>
-      <p className="text-xs text-amber-500">Auto-retrying in {seconds}s…</p>
+      <p className="text-xs text-amber-700">Auto-retrying in {seconds}s…</p>
     </div>
   );
 }
@@ -185,7 +185,7 @@ function CircuitOpenError({ error }) {
       <p className="text-xs font-semibold text-amber-700">BLAST temporarily unavailable</p>
       <p className="text-xs text-amber-700">{error.message}</p>
       {error.retryAfter && (
-        <p className="text-xs text-amber-500">Try again in ~{error.retryAfter}s.</p>
+        <p className="text-xs text-amber-700">Try again in ~{error.retryAfter}s.</p>
       )}
       <p className="text-xs text-slate-500 mt-1">Primer design results above are unaffected.</p>
     </div>
@@ -225,7 +225,7 @@ function ResultDisplay({ result }) {
                       variants={result.identical_sequence_variants ?? {}} />
 
       {summary.hits_truncated && (
-        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
           Showing top 200 hits per primer. {summary.total_hits.toLocaleString()} total hits found.
         </p>
       )}
@@ -290,10 +290,10 @@ function OverallRiskRow({ summary, identical, variants }) {
           <span className="text-red-600 font-medium">{summary.critical_count.toLocaleString()} critical</span>
         )}
         {summary.high_risk_count > 0 && (
-          <span className="text-orange-600 font-medium">{summary.high_risk_count.toLocaleString()} high</span>
+          <span className="text-orange-700 font-medium">{summary.high_risk_count.toLocaleString()} high</span>
         )}
         {summary.medium_risk_count > 0 && (
-          <span className="text-amber-600 font-medium">{summary.medium_risk_count.toLocaleString()} medium</span>
+          <span className="text-amber-700 font-medium">{summary.medium_risk_count.toLocaleString()} medium</span>
         )}
         {summary.safe_count > 0 && (
           <span className="text-slate-500">{summary.safe_count.toLocaleString()} safe</span>

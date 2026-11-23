@@ -10,14 +10,18 @@ test.describe('miRBase lookup', () => {
     const idInput = page.getByPlaceholder(PLACEHOLDER);
     await idInput.fill('hsa-miR-21-5p');
     await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.getByPlaceholder(PLACEHOLDER)).toHaveValue('UAGCUUAUCAGACUGAUGUUGA', { timeout: 8000 });
+    // The search box keeps what was typed; the resolved sequence is shown below it.
+    await expect(page.getByText('UAGCUUAUCAGACUGAUGUUGA', { exact: true }).first()).toBeVisible({ timeout: 8000 });
+    await expect(page.getByPlaceholder(PLACEHOLDER)).toHaveValue('hsa-miR-21-5p');
   });
 
   test('MIMAT0000076 resolves same miRNA', async ({ page }) => {
     const idInput = page.getByPlaceholder(PLACEHOLDER);
     await idInput.fill('MIMAT0000076');
     await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.getByPlaceholder(PLACEHOLDER)).toHaveValue('UAGCUUAUCAGACUGAUGUUGA', { timeout: 8000 });
+    await expect(page.getByText('UAGCUUAUCAGACUGAUGUUGA', { exact: true }).first()).toBeVisible({ timeout: 8000 });
+    await expect(page.getByText('hsa-miR-21-5p').first()).toBeVisible();
+    await expect(page.getByPlaceholder(PLACEHOLDER)).toHaveValue('MIMAT0000076');
   });
 
   test('invalid ID shows not-found error', async ({ page }) => {

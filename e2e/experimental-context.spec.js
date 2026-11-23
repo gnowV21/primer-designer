@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { openParameters } from './helpers.js';
+import { openParameters, openGroup } from './helpers.js';
 
 test.describe('ExperimentalContextGroup', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/design');
     await openParameters(page);
-    await page.getByText('Experimental Context').click();
+    await openGroup(page, 'Experimental context');
   });
 
   test('Serum sample shows preset banner', async ({ page }) => {

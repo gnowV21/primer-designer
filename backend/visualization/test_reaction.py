@@ -147,6 +147,14 @@ def _paired_rows(rows, n):
     return best[1], best[2]
 
 
+def _rna(seq):
+    return seq.replace("T", "U")
+
+
+def _dna(seq):
+    return seq.replace("U", "T")
+
+
 def _row(rows, seq):
     """The single row whose left-to-right text is `seq`: (y, {x: char})."""
     hits = [(y, c) for y, c in rows if "".join(c[x] for x in sorted(c)) == seq]
@@ -159,11 +167,11 @@ def test_stage1_overhang_base_pairs_with_mirna_3prime():
     model = _golden_model()
     rows = _char_rows(render_reaction(model), "Stage 1")
     yo, ov = _row(rows, model.overhang[::-1])          # overhang displayed 3'->5'
-    ym, mi = _row(rows, model.mirna_dna)
+    ym, mi = _row(rows, _rna(model.mirna_dna))        # the miRNA is drawn as RNA (U)
     assert ym < yo                                      # miRNA top row, primer bottom row
     for x, base in ov.items():
-        assert base == _COMP[mi[x]], f"x={x}: {mi[x]} paired with {base}"
-    assert "".join(mi[x] for x in sorted(ov)) == model.mirna_dna[-len(ov):]
+        assert base == _COMP[_dna(mi[x])], f"x={x}: {mi[x]} paired with {base}"
+    assert "".join(mi[x] for x in sorted(ov)) == _rna(model.mirna_dna[-len(ov):])
 
 
 def test_stage2_cdna_pairs_with_whole_mirna():
@@ -173,12 +181,12 @@ def test_stage2_cdna_pairs_with_whole_mirna():
     ext = model.cdna[len(model.stemloop_rt):]
     ye, ex = _row(rows, ext[::-1])
     yo, ov = _row(rows, model.overhang[::-1])
-    ym, mi = _row(rows, model.mirna_dna)
+    ym, mi = _row(rows, _rna(model.mirna_dna))
     assert ym < ye == yo
     paired = {**ex, **ov}
     assert sorted(paired) == sorted(mi)
     for x, base in paired.items():
-        assert base == _COMP[mi[x]]
+        assert base == _COMP[_dna(mi[x])]
 
 
 def test_stage3_forward_primer_pairs_with_linear_cdna():
@@ -266,7 +274,7 @@ def test_mirna_shares_the_top_row_with_arm_a(stage):
     """miRNA and stem arm A are on the same row; the miRNA ends where arm A begins."""
     model = _golden_model()
     rows = _char_rows(render_reaction(model), stage)
-    ym, mi = _row(rows, model.mirna_dna)
+    ym, mi = _row(rows, _rna(model.mirna_dna))
     ya, arm_a = _row(rows, model.stemloop_rt[:14])
     assert ym == ya
     pitch = sorted(arm_a)[1] - sorted(arm_a)[0]

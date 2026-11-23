@@ -36,7 +36,7 @@ test.describe('320 px layout', () => {
       const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
       if (b) b.click();
     });
-    const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+    const designBtn = page.getByRole('button', { name: /^Design primers$/ });
     await expect(designBtn).toBeEnabled({ timeout: 8000 });
     await designBtn.click();
     await expect(page).toHaveURL('/results', { timeout: 30000 });
@@ -56,7 +56,7 @@ for (const width of [320, 360, 390]) {
         const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
         if (b) b.click();
       });
-      const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+      const designBtn = page.getByRole('button', { name: /^Design primers$/ });
       await expect(designBtn).toBeEnabled({ timeout: 8000 });
       await designBtn.click();
       await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });
@@ -78,7 +78,7 @@ for (const width of [360, 390]) {
         const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
         if (b) b.click();
       });
-      const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+      const designBtn = page.getByRole('button', { name: /^Design primers$/ });
       await expect(designBtn).toBeEnabled({ timeout: 8000 });
       await designBtn.click();
       await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });
@@ -92,6 +92,6 @@ for (const width of [360, 390]) {
 test('unknown address shows a not-found page with a way back', async ({ page }) => {
   await page.goto('/no-such-page');
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
-  await page.getByRole('link', { name: /Go to Designer/ }).click();
+  await page.getByRole('link', { name: /Go to the designer/ }).click();
   await expect(page).toHaveURL('/design');
 });

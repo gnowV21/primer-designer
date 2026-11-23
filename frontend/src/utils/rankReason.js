@@ -3,7 +3,7 @@
 // ones that actually moved the ranking.
 import { CRITERION_LABELS } from './scoreSeverity.js';
 import { compareTiered, decidingStep, hasTiers, KEY_STEPS, vetoedSubIndices } from './tierRank.js';
-import { GROUP, standardRuleLabels } from './criteriaGroups.js';
+import { standardRuleLabels } from './criteriaGroups.js';
 
 const TIE_POINTS = 1.0;       // total-score gap below which the sets are called a tie
 const MIN_CONTRIB = 0.3;      // ignore criteria that moved the total by < 0.3 points
@@ -53,20 +53,25 @@ export function v4RankReason(first, second) {
 
 const fmtNum = (v, d = 1) => (v == null || Number.isNaN(Number(v)) ? 'n/a' : Number(v).toFixed(d));
 
-const COMPOSITION_LABEL = { gc: 'F1 GC %', gc_clamp: 'F2 GC clamp', binding_tm: 'F4 binding Tm', structure: 'F5 structure' };
+const COMPOSITION_LABEL = {
+  gc: 'GC content', gc_clamp: '3′ GC clamp', binding_tm: 'binding-region Tm', structure: 'secondary structure',
+};
+const RISK_WORD = (r) => (r ? String(r).toLowerCase() : 'not run');
 
+// Plain-English reasons (UI review 2026-11-23). The deciding step is the one of the
+// ranking key (decidingStep / KEY_STEPS); only the words are written here.
 function requiredDiffs(a, b) {
   const sa = a.ranking.specificity;
   const sb = b.ranking.specificity;
   const out = [];
   if (sa.blast?.score !== sb.blast?.score) {
-    out.push(`S1 BLAST ${sa.blast?.overall_risk ?? 'not run'} vs ${sb.blast?.overall_risk ?? 'not run'}`);
+    out.push(`its BLAST off-target screen is cleaner (${RISK_WORD(sa.blast?.overall_risk)} vs ${RISK_WORD(sb.blast?.overall_risk)})`);
   }
   if (sa.assay_dcq?.score !== sb.assay_dcq?.score) {
-    out.push(`S2 ΔCq ${fmtNum(sa.assay_dcq?.min_delta_cq)} vs ${fmtNum(sb.assay_dcq?.min_delta_cq)}`);
+    out.push(`the closest other miRNA is held further back (assay ΔCq ${fmtNum(sa.assay_dcq?.min_delta_cq)} vs ${fmtNum(sb.assay_dcq?.min_delta_cq)})`);
   }
   if (sa.tm_margin?.score !== sb.tm_margin?.score) {
-    out.push(`S3 Tm margin ${fmtNum(sa.tm_margin?.margin)} vs ${fmtNum(sb.tm_margin?.margin)} °C`);
+    out.push(`it discriminates the closest off-target better (Tm margin ${fmtNum(sa.tm_margin?.margin)} vs ${fmtNum(sb.tm_margin?.margin)} °C)`);
   }
   return out;
 }
@@ -76,7 +81,7 @@ function compositionDiffs(a, b) {
   const fb = b.ranking.flexible;
   return Object.keys(COMPOSITION_LABEL)
     .filter((k) => fa[k] && fb[k] && fa[k].score !== fb[k].score)
-    .map((k) => `${COMPOSITION_LABEL[k]} ${fa[k].score} vs ${fb[k].score}`);
+    .map((k) => `${COMPOSITION_LABEL[k]} level ${fa[k].score} vs ${fb[k].score}`);
 }
 
 /** { step, text }: why `first` (#1) ranks above `second` (#2). step is a KEY_STEPS name,
@@ -85,7 +90,7 @@ export function groupReason(first, second) {
   const i = decidingStep(first, second);
   if (i === -1) {
     return { step: 'identical',
-      text: 'Identical on every criterion (5′-tail variants); the order is arbitrary but fixed.' };
+      text: 'Sets #1 and #2 are identical on every criterion (they differ only in the 5′ tail); the order is arbitrary but fixed.' };
   }
   if (compareTiered(first, second) > 0) {
     return { step: 'out_of_order',
@@ -93,50 +98,50 @@ export function groupReason(first, second) {
   }
   const a = first.ranking;
   const b = second.ranking;
-  const ncw = GROUP.ncw.toLowerCase();
   switch (KEY_STEPS[i]) {
     case 'specificity': {
       const d = requiredDiffs(first, second);
       return { step: 'specificity',
-        text: `${GROUP.required}: #1 is more specific (S ${a.specificity.total} vs ${b.specificity.total})`
-          + (d.length ? `: ${d.join(', ')}.` : '.') };
+        text: `Set #1 ranks first because it is more specific (specificity ${a.specificity.total} vs ${b.specificity.total} of ${a.specificity.max})`
+          + (d.length ? `: ${d.join('; ')}.` : '.') };
     }
     case 'structure_veto': {
       const sub = vetoedSubIndices(second);
       return { step: 'structure_veto',
-        text: `Same ${GROUP.required} specificity; #2 fails ${GROUP.ncw}: secondary structure too strong`
+        text: 'Set #1 ranks first: both sets are equally specific, but #2 has too strong a secondary structure'
           + `${sub.length ? ` (${sub.join(', ')})` : ''}.` };
     }
     case 'binding_floor_fail':
       return { step: 'binding_floor_fail',
-        text: `Same ${GROUP.required} specificity; #2 fails ${GROUP.ncw}: cycle-1 binding Tm below 39 °C.` };
+        text: 'Set #1 ranks first: both sets are equally specific, but #2 binds the cDNA weakly in PCR cycle 1 '
+          + '(binding-region Tm below 39 °C).' };
     case 'v4_violation': {
       const rules = standardRuleLabels(second);
       return { step: 'v4_violation',
-        text: `Same ${GROUP.required} specificity; #2 fails ${GROUP.ncw}: it does not meet the standard primer rules`
+        text: 'Set #1 ranks first: both sets are equally specific, but #2 does not meet a standard primer rule'
           + `${rules.length ? ` (${rules.join('; ')})` : ''}.` };
     }
     case 'pcr':
       return { step: 'pcr',
-        text: `Same ${GROUP.required} specificity and ${ncw}; ${GROUP.pcr}: #1 is closer to Ta `
-          + `(|Tm − Ta| ${fmtNum(a.pcr.tm_vs_ta?.diff)} vs ${fmtNum(b.pcr.tm_vs_ta?.diff)} °C).` };
+        text: 'Set #1 ranks first: both sets are equally specific, and #1 has its Tm closer to Ta '
+          + `(${fmtNum(a.pcr.tm_vs_ta?.diff)} vs ${fmtNum(b.pcr.tm_vs_ta?.diff)} °C apart).` };
     case 'flexible': {
       const d = compositionDiffs(first, second);
       return { step: 'flexible',
-        text: `Same ${GROUP.required} specificity, ${ncw} and ${GROUP.pcr}; #1 scores higher on `
-          + `${GROUP.composition.toLowerCase()} (F ${a.flexible.total} vs ${b.flexible.total})`
+        text: 'Set #1 ranks first: both sets are equally specific and equally close to Ta, and #1 scores higher on '
+          + `composition and structure (${a.flexible.total} vs ${b.flexible.total} of ${a.flexible.max})`
           + `${d.length ? `: ${d.join(', ')}` : ''}.` };
     }
     case 'tie_break':
       return { step: 'tie_break',
-        text: 'Equivalent in silico on every group; ordered by tie-break score '
+        text: 'Sets #1 and #2 are equivalent in silico on every group; #1 is listed first on the tie-break score '
           + `(+${fmtNum(a.detailed_score - b.detailed_score)}).` };
     case 'tm_vs_ta':
       return { step: 'tm_vs_ta',
-        text: 'Equivalent in silico on every group, same tie-break score; #1 is closer to Ta '
-          + `(|Tm − Ta| ${fmtNum(a.pcr.tm_vs_ta?.diff, 2)} vs ${fmtNum(b.pcr.tm_vs_ta?.diff, 2)} °C).` };
+        text: 'Sets #1 and #2 are equivalent in silico on every group with the same tie-break score; #1 is closer to Ta '
+          + `(${fmtNum(a.pcr.tm_vs_ta?.diff, 2)} vs ${fmtNum(b.pcr.tm_vs_ta?.diff, 2)} °C apart).` };
     default:
       return { step: 'identical',
-        text: 'Identical on every criterion (5′-tail variants); the order is arbitrary but fixed.' };
+        text: 'Sets #1 and #2 are identical on every criterion (they differ only in the 5′ tail); the order is arbitrary but fixed.' };
   }
 }

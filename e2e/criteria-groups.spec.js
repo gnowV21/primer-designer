@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 import { DEFAULTS } from '../frontend/src/constants/defaults.js';
 import { buildDesignBody, legacySaltNote, phApplied, thermoForRequest } from '../frontend/src/utils/designRequest.js';
 import { taOutsideWindow } from '../frontend/src/utils/paramChecks.js';
-import { PLACEHOLDER, DESIGN_TIMEOUT, WARM_MIRNAS, openParameters } from './helpers.js';
+import { PLACEHOLDER, DESIGN_TIMEOUT, WARM_MIRNAS, openParameters, openGroup } from './helpers.js';
 
 const MIR21 = WARM_MIRNAS.find((m) => m.name === 'hsa-miR-21-5p').sequence;
 
@@ -46,7 +46,7 @@ test.describe('UI default body', () => {
       const s = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Search');
       if (s) s.click();
     });
-    const btn = page.getByRole('button', { name: 'Design Primers →' });
+    const btn = page.getByRole('button', { name: /^Design primers$/ });
     await expect(btn).toBeEnabled({ timeout: 8000 });
     await btn.click();
     const t = (await posted).postDataJSON().thermodynamic;
@@ -70,7 +70,7 @@ test.describe('Ta outside the Tm window (P2 cannot reach level 5)', () => {
   test('the warning shows at Ta 56 and 64, not at 57 or 60', async ({ page }) => {
     await page.goto('/design');
     await openParameters(page);
-    await page.getByText('Flexible', { exact: true }).click();
+    await openGroup(page, 'Flexible');
     const ta = page.locator('#qpcr-ta');
     const warn = page.getByTestId('ta-window-warning');
     await expect(warn).toHaveCount(0);                     // default 60
@@ -89,17 +89,21 @@ test.describe('Ta outside the Tm window (P2 cannot reach level 5)', () => {
 
 // ── Parameters grouped by effect; tooltips ──────────────────────────────
 
-test('Parameters: Required, Flexible, Assay setup in that order, length marked unused', async ({ page }) => {
+test('Parameters: Required, Flexible, Assay setup in that order, all open, no unused length control', async ({ page }) => {
   await page.goto('/design');
   await openParameters(page);
-  const titles = ['Required', 'Flexible', 'Assay setup', 'Detection Method', 'Experimental Context'];
+  const titles = ['Required', 'Flexible', 'Assay setup', 'Detection method', 'Experimental context'];
   const tops = [];
   for (const t of titles) tops.push((await page.getByText(t, { exact: true }).first().boundingBox()).y);
   for (let i = 1; i < tops.length; i++) expect(tops[i]).toBeGreaterThan(tops[i - 1]);
-  await page.getByText('Assay setup', { exact: true }).click();
-  await expect(page.getByText('Primer length (nt) — not used by the ranking (engine uses 18–27 nt)')).toBeVisible();
-  await page.getByText('Flexible', { exact: true }).click();
-  await expect(page.getByText(/Monovalent cations \(Na\+\/K\+ total\), mM/)).toBeVisible();
+  // One level of folding: every group is open once Parameters is open.
+  for (const t of titles) {
+    await expect(page.locator('button[aria-expanded]').filter({ hasText: new RegExp(`^\\W*${t}`) }).first())
+      .toHaveAttribute('aria-expanded', 'true');
+  }
+  // The primer-length control changed nothing (the engine uses 18–27 nt): it is gone.
+  await expect(page.getByText(/Primer length \(nt\)/)).toHaveCount(0);
+  await expect(page.getByText(/Na\+\/K\+ total/).first()).toBeVisible();
   await expect(page.locator('#thermo-k')).toHaveValue('0');
 });
 
@@ -112,7 +116,7 @@ async function design(page, sequence) {
     const s = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Search');
     if (s) s.click();
   });
-  const btn = page.getByRole('button', { name: 'Design Primers →' });
+  const btn = page.getByRole('button', { name: /^Design primers$/ });
   await expect(btn).toBeEnabled({ timeout: 8000 });
   await btn.click();
   await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });

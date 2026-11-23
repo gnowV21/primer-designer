@@ -59,8 +59,8 @@ export default function NormalizationAdvisor({ advice }) {
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-purple-100/40 transition"
       >
         <div>
-          <p className="text-xs font-semibold text-purple-800 uppercase tracking-wide">
-            Normalization Advisor
+          <p className="text-xs font-semibold text-purple-800">
+            Normalization advisor
           </p>
           {sample_type && (
             <p className="text-xs text-purple-600 mt-0.5">
@@ -73,7 +73,7 @@ export default function NormalizationAdvisor({ advice }) {
           <span className="text-xs px-2 py-0.5 rounded border border-purple-200 bg-white text-purple-600 font-medium">
             Advisory only
           </span>
-          <span className="text-purple-400 text-sm">{open ? '▲' : '▼'}</span>
+          <span className="text-purple-700 text-sm">{open ? '▲' : '▼'}</span>
         </div>
       </button>
 
@@ -82,15 +82,15 @@ export default function NormalizationAdvisor({ advice }) {
       <div className="px-4 pb-3 space-y-3 border-t border-purple-200 pt-3">
       {/* Recommended strategy */}
       <div className="rounded-lg bg-white border border-purple-200 px-3 py-2">
-        <p className="text-xs font-semibold text-purple-700 mb-1">Recommended Strategy</p>
+        <p className="text-xs font-semibold text-purple-700 mb-1">Recommended strategy</p>
         <p className="text-xs text-slate-700 leading-relaxed">{recommended_strategy}</p>
       </div>
 
       {/* Reference candidates */}
       {reference_candidates.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
-            Reference Candidates
+          <p className="text-xs font-semibold text-purple-700">
+            Reference candidates
           </p>
           <div className="grid grid-cols-1 gap-2">
             {reference_candidates.map((ref) => (
@@ -108,7 +108,7 @@ export default function NormalizationAdvisor({ advice }) {
               key={i}
               className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 flex gap-2"
             >
-              <span className="text-amber-500 shrink-0 mt-0.5">⚠</span>
+              <span className="text-amber-700 shrink-0 mt-0.5">⚠</span>
               <div className="space-y-0.5">
                 <p className="text-xs text-amber-800">{c.text}</p>
                 {c.source_doi && (
@@ -116,7 +116,7 @@ export default function NormalizationAdvisor({ advice }) {
                     href={`https://doi.org/${c.source_doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-amber-600 underline hover:text-amber-800"
+                    className="text-xs text-amber-700 underline hover:text-amber-800"
                   >
                     doi:{c.source_doi}
                   </a>
@@ -142,7 +142,7 @@ export default function NormalizationAdvisor({ advice }) {
                 rel="noopener noreferrer"
                 className="text-teal-600 underline hover:text-teal-800 font-medium"
               >
-                {tool.name} →
+                {tool.name}
               </a>
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function NormalizationAdvisor({ advice }) {
       </div>
 
       {/* Disclaimer */}
-      <p className="text-xs italic text-purple-500 border-t border-purple-200 pt-2">
+      <p className="text-xs italic text-purple-700 border-t border-purple-200 pt-2">
         {disclaimer}
       </p>
       </div>

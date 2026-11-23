@@ -128,7 +128,7 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
         {/* ── Summary: label + action, the parameters listed vertically below ── */}
         <div className="px-4 py-3 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Parameters used</p>
+            <p className="text-xs font-semibold text-slate-500">Parameters used</p>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
@@ -139,7 +139,7 @@ export default function RerunBar({ runs, activeRun, running, onRerun, onSelectRu
                   : 'bg-teal-600 border-teal-600 text-white hover:bg-teal-700'
               }`}
             >
-              {open ? 'Close' : '✎ Adjust & re-run'}
+              {open ? 'Close' : 'Adjust & re-run'}
             </button>
           </div>
           <ParamChips layout="list" params={open ? draft : baseForm} highlight={open ? changedPaths(changes) : new Set()} />

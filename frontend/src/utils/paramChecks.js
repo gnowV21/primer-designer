@@ -11,3 +11,14 @@ export function taOutsideWindow(ta, tmMin, tmMax) {
 export function taAboveWindowLow(ta, tmMin) {
   return ta > tmMin + 5;
 }
+
+/** True when the normalization reference names the target miRNA itself
+ *  ("hsa-miR-16-5p" vs "miR-16"); same rule as the PDF (backend report_pdf.same_reference). */
+export function sameReference(target, reference) {
+  const norm = (x) => String(x || '').trim().toLowerCase()
+    .replace(/^[a-z]{3,5}-(?=(mir|let)-)/, '')
+    .replace(/-[35]p$/, '');
+  const t = norm(target);
+  const r = norm(reference);
+  return Boolean(t) && Boolean(r) && t === r;
+}

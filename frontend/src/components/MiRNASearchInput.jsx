@@ -201,6 +201,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
           <input
             ref={inputRef}
             type="text"
+            aria-label="miRNA name, accession or sequence"
             value={query}
             onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
@@ -209,7 +210,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
             }}
             placeholder={placeholder || 'hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA'}
             disabled={status === 'loading'}
-            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
+            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
           />
 
           {showSuggestions && dropdownRect && createPortal(
@@ -218,7 +219,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
               style={{ position: 'fixed', top: dropdownRect.top, left: dropdownRect.left, width: Math.max(dropdownRect.width, 420), zIndex: 9999 }}
             >
               <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                <span className="text-xs font-medium text-slate-500">
                   {isFetchingSugg ? 'Searching…' : `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
                 </span>
                 <span className="text-xs text-slate-500">↑↓ navigate · Enter select · Esc close</span>
@@ -251,11 +252,11 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
                         onMouseEnter={() => setActiveSuggIdx(idx)}
                         className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b border-slate-50 last:border-0 ${idx === activeSuggIdx ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
                       >
-                        <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-slate-300'}`} viewBox="0 0 16 16" fill="none">
+                        <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-slate-500'}`} viewBox="0 0 16 16" fill="none">
                           <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.6" />
                           <line x1="9.8" y1="9.8" x2="13" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                         </svg>
-                        <span className="font-mono text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
+                        <span className="text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
                           <Highlight text={item.name} query={query} />
                         </span>
                         {item.accession && <span className="text-xs font-mono text-slate-500 shrink-0">{item.accession}</span>}
@@ -283,7 +284,7 @@ export default function MiRNASearchInput({ onResolve, onRawSequence, onClear, pl
           type="button"
           onClick={handleSearch}
           disabled={status === 'loading' || !query.trim()}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-semibold shadow-sm hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-semibold shadow-sm hover:bg-teal-700 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-700 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-150"
         >
           <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true">
             <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.7" />

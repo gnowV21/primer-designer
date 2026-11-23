@@ -17,7 +17,7 @@ export default function NotFoundPage() {
         to="/design"
         className="inline-block mt-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition"
       >
-        Go to Designer →
+        Go to the designer
       </Link>
     </div>
   );

@@ -16,7 +16,7 @@ async function design(page, sequence) {
     const s = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Search');
     if (s) s.click();
   });
-  const btn = page.getByRole('button', { name: 'Design Primers →' });
+  const btn = page.getByRole('button', { name: /^Design primers$/ });
   await expect(btn).toBeEnabled({ timeout: 8000 });
   await btn.click();
   await expect(page).toHaveURL('/results', { timeout: DESIGN_TIMEOUT });
@@ -49,7 +49,7 @@ test('(a) a tiered card shows grade, Required and Flexible groups and no score g
   // Required = assay structure + Tm window + S1–S3; Flexible = 1 → 2 → 3 (2026-11-22)
   const required = summary.getByTestId('group-required');
   await expect(required).toContainText('Built to the Chen 2005 assay structure');
-  await expect(required).toContainText(/inside the Tm window 58–62 °C/);
+  await expect(required).toContainText(/inside the Tm window 58–62\s°C/);
   await expect(required.getByTestId('tier-specificity')).toBeVisible();
   const flexible = summary.getByTestId('group-flexible');
   const order = await flexible.evaluate((el) => ['ncw', 'tier-pcr', 'tier-flexible']
@@ -60,14 +60,15 @@ test('(a) a tiered card shows grade, Required and Flexible groups and no score g
   await expect(flexible).toContainText('3. Composition & structure');
   await expect(flexible.getByTestId('f4-note')).toContainText('PCR cycle-1 binding; scored with F, ranked after P2');
   // ΔTm F–R: a value on the card, not scored, no chip warning; once in "Shared by all sets"
-  await expect(summary.getByTestId('dtm-fr')).toContainText('not scored');
-  await expect(page.getByTestId('reverse-tm-note')).toContainText('ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions, the same for every set.');
-  await expect(page.getByTestId('reverse-tm-note')).toContainText('Tm_R 62.93 °C');
+  await expect(summary.getByTestId('dtm-fr')).toContainText('Not scored');
+  await expect(page.getByTestId('reverse-tm-note')).toContainText('it is set by Ta and the reaction conditions and is the same for every set');
+  await expect(page.getByTestId('reverse-tm-note')).toContainText(/Tm \(reverse\) 62\.9\s°C/);
+  await expect(page.getByTestId('reverse-tm-note')).not.toContainText('Tm_R');
   await expect(summary).not.toContainText('V4');
   await expect(page.getByTestId('score-gauge')).toHaveCount(0);
   // The tie-break score is only in the collapsed detail table, with its label.
   await page.getByText('Criteria detail').first().click();
-  await expect(page.getByText('Tie-break score — used only when every group is equal').first()).toBeVisible();
+  await expect(page.getByText('Tie-break score (used only when every group is equal)').first()).toBeVisible();
 });
 
 // ── (b) fallback banner on let-7a-5p ──────────────────────────────────
@@ -90,7 +91,7 @@ test('(c1) rank reason names the specificity tier when S decides', async ({ page
     r2.specificity.total = j.top3[0].ranking.specificity.total - 2;
   });
   await design(page, MIR21);
-  await expect(page.getByTestId('rank-reason')).toContainText(/^Required: #1 is more specific \(S \d+ vs \d+\): S1 BLAST \w+ vs MEDIUM/);
+  await expect(page.getByTestId('rank-reason')).toContainText(/^Set #1 ranks first because it is more specific \(specificity \d+ vs \d+ of \d+\): its BLAST off-target screen is cleaner \(\w+ vs medium\)/);
 });
 
 test('(c2) two sets equal on every group are labelled "Equivalent in silico"', async ({ page }) => {
@@ -102,7 +103,7 @@ test('(c2) two sets equal on every group are labelled "Equivalent in silico"', a
   });
   await design(page, MIR21);
   await expect(page.getByTestId('rank-reason'))
-    .toHaveText('Equivalent in silico on every group; ordered by tie-break score (+3.0).');
+    .toHaveText('Sets #1 and #2 are equivalent in silico on every group; #1 is listed first on the tie-break score (+3.0).');
   await expect(page.getByTestId('equivalent-label').first()).toContainText('Equivalent in silico to #');
 });
 
@@ -174,7 +175,7 @@ test('(f) a History record saved before 4.0.0 shows the V4 score and opens', asy
   await page.reload();
   const row = page.getByRole('button', { name: /hsa-miR-21-5p/ }).first();
   await expect(row).toContainText(/best [\d.]+ \(\w+\)/);
-  await expect(row).toContainText('v3.8.2');
+  await expect(row).toContainText('algorithm v3.8.2');
   await row.click();
   await expect(page).toHaveURL('/results');
   await expect(page.getByTestId('score-gauge').first()).toBeVisible();
@@ -208,9 +209,9 @@ test('(g) the CSV export carries the criteria-group columns', async ({ page }) =
 test('hsa-miR-590-3p #1 fails No critical weakness on binding Tm and a standard rule; grade B', async ({ page }) => {
   await design(page, WARM_MIRNAS.find((m) => m.name === 'hsa-miR-590-3p').sequence);
   const flags = page.getByTestId('tier-flags').first();
-  await expect(page.getByTestId('ncw-fail').first()).toBeVisible();
+  await expect(page.getByTestId('ncw-fail').first()).toHaveCount(1);
   await expect(flags).toContainText(/Cycle-1 binding Tm .*< 39 °C/);
-  await expect(flags).toContainText('Standard primer rule not met: No G/C in the last 3 nt');
+  await expect(flags).toContainText('Standard primer rules: 1 not met (3′ GC clamp missing)');
   await expect(flags).not.toContainText('V4');
   await expect(page.getByTestId('grade-badge').first()).toHaveText(/^B/);
   // advice for a binding Tm below the floor (review panel A5): on the open #1 card

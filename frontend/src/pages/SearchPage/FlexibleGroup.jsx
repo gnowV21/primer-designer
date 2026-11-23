@@ -34,7 +34,8 @@ export default function FlexibleGroup({
       clearTimeout(resetTimerRef.current);
       setConfirmingReset(false);
       const d = DEFAULTS.thermodynamic;
-      ['tmMin', 'tmMax', 'saltConcentration', 'primerConcentration',
+      // Reaction conditions only; the Tm window has its own reset under Required.
+      ['saltConcentration', 'primerConcentration',
         'magnesiumConcentration', 'dntpTotal', 'kPlusConc', 'bufferPH']
         .forEach((f) => onThermoChange(f, d[f]));
       ['saltConcentration', 'primerConcentration', 'magnesiumConcentration',
@@ -72,25 +73,26 @@ export default function FlexibleGroup({
   const freeMg = Math.max(0, mg - dNTP);
 
   const mgWarn = !thermoErrors.magnesiumConcentration
-    ? mg < 1.0 ? 'Low [Mg²⁺] — polymerase cofactor activity is reduced; amplification efficiency may suffer.'
-      : mg > 3.5 ? 'High [Mg²⁺] — increased risk of non-specific products and primer-dimer formation.' : '' : '';
+    ? mg < 1.0 ? 'Low Mg²⁺: polymerase cofactor activity is reduced; amplification efficiency may suffer.'
+      : mg > 3.5 ? 'High Mg²⁺: higher risk of non-specific products and primer-dimers.' : '' : '';
   const saltWarn = !thermoErrors.saltConcentration
-    ? salt < 20 ? `Low monovalent salt (${salt} mM) — estimated Tm is ~${Math.round(16.6 * Math.log10(50 / salt))}°C lower than standard (50 mM). Adjust target Tm accordingly.`
-      : salt > 150 ? `High monovalent salt (${salt} mM) — estimated Tm is ~${Math.round(16.6 * Math.log10(salt / 50))}°C higher than standard.` : '' : '';
+    ? salt < 20 ? `Low monovalent salt (${salt}\u00a0mM): the estimated Tm is about ${Math.round(16.6 * Math.log10(50 / salt))}\u00a0°C lower than at the standard 50\u00a0mM. Adjust the Tm window accordingly.`
+      : salt > 150 ? `High monovalent salt (${salt}\u00a0mM): the estimated Tm is about ${Math.round(16.6 * Math.log10(salt / 50))}\u00a0°C higher than at the standard 50\u00a0mM.` : '' : '';
   const primerCWarn = !thermoErrors.primerConcentration
-    ? pc < 100 ? `Low primer concentration (${pc} nM) — Tm may be ~3–5°C lower than calculations at 250 nM.`
-      : pc > 600 ? `High primer concentration (${pc} nM) — increased risk of primer-dimer formation.` : '' : '';
-  const dntpWarn = !thermoErrors.dntpTotal
-    ? dNTP < 0.1 ? `Very low [dNTP] (${dNTP} mM) — risk of substrate depletion.`
-      : dNTP > 0.4 ? `[dNTP] (${dNTP} mM) chelates Mg²⁺ — check the effective free [Mg²⁺] below.` : '' : '';
+    ? pc < 100 ? `Low primer concentration (${pc}\u00a0nM): the Tm may be about 3–5\u00a0°C lower than at 250\u00a0nM.`
+      : pc > 600 ? `High primer concentration (${pc}\u00a0nM): higher risk of primer-dimers.` : '' : '';
+  // Mg²⁺ chelation by dNTP is shown once, in the free-Mg²⁺ box (UI review 2026-11-23:
+  // the second box fired at the standard 0.8 mM and pointed "below" to a box above it).
+  const dntpWarn = !thermoErrors.dntpTotal && dNTP < 0.1
+    ? `Very low dNTP (${dNTP}\u00a0mM total): risk of substrate depletion.` : '';
   const kPlusWarn = !thermoErrors.kPlusConc
-    ? kPlus > 100 ? `[K⁺] ${kPlus} mM significantly inhibits Taq and most thermostable polymerases.`
-      : kPlus > 75 ? `[K⁺] ${kPlus} mM is at the upper recommended limit (≤ 75 mM).` : '' : '';
+    ? kPlus > 100 ? `K⁺ ${kPlus}\u00a0mM strongly inhibits Taq and most thermostable polymerases.`
+      : kPlus > 75 ? `K⁺ ${kPlus}\u00a0mM is at the upper recommended limit (75\u00a0mM).` : '' : '';
   const phWarn = !thermoErrors.bufferPH
-    ? pH < 7.5 ? `Buffer pH ${pH} is below 7.5 — polymerase activity drops sharply below pH 7.5.`
-      : pH > 9.0 ? `Buffer pH ${pH} is above 9.0 — risk of primer degradation.` : '' : '';
+    ? pH < 7.5 ? `Buffer pH ${pH} is below 7.5: polymerase activity drops sharply below pH 7.5.`
+      : pH > 9.0 ? `Buffer pH ${pH} is above 9.0: risk of primer degradation.` : '' : '';
   const freeMgWarn = !thermoErrors.magnesiumConcentration && !thermoErrors.dntpTotal && freeMg < 0.5
-    ? `Free [Mg²⁺] ≈ ${freeMg.toFixed(2)} mM (${mg} total − ${dNTP} dNTP) is critically low — polymerase activity will be severely impaired. Increase [Mg²⁺]_total or reduce [dNTP].` : '';
+    ? 'Polymerase activity will be severely impaired. Increase the total Mg²⁺ or reduce the dNTP.' : '';
   const showIonicWarn = !thermoErrors.saltConcentration && !thermoErrors.magnesiumConcentration && salt > 100 && mg > 3.0;
 
   // ── PCR: annealing temperature ────────────────────────────────────────
@@ -130,19 +132,17 @@ export default function FlexibleGroup({
         <button
           type="button"
           onClick={handleResetClick}
-          className={`text-xs font-medium px-2 py-0.5 rounded transition-all duration-150 shrink-0 ${
-            confirmingReset
-              ? 'text-red-600 bg-red-50 border border-red-200 hover:bg-red-100'
-              : 'text-slate-500 hover:text-slate-600 hover:bg-slate-100'
-          }`}
+          className={`text-xs font-medium px-2 py-0.5 rounded transition-all duration-150 shrink-0 ${confirmingReset
+            ? 'text-red-700 bg-red-50 border border-red-200 hover:bg-red-100'
+            : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'}`}
         >
-          {confirmingReset ? 'Confirm reset?' : 'Reset Tm'}
+          {confirmingReset ? 'Confirm reset?' : 'Reset reaction conditions'}
         </button>
       }
     >
       {/* ══ 1. No critical weakness — standard primer rules ══ */}
-      <SubDivider label="1. No critical weakness · standard primer rules"
-        note="Not filters: a set outside them ranks below the sets with the same specificity." />
+      <SubDivider label="1. Standard primer rules"
+        note="Part of No critical weakness. Not filters: a set outside them ranks below the sets with the same specificity." />
 
       <RangeSlider
         label="GC content (%)"
@@ -158,7 +158,7 @@ export default function FlexibleGroup({
 
       <div className="space-y-2">
         <div className="flex items-center gap-1.5">
-          <label className="text-sm font-medium text-slate-700">3′ GC Clamp</label>
+          <label className="text-sm font-medium text-slate-700">3′ GC clamp</label>
           <Tooltip text="Standard primer rule: at least one G or C in the last 3 nt of the forward primer. The 3′ end is set by the miRNA; the clamp is scored (F2) and, with this ON, an all-A/T 3′ end counts as a rule not met." />
         </div>
         <Toggle
@@ -174,21 +174,21 @@ export default function FlexibleGroup({
       </div>
 
       {seqAnalysis?.hasContinuousRepeat && (
-        <WarnBox text="Sequence contains a homopolymer run (≥ 4 identical nt). This region can cause polymerase slippage — the algorithm will deprioritize it." />
+        <WarnBox text="The sequence contains a homopolymer run (4 or more identical nt). It can cause polymerase slippage; the algorithm deprioritizes it." />
       )}
       {seqAnalysis && seqAnalysis.fwdRegionGC < 30 && (
-        <WarnBox text={`AU-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): The 5′-most 12 nt are heavily AU — the forward primer will require a long 5′ tail to reach the Tm target. Consider lowering the Tm minimum under Required.`} />
+        <WarnBox text={`AU-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): the 5′-most 12 nt are mostly A/U, so the forward primer needs a long 5′ tail to reach the Tm window. Consider lowering the Tm minimum under Required.`} />
       )}
       {seqAnalysis && seqAnalysis.fwdRegionGC > 70 && (
-        <WarnBox text={`GC-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): Risk of self-complementarity and hairpin formation — check the structure flags on each primer set in the results.`} />
+        <WarnBox text={`GC-rich forward binding region (${seqAnalysis.fwdRegionGC}% GC): risk of self-complementarity and hairpins. Check the structure rows of each primer set in the results.`} />
       )}
 
       {/* ══ 2. PCR ══ */}
-      <SubDivider label="2. PCR" note="P2 scores |Tm − Ta| of the forward primer." />
+      <SubDivider label="2. PCR" note="Scores how close the forward-primer Tm is to Ta." />
       <div className="space-y-1 max-w-xs">
         <NumInput
           id="qpcr-ta"
-          label="Annealing temp (Ta)"
+          label="Annealing temperature (Ta)"
           tooltip={TA_TOOLTIP}
           value={ta}
           onChange={handleTaChange}
@@ -201,7 +201,7 @@ export default function FlexibleGroup({
       </div>
       {showTaHighWarning && (
         <WarnBox testId="ta-high-warning"
-          text={`Ta is more than 5 °C above the lower end of the Tm window (${tmMin} °C): forward primers near that end would anneal poorly. Raise the Tm window together with Ta.`} />
+          text={`Ta is more than 5\u00a0°C above the lower end of the Tm window (${tmMin}\u00a0°C): forward primers near that end would anneal poorly. Raise the Tm window together with Ta.`} />
       )}
       {showTaWindowWarning && (
         <WarnBox testId="ta-window-warning"
@@ -210,13 +210,13 @@ export default function FlexibleGroup({
 
       {/* ══ Reaction conditions ══ */}
       <SubDivider label="Reaction conditions"
-        note="Every Tm is computed at these values — the Required Tm window and specificity checks included." />
+        note="Every Tm is computed at these values, including the Tm window and the specificity checks." />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-4">
         <NumInput
           id="thermo-na"
-          label={<>Monovalent cations (Na<sup>+</sup>/K<sup>+</sup> total), mM</>}
-          tooltip="Total monovalent salt of your PCR buffer (usually KCl). Default 50 mM = the conditions used for all validation and thesis numbers."
+          label={<>Na<sup>+</sup>/K<sup>+</sup> total</>}
+          tooltip="Total monovalent salt of your PCR buffer (usually KCl). The default 50 mM is the condition every validation number uses."
           value={salt}
           onChange={handleSalt}
           min={L.saltMin} max={L.saltMax} step={5} unit="mM"
@@ -224,8 +224,8 @@ export default function FlexibleGroup({
         />
         <NumInput
           id="thermo-k"
-          label={<>Extra [K<sup>+</sup>]</>}
-          tooltip="Extra K⁺ added on top of the value above. Leave 0 if the total above already includes KCl."
+          label={<>Extra K<sup>+</sup></>}
+          hint="On top of the total; usually 0."
           value={kPlus}
           onChange={handleKPlus}
           min={L.kPlusMin} max={L.kPlusMax} step={5} unit="mM"
@@ -233,8 +233,7 @@ export default function FlexibleGroup({
         />
         <NumInput
           id="thermo-mg"
-          label={<>[Mg<sup>2+</sup>]<sub> total</sub></>}
-          tooltip="Total magnesium concentration. Free [Mg²⁺] = [Mg²⁺]_total − [dNTP]_total. Optimal free Mg²⁺ is 1.5–3 mM."
+          label={<>Mg<sup>2+</sup> total</>}
           value={mg}
           onChange={handleMg}
           min={L.mgMin} max={L.mgMax} step={0.5} unit="mM"
@@ -242,8 +241,8 @@ export default function FlexibleGroup({
         />
         <NumInput
           id="thermo-dntp"
-          label="[dNTP] total"
-          tooltip="Total dNTP concentration. Standard: 0.2 mM per nucleotide = 0.8 mM total. dNTPs chelate Mg²⁺ stoichiometrically."
+          label="dNTP total"
+          hint="0.2 mM each = 0.8 mM total."
           value={dNTP}
           onChange={handleDntp}
           min={L.dntpMin} max={L.dntpMax} step={0.05} unit="mM"
@@ -251,7 +250,7 @@ export default function FlexibleGroup({
         />
         <NumInput
           id="thermo-primer"
-          label="[Primer]"
+          label="Primer"
           tooltip={PRIMER_CONC_TOOLTIP}
           value={pc}
           onChange={handlePrimerC}
@@ -261,7 +260,7 @@ export default function FlexibleGroup({
         <NumInput
           id="thermo-ph"
           label="Buffer pH"
-          tooltip="Only used if you change it (adds the Tris contribution). Default: not applied."
+          hint="Applied only if you change it."
           value={pH}
           onChange={handlePH}
           min={L.bufferPHMin} max={L.bufferPHMax} step={0.1} unit=""
@@ -271,29 +270,30 @@ export default function FlexibleGroup({
 
       {/* Free Mg²⁺ indicator */}
       {!thermoErrors.magnesiumConcentration && !thermoErrors.dntpTotal && (
-        <div className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3 py-2 rounded-lg text-xs border ${
+        <div data-testid="free-mg" className={`px-3 py-2 rounded-lg text-xs border space-y-0.5 ${
           freeMg < 0.5 ? 'bg-red-50 border-red-200 text-red-700'
-            : freeMg < 1.0 ? 'bg-amber-50 border-amber-200 text-amber-700'
-            : 'bg-teal-50 border-teal-200 text-teal-700'
-        }`}>
-          <span className="font-medium shrink-0">Effective free [Mg²⁺]</span>
-          <span className="font-mono font-bold tabular-nums">{freeMg.toFixed(2)} mM</span>
-          <span className="text-slate-500 font-normal tabular-nums">({mg} total − {dNTP} mM dNTP)</span>
-          <span className="ml-auto shrink-0 font-medium">
-            {freeMg >= 1.0 ? '✓ Acceptable (≥ 1.0 mM)' : freeMg >= 0.5 ? '⚠ Below optimal' : '✕ Critically low'}
-          </span>
+            : freeMg < 1.0 ? 'bg-amber-50 border-amber-200 text-amber-800'
+              : 'bg-green-50 border-green-200 text-green-700'}`}>
+          <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+            <span className="font-medium">Free Mg²⁺</span>
+            <span className="font-bold tabular-nums whitespace-nowrap">{freeMg.toFixed(2)}{'\u00a0'}mM</span>
+            <span className="text-slate-700 font-normal tabular-nums whitespace-nowrap">({mg} total − {dNTP} dNTP, which binds Mg²⁺ one to one)</span>
+            <span className="ml-auto shrink-0 font-semibold">
+              {freeMg >= 1.0 ? 'Pass (≥ 1.0 mM)' : freeMg >= 0.5 ? 'Warning: below 1.0 mM' : 'Fail: critically low'}
+            </span>
+          </p>
+          {freeMgWarn && <p>{freeMgWarn}</p>}
         </div>
       )}
 
-      {freeMgWarn              && <WarnBox text={freeMgWarn} />}
       {saltWarn                && <WarnBox text={saltWarn} />}
       {kPlusWarn               && <WarnBox text={kPlusWarn} />}
       {mgWarn                  && <WarnBox text={mgWarn} />}
-      {!freeMgWarn && dntpWarn && <WarnBox text={dntpWarn} />}
+      {dntpWarn                && <WarnBox text={dntpWarn} />}
       {primerCWarn             && <WarnBox text={primerCWarn} />}
       {phWarn                  && <WarnBox text={phWarn} />}
       {showIonicWarn && (
-        <WarnBox text={`High ionic strength: monovalent ${salt} mM + [Mg²⁺] ${mg} mM — actual Tm may be significantly higher than the monovalent-only correction predicts.`} />
+        <WarnBox text={`High ionic strength (monovalent ${salt}\u00a0mM plus Mg²⁺ ${mg}\u00a0mM): the real Tm may be clearly higher than the salt correction predicts.`} />
       )}
     </CollapsibleSection>
   );

@@ -32,7 +32,7 @@ _CACHE_TTL_DAYS = 30                                      # SPEC §E.2
 # SVG for up to the full TTL.
 #   2 — fixed stage-1/stage-3 base pairing (strands must be passed 5'->3'),
 #       melting-curve headroom, gel header/lane overlap.
-_RENDER_VERSION = 11
+_RENDER_VERSION = 12   # 12: miRNA drawn as RNA, sans prose, −dF/dT ticks (UI review 2026-11-23)
 
 # VISUALIZE_CACHE_PATH: another cache file (the deployed image sets one under /tmp,
 # the only writable place there). The cache is optional: it is opened on first use,

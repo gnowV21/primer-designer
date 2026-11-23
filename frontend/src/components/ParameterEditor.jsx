@@ -20,6 +20,7 @@ import FlexibleGroup from '../pages/SearchPage/FlexibleGroup.jsx';
 import AssaySetupGroup from '../pages/SearchPage/AssaySetupGroup.jsx';
 import DetectionMethodGroup from '../pages/SearchPage/DetectionMethodGroup.jsx';
 import ExperimentalContextGroup from '../pages/SearchPage/ExperimentalContextGroup.jsx';
+import { SectionsOpenByDefault } from './ui/CollapsibleSection.jsx';
 
 export default function ParameterEditor({
   params,
@@ -29,6 +30,7 @@ export default function ParameterEditor({
   onApplyPreset,     // (preset)
   seqAnalysis = null,
   openRequests = {},
+  groupsOpen = false, // /design: every group open once Parameters is open
 }) {
   const set = (group) => (field, value) => onChange(group, field, value);
   const thermoErrors = {
@@ -41,6 +43,7 @@ export default function ParameterEditor({
   };
 
   return (
+    <SectionsOpenByDefault.Provider value={groupsOpen}>
     <div className="space-y-3">
       <RequiredGroup
         constraints={params.primerConstraints}
@@ -80,6 +83,7 @@ export default function ParameterEditor({
         data={params.detectionMethod}
         onChange={set('detectionMethod')}
         seqAnalysis={seqAnalysis}
+        targetName={params.sequence?.mirnaName}
         openRequested={openRequests.method || 0}
       />
       <ExperimentalContextGroup
@@ -89,5 +93,6 @@ export default function ParameterEditor({
         openRequested={openRequests.context || 0}
       />
     </div>
+    </SectionsOpenByDefault.Provider>
   );
 }

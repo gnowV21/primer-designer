@@ -108,7 +108,7 @@ export default function CriteriaPanel({ open, onClose }) {
         </div>
 
         <section className="space-y-2" data-testid="criteria-required">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{GROUP.required}</h4>
+          <h4 className="text-xs font-bold text-slate-500">{GROUP.required}</h4>
           <Table head={['Criterion', 'Rule / levels', 'Effect']} rows={REQUIRED_ROWS} />
           <p className="text-xs text-slate-600">
             Specificity S = S1 + S2 + S3 (max 15; 10 without BLAST) ranks first. When every candidate is eliminated,
@@ -117,7 +117,7 @@ export default function CriteriaPanel({ open, onClose }) {
         </section>
 
         <section className="space-y-3" data-testid="criteria-flexible">
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">{GROUP.flexible}</h4>
+          <h4 className="text-xs font-bold text-slate-500">{GROUP.flexible}</h4>
           <div className="space-y-1">
             <p className="text-xs font-semibold text-slate-700">1. {GROUP.ncw}</p>
             <p className="text-xs text-slate-600">Checked in this order; a set that fails one ranks below, it is not eliminated.</p>

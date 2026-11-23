@@ -7,8 +7,8 @@ export default function OverhangComparison({ comparison, recommended }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-          Overhang Length Comparison (5 / 6 / 7 nt)
+        <p className="text-xs font-semibold text-slate-500">
+          Overhang length comparison (5 / 6 / 7 nt)
         </p>
         <span className="text-xs text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-2 py-0.5 font-medium">
           Recommended: {recommended} nt
@@ -53,14 +53,14 @@ function OverhangCard({ data }) {
           <span className="text-xs font-semibold text-teal-600">★ Best</span>
         )}
         {!viable && (
-          <span className="text-xs font-semibold text-red-500">No candidates</span>
+          <span className="text-xs font-semibold text-red-700">No candidates</span>
         )}
       </div>
 
       {/* Overhang sequence */}
       <div>
-        <p className="text-xs text-slate-500 mb-0.5">3' overhang (miRNA)</p>
-        <span className="font-mono text-xs text-slate-700 tracking-wider">{overhang_rna}</span>
+        <p className="text-xs text-slate-500 mb-0.5">3′ overhang (miRNA)</p>
+        <span className="font-mono text-xs text-slate-700">{overhang_rna}</span>
       </div>
 
       {/* Stemloop metrics */}
@@ -110,7 +110,7 @@ function Row({ label, value, unit = '', badge, sub }) {
       <span className="text-slate-500 shrink-0">{label}</span>
       <span className="flex items-center gap-1">
         {badge === 'ok' && <span className="text-teal-500 text-xs">✓</span>}
-        {badge === 'warn' && <span className="text-amber-500 text-xs">⚠</span>}
+        {badge === 'warn' && <span className="text-amber-700 text-xs">⚠</span>}
         <strong className="tabular-nums">{value}{unit}</strong>
         {sub && <span className="text-slate-500 text-xs">({sub})</span>}
       </span>

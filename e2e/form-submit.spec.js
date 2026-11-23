@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openParameters } from './helpers.js';
+import { openParameters, openGroup } from './helpers.js';
 
 test.describe('Form submit button', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,7 +14,7 @@ test.describe('Form submit button', () => {
   test('submit button shows Fix errors state on validation error', async ({ page }) => {
     // Open Flexible (reaction conditions) to access the salt input
     await openParameters(page);
-    await page.getByText('Flexible', { exact: true }).click();
+    await openGroup(page, 'Flexible');
     const saltInput = page.locator('#thermo-na');
     await saltInput.fill('');
     await saltInput.blur();
@@ -23,7 +23,7 @@ test.describe('Form submit button', () => {
 
   test('NumInput clear shows empty field not zero', async ({ page }) => {
     await openParameters(page);
-    await page.getByText('Flexible', { exact: true }).click();
+    await openGroup(page, 'Flexible');
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     await saltInput.selectText();
@@ -33,7 +33,7 @@ test.describe('Form submit button', () => {
 
   test('NumInput focus selects all text', async ({ page }) => {
     await openParameters(page);
-    await page.getByText('Flexible', { exact: true }).click();
+    await openGroup(page, 'Flexible');
     const saltInput = page.locator('#thermo-na');
     await saltInput.click();
     // After click, value should be selected (verify by typing immediately)
@@ -43,7 +43,7 @@ test.describe('Form submit button', () => {
     expect(val).toBe('99');
   });
 
-  test('page title is HG Lab | Primer Designer', async ({ page }) => {
-    await expect(page).toHaveTitle('HG Lab | Primer Designer');
+  test('page title is HG Lab | Primer designer', async ({ page }) => {
+    await expect(page).toHaveTitle('HG Lab | Primer designer');
   });
 });

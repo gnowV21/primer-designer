@@ -134,7 +134,7 @@ test.describe('rankReason — 8 branches (SPEC_ui §2.4)', () => {
     expect(r.step).toBe('tm_vs_ta');
   });
   test('rankReason dispatches: tiered vs V4 (U5)', () => {
-    expect(rankReason(mk(), mk({ s2: 3 }))).toMatch(/^Required: #1 is more specific/);
+    expect(rankReason(mk(), mk({ s2: 3 }))).toMatch(/^Set #1 ranks first because it is more specific/);
     const v4a = { total_score: 92, scores: { gc_clamp: 100 }, weights: { gc_clamp: 0.06 } };
     const v4b = { total_score: 85, scores: { gc_clamp: 50 }, weights: { gc_clamp: 0.06 } };
     expect(rankReason(v4a, v4b)).toMatch(/^#1 ranks 7\.0 points above #2/);
@@ -146,21 +146,21 @@ test.describe('rankReason — 8 branches (SPEC_ui §2.4)', () => {
 test.describe('groupReason — criteria-group wording, same steps as tierReason', () => {
   const cases = [
     ['specificity', mk(), mk({ s1: 3, risk: 'MEDIUM' }),
-      'Required: #1 is more specific (S 15 vs 13): S1 BLAST SAFE vs MEDIUM.'],
+      'Set #1 ranks first because it is more specific (specificity 15 vs 13 of 15): its BLAST off-target screen is cleaner (safe vs medium).'],
     ['structure_veto', mk(), mk({ veto: true, f5: 1, sub: { hairpin_tm: 5, dimer_dg: 1, end_dimer_tm: 5 } }),
-      'Same Required specificity; #2 fails No critical weakness: secondary structure too strong (dimer ΔG).'],
+      'Set #1 ranks first: both sets are equally specific, but #2 has too strong a secondary structure (dimer ΔG).'],
     ['binding_floor_fail', mk(), mk({ floor: true, f4: 1 }),
-      'Same Required specificity; #2 fails No critical weakness: cycle-1 binding Tm below 39 °C.'],
+      'Set #1 ranks first: both sets are equally specific, but #2 binds the cDNA weakly in PCR cycle 1 (binding-region Tm below 39 °C).'],
     ['v4_violation', mk(), mk({ v4: ['gc_clamp_fail'] }),
-      'Same Required specificity; #2 fails No critical weakness: it does not meet the standard primer rules (No G/C in the last 3 nt (all-A/T 3′ end)).'],
+      'Set #1 ranks first: both sets are equally specific, but #2 does not meet a standard primer rule (3′ GC clamp missing).'],
     ['pcr', mk(), mk({ p: 4, tm: 61.4 }),
-      'Same Required specificity and no critical weakness; PCR: #1 is closer to Ta (|Tm − Ta| 0.0 vs 1.4 °C).'],
+      'Set #1 ranks first: both sets are equally specific, and #1 has its Tm closer to Ta (0.0 vs 1.4 °C apart).'],
     ['flexible', mk(), mk({ f2: 3 }),
-      'Same Required specificity, no critical weakness and PCR; #1 scores higher on composition & structure (F 20 vs 18): F2 GC clamp 5 vs 3.'],
+      'Set #1 ranks first: both sets are equally specific and equally close to Ta, and #1 scores higher on composition and structure (20 vs 18 of 20): 3′ GC clamp level 5 vs 3.'],
     ['tie_break', mk({ detailed: 92.3 }), mk({ detailed: 90.1 }),
-      'Equivalent in silico on every group; ordered by tie-break score (+2.2).'],
+      'Sets #1 and #2 are equivalent in silico on every group; #1 is listed first on the tie-break score (+2.2).'],
     ['identical', mk({ sequence: 'AACGT' }), mk({ sequence: 'TTCGT' }),
-      'Identical on every criterion (5′-tail variants); the order is arbitrary but fixed.'],
+      'Sets #1 and #2 are identical on every criterion (they differ only in the 5′ tail); the order is arbitrary but fixed.'],
   ];
   for (const [step, a, b, text] of cases) {
     test(`${step}`, () => {

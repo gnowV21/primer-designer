@@ -36,14 +36,14 @@ export default function IsoformTable({ iso }) {
         </thead>
         <tbody className="align-top">
           <tr className="border-t border-amber-200">
-            <td className="font-mono break-all pr-1"><End rna={iso.canonical_end_rna} /></td>
+            <td className="seq pr-1"><End rna={iso.canonical_end_rna} /></td>
             <td className="pr-2">miRBase 22.1 end</td>
             <td className="pr-2 tabular-nums">{share(iso.canonical_3prime_share_pooled)}</td>
             <td className="pr-1 break-words">primer target</td>
           </tr>
           {variants.map((v) => (
             <tr key={v.sequence_dna} className="border-t border-amber-200" data-testid="isomir-row">
-              <td className="font-mono break-all pr-1"><End rna={v.end_rna} diffAt={v.end_diff_at} /></td>
+              <td className="seq pr-1"><End rna={v.end_rna} diffAt={v.end_diff_at} /></td>
               <td className="pr-2">{v.type_label}</td>
               <td className="pr-2 tabular-nums">{share(v.pooled_share)}</td>
               <td className="pr-1 break-words" title={v.rt_capture.note || undefined}>{v.rt_capture.label}</td>

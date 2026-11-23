@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { thermoForRequest } from '../../utils/designRequest.js';
+import { fmtDg, fmtTm, fmtPct, withUnit, STATUS_CLASSES } from '../../utils/format.js';
 import { DEFAULTS } from '../../constants/defaults.js';
 import OffTargetPanel from '../SearchPage/ResultsSection/OffTargetPanel.jsx';
 import LnaPanel from '../../components/LnaPanel/index.jsx';
@@ -58,7 +59,9 @@ export default function AnalyzePage() {
   const [showLna, setShowLna] = useState(false);
   const lnaEnabled = useLnaEnabled();
 
-  useEffect(() => { document.title = 'HG Lab | Primer Analyzer'; }, []);
+  useEffect(() => { document.title = 'HG Lab | Primer analyzer'; }, []);
+  // Remounts the search box so "Load example" fills it (it reads its initial query once).
+  const [searchKey, setSearchKey] = useState(0);
 
   function loadExample() {
     setMirnaId(EXAMPLE.mirnaId);
@@ -66,6 +69,7 @@ export default function AnalyzePage() {
     setRt(EXAMPLE.rt);
     setForward(EXAMPLE.forward);
     setReverse(EXAMPLE.reverse);
+    setSearchKey((k) => k + 1);
     setStatus('idle');
     setResult(null);
     setErrorMsg('');
@@ -74,6 +78,7 @@ export default function AnalyzePage() {
   function clearAll() {
     setMirnaId(''); setMature(''); setRt(''); setForward('');
     setReverse(UNIVERSAL_REVERSE);
+    setSearchKey((k) => k + 1);
     setStatus('idle'); setResult(null); setErrorMsg(''); setShowLna(false);
   }
 
@@ -108,11 +113,11 @@ export default function AnalyzePage() {
 
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-xl font-bold text-slate-800">Primer Analyzer</h1>
-        <p className="text-sm text-slate-500 leading-relaxed">
-          Already have a stem-loop RT-qPCR primer set? Paste the three primers and the mature
-          miRNA — this computes their thermodynamic parameters, cross-dimer risk, and checks each
-          primer against the miRNA it targets. No design is run; your sequences are analysed as-is.
+        <h1 className="text-xl font-bold text-slate-800">Primer analyzer</h1>
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Paste an existing stem-loop RT-qPCR primer set and its mature miRNA to see the
+          thermodynamic parameters, the cross-dimer risk and how each primer matches the miRNA.
+          No design is run; your sequences are analyzed unchanged.
         </p>
       </div>
 
@@ -121,19 +126,19 @@ export default function AnalyzePage() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-600">Input</h2>
           <div className="flex items-center gap-3 text-xs">
-            <button onClick={loadExample} className="text-teal-600 hover:underline font-medium">Load example</button>
-            <span className="text-slate-300">·</span>
-            <button onClick={clearAll} className="text-slate-500 hover:text-slate-600">Clear</button>
+            <button type="button" onClick={loadExample} className="text-teal-700 hover:underline font-medium">Load example</button>
+            <button type="button" onClick={clearAll} className="text-slate-600 hover:text-slate-800">Clear</button>
           </div>
         </div>
 
         {/* miRNA — unified search (name / miRBase ID / sequence) with autocomplete */}
         <div className="space-y-2">
           <div>
-            <span className="text-xs font-medium text-slate-600">Mature miRNA</span>
-            <span className="text-xs text-slate-500 ml-1">· type a name/ID for suggestions, or paste the RNA sequence (A/U/G/C)</span>
+            <span className="text-xs font-medium text-slate-700">Mature miRNA</span>
+            <span className="text-xs text-slate-600 ml-1">Type a name or accession for suggestions, or paste the RNA sequence (A/U/G/C).</span>
           </div>
           <MiRNASearchInput
+            key={searchKey}
             initialQuery={mirnaId || mature}
             onResolve={(r) => { setMature((r.sequence || '').toUpperCase()); setMirnaId(r.id || ''); }}
             onRawSequence={(seq) => { setMature(seq); setMirnaId(''); }}
@@ -142,10 +147,10 @@ export default function AnalyzePage() {
 
           {mature && (
             <div className="border border-teal-200 rounded-xl bg-teal-50/40 px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
-              <span className="text-xs text-slate-500 uppercase tracking-wide">miRNA</span>
-              <span className="font-mono font-semibold text-slate-800">{mirnaId || '—'}</span>
+              <span className="text-xs text-slate-600">miRNA</span>
+              <span className="font-semibold text-slate-800 whitespace-nowrap">{mirnaId || '—'}</span>
               <SeqWithSeed seq={mature} />
-              <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded px-2 py-0.5 tabular-nums">{mature.length} nt</span>
+              <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded px-2 py-0.5 tabular-nums">{withUnit(mature.length, 'nt')}</span>
             </div>
           )}
         </div>
@@ -156,13 +161,13 @@ export default function AnalyzePage() {
             label="Stem-loop RT primer" accent="border-l-teal-400"
             value={rt} onChange={setRt}
             placeholder="GTCGTATCCAGTGCAGGGTCCGAGGTA…TCAACA"
-            hint="Hairpin body + 3' overhang complementary to the miRNA 3' end; its length is read from the primer (standard 6 nt, 5-7 supported)"
+            hint="Hairpin body + 3′ overhang complementary to the miRNA 3′ end; its length is read from the primer (standard 6 nt, 5-7 supported)"
           />
           <PrimerInput
             label="Forward qPCR primer" accent="border-l-teal-400"
             value={forward} onChange={setForward}
             placeholder="GCGGCGTAGCTTATCAGACTGA"
-            hint="Synthetic 5' tail + miRNA-specific 5' region"
+            hint="Synthetic 5′ tail + miRNA-specific 5′ region"
           />
           <PrimerInput
             label="Universal reverse primer" accent="border-l-slate-300"
@@ -176,16 +181,29 @@ export default function AnalyzePage() {
         <div>
           <button
             onClick={() => setShowParams((v) => !v)}
-            className="text-xs font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1"
+            type="button"
+            aria-expanded={showParams}
+            className="text-xs font-medium text-slate-700 hover:text-slate-900 flex items-start gap-1 text-left"
           >
-            <span className={`transition-transform ${showParams ? 'rotate-90' : ''}`}>▸</span>
-            Reaction conditions {showParams ? '' : '(defaults: 50 mM Na⁺, 50 mM K⁺, 1.5 mM Mg²⁺, 0.8 mM dNTP, 200 nM primer, pH 8.4, 60 °C)'}
+            <span aria-hidden className={`transition-transform ${showParams ? 'rotate-90' : ''}`}>▸</span>
+            <span>
+              Reaction conditions
+              {!showParams && (
+                <span className="font-normal text-slate-600">
+                  {' '}(defaults: Na⁺/K⁺ total {withUnit(DEFAULTS.thermodynamic.saltConcentration, 'mM')},{' '}
+                  Mg²⁺ {withUnit(DEFAULTS.thermodynamic.magnesiumConcentration, 'mM')},{' '}
+                  dNTP {withUnit(DEFAULTS.thermodynamic.dntpTotal, 'mM')},{' '}
+                  primer {withUnit(DEFAULTS.thermodynamic.primerConcentration, 'nM')},{' '}
+                  Ta {withUnit(DEFAULTS.qpcr.annealingTemp, '°C')})
+                </span>
+              )}
+            </span>
           </button>
           {showParams && (
             <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-3">
               {ION_FIELDS.map(({ key, label, unit, step }) => (
                 <label key={key} className="block space-y-1">
-                  <span className="text-xs text-slate-500">{label} <span className="text-slate-500">({unit})</span></span>
+                  <span className="block h-4 text-xs text-slate-700 whitespace-nowrap">{label}{unit ? `, ${unit}` : ''}</span>
                   <input
                     type="number" step={step} value={params[key]}
                     onChange={(e) => setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))}
@@ -202,7 +220,8 @@ export default function AnalyzePage() {
           <button
             onClick={analyze}
             disabled={!canSubmit}
-            className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-medium rounded-xl shadow-sm hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+            type="button"
+            className="py-3 px-6 rounded-xl text-sm font-semibold transition-all bg-teal-600 text-white shadow-md hover:bg-teal-700 active:scale-[0.99] disabled:bg-slate-200 disabled:text-slate-700 disabled:shadow-none disabled:cursor-not-allowed"
           >
             {status === 'loading' ? 'Analyzing…' : 'Analyze primers'}
           </button>
@@ -214,13 +233,13 @@ export default function AnalyzePage() {
 
       {/* ── Results ── */}
       {status === 'done' && result && (
-        <div className="space-y-6">
+        <div className="space-y-6" data-testid="analyze-results">
 
           {/* Per-primer metrics */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-slate-600">Per-primer parameters</h2>
             <div className="grid grid-cols-1 gap-3">
-              <PrimerCard title="Stem-loop RT primer"      data={result.primers.rt} />
+              <PrimerCard title="Stem-loop RT primer"      data={result.primers.rt} rt />
               <PrimerCard title="Forward qPCR primer"       data={result.primers.forward} />
               <PrimerCard title="Universal reverse primer"  data={result.primers.reverse} />
             </div>
@@ -231,11 +250,11 @@ export default function AnalyzePage() {
             <h2 className="text-sm font-semibold text-slate-600">Cross-dimer matrix</h2>
             <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500">
+                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-700">
                   <tr>
                     <th className="text-left px-4 py-2 font-semibold">Pair</th>
-                    <th className="text-right px-4 py-2 font-semibold">ΔG overall</th>
-                    <th className="text-right px-4 py-2 font-semibold">ΔG 3′-end</th>
+                    <th className="text-right px-4 py-2 font-semibold">ΔG overall (kcal/mol)</th>
+                    <th className="text-right px-4 py-2 font-semibold">ΔG 3′ end (kcal/mol)</th>
                     <th className="text-center px-4 py-2 font-semibold">Status</th>
                   </tr>
                 </thead>
@@ -245,8 +264,8 @@ export default function AnalyzePage() {
                     return (
                       <tr key={d.pair} title={d.note}>
                         <td className="px-4 py-2.5 font-medium text-slate-700">{d.pair}</td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums text-slate-600">{fmt(d.dg_overall)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums text-slate-600">{fmt(d.dg_3prime)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{fmtDg(d.dg_overall)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{fmtDg(d.dg_3prime)}</td>
                         <td className="px-4 py-2.5 text-center">
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
                         </td>
@@ -256,7 +275,7 @@ export default function AnalyzePage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-slate-500">ΔG in kcal/mol. More negative = more stable dimer. A stable 3′-end dimer is the concern — the polymerase can extend it into primer-dimer artifacts.</p>
+            <p className="text-xs text-slate-600">More negative ΔG means a more stable dimer. A stable 3′-end dimer is the concern: the polymerase can extend it into primer-dimer artifacts.</p>
           </section>
 
           {/* Context vs miRNA */}
@@ -272,8 +291,9 @@ export default function AnalyzePage() {
                     <div className="flex flex-wrap gap-2 mt-1">
                       <Kv k="expected" v={result.context.rt_overhang.expected} mono />
                       <Kv k="observed" v={result.context.rt_overhang.observed} mono />
-                      {result.context.rt_overhang.hybrid_tm_c != null && (
-                        <Kv k="hybrid Tm" v={`${result.context.rt_overhang.hybrid_tm_c} °C`} />
+                      {result.context.rt_overhang.hybrid_tm_c != null
+                        && (result.context.rt_overhang.overhang_length ?? 0) >= SHORT_DUPLEX_NT && (
+                        <Kv k="hybrid Tm" v={fmtTm(result.context.rt_overhang.hybrid_tm_c)} />
                       )}
                     </div>
                   }
@@ -284,8 +304,8 @@ export default function AnalyzePage() {
                   note={result.context.forward_anchor.note}
                   extra={
                     <div className="flex flex-wrap gap-2 mt-1">
-                      <Kv k="matched" v={`${result.context.forward_anchor.matched_len} nt`} />
-                      <Kv k="tail ≈" v={`${result.context.forward_anchor.tail_len} nt`} />
+                      <Kv k="matched" v={withUnit(result.context.forward_anchor.matched_len, 'nt')} />
+                      <Kv k="tail ≈" v={withUnit(result.context.forward_anchor.tail_len, 'nt')} />
                       {result.context.forward_anchor.matched_seq && (
                         <Kv k="on miRNA" v={result.context.forward_anchor.matched_seq} mono />
                       )}
@@ -315,10 +335,10 @@ export default function AnalyzePage() {
             ) : (
               <div className="rounded-lg border border-slate-200 overflow-hidden">
                 <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Off-target Check (BLAST)</p>
+                  <p className="text-xs font-semibold text-slate-500">Off-target check (BLAST)</p>
                 </div>
-                <p className="px-3 py-3 text-xs text-slate-500 leading-relaxed">
-                  Add the miRBase ID with its arm (e.g. <span className="font-mono text-slate-700">hsa-miR-21-5p</span>) above to run BLAST — the ID lets it exclude the primer's own on-target miRNA.
+                <p className="px-3 py-3 text-xs text-slate-600 leading-relaxed">
+                  Add the miRBase name with its arm (for example <span className="whitespace-nowrap text-slate-800">hsa-miR-21-5p</span>) above to run BLAST: the name lets it exclude the primer's own target.
                 </p>
               </div>
             )}
@@ -327,7 +347,7 @@ export default function AnalyzePage() {
             {lnaEnabled && (
               <div className="rounded-lg border border-slate-200 overflow-hidden">
                 <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">LNA Tm (forward primer)</p>
+                  <p className="text-xs font-semibold text-slate-500">LNA Tm (forward primer)</p>
                   <button
                     onClick={() => setShowLna((v) => !v)}
                     className="text-xs font-semibold px-3 py-1 rounded-lg border bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
@@ -352,7 +372,7 @@ export default function AnalyzePage() {
           </section>
 
           {/* Method notes */}
-          <section className="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1">
+          <section className="text-xs text-slate-600 border-t border-slate-100 pt-3 space-y-1">
             {result.meta?.method_notes?.map((n, i) => <p key={i}>{n}</p>)}
           </section>
         </div>
@@ -367,7 +387,7 @@ export default function AnalyzePage() {
 function SeqWithSeed({ seq }) {
   if (!seq) return null;
   return (
-    <span className="font-mono font-bold tracking-wide break-all text-sm">
+    <span className="seq font-bold text-sm">
       <span className="text-teal-800">{seq.slice(0, 1)}</span>
       <span className="bg-teal-100 text-teal-700 rounded px-0.5">{seq.slice(1, 8)}</span>
       <span className="text-teal-800">{seq.slice(8)}</span>
@@ -386,7 +406,7 @@ function PrimerInput({ label, accent, value, onChange, placeholder, hint }) {
         value={value}
         onChange={(e) => onChange(e.target.value.toUpperCase().replace(/\s/g, ''))}
         placeholder={placeholder}
-        className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-400 focus:ring-1 focus:ring-teal-300 outline-none tracking-wide bg-white"
+        className="w-full font-mono text-sm px-3 py-2 rounded-lg border border-slate-200 focus:border-teal-400 focus:ring-1 focus:ring-teal-300 outline-none bg-white"
       />
       <p className="text-xs text-slate-500 leading-relaxed">{hint}</p>
     </div>
@@ -394,41 +414,51 @@ function PrimerInput({ label, accent, value, onChange, placeholder, hint }) {
 }
 
 const HAIRPIN_STYLE = {
-  safe:       'text-teal-700',
-  acceptable: 'text-teal-700',
+  safe:       'text-green-700',
+  acceptable: 'text-green-700',
   warning:    'text-amber-800',
   critical:   'text-red-700',
 };
 
-function PrimerCard({ title, data }) {
+// Overhang shorter than this: no point hybrid Tm (backend SHORT_DUPLEX_NT_THRESHOLD, as on /results).
+const SHORT_DUPLEX_NT = 8;
+
+function PrimerCard({ title, data, rt = false }) {
   if (!data) return null;
   const hp = data.hairpin ?? {};
   const sd = data.self_dimer ?? {};
+  // Two stem-loop RT primers always pair through their shared 44-nt body: expected, used
+  // at low concentration and refolded before RT — information, not a defect.
+  const sdInfo = rt && !sd.pass_overall;
+  const sdClass = sdInfo ? 'text-slate-800'
+    : sd.critical_3prime ? 'text-red-700' : (!sd.pass_3prime ? 'text-amber-800' : 'text-slate-800');
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <span className="text-sm font-semibold text-slate-700">{title}</span>
-        <span className="font-mono text-xs text-slate-500 break-all">{data.sequence}</span>
+        <span className="text-sm font-semibold text-slate-800">{title}</span>
+        <span className="seq-block text-xs text-slate-700 max-w-full">5′-{data.sequence}-3′</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
-        <Metric label="Length"        value={`${data.length} nt`} />
-        <Metric label="GC"            value={`${data.gc_percent}%`} />
-        <Metric label="GC skew"       value={data.gc_skew} />
-        <Metric label="Tm (NN)"       value={`${data.tm_nn} °C`} />
-        <Metric label="3′-end stab."  value={`${data.end_stability_3prime} kcal/mol`} />
-        <Metric label="Hairpin ΔG"    value={`${hp.dg} kcal/mol`} valueClass={HAIRPIN_STYLE[hp.severity] || 'text-slate-700'} />
-        <Metric label="Self-dimer ΔG" value={`${sd.dg_overall} / ${sd.dg_3prime}`} valueClass={sd.critical_3prime ? 'text-red-700' : (!sd.pass_3prime ? 'text-amber-800' : 'text-slate-700')} />
-        <Metric label="GC clamp"      value={data.gc_clamp?.pass ? 'OK' : 'weak'} valueClass={data.gc_clamp?.pass ? 'text-teal-700' : 'text-amber-800'} />
+        <Metric label="Length"        value={withUnit(data.length, 'nt')} />
+        <Metric label="GC"            value={fmtPct(data.gc_percent)} />
+        <Metric label="Tm (nearest-neighbour)" value={fmtTm(data.tm_nn)} />
+        <Metric label="3′-end stability (−ΔG)" value={`${fmtDg(data.end_stability_3prime)} kcal/mol`} />
+        <Metric label="Hairpin ΔG"    value={`${fmtDg(hp.dg)} kcal/mol`} valueClass={HAIRPIN_STYLE[hp.severity] || 'text-slate-800'} />
+        <Metric label="Self-dimer ΔG, overall" value={`${fmtDg(sd.dg_overall)} kcal/mol`} valueClass={sdClass} />
+        <Metric label="Self-dimer ΔG, 3′ end"  value={`${fmtDg(sd.dg_3prime)} kcal/mol`} valueClass={sdClass} />
+        <Metric label="GC clamp"      value={data.gc_clamp?.pass ? 'Pass' : 'Warning'} valueClass={data.gc_clamp?.pass ? 'text-green-700' : 'text-amber-800'} />
       </div>
-      {(data.homopolymer_run || !data.gc_clamp?.pass || hp.severity === 'warning' || hp.severity === 'critical' || sd.critical_3prime) && (
+      {(data.homopolymer_run || !data.gc_clamp?.pass || hp.severity === 'warning' || hp.severity === 'critical' || sd.critical_3prime || sdInfo) && (
         <ul className="text-xs space-y-0.5 pt-1 border-t border-slate-100">
-          {data.homopolymer_run && <li className="text-amber-800">Homopolymer run &gt; 5 nt — may cause slippage.</li>}
+          {data.homopolymer_run && <li className="text-amber-800">Homopolymer run longer than 5 nt: may cause slippage.</li>}
           {!data.gc_clamp?.pass && <li className="text-amber-800">{data.gc_clamp?.reason}</li>}
           {(hp.severity === 'warning' || hp.severity === 'critical') && <li className={HAIRPIN_STYLE[hp.severity]}>{hp.note}</li>}
-          {sd.critical_3prime && <li className="text-red-700">{sd.note}</li>}
+          {sdInfo
+            ? <li className="text-slate-700"><span className="font-semibold">Information:</span> two stem-loop RT primers pair through their shared stem. This is expected for every stem-loop RT primer; at low concentration and refolded before RT it is not a design defect.</li>
+            : sd.critical_3prime && <li className="text-red-700">{sd.note}</li>}
         </ul>
       )}
-      {data.tm_note && <p className="text-xs text-slate-500 leading-relaxed">{data.tm_note}</p>}
+      {data.tm_note && <p className="text-xs text-slate-600 leading-relaxed">{data.tm_note}</p>}
     </div>
   );
 }
@@ -436,7 +466,7 @@ function PrimerCard({ title, data }) {
 function Metric({ label, value, valueClass = 'text-slate-700' }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-xs text-slate-600">{label}</p>
       <p className={`text-sm font-semibold tabular-nums ${valueClass}`}>{value}</p>
     </div>
   );
@@ -444,10 +474,10 @@ function Metric({ label, value, valueClass = 'text-slate-700' }) {
 
 function ContextRow({ title, ok, note, extra }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 ${ok ? 'border-teal-200 bg-teal-50/50' : 'border-amber-200 bg-amber-50/60'}`}>
+    <div className={`rounded-xl border px-4 py-3 ${ok ? STATUS_CLASSES.Pass : STATUS_CLASSES.Warning}`}>
       <div className="flex items-baseline gap-2">
-        <span className={`text-xs font-bold ${ok ? 'text-teal-700' : 'text-amber-800'}`}>{ok ? '✓' : '⚠'}</span>
-        <span className="text-sm font-semibold text-slate-700">{title}</span>
+        <span className="text-xs font-bold">{ok ? 'Pass' : 'Warning'}</span>
+        <span className="text-sm font-semibold text-slate-800">{title}</span>
       </div>
       <p className="text-xs text-slate-600 leading-relaxed mt-1">{note}</p>
       {extra}
@@ -458,18 +488,14 @@ function ContextRow({ title, ok, note, extra }) {
 function Kv({ k, v, mono }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs bg-white border border-slate-200 rounded px-2 py-0.5">
-      <span className="text-slate-500">{k}</span>
-      <span className={`text-slate-700 font-semibold ${mono ? 'font-mono' : ''}`}>{v}</span>
+      <span className="text-slate-600">{k}</span>
+      <span className={`text-slate-800 font-semibold ${mono ? 'seq' : ''}`}>{v}</span>
     </span>
   );
 }
 
 function dimerStatus(d) {
-  if (d.critical_3prime) return { label: 'Critical', cls: 'text-red-700 bg-red-50 border-red-200' };
-  if (!d.pass_overall || !d.pass_3prime) return { label: 'Watch', cls: 'text-amber-800 bg-amber-50 border-amber-200' };
-  return { label: 'OK', cls: 'text-teal-700 bg-teal-50 border-teal-200' };
-}
-
-function fmt(x) {
-  return typeof x === 'number' ? x.toFixed(2) : x;
+  if (d.critical_3prime) return { label: 'Fail', cls: STATUS_CLASSES.Fail };
+  if (!d.pass_overall || !d.pass_3prime) return { label: 'Warning', cls: STATUS_CLASSES.Warning };
+  return { label: 'Pass', cls: STATUS_CLASSES.Pass };
 }

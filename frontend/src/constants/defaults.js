@@ -121,6 +121,6 @@ export const QPCR_SYSTEM_NOTES = {
   biorad: 'Bio-Rad CFX: Do NOT use ROX. Use CFX-specific master mix (e.g. iTaq Universal SYBR/Probes). Normalization is handled automatically by CFX Manager software.',
   roche:  'Roche LightCycler: Uses capillary tubes. Smaller reaction volume (10–20 µl). FastStart master mix is optimized for this system.',
   qiagen: 'Qiagen Rotor-Gene: Spinning rotor format. No passive reference needed. QuantiTect or QuantiNova master mixes are recommended.',
-  other:  'Consult your instrument manual for reference dye requirements, optimal reaction volume, and compatible master mixes.',
+  other:  '',   // no note: it asked for no action (UI review 2026-11-23)
 };
 

@@ -19,7 +19,7 @@ async function runDesign(page) {
     if (s) s.click();
   });
   // Wait for Design Primers button to become enabled
-  const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+  const designBtn = page.getByRole('button', { name: /^Design primers$/ });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
   await expect(page).toHaveURL('/results', { timeout: 30000 });
@@ -34,23 +34,23 @@ test('empty state shows when navigating directly to /results', async ({ page }) 
   const body = await page.textContent('main');
   if (body && body.includes('No results yet')) {
     await expect(page.getByText('No results yet')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Go to Designer/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Go to the designer/i })).toBeVisible();
   } else {
     // History-preserved state from same session — still valid page (not broken)
-    await expect(page.getByText('Design Results')).toBeVisible();
+    await expect(page.getByText('Design results')).toBeVisible();
   }
 });
 
-test('page title on /results is HG Lab | Primer Design Results', async ({ page }) => {
+test('page title on /results is HG Lab | Design results', async ({ page }) => {
   await runDesign(page);
-  await expect(page).toHaveTitle('HG Lab | Primer Design Results');
+  await expect(page).toHaveTitle('HG Lab | Design results');
 });
 
 // ── Navigation / header ───────────────────────────────────────────
 
-test('results page shows single Design Results header', async ({ page }) => {
+test('results page shows single Design results header', async ({ page }) => {
   await runDesign(page);
-  const headers = page.getByRole('heading', { name: 'Design Results' });
+  const headers = page.getByRole('heading', { name: 'Design results' });
   await expect(headers).toHaveCount(1);
 });
 
@@ -60,16 +60,17 @@ test('Back button returns to the designer', async ({ page }) => {
   await expect(page).toHaveURL('/design');
 });
 
-test('algorithm version badge visible on results page', async ({ page }) => {
+test('algorithm version is in the footer, not a pill on the results page', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toBeVisible();
+  await expect(page.getByTestId('algorithm-version')).toContainText(/Algorithm v\d+\.\d+\.\d+/);
+  await expect(page.getByText(/^v\d+\.\d+\.\d+$/)).toHaveCount(0);
 });
 
 // ── Removed panels (owner's request 2026-11-18) ───────────────────
 
 test('Quality Summary and Normalization advisor are not on the results page', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText('Quality Summary')).toHaveCount(0);
+  await expect(page.getByText(/Quality summary/i)).toHaveCount(0);
   await page.getByRole('button', { name: /Show scientific details/ }).click();
   await expect(page.getByText(/Normalization/i)).toHaveCount(0);
 });
@@ -106,16 +107,16 @@ test('universal reverse primer section visible', async ({ page }) => {
 test('Thermodynamic Parameters section heading visible', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
-  await expect(page.getByText('Thermodynamic Parameters').first()).toBeVisible();
+  await expect(page.getByText('Thermodynamic parameters').first()).toBeVisible();
 });
 
 test('ThermoTable Tab A shows by default', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
-  await expect(page.getByRole('button', { name: /Tab A.*Comparison/i })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Comparison' })).toBeVisible();
   // Tiered (4.0.0): the V4 "Total score" row is replaced by the criteria groups (2026-11-22).
-  await expect(page.getByRole('cell', { name: 'Required · specificity (S)' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'Flexible 2 · PCR (P)' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Specificity (S)' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'PCR (P)' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Tie-break score' })).toBeVisible();
   await expect(page.getByText('Total score')).toHaveCount(0);
 });
@@ -123,24 +124,24 @@ test('ThermoTable Tab A shows by default', async ({ page }) => {
 test('ThermoTable Tab B switch shows per-primer detail', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
-  await page.getByRole('button', { name: /Tab B.*Per-primer/i }).click();
-  await expect(page.getByText('Forward Primer', { exact: true })).toBeVisible();
-  await expect(page.getByText('RT Stem-loop Primer')).toBeVisible();
-  await expect(page.getByText('Universal Reverse Primer').first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Per primer' }).click();
+  await expect(page.getByRole('tabpanel').getByText('Forward primer', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('RT stem-loop primer (shared)')).toBeVisible();
+  await expect(page.getByText('Universal reverse primer (fixed)').first()).toBeVisible();
 });
 
 test('ThermoTable Tab B has copy button on sequence', async ({ page }) => {
   await runDesign(page);
   await showScientificDetails(page);
-  await page.getByRole('button', { name: /Tab B.*Per-primer/i }).click();
-  await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Per primer' }).click();
+  await expect(page.getByRole('button', { name: /Copy/ }).first()).toBeVisible();
 });
 
 // ── ExportBar ─────────────────────────────────────────────────────
 
 test('Export section visible with PDF and CSV buttons', async ({ page }) => {
   await runDesign(page);
-  await expect(page.getByText('Export')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Export' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Download PDF/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Download CSV/i })).toBeVisible();
 });

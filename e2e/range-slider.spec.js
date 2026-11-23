@@ -1,17 +1,17 @@
 import { test, expect } from '@playwright/test';
-import { openParameters } from './helpers.js';
+import { openParameters, openGroup } from './helpers.js';
 
 test.describe('RangeSlider', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/design');
     // Open Required to access the Tm window slider
     await openParameters(page);
-    await page.getByText('Required', { exact: true }).click();
+    await openGroup(page, 'Required');
   });
 
-  test('Tm badge chips show default values 58°C and 62°C', async ({ page }) => {
-    await expect(page.getByText('58°C').first()).toBeVisible();
-    await expect(page.getByText('62°C').first()).toBeVisible();
+  test('Tm window label shows the default 58–62 °C under the thumbs', async ({ page }) => {
+    // Thumbs this close share one centred label; value and unit never break apart.
+    await expect(page.getByText(/^58–62\s°C$/).first()).toBeVisible();
   });
 
   test('drag callout bubble appears on pointer down', async ({ page }) => {

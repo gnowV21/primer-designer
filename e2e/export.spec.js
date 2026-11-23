@@ -15,7 +15,7 @@ async function runDesign(page) {
     const s = btns.find((b) => b.textContent.trim() === 'Search');
     if (s) s.click();
   });
-  const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+  const designBtn = page.getByRole('button', { name: /^Design primers$/ });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
   await expect(page).toHaveURL('/results', { timeout: 30000 });
