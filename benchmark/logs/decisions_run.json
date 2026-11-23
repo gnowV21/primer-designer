@@ -1,0 +1,77 @@
+{
+ "provenance": {
+  "started": "2026-11-23T13:01:00",
+  "git_sha": "5c229eea6f3a23daaed0e79ab4b126733865f311",
+  "git_branch": "decisions-2026-11",
+  "working_tree_clean": true,
+  "algorithm_version": "4.0.0",
+  "scoring_system_default": "tiered",
+  "tiered_flags": {
+   "TIERED_F4_FLOOR": true,
+   "TIERED_GRADE_BY_TIERS": true,
+   "TIERED_V4_COMPLIANT_FIRST": true,
+   "TIERED_BINDING_FLOOR_VETO": true
+  },
+  "design_provenance": {
+   "python": "3.12.8",
+   "primer3_py": "2.0.3",
+   "viennarna": "2.7.2",
+   "scoring_weights_sha256": "1fe2b60ada11",
+   "tiered_thresholds_sha256": "4f9b87786af5",
+   "mirbase_release": "22.1",
+   "mature_fa_sha256": "3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342",
+   "mature_fa_build_date": "2026-10-29"
+  },
+  "python": "3.12.8",
+  "primer3_py": "2.0.3",
+  "viennarna": "2.7.2",
+  "blastn": "blastn: 2.17.0+",
+  "blast_db_metadata": {
+   "mirbase_version": "22.1",
+   "mirbase_version_note": "Built 2026-07-01 from mature.fa while miRBase CURRENT was 22.1 (48,885 mature = the 22.1 count). Kept on 22.1 for consistency with the family and overhang indexes; Release 23.1 (Sep 2026) is a separate upgrade. mature_fa_sha256 added 2026-11-22 after a blastdbcmd dump of this DB matched the pinned backend/data/mirbase_22.1/mature.fa.gz entry by entry (48,885/48,885); new builds write it themselves.",
+   "build_date": "2026-07-01",
+   "sequences_count": {
+    "mirbase_multi": 48885
+   },
+   "makeblastdb_version": "makeblastdb: 2.17.0+",
+   "mature_fa_sha256": "3c521fc9bea3c7993e71cf188b11caf73e2d40ac83454e32876455317cc6d342",
+   "mature_fa_source": "data/mirbase_22.1/mature.fa.gz"
+  },
+  "blast_db_files_sha256": "e31aee0368c57f385995cb137e6d843edefa7af847a05bdf2ab8cca17eb19aa4",
+  "env_BLAST_CACHE_DISABLED": null,
+  "env_BLAST_USAGE_REPORT": "false",
+  "env_SCORING_SYSTEM": null,
+  "blast_cache_path": "backend/data/blast_cache.sqlite"
+ },
+ "steps": [
+  {
+   "step": "validation",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/validate_primers.py",
+   "exit_code": 0,
+   "seconds": 939.9,
+   "log": "benchmark/logs/decisions_validation.log"
+  },
+  {
+   "step": "validation_report",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe backend/scripts/build_validation_report.py",
+   "exit_code": 0,
+   "seconds": 0.3,
+   "log": "benchmark/logs/decisions_validation_report.log"
+  },
+  {
+   "step": "benchmark_validation_block",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/build_benchmark_validation.py --in-place",
+   "exit_code": 0,
+   "seconds": 0.2,
+   "log": "benchmark/logs/decisions_benchmark_validation_block.log"
+  },
+  {
+   "step": "validation_v4",
+   "cmd": "C:\\Users\\TIEN VUONG\\AppData\\Local\\Programs\\Python\\Python312\\python.exe validation/validate_primers.py --scoring-system v4 --out D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\benchmark\\logs\\freeze_v4\\results.csv --json-out D:\\Users\\TIEN VUONG\\Desktop\\TienVuong\\THESIS\\WEB\\primer-designer\\benchmark\\logs\\freeze_v4\\results.json",
+   "exit_code": 0,
+   "seconds": 786.8,
+   "log": "benchmark/logs/decisions_validation_v4.log"
+  }
+ ],
+ "finished": "2026-11-23T13:29:54"
+}
