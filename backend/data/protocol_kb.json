@@ -1,5 +1,5 @@
 {
-  "kb_version": "1.3",
+  "kb_version": "1.4",
   "updated": "2026-11-23",
   "description": "Protocol/Evidence Advisor knowledge base — 8 evidence-backed rules (P1-P8) + normalization rules (N1-N4). Each rule has citation DOIs. Descriptive only: match scores are not prescriptive.",
   "rules": [
@@ -12,7 +12,7 @@
       },
       "recommendation": "A seed-family member is at high or identical cross-reactivity risk for this assay. In stem-loop RT-qPCR, members that differ near the 3′ end are told apart mainly at the RT step, by the stem-loop primer and its 3′ overhang, not by the detection chemistry (Chen et al. 2005); SYBR Green reports every amplified product and adds no discrimination of its own. Test the assay on synthetic templates of the close family members; if the cross-signal is too high, design a separate stem-loop RT primer for each member or use a probe-based (TaqMan) assay.",
       "match_weights": { "signal_method_sybr": 0.5, "family_risk_high": 0.5 },
-      "pros": ["TaqMan eliminates non-specific signal", "Separate RT primers give single-member specificity"],
+      "pros": ["A probe assay gives no signal from primer-dimers or unrelated products (it does not by itself separate family members)", "A separate RT primer per member can improve discrimination; confirm it on synthetic templates"],
       "cons": ["TaqMan probes add cost", "Multiple RT reactions increase workload"],
       "sources": [
         { "tag": "Wang17", "doi": "10.3892/mmr.2017.8297", "pmid": "29257343", "note": "let-7 panel; members differ by 1 nt; SYBR required stringent annealing optimisation" },
@@ -32,7 +32,7 @@
       "pros": [
         "Improved Tm and hybridisation affinity for short miRNA targets [Andreasen10]",
         "Reliable down to ~20 copies per reaction [Kunwar23]",
-        "Suitable for degraded RNA (FFPE, plasma)"
+        "Reported for low-input clinical RNA [Andreasen10]; check on your own sample type"
       ],
       "cons": [
         "LNA oligo synthesis cost is higher than standard DNA",
@@ -51,7 +51,7 @@
       "when": {
         "signal_method": "sybr"
       },
-      "recommendation": "Melting-curve analysis is mandatory with SYBR Green. Non-specific signal (primer-dimer, off-target) only becomes apparent in the melting curve and is not detectable from Cq alone.",
+      "recommendation": "Run a melting curve with every SYBR Green assay. Non-specific products (primer-dimer, off-target) are not visible in the Cq; the melting curve, or a gel, shows them.",
       "match_weights": { "signal_method_sybr": 1.0 },
       "pros": ["Detects primer-dimer and non-specific amplification products", "Low cost — no probe required"],
       "cons": ["Adds analysis step", "Cannot multiplex (single fluorescence channel)"],
@@ -86,7 +86,7 @@
       "match_weights": { "edge_E1": 0.5, "edge_E4": 0.5 },
       "pros": [
         "LNA increases Tm by ~2-8°C per substitution for short targets [Andreasen10]",
-        "5′ tail extension achieves Tm without changing binding specificity"
+        "A longer 5′ tail raises the full-primer Tm (from PCR cycle 2 on) without changing the miRNA-specific region; it does not help cycle 1, where only that region binds"
       ],
       "cons": [
         "LNA positions require empirical optimisation",
@@ -107,8 +107,8 @@
       "recommendation": "For clinical laboratory applications, LNA-qPCR may offer operational advantages (CAP/CLIA compatibility, kit-based workflow). Both stem-loop TaqMan and LNA-qPCR are analytically comparable at >20 copies per reaction.",
       "match_weights": { "clinical_context": 1.0 },
       "pros": [
-        "LNA-qPCR demonstrated CAP/CLIA-compatible workflow [Kunwar23]",
-        "Stem-loop TaqMan well-established; extensive published validation [Chen05]"
+        "LNA-qPCR was used in a CAP/CLIA-compatible workflow [Kunwar23]",
+        "Stem-loop TaqMan is widely used since its description [Chen05]"
       ],
       "cons": [
         "Regulatory validation (IVD) requires additional clinical studies beyond analytical performance",
@@ -126,11 +126,11 @@
         "multiplex": true,
         "target_count_min": 3
       },
-      "recommendation": "Use geNorm or NormFinder to select ≥2 stable reference miRNAs rather than a single U6 housekeeping gene. For panels ≥10 targets, global-mean normalization avoids needing candidate reference genes. Reference stability is sample-type dependent (Fujimoto 2018, Liang 2018).",
+      "recommendation": "Consider geNorm or NormFinder to select ≥2 stable reference miRNAs rather than a single U6 reference. For larger panels (≥10 targets, a threshold of this tool), global-mean normalization is an option that needs no candidate references; it assumes most miRNAs do not change. Reference stability depends on the sample type (Fujimoto 2018, Liang 2018).",
       "match_weights": { "always": 0.3, "multi_target": 0.4, "difficult_sample": 0.3 },
       "pros": [
-        "geNorm/NormFinder identifies stable references from a panel, reducing systematic bias [Hellemans14]",
-        "Global-mean normalization requires no prior gene selection — suitable for panels >10 targets [Hacimoto24]",
+        "geNorm/NormFinder rank candidate references by stability in your data, which can reduce systematic bias [Hellemans14]",
+        "Global-mean normalization needs no prior reference selection (larger panels)",
         "Reference choice depends on sample type: tissue ≠ plasma ≠ FFPE (Fujimoto 2018)"
       ],
       "cons": [
@@ -152,17 +152,17 @@
         "sample_types": ["plasma", "serum", "cfRNA", "urine", "saliva"],
         "spike_in": false
       },
-      "recommendation": "For circulating miRNA in biofluids: (1) add cel-miR-39-3p spike-in before RNA extraction to correct for variable extraction efficiency; (2) assess hemolysis (miR-16/miR-451a ratio, McDonald 2011); (3) use EDTA tubes and process within 2 h to minimize hemolysis-driven miRNA contamination. Hemolysis can introduce erythrocyte miRNAs (miR-92a, miR-451a) at >10-fold, masking true biofluid expression.",
+      "recommendation": "For circulating miRNA in biofluids: (1) add cel-miR-39-3p spike-in before RNA extraction to correct for variable extraction efficiency; (2) assess hemolysis (miR-16/miR-451a ratio, McDonald 2011); (3) use one tube type for the whole study (EDTA vs serum changes the profile, Zhelankin 2022) and process every sample within the same short time window. Hemolysis can raise erythrocyte miRNAs (miR-92a, miR-451a) many-fold and mask the biofluid signal.",
       "match_weights": { "biofluid_sample": 0.8, "low_input_sample": 0.4 },
       "pros": [
-        "cel-miR-39-3p spike-in corrects extraction efficiency variation and RT inhibition [Tan15]",
-        "Hemolysis check (miR-16/451a ratio) protects against erythrocyte miRNA contamination [McDonald11]",
-        "EDTA tubes reduce hemolysis vs. serum — use when study design permits"
+        "cel-miR-39-3p spike-in can correct for variation in extraction efficiency [Tan15]",
+        "A hemolysis check (miR-16 / miR-451a) flags samples affected by erythrocyte miRNAs [McDonald11]",
+        "Tube type (EDTA vs serum) changes circulating miRNA yield and profile [Zhelankin22]; keep it constant"
       ],
       "cons": [
-        "Spike-in must be added before lysis/extraction, not after — incorrect timing invalidates normalization",
-        "Does not correct for differences in total RNA input — use synthetic miRNA ladder for input normalization",
-        "Hemolysis assessment adds one extra qPCR reaction per sample"
+        "The spike-in corrects extraction losses only if it is added before lysis/extraction",
+        "It does not correct for differences in sample input; use the same biofluid volume per extraction",
+        "The hemolysis check adds qPCR reactions per sample"
       ],
       "sources": [
         { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization for serum/plasma miRNA; cel-miR-39 as exogenous control" },
@@ -177,11 +177,11 @@
       "when": {
         "sample_types": ["tissue", "cell_line", "cell-line", "cell", "cells"]
       },
-      "recommendation": "Select ≥3 stable endogenous reference miRNAs using geNorm or NormFinder. Reference stability is tissue-specific — validate in your tissue cohort before quantification.",
+      "recommendation": "Consider selecting ≥3 stable endogenous reference miRNAs with geNorm or NormFinder. Reference stability can differ between tissues; check it in your own cohort before quantification.",
       "match_weights": { "always": 0.5, "tissue_sample": 0.5 },
       "pros": [
-        "geNorm/NormFinder identify the most stable references in your specific dataset [Hellemans14]",
-        "Multiple reference miRNAs reduce systematic normalization bias"
+        "geNorm/NormFinder rank candidate references by stability in your dataset [Hellemans14]",
+        "Several reference miRNAs can reduce normalization bias compared with one"
       ],
       "cons": [
         "Requires a pilot experiment to identify stable references",
@@ -200,15 +200,15 @@
       "when": {
         "sample_types": ["plasma", "serum", "cfRNA", "urine", "saliva", "biofluid"]
       },
-      "recommendation": "Add exogenous cel-miR-39-3p spike-in before RNA extraction to correct extraction efficiency. For panels ≥10 targets, use global-mean normalization. Run hemolysis QC (miR-451a/miR-16 ratio) to exclude hemolyzed samples.",
+      "recommendation": "Add an exogenous cel-miR-39-3p spike-in before RNA extraction to correct for extraction efficiency. For larger panels (≥10 targets, a threshold of this tool), global-mean normalization is an option. Run a hemolysis check (miR-451a / miR-16) and consider excluding hemolyzed samples.",
       "match_weights": { "biofluid_sample": 1.0 },
       "pros": [
-        "cel-miR-39-3p spike-in corrects extraction efficiency variation [Tan15]",
-        "Hemolysis check protects against erythrocyte miRNA contamination [McDonald11]"
+        "cel-miR-39-3p spike-in can correct for variation in extraction efficiency [Tan15]",
+        "A hemolysis check flags samples affected by erythrocyte miRNAs [McDonald11]"
       ],
       "cons": [
-        "Spike-in must be added before lysis/extraction — incorrect timing invalidates correction",
-        "Global-mean normalization requires sufficient panel size (≥10 targets)"
+        "The spike-in corrects extraction losses only if it is added before lysis/extraction",
+        "Global-mean normalization needs a large enough panel (≥10 targets here, a tool threshold)"
       ],
       "sources": [
         { "tag": "Tan15", "doi": "10.1093/nar/gkv007", "pmid": "25662605", "note": "Spike-in normalization for serum/plasma miRNA" },
@@ -222,11 +222,11 @@
       "when": {
         "sample_types": ["ffpe", "low_input", "low-input", "degraded"]
       },
-      "recommendation": "Use LNA-enhanced primers for improved sensitivity at low RNA input. Validate reference miRNA stability empirically — extraction variability is high in FFPE and low-input samples.",
+      "recommendation": "LNA-enhanced primers may improve sensitivity at low RNA input. Check reference miRNA stability in your own samples: extraction variability is typically higher in FFPE and low-input samples.",
       "match_weights": { "difficult_sample": 1.0 },
       "pros": [
-        "LNA-enhanced primers improve Tm and hybridisation affinity for degraded RNA [Andreasen10]",
-        "Multiple reference miRNAs reduce impact of high extraction variability"
+        "LNA-enhanced primers raise Tm and hybridisation affinity [Andreasen10]",
+        "Several reference miRNAs can reduce the effect of extraction variability"
       ],
       "cons": [
         "LNA synthesis is more expensive",
@@ -244,15 +244,15 @@
       "when": {
         "target_count_min": 10
       },
-      "recommendation": "For panels ≥10 miRNA targets, global-mean normalization avoids the need to pre-select reference miRNAs. Assumes the majority of miRNAs are unchanged between conditions.",
+      "recommendation": "For larger panels (≥10 targets, a threshold of this tool), global-mean normalization is an option that needs no pre-selected reference miRNAs. It assumes most miRNAs do not change between conditions.",
       "match_weights": { "large_panel": 1.0 },
       "pros": [
-        "No need for reference gene pre-selection — suitable for panels >10 targets [Hellemans14]",
+        "Needs no pre-selected reference miRNAs [Hellemans14]",
         "Reduces bias from single reference gene instability"
       ],
       "cons": [
         "Assumes majority of miRNAs unchanged — may not hold in highly dysregulated states",
-        "Not suitable for small panels (<10 targets)"
+        "Not for small panels (<10 targets here)"
       ],
       "sources": [
         { "tag": "Hellemans14", "doi": "10.1007/978-1-4939-0733-5_3", "pmid": "24567180", "note": "Global-mean normalization for large panels" }
