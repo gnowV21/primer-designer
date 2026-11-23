@@ -198,9 +198,9 @@ const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)}%`);
 const NB = '\u00a0';
 
 /** tmReverse: Tm of the universal reverse primer at the design's conditions, as the
- *  ranking computed it (ranking.pcr.tm_pair.tm_reverse). universal_reverse.tm is a
- *  pre-calculated constant (60.4 °C) the engine does not use; it is shown only for
- *  sets without a ranking block. */
+ *  ranking computed it (ranking.pcr.tm_pair.tm_reverse). universal_reverse.tm holds the
+ *  same computed value since 2026-11-23 (records saved earlier hold the old fixed
+ *  60.4 °C), so it is the fallback for sets without a ranking block. */
 function SharedPrimers({ stemloopRt: rt, reverse, tmReverse, closest }) {
   const tmR = tmReverse ?? reverse?.tm;
   const iso = rt?.three_prime_isomir;
