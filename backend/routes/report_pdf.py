@@ -101,7 +101,7 @@ def _styles() -> dict:
         "head_r": ParagraphStyle("head_r", fontName=SANS_B, fontSize=8.3, leading=10.4,
                                  textColor=colors.white, alignment=TA_RIGHT),
         # Sequences: mono, never wrapped (no CJK / no spaces → one line).
-        "seq": ParagraphStyle("seq", fontName=MONO, fontSize=8.6, leading=10.6, textColor=TEXT,
+        "seq": ParagraphStyle("seq", fontName=MONO, fontSize=8.4, leading=10.6, textColor=TEXT,
                               splitLongWords=0),
         "seq_s": ParagraphStyle("seq_s", fontName=MONO, fontSize=7.6, leading=10.0, textColor=TEXT,
                                 splitLongWords=0),
@@ -480,7 +480,7 @@ def build_pdf_bytes(results: dict, blast_result=None, include_checklist: bool = 
                  fmt_tm(sl.get("tm_full")) + "*", fmt_pct(sl.get("gc_percent"))],
                 ["Universal reverse", _seq(rev.get("sequence")), f"{rev.get('length', '?')} nt",
                  fmt_tm(reverse_tm(results)), fmt_pct(rev.get("gc_percent"))]]
-        story.append(_table(rows, [0.17, 0.555, 0.09, 0.105, 0.08], st, width=W,
+        story.append(_table(rows, [0.15, 0.575, 0.095, 0.10, 0.08], st, width=W,
                             right_cols=(2, 3, 4), mono_cells=lambda r, c: r > 0 and c == 1))
         p(f"Tm: nearest-neighbour model at the design conditions {cite('SantaLucia1998')}. "
           "*RT stem-loop: full-primer DNA:DNA Tm, indicative only; it is not the "
