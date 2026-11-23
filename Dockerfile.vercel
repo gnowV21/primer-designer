@@ -45,6 +45,7 @@ RUN pip install --no-cache-dir -r backend/requirements.txt \
 # the built frontend. No spec, docs, validation, calibration, crossreactivity, e2e
 # or outputs (see also .dockerignore).
 COPY backend/app.py backend/
+COPY backend/assets backend/assets
 COPY backend/algorithm backend/algorithm
 COPY backend/routes backend/routes
 COPY backend/db backend/db

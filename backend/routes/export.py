@@ -21,17 +21,13 @@ from datetime import date
 from flask import Blueprint, jsonify, request, make_response
 
 from algorithm.constants import NTC_DELTA_CQ_MIN
+from utils.report_text import clean, fmt_dg, rule_labels
 
 try:
-    from reportlab.platypus import (
-        SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer,
-    )
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib import colors
-    from reportlab.lib.units import cm
+    from routes import report_pdf
     _REPORTLAB_AVAILABLE = True
 except ImportError:
+    report_pdf = None
     _REPORTLAB_AVAILABLE = False
 
 export_bp = Blueprint("export", __name__)
@@ -109,91 +105,6 @@ def export_primers():
 
 # ── CSV builder ───────────────────────────────────────────────────
 
-# ── MIQE 2.0 §1 "Assay Design" self-report ────────────────────────
-
-def _fmt_range(pair, unit=""):
-    """Format a [min, max] pair like '58–62 °C', tolerant of None/missing."""
-    if not isinstance(pair, (list, tuple)) or len(pair) != 2:
-        return "—"
-    lo, hi = pair
-    if lo is None and hi is None:
-        return "—"
-    suffix = f" {unit}" if unit else ""
-    return f"{lo}{suffix}" if lo == hi else f"{lo}–{hi}{suffix}"
-
-
-def _miqe_modifications(top3):
-    """Report oligo modifications (e.g. LNA) if any were used (MIQE 2.0 §1)."""
-    for s in (top3 or []):
-        lna = s.get("lna_positions") or s.get("lna") or []
-        if lna:
-            return f"LNA at forward positions {lna}"
-    return "None (standard DNA oligonucleotides)"
-
-
-def _ions_row(ds: dict) -> str:
-    """User-entered ions, or the effective values the engine used when none were given."""
-    if ds.get("na_mm") is not None:
-        return (f"Na+ {ds.get('na_mm')} / K+ {ds.get('k_mm') or 0} / Mg2+ {ds.get('mg_mm')} / "
-                f"dNTP {ds.get('dntp_mm')}")
-    ef = ds.get("effective_p3") or {}
-    if not ef:
-        return "—"
-    return (f"monovalent {ef['mv_conc']:g} / Mg2+ {ef['dv_conc']:g} / dNTP {ef['dntp_conc']:g} "
-            "(tool defaults)")
-
-
-def _miqe_design_rows(meta, top3):
-    """MIQE 2.0 §1 rows the design tool can self-report (reagent prep / assay design)."""
-    ds = meta.get("design_settings", {}) or {}
-    tool = (
-        f"HG Lab Stem-loop RT-qPCR Primer Designer "
-        f"(algorithm v{meta.get('algorithm_version', '?')}, "
-        f"scoring {meta.get('scoring_version', 'V4')})"
-    )
-    ident = " · ".join(filter(None, [
-        meta.get("mirna_id") or "—",
-        meta.get("species") or None,
-        (f"accession {meta['mirna_accession']}" if meta.get("mirna_accession") else None),
-        (f"{meta.get('mirna_length')} nt" if meta.get("mirna_length") else None),
-    ]))
-    pv = meta.get("provenance") or {}
-    engines = " · ".join(filter(None, [
-        f"primer3-py {pv['primer3_py']}" if pv.get("primer3_py") else None,
-        f"ViennaRNA {pv['viennarna']}" if pv.get("viennarna") else None,
-        f"scoring system {pv['scoring_system']}" if pv.get("scoring_system") else None,
-        f"weights #{pv['scoring_weights_sha256']}" if pv.get("scoring_weights_sha256") else None,
-        (f"tiered thresholds #{pv['tiered_thresholds_sha256']}"
-         if pv.get("tiered_thresholds_sha256") else None),
-        f"miRBase release {pv.get('mirbase_release', 'unknown')}" if pv else None,
-        f"mature.fa sha256 {pv['mature_fa_sha256']}" if pv.get("mature_fa_sha256") else None,
-    ])) or "—"
-    return [
-        ("Design tool + version + settings", tool),
-        ("Computation engines (reproducibility)", engines),
-        ("Target (symbol · species · accession · length)", ident),
-        ("Detection method", str(ds.get("detection_method", "—")).upper()),
-        ("RT 3' overhang (binding region)",
-         f"{ds.get('rt_overhang_nt', meta.get('binding_region_nt', '?'))} nt (Chen 2005 stem-loop)"),
-        ("Primer Tm target", _fmt_range(ds.get("tm_target_c"), "°C")),
-        ("Primer length", _fmt_range(ds.get("primer_length_nt"), "nt")),
-        ("Primer GC", _fmt_range(ds.get("gc_percent"), "%")),
-        ("Amplicon length target", _fmt_range(ds.get("amplicon_bp"), "bp")),
-        ("Reaction ions (mM)", _ions_row(ds)),
-        ("Primer concentration",
-         f"{ds['primer_nm'] if ds.get('primer_nm') is not None else (ds.get('effective_p3') or {}).get('dna_conc', '?')} nM"),
-        ("Buffer pH", str(ds["buffer_ph"]) if ds.get("buffer_ph") is not None else "—"),
-        ("Oligo modifications", _miqe_modifications(top3)),
-        ("Planned Ta / cycles",
-         f"{ds.get('annealing_temp_c') or '?'} °C / {ds.get('total_cycles') or '?'} cycles"),
-        ("Efficiency acceptance", _fmt_range(ds.get("efficiency_acceptance_pct"), "%")),
-        ("Quantification · reference",
-         " · ".join(str(x) for x in (ds.get("quantification"), ds.get("reference")) if x) or "—"),
-        ("Sample type · instrument",
-         " · ".join(str(x) for x in (ds.get("sample_type"), ds.get("qpcr_instrument")) if x) or "—"),
-    ]
-
-
 def _build_csv(results: dict, filename: str, blast_result=None, include_checklist: bool = True):
     meta    = results.get("metadata", {})
     top3    = results.get("top3", [])
@@ -251,10 +162,10 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         writer.writerow([
             rank, "Forward", s.get("sequence", ""), s.get("length", ""),
             _fmt(s.get("tm_full")), _fmt(s.get("gc_percent")),
-            _fmt(hp), _fmt(sd),
+            _dg2(hp), _dg2(sd),
             s.get("amplicon_size", ""), *scores,
             "; ".join(filter(None, [
-                f"Binding region {s.get('specific_length', '?')} nt",
+                f"Forward-primer specific length {s.get('specific_length', '?')} nt",
                 _selection_note(s),
                 _ranking_note(s),
                 _v4_rules_note(s),
@@ -267,7 +178,7 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     writer.writerow([
         "", "RT_StemLoop", sl.get("sequence", ""), sl.get("length", ""),
         _fmt(sl.get("tm_full")), _fmt(sl.get("gc_percent")),
-        _fmt(sl_sc.get("hairpin_dg")), "", "", *blank_scores,
+        _dg2(sl_sc.get("hairpin_dg")), "", "", *blank_scores,
         _rt_tm_note(sl),
     ])
 
@@ -275,15 +186,19 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
     rev_sc = rev.get("self_structure_check", {})
     writer.writerow([
         "", "Universal_Reverse", rev.get("sequence", ""), rev.get("length", ""),
-        _fmt(rev.get("tm")), _fmt(rev.get("gc_percent")),
-        _fmt(rev_sc.get("hairpin_dg")), _fmt(rev_sc.get("self_dimer_dg")),
-        "", *blank_scores, "Fixed universal reverse [Chen05][K11]",
+        _fmt(report_pdf.reverse_tm(results) if report_pdf else rev.get("tm")),
+        _fmt(rev.get("gc_percent")),
+        _dg2(rev_sc.get("hairpin_dg")), _dg2(rev_sc.get("self_dimer_dg")),
+        "", *blank_scores,
+        "Fixed universal reverse (Chen 2005; Kramer 2011); Tm at the design conditions",
     ])
 
     # ── Assay design (MIQE 2.0 §1) — the tool self-reports itself + settings ──
     buf.write("\r\n# ASSAY DESIGN (MIQE 2.0 §1: bioinformatics tool, version, settings)\r\n")
     writer.writerow(["Design_Parameter", "Value"])
-    for _label, _val in _miqe_design_rows(meta, top3):
+    for _label, _val in report_pdf.design_rows(meta, top3):
+        writer.writerow([_label, _val])
+    for _label, _val in report_pdf.reproducibility_rows(meta, date.today().isoformat()):
         writer.writerow([_label, _val])
 
     # ── Specificity summary — its own clearly-delimited 2-column block ──
@@ -293,14 +208,16 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
         buf.write(f"# {prov}\r\n")
     writer.writerow(["Off_target_Metric", "Value"])
     blines = _blast_lines(blast_result)
+    db = report_pdf.design_blast(results)
     if blines:
         for label, val in blines:
             writer.writerow([label, val])
+    elif db.get("available"):
+        writer.writerow(["BLAST off-target (design screen, rank 1)",
+                         f"{db.get('overall_risk')}; {db.get('medium_hits') or 0} medium-risk hits; "
+                         f"S1 level {db.get('score')} of 5"])
     else:
-        writer.writerow([
-            "BLAST off-target",
-            "not assessed — run the Off-target (BLAST) check before ordering",
-        ])
+        writer.writerow(["BLAST off-target", "Not assessed"])
 
     # Primer-binding (RT 3'-overhang x forward 5'-prefix) collision axes — the scoring axis.
     oc_rows, _oc_interp = _overhang_axis_summary(results)
@@ -335,666 +252,55 @@ def _build_csv(results: dict, filename: str, blast_result=None, include_checklis
 
 
 def _append_checklist_csv(writer, buf, results: dict, blast_result=None):
-    """Append MIQE 2.0-aligned validation checklist block to CSV. [Bustin 2025]"""
-    # Auto-fill specificity data from results
-    spec = results.get("specificity_warnings", {})
-    cr   = spec.get("cross_reactivity", {})
-    cr_risks = [r.get("risk") for r in cr.get("cross_reactivity", [])]
-    worst_family_risk = (
-        "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
-        else ("LOW" if "LOW" in cr_risks else "SAFE")
-    )
-    # Fill in the BLAST off-target risk if the check was run and passed in.
-    _bsumm = (blast_result or {}).get("summary", {}) if isinstance(blast_result, dict) else {}
-    blast_risk = _bsumm.get("overall_risk", "")
-
-    buf.write("\r\n# VALIDATION CHECKLIST (MIQE 2.0-aligned, Bustin et al. 2025 Clin Chem 71:634)\r\n")
+    """Append the MIQE 2.0-aligned validation checklist block to the CSV [Bustin 2025].
+    The in-silico specificity row reports what the design (and the optional
+    'Show all hits' check) actually assessed — same text as the PDF."""
+    acc, val = report_pdf.specificity_check_value(results, blast_result)
+    buf.write("\r\n# VALIDATION CHECKLIST (MIQE 2.0, Bustin et al. 2025 Clin Chem 71:634)\r\n")
     buf.write("# Fill in Pass (Y/N) and Measured_Value after wet-lab validation.\r\n")
     buf.write("# For research use only. Validate primers experimentally before use.\r\n")
     writer.writerow(["Item", "Acceptance_Criterion", "Reference", "Pass", "Measured_Value"])
-
     checklist = [
-        (
-            "No-template control (NTC)",
-            f"No amplification, or Cq ≥{NTC_DELTA_CQ_MIN} cycles later than the latest-Cq sample",
-            "HG Lab convention; reporting per MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "No-RT control",
-            "No signal (confirms absence of genomic DNA / self-priming)",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Melting curve (SYBR Green)",
-            "Single peak; no primer-dimer or non-specific product",
-            "MIQE 2.0, Varkonyi-Gasic 2007",
-            "",
-            "",
-        ),
-        (
-            "Standard curve",
-            "≥5 dilution points, ≥1 log range (10-fold serial dilutions)",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "PCR efficiency (report with CI)",
-            "90–110%  [E = 10^(−1/slope) − 1]; report ±95% confidence interval",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "R² (linearity)",
-            "≥ 0.98",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "LOD and LLOQ/ULOQ (dynamic range)",
-            "Determine and report LOD, lower/upper limits of quantification",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Efficiency-corrected quantification",
-            "Report efficiency-corrected quantities with prediction intervals; avoid Cq/ΔΔCq alone",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Reference-gene normalization",
-            "≥2 reference genes, geometric-mean normalization, stability validated in-context",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Technical replicates",
-            "≥3 replicates; report Cq mean and SD (repeatability)",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Reproducibility (inter-assay)",
-            "Report variation across days / operators / instruments",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Raw fluorescence data",
-            "Deposit/submit raw fluorescence data (RDML or RDES format)",
-            "MIQE 2.0",
-            "",
-            "",
-        ),
-        (
-            "Specificity (in-silico)",
-            (
-                f"Family cross-reactivity: {worst_family_risk} risk "
-                f"(see family_cross_reactivity in design output). "
-                f"BLAST off-target risk: {blast_risk or 'run /api/blast-check to assess'}."
-            ),
-            "Phase 3 specificity_check",
-            "",
-            worst_family_risk,
-        ),
+        ("No-template control (NTC)",
+         f"No amplification, or Cq ≥ {NTC_DELTA_CQ_MIN} cycles later than the latest-Cq sample",
+         "HG Lab convention; reported per MIQE 2.0"),
+        ("No-RT control", "No signal (excludes genomic DNA and self-priming)", "MIQE 2.0"),
+        ("Melting curve (SYBR Green)", "Single peak; no primer-dimer or non-specific product",
+         "MIQE 2.0; Varkonyi-Gasic 2007"),
+        ("Standard curve", "≥ 5 points of 10-fold serial dilutions, ≥ 1 log range", "MIQE 2.0"),
+        ("PCR efficiency (with 95% CI)", "90–110%, E = 10^(−1/slope) − 1", "MIQE 2.0"),
+        ("R² (linearity)", "≥ 0.98", "MIQE 2.0"),
+        ("LOD, LLOQ and ULOQ", "Determine and report the limits of detection and quantification",
+         "MIQE 2.0"),
+        ("Efficiency-corrected quantification",
+         "Report efficiency-corrected quantities with prediction intervals; avoid ΔΔCq alone",
+         "MIQE 2.0"),
+        ("Reference-gene normalization",
+         "≥ 2 reference genes, geometric mean, stability validated in your samples", "MIQE 2.0"),
+        ("Technical replicates", "≥ 3 replicates; report Cq mean ± SD (repeatability)", "MIQE 2.0"),
+        ("Reproducibility (inter-assay)", "Variation across days, operators and instruments",
+         "MIQE 2.0"),
+        ("Raw fluorescence data", "Deposit raw data (RDML or RDES)", "MIQE 2.0"),
     ]
+    for item, crit, ref in checklist:
+        writer.writerow([item, crit, ref, "", ""])
+    writer.writerow(["Specificity (in silico)", acc, "In-silico design output", "", val])
 
-    for row in checklist:
-        writer.writerow(list(row))
 
-
-# ── PDF builder ───────────────────────────────────────────────────
-
-def _seq_with_seed_markup(seq: str) -> str:
-    """Reportlab markup for a mature miRNA sequence with the seed (nt 2-8) picked
-    out in brand teal bold — the app's signature visual motif. Seed = positions
-    2-8 from the 5' end (0-indexed 1:8), which define target recognition."""
-    seq = _html.escape(str(seq))
-    if len(seq) < 8:
-        return f"<font name='Courier'>{seq}</font>"
-    pre, seed, post = seq[:1], seq[1:8], seq[8:]
-    return (
-        f"<font name='Courier'>{pre}"
-        f"<font color='{_TEAL}'><b>{seed}</b></font>{post}</font>"
-    )
-
+# ── PDF ───────────────────────────────────────────────────────────
 
 def _build_pdf(results: dict, filename: str, blast_result=None, include_checklist: bool = True,
                history_count: int = 0):
-    from reportlab.lib import colors as rl_colors
-    teal     = rl_colors.HexColor(_TEAL)
-    teal_bg  = rl_colors.HexColor(_TEAL_BG)
-
-    meta  = results.get("metadata", {})
-    top3  = results.get("top3", [])
-    sl    = results.get("stemloop_rt", {})
-    rev   = results.get("universal_reverse", {})
-    gw    = results.get("global_warnings", [])
-    ec    = results.get("edge_cases", [])
-    pa    = results.get("protocol_advice", [])
-
-    # Escape meta strings used in reportlab XML Paragraphs
-    esc = _html.escape
-    e = esc  # keep short alias for meta fields below
-    mirna_id_safe  = e(str(meta.get("mirna_id", "unknown")))
-    mirna_seq_safe = e(str(meta.get("mirna_sequence", "")))
-    alg_ver_safe   = e(str(meta.get("algorithm_version", "?")))
-    score_ver_safe = e(str(meta.get("scoring_version", "V4")))
-
-    buf = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buf, pagesize=A4,
-        leftMargin=2*cm, rightMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm,
-    )
-    styles = getSampleStyleSheet()
-    h1  = styles["Heading1"]
-    h2  = styles["Heading2"]
-    h3  = styles["Heading3"]
-    body = styles["Normal"]
-    mono_style = styles["Code"]
-
-    story = []
-
-    # ── Header ──────────────────────────────────────────────────
-    story.append(Paragraph("HG Lab — Stem-loop RT-qPCR Primer Report", h1))
-    story.append(Spacer(1, 0.2*cm))
-    story.append(Paragraph(
-        f"miRNA: <b>{mirna_id_safe}</b> "
-        f"({meta.get('mirna_length', '?')} nt) &nbsp;|&nbsp; "
-        f"Sequence 5′→3′: {_seq_with_seed_markup(meta.get('mirna_sequence', ''))} "
-        f"&nbsp;<font size=7 color='#64748B'>(seed nt 2-8 highlighted)</font>",
-        body,
-    ))
-    story.append(Paragraph(
-        f"Exported: {date.today().isoformat()} &nbsp;|&nbsp; "
-        f"Algorithm v{alg_ver_safe} &nbsp;|&nbsp; "
-        f"Scoring: {score_ver_safe}",
-        body,
-    ))
-    story.append(Spacer(1, 0.5*cm))
-
-    # ── Recommended set (Rank 1) ─────────────────────────────────
-    if top3:
-        best = top3[0]
-        story.append(Paragraph("Recommended Primer Set (Rank 1)", h2))
-        if best.get("ranking"):
-            # Tiered (4.0.0): grade + the three tiers + flags; total_score is only the
-            # final tie-break (SPEC_ui_tiered_4.0.0 §2.5).
-            quality = (f"<b>{e(_ranking_note(best))}</b> &nbsp;|&nbsp; tie-break score "
-                       f"{e(_fmt(best['ranking'].get('detailed_score')))}")
-        else:
-            quality = (f"Score: <b>{e(str(best.get('total_score', '?')))}</b> — "
-                       f"{e(str(best.get('grade', '')))}")
-        story.append(Paragraph(
-            f"{quality} "
-            f"&nbsp;|&nbsp; Total primers designed: {meta.get('candidates_passed_prefilter', '?')}",
-            body,
-        ))
-
-        # Wrap sequence cells in a mono Paragraph so long (50-nt) strings wrap
-        # inside the cell instead of overflowing into the next column.
-        seq_cell = ParagraphStyle("seqcell", fontName="Courier", fontSize=7, leading=8.5, wordWrap="CJK")
-        def _sq(x):
-            return Paragraph(esc(str(x or "")), seq_cell)
-        seq_table_data = [
-            ["Role", "Sequence (5′→3′)", "Length", "Tm", "GC%"],
-            ["Forward", _sq(best.get("sequence", "")), f"{best.get('length', '?')} nt",
-             f"{_fmt(best.get('tm_full'))}°C", f"{_fmt(best.get('gc_percent'))}%"],
-            ["RT Stem-loop", _sq(sl.get("sequence", "")), f"{sl.get('length', '?')} nt",
-             f"{_fmt(sl.get('tm_full'))}°C", f"{_fmt(sl.get('gc_percent'))}%"],
-            ["Universal Reverse", _sq(rev.get("sequence", "")), f"{rev.get('length', '?')} nt",
-             f"{_fmt(rev.get('tm'))}°C", f"{_fmt(rev.get('gc_percent'))}%"],
-        ]
-        col_widths = [3.3*cm, 7.7*cm, 1.8*cm, 2.2*cm, 1.5*cm]
-        seq_tbl = Table(seq_table_data, colWidths=col_widths)
-        seq_tbl.setStyle(TableStyle([
-            ("BACKGROUND",    (0, 0), (-1, 0), teal),
-            ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
-            ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTNAME",      (1, 1), (1, -1), "Courier"),
-            ("FONTSIZE",      (1, 1), (1, -1), 7),
-            ("FONTSIZE",      (0, 0), (-1, -1), 9),
-            ("BACKGROUND",    (0, 1), (-1, 1), teal_bg),
-            ("GRID",          (0, 0), (-1, -1), 0.5, rl_colors.grey),
-            ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
-        ]))
-        story.append(seq_tbl)
-        story.append(Spacer(1, 0.3*cm))
-
-        # Scientific caveats a reader must not miss (mirror the app's careful labelling)
-        notes = []
-        rt_note = _rt_tm_note(sl)
-        if rt_note:
-            notes.append(
-                f"<b>RT stem-loop Tm:</b> {rt_note}. The full-primer Tm is DNA:DNA and "
-                f"INDICATIVE only — it is not the overhang:miRNA hybridization Tm and is "
-                f"not used in scoring."
-            )
-        iso = _isomir_note(best)
-        if iso:
-            notes.append(f"<b>{esc(iso)}</b>")
-        tpi = sl.get("three_prime_isomir") or {}
-        if tpi.get("warning") or tpi.get("summary"):
-            # 3' isomiRs (isomiRdb): a warning when the canonical 3' form is a minority.
-            text = tpi.get("warning") or tpi.get("summary")
-            notes.append(f"<b>3' isomiRs:</b> {esc(text)} Source: {esc(str(tpi.get('source', '')))}.")
-        if tpi.get("dominant_isoform_risk") and tpi.get("dominant_isoform_warning"):
-            notes.append(f"<b>Dominant 3' isoform:</b> "
-                         f"{esc(_pdf_text(tpi['dominant_isoform_warning']))}")
-        oc_rows, oc_interp = _overhang_axis_summary(results)
-        if oc_interp:
-            oc = results.get("specificity_warnings", {}).get("overhang_collision", {})
-            worst = oc.get("worst_assay_label", "")
-            summ = oc.get("summary", {})
-            notes.append(
-                f"<b>Assay specificity (ΔCq model):</b> worst other miRNA {esc(str(worst))}; "
-                f"{summ.get('CO-AMPLIFIED', 0)} co-amplified, {summ.get('PARTIAL', 0)} partial; "
-                f"{summ.get('shifted_5p', 0) + summ.get('shifted_3p', 0) + summ.get('same_sequence', 0)} "
-                f"same-molecule entr(ies) not scored. {esc(oc_interp)}"
-            )
-        prov = _family_provenance_note(results)
-        if prov:
-            notes.append(esc(prov))
-        if notes:
-            story.append(Paragraph("Scientific notes", h3))
-            for n in notes:
-                story.append(Paragraph(f"• {n}", body))
-        story.extend(_isoform_pdf_table(tpi, h3, body, teal, rl_colors, Paragraph, Table,
-                                        TableStyle, ParagraphStyle, cm))
-        story.append(Spacer(1, 0.4*cm))
-
-    # ── Comparison table (Tab A summary) ─────────────────────────
-    story.append(Paragraph("Primer Set Comparison", h2))
-    cmp_header = ["Criterion"] + [f"Rank {i + 1}" for i in range(len(top3))]
-    criteria = [
-        ("Total score",    lambda s: f"{_fmt(s.get('total_score'))} ({s.get('grade', '')})"),
-        ("Forward Tm",     lambda s: f"{_fmt(s.get('tm_full'))}°C"),
-        ("GC%",            lambda s: f"{_fmt(s.get('gc_percent'))}%"),
-        ("Amplicon",       lambda s: f"{s.get('amplicon_size', '?')} bp"),
-        ("Binding region", lambda s: f"{s.get('specific_length', '?')} nt"
-                                     + (f" — {_selection_note(s)}" if _selection_note(s) else "")),
-        ("Hairpin ΔG",     lambda s: _dg(s, "structure_checks", "hairpin", "dg")),
-        ("Self-dimer ΔG",  lambda s: _dg(s, "structure_checks", "self_dimer", "dg_overall")),
-        ("Dimer ΔG (RNAcofold, 37 °C)", lambda s: _cofold_dimer_dg(s)),
-        ("Cycle-1 occupancy % (Ta)", lambda s: _fmt_pct(s.get('scores', {}).get('bound_fraction_binding_pct'))),
-    ]
-    if top3 and all(s.get("ranking") for s in top3):
-        criteria[0] = ("Grade · criteria groups", lambda s: _ranking_note(s) or "—")
-        criteria.insert(1, ("Tie-break score", lambda s: _fmt(s["ranking"].get("detailed_score"))))
-    elif any(s.get("ranking") for s in top3):
-        criteria.insert(1, ("Criteria groups", lambda s: _ranking_note(s) or "—"))
-    criteria.append(("Standard primer rules not met", lambda s: ", ".join(s.get("v4_rule_violations") or []) or "none"))
-    cmp_data = [cmp_header] + [
-        [label] + [fn(s) for s in top3]
-        for label, fn in criteria
-    ]
-    cmp_tbl = Table(cmp_data, colWidths=[4.5*cm] + [4*cm] * len(top3))
-    cmp_tbl.setStyle(TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, 0), teal),
-        ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
-        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, -1), 9),
-        ("BACKGROUND",    (1, 1), (1, -1), teal_bg),
-        ("GRID",          (0, 0), (-1, -1), 0.5, rl_colors.grey),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
-    ]))
-    story.append(cmp_tbl)
-    story.append(Spacer(1, 0.5*cm))
-
-    # ── Assay design (MIQE 2.0 §1) — the tool self-reports itself + settings ──
-    from reportlab.lib.styles import ParagraphStyle as _PS
-    _dcell = _PS("miqedesign", parent=body, fontSize=8, leading=10)
-    story.append(Paragraph("Assay Design (MIQE 2.0 §1)", h2))
-    dr_data = [["Parameter", "Value"]] + [
-        [Paragraph(e(lbl), _dcell), Paragraph(e(val), _dcell)]
-        for lbl, val in _miqe_design_rows(meta, top3)
-    ]
-    dr_tbl = Table(dr_data, colWidths=[6.5*cm, 9.5*cm])
-    dr_tbl.setStyle(TableStyle([
-        ("BACKGROUND",     (0, 0), (-1, 0), teal),
-        ("TEXTCOLOR",      (0, 0), (-1, 0), rl_colors.white),
-        ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",       (0, 0), (-1, 0), 9),
-        ("GRID",           (0, 0), (-1, -1), 0.5, rl_colors.grey),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
-        ("VALIGN",         (0, 0), (-1, -1), "TOP"),
-    ]))
-    story.append(dr_tbl)
-    story.append(Paragraph(
-        "<i>Self-reported by the design tool for MIQE 2.0 §1 (Reagent preparation / "
-        "assay design). Manufacturer of oligonucleotides and optimization details are "
-        "supplied by the user.</i>", body,
-    ))
-    story.append(Spacer(1, 0.4*cm))
-
-    # ── Quality summary ───────────────────────────────────────────
-    issues = [w for w in gw if w.get("severity") in ("critical", "warning")]
-    if issues:
-        story.append(Paragraph("Quality Warnings", h2))
-        for w in issues:
-            prefix = "⚠ Critical:" if w["severity"] == "critical" else "ℹ Warning:"
-            story.append(Paragraph(f"<b>{prefix}</b> {esc(w.get('message', ''))}", body))
-        story.append(Spacer(1, 0.3*cm))
-
-    # ── Edge cases ────────────────────────────────────────────────
-    criticals = [ec_item for ec_item in ec if ec_item.get("severity") in ("critical", "warning")]
-    if criticals:
-        story.append(Paragraph("Sequence Edge Cases", h2))
-        for ec_item in criticals:
-            story.append(Paragraph(f"[{esc(ec_item['code'])}] {esc(ec_item.get('message', ''))}", body))
-        story.append(Spacer(1, 0.3*cm))
-
-    # ── Off-target specificity (BLAST) ───────────────────────────
-    story.append(Paragraph("Off-target Specificity (BLAST)", h2))
-    blines = _blast_lines(blast_result)
-    if blines:
-        bl_data = [["Metric", "Value"]] + [[e(lbl), e(val)] for lbl, val in blines]
-        bl_tbl = Table(bl_data, colWidths=[7*cm, 5*cm])
-        bl_tbl.setStyle(TableStyle([
-            ("BACKGROUND",     (0, 0), (-1, 0), teal),
-            ("TEXTCOLOR",      (0, 0), (-1, 0), rl_colors.white),
-            ("FONTNAME",       (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE",       (0, 0), (-1, -1), 9),
-            ("GRID",           (0, 0), (-1, -1), 0.5, rl_colors.grey),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
-        ]))
-        story.append(bl_tbl)
-        story.append(Paragraph(
-            "<i>Overall risk reflects OUT-of-family off-targets only. Same-family "
-            "cross-reactivity is expected for this miRNA family and is assessed "
-            "separately (family cross-reactivity).</i>",
-            body,
-        ))
-    else:
-        story.append(Paragraph(
-            "Not assessed. Run the Off-target (BLAST) check on the Results page, then "
-            "re-export to include the analysis in this report.",
-            body,
-        ))
-    story.append(Spacer(1, 0.4*cm))
-
-    # ── Protocol Advisor (moved off the results page into the report) ──
-    if pa:
-        story.append(Paragraph("Protocol Advisor", h2))
-        story.append(Paragraph(
-            "<i>Evidence-backed protocol suggestions based on your assay parameters. "
-            "Descriptive only — validate experimentally before use.</i>", body))
-        for item in pa:
-            match = str(item.get("match", "")).upper()
-            iid   = esc(str(item.get("id", "")))
-            title = esc(str(item.get("title", "")))
-            rec   = esc(str(item.get("recommendation", "")))
-            head  = f"<b>[{iid}] {title}</b>" + (f" — {match} match" if match else "")
-            story.append(Paragraph(head, body))
-            if rec:
-                story.append(Paragraph(rec, body))
-            doi = item.get("doi") or item.get("source_doi")
-            if doi:
-                story.append(Paragraph(f"<i>doi:{esc(str(doi))}</i>", body))
-        story.append(Spacer(1, 0.4*cm))
-
-    # ── Controls & Contamination (audit SCI-11) ──────────────────
-    if results.get("controls_advice"):
-        story.extend(_build_controls_pdf_section(
-            results["controls_advice"], history_count, h2, h3, body, teal, rl_colors))
-
-    # ── Validation Checklist (Phase 7 PART E) ────────────────────
-    if include_checklist:
-        story.extend(_build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result))
-
-    # ── Footer ────────────────────────────────────────────────────
-    story.append(Spacer(1, 0.5*cm))
-    story.append(Paragraph(
-        "<i>For research use only. Validate all primers experimentally before use.</i>",
-        body,
-    ))
-    story.append(Paragraph(
-        "Sources: Chen et al. 2005 (Nucleic Acids Res.); Kramer 2011 (Curr Protoc Mol Biol); "
-        "MIQE 2.0 guidelines Bustin et al. 2025 (Clin Chem 71:634); SantaLucia & Hicks 2004.",
-        body,
-    ))
-
-    doc.build(story)
-    pdf_bytes = buf.getvalue()
-
+    pdf_bytes = report_pdf.build_pdf_bytes(results, blast_result=blast_result,
+                                           include_checklist=include_checklist,
+                                           history_count=history_count)
     response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
 
-# ── Controls & contamination PDF helper (audit SCI-11) ───────────
-
-def _build_controls_pdf_section(ca, history_count, h2, h3, body, teal, rl_colors) -> list:
-    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.units import cm
-    from reportlab.lib.styles import ParagraphStyle
-
-    esc = _html.escape
-    cell = ParagraphStyle("ctlcell", fontName="Helvetica", fontSize=8, leading=9.5)
-    P = lambda t: Paragraph(esc(str(t)), cell)  # noqa: E731
-
-    rows = [["Control", "Set-up", "Checks", "Pass criterion"]] + [
-        [P(c["name"]), P(c["setup"]), P(c["checks"]), P(c["pass"])] for c in ca.get("controls", [])
-    ]
-    tbl = Table(rows, colWidths=[3*cm, 5.6*cm, 4.2*cm, 4.2*cm], repeatRows=1)
-    tbl.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), teal),
-        ("TEXTCOLOR",  (0, 0), (-1, 0), rl_colors.white),
-        ("FONTNAME",   (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",   (0, 0), (-1, -1), 8),
-        ("GRID",       (0, 0), (-1, -1), 0.5, rl_colors.grey),
-        ("VALIGN",     (0, 0), (-1, -1), "TOP"),
-    ]))
-
-    cont = ca.get("contamination", {})
-    reasons = cont.get("reasons", [])
-    risk = "ELEVATED" if reasons else "standard"
-
-    out = [
-        Spacer(1, 0.5*cm),
-        Paragraph("Controls &amp; Contamination", h2),
-        Paragraph("Run these controls on every plate. NTC and no-RT results must be reported "
-                  "(MIQE 2.0, Bustin et al. 2025).", body),
-        Spacer(1, 0.2*cm),
-        tbl,
-    ]
-    if ca.get("melt_note"):
-        out += [Spacer(1, 0.2*cm), Paragraph(esc(ca["melt_note"]), body)]
-    out += [
-        Spacer(1, 0.3*cm),
-        Paragraph(f"Contamination risk: <b>{risk}</b>", h3),
-    ]
-    for r in reasons:
-        out.append(Paragraph("• " + esc(r), body))
-    if not reasons:
-        out.append(Paragraph(f"No specific risk factor found (abundance data: "
-                             f"{esc(cont.get('abundance_data', 'n/a'))}).", body))
-    if history_count:
-        # Designing is not amplifying, so this is a prompt, not a risk factor.
-        out.append(Paragraph(
-            f"<i>Note: this miRNA was designed {history_count} time(s) before in this browser. "
-            "If its amplicon has already been made in the lab, amplicon carry-over is the most "
-            "common cause of a positive NTC.</i>", body))
-    out.append(Paragraph("<b>Precautions</b>", body))
-    for pr in cont.get("precautions", []):
-        out.append(Paragraph("• " + esc(pr), body))
-    return out
-
-
-# ── Checklist PDF helper ──────────────────────────────────────────
-
-def _build_checklist_pdf_section(results, h2, body, teal, teal_bg, rl_colors, blast_result=None) -> list:
-    """Build Validation Checklist PDF section (MIQE 2.0-aligned). (Phase 7 PART E)"""
-    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.units import cm
-    from reportlab.lib.styles import ParagraphStyle
-
-    _cell = ParagraphStyle("chkcell", fontName="Helvetica", fontSize=8, leading=9.5)
-    def _P(t):
-        return Paragraph(_html.escape(str(t)).replace("\n", "<br/>"), _cell)
-
-    spec = results.get("specificity_warnings", {})
-    cr   = spec.get("cross_reactivity", {})
-    cr_risks = [r.get("risk") for r in cr.get("cross_reactivity", [])]
-    worst_family = (
-        "HIGH" if "HIGH" in cr_risks or "IDENTICAL" in cr_risks
-        else ("LOW" if "LOW" in cr_risks else "SAFE")
-    )
-    _bsumm = (blast_result or {}).get("summary", {}) if isinstance(blast_result, dict) else {}
-    blast_risk = _bsumm.get("overall_risk", "")
-    spec_value = f"Family: {worst_family}" + (f" · BLAST: {blast_risk}" if blast_risk else "")
-
-    checklist_data = [
-        ["Criterion", "Acceptance Target", "Reference", "Pass ☐", "Value / Notes"],
-        ["No-template control (NTC)",
-         f"No amplification, or Cq ≥{NTC_DELTA_CQ_MIN} cycles later than the latest-Cq sample",
-         "HG Lab convention; reporting per MIQE 2.0", "", ""],
-        ["No-RT control",
-         "No signal (excludes genomic DNA / self-priming)",
-         "MIQE 2.0", "", ""],
-        ["Melting curve (SYBR Green)",
-         "Single peak; no primer-dimer or non-specific product",
-         "MIQE 2.0\nVarkonyi-Gasic 2007", "", ""],
-        ["Standard curve (≥5 points)",
-         "10-fold serial dilutions, ≥1 log range",
-         "MIQE 2.0", "", ""],
-        ["PCR efficiency (report with CI)",
-         "90–110%  [E = 10^(−1/slope) − 1]; ±95% CI",
-         "MIQE 2.0", "", ""],
-        ["R² (linearity)",
-         "≥ 0.98",
-         "MIQE 2.0", "", ""],
-        ["LOD and LLOQ/ULOQ",
-         "Determine + report LOD and limits of quantification (dynamic range)",
-         "MIQE 2.0", "", ""],
-        ["Efficiency-corrected quantification",
-         "Report efficiency-corrected quantities + prediction intervals; avoid ΔΔCq alone",
-         "MIQE 2.0", "", ""],
-        ["Reference-gene normalization",
-         "≥2 reference genes, geometric-mean, validated in-context",
-         "MIQE 2.0", "", ""],
-        ["Technical replicates (repeatability)",
-         "≥3 replicates; report Cq mean ± SD",
-         "MIQE 2.0", "", ""],
-        ["Reproducibility (inter-assay)",
-         "Variation across days / operators / instruments",
-         "MIQE 2.0", "", ""],
-        ["Raw fluorescence data",
-         "Deposit/submit raw data (RDML or RDES)",
-         "MIQE 2.0", "", ""],
-        ["Specificity (in-silico)",
-         "Family cross-reactivity: reviewed. BLAST off-target: reviewed.",
-         "Phase 3",
-         "",
-         spec_value],
-    ]
-
-    # Wrap the long text columns in Paragraphs so they wrap inside the cell
-    # rather than overflowing into (and overprinting) the neighbouring column.
-    wrapped = [checklist_data[0]] + [
-        [row[0], _P(row[1]), _P(row[2]), row[3], _P(row[4])]
-        for row in checklist_data[1:]
-    ]
-    col_widths = [4*cm, 5.5*cm, 2.7*cm, 1.3*cm, 3.5*cm]
-    tbl = Table(wrapped, colWidths=col_widths)
-    tbl.setStyle(TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, 0), teal),
-        ("TEXTCOLOR",     (0, 0), (-1, 0), rl_colors.white),
-        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, -1), 8),
-        ("BACKGROUND",    (0, 1), (-1, 1), teal_bg),
-        ("GRID",          (0, 0), (-1, -1), 0.5, rl_colors.grey),
-        ("VALIGN",        (0, 0), (-1, -1), "TOP"),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1),
-         [rl_colors.white, rl_colors.HexColor("#F8FAFB")]),
-    ]))
-
-    return [
-        Spacer(1, 0.5*cm),
-        Paragraph("Validation Checklist (MIQE 2.0-aligned)", h2),
-        Paragraph(
-            "Complete the checklist below after wet-lab validation. "
-            "Criteria per the MIQE 2.0 guidelines (Bustin et al. 2025, Clin Chem 71:634).",
-            body,
-        ),
-        Spacer(1, 0.3*cm),
-        tbl,
-        Spacer(1, 0.3*cm),
-        Paragraph(
-            "<i>Specificity (in-silico) is pre-filled from the design output. "
-            "All other fields require wet-lab measurement.</i>",
-            body,
-        ),
-    ]
-
-
 # ── Scientific-content helpers (shared by CSV + PDF) ──────────────
-
-_PDF_GLYPHS = {"−": "-", "′": "'", "≥": ">=", "≤": "<="}
-
-
-def _pdf_text(text: str) -> str:
-    """Glyphs the built-in PDF fonts (WinAnsi) lack: minus sign, prime, >=, <=."""
-    for a, b in _PDF_GLYPHS.items():
-        text = text.replace(a, b)
-    return text
-
-
-def _isoform_pdf_table(tpi: dict, h3, body, teal, rl_colors, Paragraph, Table, TableStyle,
-                       ParagraphStyle, cm) -> list:
-    """'Most common 3' isoforms (isomiRdb, pooled)': the miRBase 22.1 end + top 3, with
-    the API's type and capture labels; one line when the reference is not assessed."""
-    variants = tpi.get("dominant_3prime_variants") or []
-    if not variants or "rt_capture" not in variants[0]:
-        return []
-    esc = _html.escape
-    out = [Paragraph("Most common 3' isoforms (isomiRdb, pooled)", h3)]
-    if tpi.get("reference_note"):
-        return out + [Paragraph(esc(_pdf_text(tpi["reference_note"])) + ".", body)]
-    cell = ParagraphStyle("isocell", parent=body, fontSize=8, leading=9.5)
-    mono = ParagraphStyle("isomono", parent=cell, fontName="Courier")
-
-    def pct(x):
-        return "-" if x is None else f"{100 * x:.{1 if x < 0.1 else 0}f} %"
-
-    def end(rna, at):
-        rna = esc(rna or "")
-        return rna if at is None else f"{rna[:at]}<b><u>{rna[at:]}</u></b>"
-
-    rows = [["3' end", "Type", "Share of reads", "Expected RT capture"],
-            [Paragraph(end(tpi.get("canonical_end_rna"), None), mono),
-             Paragraph("miRBase 22.1 end", cell),
-             pct(tpi.get("canonical_3prime_share_pooled")), Paragraph("primer target", cell)]]
-    for v in variants:
-        rows.append([Paragraph(end(v.get("end_rna"), v.get("end_diff_at")), mono),
-                     Paragraph(esc(_pdf_text(v.get("type_label", ""))), cell),
-                     pct(v.get("pooled_share")),
-                     Paragraph(esc(_pdf_text(v["rt_capture"].get("label", ""))), cell)])
-    tbl = Table(rows, colWidths=[3.0*cm, 4.2*cm, 2.6*cm, 6.7*cm])
-    tbl.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), teal),
-        ("TEXTCOLOR", (0, 0), (-1, 0), rl_colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, rl_colors.grey),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ]))
-    return out + [tbl]
-
 
 def _rt_tm_note(sl: dict) -> str:
     """
@@ -1005,19 +311,19 @@ def _rt_tm_note(sl: dict) -> str:
     """
     parts = []
     if sl.get("tm_full") is not None:
-        parts.append(f"full-primer Tm {_fmt(sl.get('tm_full'))}°C (DNA:DNA, indicative)")
+        parts.append(f"full-primer Tm {_fmt(sl.get('tm_full'))} °C (DNA:DNA, indicative)")
     if sl.get("tm_hybrid_c") is not None:
-        parts.append(f"overhang hybrid Tm {_fmt(sl.get('tm_hybrid_c'))}°C (DNA:RNA, Sugimoto 1995)")
+        parts.append(f"overhang hybrid Tm {_fmt(sl.get('tm_hybrid_c'))} °C (DNA:RNA, Sugimoto 1995)")
     if sl.get("mfe") is not None:
-        parts.append(f"MFE {_fmt(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})")
-    return "; ".join(parts)
+        parts.append(f"MFE {fmt_dg(sl.get('mfe'))} kcal/mol ({sl.get('mfe_method', '')})")
+    return clean("; ".join(parts))
 
 
 def _isomir_note(s: dict) -> str:
     """Return an isoMiR co-amplification caveat for a set, or '' if not flagged."""
     flag = s.get("isomir_flag") or {}
     if flag.get("isomir_discrimination_risk"):
-        return f"isoMiR co-amplification risk: {flag.get('note', 'yes')}"
+        return clean(f"isomiR co-amplification risk: {flag.get('note', 'yes')}")
     return ""
 
 
@@ -1026,9 +332,9 @@ def _selection_note(s: dict) -> str:
     sel = s.get("selection")
     if sel == "tail_variant":
         return (f"same binding region as rank {s.get('same_binding_as_rank', '?')}, "
-                f"other 5' tail (same specificity)")
+                f"other 5′ tail (same specificity)")
     if sel == "adjacent_3prime":
-        return "3' end 1 nt from a higher-ranked set"
+        return "3′ end 1 nt from a higher-ranked set"
     return ""
 
 
@@ -1038,7 +344,7 @@ def _ranking_note(s: dict) -> str:
     if not rk:
         return ""
     sp, pcr, fx = rk["specificity"], rk["pcr"], rk["flexible"]
-    note = (f"Required S {sp['total']}/{sp['max']} · PCR P {pcr['total']}/{pcr['max']} · "
+    note = (f"Specificity S {sp['total']}/{sp['max']} · PCR P {pcr['total']}/{pcr['max']} · "
             f"Composition & structure F {fx['total']}/{fx['max']}")
     if s.get("grade"):
         note = f"Grade {s['grade']} · " + note
@@ -1060,16 +366,16 @@ def _v4_rules_note(s: dict) -> str:
     """Standard primer rules (the V4 hard filters, SPEC QD 25) this set does not meet;
     '' when none or not reported."""
     v = s.get("v4_rule_violations")
-    return f"Standard primer rules not met: {', '.join(v)}" if v else ""
+    return f"Primer rules not met: {rule_labels(v)}" if v else ""
 
 
 def _family_provenance_note(results: dict) -> str:
     """Clarify that seed grouping is biological context, not the primer specificity axis."""
     cr = results.get("specificity_warnings", {}).get("cross_reactivity", {})
     note = (
-        "Seed-family grouping (positions 2-8) is the mRNA-targeting axis, shown for biological "
-        "context only. Primer specificity is assessed on the RT 3'-overhang and forward 5'-prefix "
-        "axes (see the primer-binding specificity summary)."
+        "Seed-family grouping (positions 2–8) is the mRNA-targeting axis, shown for biological "
+        "context only. Primer specificity is assessed on the RT 3′ overhang and the forward-primer "
+        "5′ prefix (assay ΔCq rows below)."
     )
     base = cr.get("data_warning", "") or ""
     return f"{note} {base}".strip()
@@ -1085,7 +391,7 @@ def _overhang_axis_summary(results: dict):
     top_txt = "none"
     if top and top.get("assay_label") != "DISCRIMINATED":
         top_txt = (f"{top.get('mirna')} (ΔCq {top.get('delta_cq')}, "
-                   f"{top.get('cross_reactivity_pct')} %)")
+                   f"{top.get('cross_reactivity_pct')}%)")
     rows = [
         ("assay_worst_label",      str(oc.get("worst_assay_label", ""))),
         ("n_co_amplified",         str(summ.get("CO-AMPLIFIED", 0))),
@@ -1169,6 +475,11 @@ def _fmt(v) -> str:
     if isinstance(v, float):
         return f"{v:.1f}"
     return str(v)
+
+
+def _dg2(v) -> str:
+    """ΔG with 2 decimals (ASCII minus: numeric CSV column)."""
+    return f"{v:.2f}" if isinstance(v, (int, float)) and not isinstance(v, bool) else ""
 
 
 def _dg(s: dict, *keys) -> str:

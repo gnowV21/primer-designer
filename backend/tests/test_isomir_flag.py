@@ -517,15 +517,17 @@ def test_pdf_export_has_isoform_table_and_dominant_warning(_client):
     res = _design(_client, "AGCUACAUCUGGCUACUGGGU", "hsa-miR-222-3p")
     pdf = _client.post("/api/export", json={"format": "pdf", "results": res})
     assert pdf.status_code == 200 and pdf.data[:4] == b"%PDF"
-    st = getSampleStyleSheet()
+    from routes import report_pdf as rp
+    rp.register_fonts()
+    st, cite, W = rp._styles(), rp._Citations(), 17 * cm
     tpi = res["stemloop_rt"]["three_prime_isomir"]
-    parts = ex._isoform_pdf_table(tpi, st["Heading3"], st["BodyText"], colors.teal, colors,
-                                  Paragraph, Table, TableStyle, ParagraphStyle, cm)
+    parts = rp._isoform_table(tpi, st, W, cite)
     tables = [p for p in parts if isinstance(p, Table)]
     assert len(tables) == 1 and len(tables[0]._cellvalues) == 5     # header + 22.1 end + 3
     # a miRNA whose isomiRdb reference may differ: one line, no table
-    one = ex._isoform_pdf_table(_iso3.check_3prime_isomir_flag("hsa-miR-1246", 6),
-                                st["Heading3"], st["BodyText"], colors.teal, colors,
-                                Paragraph, Table, TableStyle, ParagraphStyle, cm)
-    assert not any(isinstance(p, Table) for p in one) and len(one) == 2
-    assert "−" not in ex._pdf_text("−1 nt then +U")
+    one = rp._isoform_table(_iso3.check_3prime_isomir_flag("hsa-miR-1246", 6), st, W, cite)
+    assert not any(isinstance(p, Table) for p in one)
+    assert [type(p).__name__ for p in one][-2:] == ["Paragraph", "Paragraph"]   # heading + one line
+    # Embedded DejaVu fonts carry the true minus sign: it is kept, not replaced.
+    from utils.report_text import clean
+    assert "−" in clean("−1 nt then +U")

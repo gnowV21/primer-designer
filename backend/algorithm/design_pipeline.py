@@ -41,6 +41,11 @@ from algorithm.constants import (
 )
 
 
+def _n_mirnas(n: int, noun: str) -> str:
+    """'1 other miRNA' / '3 other miRNAs' (warning text only)."""
+    return f"{n} {noun}{'' if n == 1 else 's'}"
+
+
 def run(seq: str, params: dict, mirna_name: str = "") -> dict:
     """
     Execute the full primer design pipeline.
@@ -322,9 +327,9 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "field": "overhang_collision",
             "severity": "critical",
             "message": (
-                f"{_oc_sum['CO-AMPLIFIED']} other miRNA(s) predicted to co-amplify (ΔCq_assay < 3.3, "
-                f"> 10 % cross-signal; worst {_oc_worst['mirna']}, ≈{_oc_worst['cross_reactivity_pct']:.0f} %). "
-                "See specificity_warnings.overhang_collision."
+                f"{_n_mirnas(_oc_sum['CO-AMPLIFIED'], 'other miRNA')} predicted to co-amplify "
+                f"(assay ΔCq < 3.3, > 10% cross-signal; worst {_oc_worst['mirna']}, "
+                f"≈{_oc_worst['cross_reactivity_pct']:.0f}%). See Assay specificity."
             ),
         })
     elif _oc_sum.get("PARTIAL", 0) >= 1:
@@ -332,8 +337,8 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "field": "overhang_collision",
             "severity": "warning",
             "message": (
-                f"{_oc_sum['PARTIAL']} other miRNA(s) only partly discriminated (ΔCq_assay 3.3–4.3, "
-                "5–10 % cross-signal). See specificity_warnings.overhang_collision."
+                f"{_n_mirnas(_oc_sum['PARTIAL'], 'other miRNA')} only partly discriminated "
+                "(assay ΔCq 3.3–4.3, 5–10% cross-signal). See Assay specificity."
             ),
         })
     elif _oc_sum.get("rt_identical", 0) > 0:
@@ -341,8 +346,10 @@ def run(seq: str, params: dict, mirna_name: str = "") -> dict:
             "field": "overhang_collision",
             "severity": "warning",
             "message": (
-                f"{_oc_sum['rt_identical']} miRNA(s) share the RT 3'-overhang (byte-identical RT "
-                "primer) but are resolved by the forward primer. Relevant for multiplex / RT-primer pooling."
+                f"{_n_mirnas(_oc_sum['rt_identical'], 'miRNA')} "
+                f"{'shares' if _oc_sum['rt_identical'] == 1 else 'share'} the RT 3′ overhang "
+                "(identical RT primer) but the forward primer tells them apart. Relevant for "
+                "multiplex or RT-primer pooling."
             ),
         })
     _n_same = sum(_oc_sum.get(k, 0) for k in ("shifted_5p", "shifted_3p", "same_sequence"))
