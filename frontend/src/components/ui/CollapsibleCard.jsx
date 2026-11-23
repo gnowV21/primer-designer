@@ -15,10 +15,10 @@
 import { useState } from 'react';
 
 const TONES = {
-  neutral: { dot: 'bg-slate-300',  text: 'text-slate-500' },
-  ok:      { dot: 'bg-teal-500',   text: 'text-teal-700'  },
-  warn:    { dot: 'bg-amber-400',  text: 'text-amber-700' },
-  danger:  { dot: 'bg-red-500',    text: 'text-red-700'   },
+  neutral: { dot: 'bg-slate-400',  text: 'text-slate-600' },
+  ok:      { dot: 'bg-green-600',  text: 'text-green-700' },
+  warn:    { dot: 'bg-amber-500',  text: 'text-amber-700' },
+  danger:  { dot: 'bg-red-600',    text: 'text-red-700'   },
 };
 
 export default function CollapsibleCard({
@@ -31,30 +31,33 @@ export default function CollapsibleCard({
   const [open, setOpen] = useState(defaultOpen);
   const t = TONES[tone] || TONES.neutral;
 
+  // Narrow screens: the summary goes on its own line under the title, so neither is
+  // truncated and the Show/Hide toggle always stays inside the card.
   return (
     <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+        className="w-full flex items-start gap-2.5 px-4 py-3 text-left hover:bg-slate-50 transition-colors"
       >
         <span
-          className={`text-teal-600 text-sm font-bold shrink-0 leading-none transition-transform duration-200 ${
-            open ? 'rotate-90' : ''
-          }`}
+          aria-hidden
+          className={`text-teal-700 text-sm font-bold shrink-0 leading-5 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
         >
           ▸
         </span>
-        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide shrink-0">
-          {title}
+        <span className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+          <span className="text-sm font-semibold text-slate-800">{title}</span>
+          {!open && summary && (
+            <span className={`flex items-center gap-1.5 text-xs min-w-0 ${t.text}`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.dot}`} />
+              <span className="sm:truncate">{summary}</span>
+            </span>
+          )}
         </span>
-        {!open && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.dot}`} />}
-        {!open && summary && (
-          <span className={`text-xs truncate min-w-0 ${t.text}`}>{summary}</span>
-        )}
-        <span className="ml-auto text-xs text-slate-500 shrink-0">
-          {open ? 'hide' : 'show'}
+        <span className="shrink-0 text-xs font-medium text-teal-700 leading-5">
+          {open ? 'Hide' : 'Show'}
         </span>
       </button>
 

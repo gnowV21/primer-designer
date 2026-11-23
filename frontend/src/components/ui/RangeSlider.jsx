@@ -65,6 +65,11 @@ export default function RangeSlider({
     [&::-moz-range-thumb]:cursor-pointer
   `;
 
+  // Value and unit never break apart: "40 bp", "58 °C", "40%".
+  const u = !unit ? '' : (unit.trim() === '%' ? '%' : `\u00a0${unit.trim()}`);
+  // Labels sit under their thumbs; when the thumbs are close, one centred "lo–hi" label.
+  const close = rightPct - leftPct < 22;
+
   return (
     <div className="space-y-1.5">
       {label && (
@@ -75,7 +80,7 @@ export default function RangeSlider({
       )}
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 w-8 shrink-0">{min}{unit}</span>
+        <span className="text-xs text-slate-600 shrink-0 whitespace-nowrap">{min}{u}</span>
 
         {/* Track area — extra top padding to make room for drag callout */}
         <div className="relative flex-1" style={{ paddingTop: '1.25rem' }}>
@@ -90,7 +95,7 @@ export default function RangeSlider({
               }}
             >
               <span className="inline-block bg-teal-700 text-white text-xs font-bold px-1.5 py-0.5 rounded leading-none shadow-md tabular-nums whitespace-nowrap">
-                {dragging === 'min' ? valueMin : valueMax}{unit}
+                {dragging === 'min' ? valueMin : valueMax}{u}
               </span>
               {/* small arrow pointing down */}
               <span className="block w-0 h-0 mx-auto"
@@ -132,19 +137,31 @@ export default function RangeSlider({
             />
           </div>
 
+          {/* Value labels under the thumbs */}
+          <div className="relative h-6 mt-1.5" aria-hidden>
+            {close ? (
+              <span className="absolute top-0 whitespace-nowrap px-1.5 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-xs text-teal-800 font-semibold tabular-nums"
+                style={{ left: `${(leftPct + rightPct) / 2}%`, transform: 'translateX(-50%)' }}>
+                {valueMin}–{valueMax}{u}
+              </span>
+            ) : (
+              <>
+                <span className="absolute top-0 whitespace-nowrap px-1.5 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-xs text-teal-800 font-semibold tabular-nums"
+                  style={{ left: `${leftPct}%`, transform: 'translateX(-50%)' }}>
+                  {valueMin}{u}
+                </span>
+                <span className="absolute top-0 whitespace-nowrap px-1.5 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-xs text-teal-800 font-semibold tabular-nums"
+                  style={{ left: `${rightPct}%`, transform: 'translateX(-50%)' }}>
+                  {valueMax}{u}
+                </span>
+              </>
+            )}
+          </div>
         </div>
 
-        <span className="text-xs text-slate-500 w-8 shrink-0 text-right">{max}{unit}</span>
+        <span className="text-xs text-slate-600 shrink-0 whitespace-nowrap text-right">{max}{u}</span>
       </div>
-
-      <div className="flex justify-between px-10">
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-50 border border-teal-100 text-xs text-teal-700 font-semibold tabular-nums">
-          {valueMin}{unit}
-        </span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-50 border border-teal-100 text-xs text-teal-700 font-semibold tabular-nums">
-          {valueMax}{unit}
-        </span>
-      </div>
+      <p className="sr-only">{label}: {valueMin}{u} to {valueMax}{u}</p>
     </div>
   );
 }

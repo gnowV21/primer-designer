@@ -23,7 +23,8 @@ export default function App() {
         <Navbar />
         <ScrollToTop containerRef={mainRef} />
         <div className="flex flex-row flex-1 min-h-0">
-          <main ref={mainRef} className="flex-1 overflow-y-auto px-4 py-5 sm:p-6">
+          <main ref={mainRef} className="flex-1 overflow-y-auto flex flex-col">
+            <div className="flex-1 px-4 py-5 sm:p-6">
             <Routes>
               <Route path="/" element={<Navigate to="/design" replace />} />
               <Route path="/home" element={<HomePage />} />
@@ -39,9 +40,10 @@ export default function App() {
               <Route path="/history" element={<HistoryPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            </div>
+            <Footer />
           </main>
         </div>
-        <Footer />
       </div>
     </ThemeProvider>
   );
