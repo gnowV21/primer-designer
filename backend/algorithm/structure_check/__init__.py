@@ -285,11 +285,11 @@ def _dimer_note(label: str, dg_any: float, dg_end: float, critical: bool,
                 pass_overall: bool = True, threshold_overall: float = 0.0,
                 end_tm: float | None = None) -> str:
     if critical:
-        return (f"{label}: 3'-anchored dimer Tm = {end_tm:.1f} °C (limit < "
-                f"{END_DIMER_TM_HARD_MAX:g} °C, Primer3 *_END_TH default) — CRITICAL. "
+        return (f"{label}: 3′-anchored dimer Tm {end_tm:.1f} °C, at or above the Primer3 "
+                f"limit of {END_DIMER_TM_HARD_MAX:g} °C. "
                 "Polymerase can extend this dimer, generating primer-dimer artifacts.")
     elif dg_end <= SELF_DIMER_DG_3PRIME_MAX:
-        return f"{label}: 3'-end ΔG = {dg_end:.2f} kcal/mol — WARNING. Close to the acceptable limit."
+        return f"{label}: 3′-end ΔG {dg_end:.2f} kcal/mol, close to the acceptable limit."
     elif not pass_overall:
         return (f"{label}: overall ΔG = {dg_any:.2f} kcal/mol exceeds the limit ({threshold_overall}) "
                 f"but the 3' end is free (3'-end: {dg_end:.2f}) — not extendable; may reduce free primer.")

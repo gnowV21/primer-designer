@@ -19,7 +19,7 @@ import {
 } from '../../utils/paramSummary.js';
 
 export default function DesignPage() {
-  useEffect(() => { document.title = 'HG Lab | Primer Designer'; }, []);
+  useEffect(() => { document.title = 'HG Lab | Primer designer'; }, []);
 
   const {
     formData, setFormData,
@@ -66,40 +66,34 @@ export default function DesignPage() {
       />
 
       {/* ── Parameters (folded by default) ── */}
+      {/* One trigger: the whole header row is the button (Show / Hide on the right). */}
       <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
         <button
           type="button"
           onClick={() => setParamsOpen((v) => !v)}
           aria-expanded={paramsOpen}
+          aria-controls="design-parameters"
           className="w-full flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-3 text-left hover:bg-slate-50 transition-colors"
         >
-          <span className={`text-teal-600 text-sm font-bold leading-none transition-transform duration-200 ${paramsOpen ? 'rotate-90' : ''}`}>
+          <span aria-hidden className={`text-teal-700 text-sm font-bold leading-none transition-transform duration-200 ${paramsOpen ? 'rotate-90' : ''}`}>
             ▸
           </span>
-          {/* Title + status may wrap onto two lines on narrow phones; Edit keeps its place. */}
           <span className="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-semibold text-slate-700">Parameters</span>
+            <span className="text-sm font-semibold text-slate-800">Parameters</span>
             {hasErrors ? (
-              <span className="whitespace-nowrap text-xs font-semibold rounded-full px-2.5 py-0.5 bg-red-100 text-red-700 border border-red-300">
+              <span className="whitespace-nowrap text-xs font-semibold rounded-full px-2.5 py-0.5 bg-red-50 text-red-700 border border-red-300">
                 Needs a fix
               </span>
             ) : (
-              <span className={`whitespace-nowrap text-xs font-semibold rounded-full px-2.5 py-0.5 border ${
-                changes.length
+              <span className={`whitespace-nowrap text-xs font-semibold rounded-full px-2.5 py-0.5 border ${changes.length
                   ? 'bg-teal-600 text-white border-teal-600'
-                  : 'bg-teal-50 text-teal-700 border-teal-300'
-              }`}>
+                : 'bg-teal-50 text-teal-700 border-teal-300'}`}>
                 {changes.length ? `${changes.length} changed` : 'Defaults'}
               </span>
             )}
           </span>
-          {/* Styled as a button so the way in is obvious; the whole row is the actual control. */}
-          <span className={`ml-auto shrink-0 inline-flex items-center gap-1 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg border transition-colors ${
-            paramsOpen
-              ? 'bg-slate-100 text-slate-600 border-slate-200'
-              : 'bg-teal-600 text-white border-teal-600 shadow-sm'
-          }`}>
-            {paramsOpen ? 'Hide' : '✎ Edit'}
+          <span className="ml-auto shrink-0 text-xs font-semibold text-teal-700">
+            {paramsOpen ? 'Hide' : 'Show'}
           </span>
         </button>
 
@@ -108,7 +102,7 @@ export default function DesignPage() {
         )}
 
         {paramsOpen && (
-          <div className="border-t border-slate-100 bg-slate-50/60 p-3 space-y-3">
+          <div id="design-parameters" className="border-t border-slate-100 bg-slate-50/60 p-3 space-y-3">
             <ParameterEditor
               key={editorKey}
               params={formData}
@@ -117,6 +111,7 @@ export default function DesignPage() {
               onError={handleError}
               onApplyPreset={(preset) => setFormData((prev) => applySamplePreset(prev, preset))}
               seqAnalysis={seqAnalysis}
+              groupsOpen
             />
             {changes.length > 0 && (
               <div className="flex items-center justify-between gap-3 px-1">
@@ -142,29 +137,25 @@ export default function DesignPage() {
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className={`w-full py-3 px-6 rounded-xl text-sm font-semibold transition-all shadow-md
-            ${!canSubmit
-              ? 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-none'
-              : 'bg-gradient-to-r from-teal-600 to-teal-800 text-white hover:opacity-90 hover:shadow-lg active:scale-[0.99]'
-            }`}
+          className={`w-full py-3 px-6 rounded-xl text-sm font-semibold transition-all ${!canSubmit
+            ? 'bg-slate-200 text-slate-700 cursor-not-allowed'
+            : 'bg-teal-600 text-white shadow-md hover:bg-teal-700 active:scale-[0.99]'}`}
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-2">
-              <span className="animate-spin inline-block">⟳</span> Processing…
+              <span className="animate-spin inline-block" aria-hidden>⟳</span> Processing…
             </span>
           ) : hasErrors ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="text-slate-500">✕</span> Fix errors to continue
-            </span>
+            'Fix errors to continue'
           ) : !seqAnalysis ? (
             'Enter a miRNA to continue'
           ) : (
-            'Design Primers →'
+            'Design primers'
           )}
         </button>
-        <p className="text-center text-xs text-slate-500">
-          Stem-loop RT primer · forward primer · universal reverse primer
-          {isTaqMan ? ' · TaqMan probe' : ''}. You can tune parameters again on the results page.
+        <p className="text-center text-xs text-slate-600">
+          Designs the stem-loop RT primer, the forward primer and the universal reverse
+          primer{isTaqMan ? ', plus a TaqMan probe' : ''}. You can change parameters again on the results page.
         </p>
       </div>
 

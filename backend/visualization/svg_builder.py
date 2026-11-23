@@ -7,6 +7,10 @@
 # ================================================================
 
 
+# Prose in sans (UI review 2026-11-23); sequences stay monospace (text_columns).
+SANS_FAMILY = "IBM Plex Sans, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+MONO_FAMILY = "ui-monospace, SFMono-Regular, Menlo, monospace"
+
 def escape_xml(text: str) -> str:
     """Escape the 5 XML metacharacters. Applied to EVERY string put into the SVG."""
     return (
@@ -85,7 +89,7 @@ class _Node:
             for i, ch in enumerate(chars)
         )
         self._children.append(
-            f"<text {_attrs({'y': y, 'font-size': size, 'fill': fill, 'text-anchor': anchor, 'font-weight': weight, 'font-family': family})}>{tspans}</text>"
+            f"<text {_attrs({'y': y, 'font-size': size, 'fill': fill, 'text-anchor': anchor, 'font-weight': weight, 'font-family': family or MONO_FAMILY})}>{tspans}</text>"
         )
 
     def raw(self, markup: str):
@@ -145,7 +149,7 @@ class Svg(_Node):
             f'<svg xmlns="http://www.w3.org/2000/svg" '
             f'viewBox="{escape_xml(self.view_box)}" '
             f'width="{_num(self.width)}" height="{_num(self.height)}" '
-            f'role="img" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">'
+            f'role="img" font-family="{SANS_FAMILY}">'
         )
         meta = ""
         if self.title is not None:

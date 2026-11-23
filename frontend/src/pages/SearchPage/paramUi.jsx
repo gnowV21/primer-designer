@@ -13,7 +13,7 @@ export function SubDivider({ label, note }) {
   return (
     <div className="pt-1 space-y-0.5">
       <div className="flex items-center gap-3">
-        <span className="text-xs font-semibold uppercase tracking-widest text-slate-500 shrink-0">
+        <span className="text-xs font-semibold text-slate-500 shrink-0">
           {label}
         </span>
         <div className="flex-1 h-px bg-slate-100" />

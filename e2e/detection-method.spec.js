@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openParameters } from './helpers.js';
+import { openParameters, openGroup } from './helpers.js';
 
 // DetectionMethodGroup in the designer's Parameters panel. The family-discrimination and
 // pre-miRNA toggles were removed (audit SCI-09/ENG-02): the first always runs,
@@ -8,8 +8,7 @@ test.describe('DetectionMethodGroup', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/design');
     await openParameters(page);
-    await page.getByText('Detection Method', { exact: true }).click();
-    await page.getByText('Advanced options').click();
+    await openGroup(page, 'Detection method');
   });
 
   test('dead toggles are gone', async ({ page }) => {
@@ -22,7 +21,7 @@ test.describe('DetectionMethodGroup', () => {
   });
 
   test('re-folding protocol checked by default', async ({ page }) => {
-    const cb = page.getByLabel('Generate re-folding protocol in output');
+    const cb = page.getByLabel(/Add a re-folding step to the protocol/);
     await expect(cb).toBeChecked();
   });
 });

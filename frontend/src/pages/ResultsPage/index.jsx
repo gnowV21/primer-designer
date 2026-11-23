@@ -28,7 +28,7 @@ export default function ResultsPage() {
   // The scientific panels start folded; once opened they stay open for the session.
   const [showDetails, setShowDetails] = useDraftState('results.showDetails', false);
 
-  useEffect(() => { document.title = 'HG Lab | Primer Design Results'; }, []);
+  useEffect(() => { document.title = 'HG Lab | Design results'; }, []);
 
   // Empty-state: navigated here without results
   if (!activeRun) {
@@ -40,7 +40,7 @@ export default function ResultsPage() {
           onClick={() => navigate('/design')}
           className="mt-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition"
         >
-          Go to Designer →
+          Go to the designer
         </button>
       </div>
     );
@@ -95,22 +95,20 @@ export default function ResultsPage() {
       {/* ── Page header (wraps under the title on phones) ── */}
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Design Results</h1>
-          <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
-            {metadata?.mirna_id && <span className="font-medium">{metadata.mirna_id} · </span>}
-            {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
-            {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
+          <h1 className="text-xl font-semibold text-slate-800">Design results</h1>
+          <p className="text-xs text-slate-600 mt-0.5 tabular-nums">
+            {metadata?.mirna_id && <span className="font-medium whitespace-nowrap">{metadata.mirna_id} · </span>}
+            <span className="whitespace-nowrap">{metadata?.mirna_length}-nt miRNA</span> · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
+            {metadata?.elapsed_seconds !== undefined && <span className="whitespace-nowrap">{` · ${metadata.elapsed_seconds} s`}</span>}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-3 py-1 font-medium">
-            v{metadata?.algorithm_version}
-          </span>
           <button
+            type="button"
             onClick={backToDesigner}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition"
+            className="text-xs px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 font-medium transition"
           >
-            ← Back to designer
+            Back to designer
           </button>
         </div>
       </div>
@@ -139,8 +137,8 @@ export default function ResultsPage() {
         {/* ── Detection mode section ── */}
         {isTaqMan && probe && (
           <div>
-            <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-              TaqMan Probe
+            <h2 className="text-sm font-semibold text-slate-800 mb-2">
+              TaqMan probe
             </h2>
             <ProbeCard probe={probe} probeNote={probe_note} />
           </div>
@@ -152,8 +150,8 @@ export default function ResultsPage() {
              Outside the scientific-details toggle so it opens in one click; still
              collapsed by default because three large SVGs otherwise dominate the page. */}
         <CollapsibleCard
-          title="Reaction & Product Visualization"
-          summary="reaction · melting curve · gel"
+          title="Reaction and product visualization"
+          summary="Reaction, melting curve, gel"
         >
           <VisualizationPanel results={results} params={params} />
         </CollapsibleCard>
@@ -163,22 +161,19 @@ export default function ResultsPage() {
           type="button"
           onClick={() => setShowDetails((v) => !v)}
           aria-expanded={showDetails}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200
-            bg-slate-50 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-teal-700 transition"
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-teal-700 transition"
         >
-          <span className={`text-teal-600 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
+          <span aria-hidden className={`text-teal-700 transition-transform duration-200 ${showDetails ? 'rotate-90' : ''}`}>▸</span>
           {showDetails ? 'Hide scientific details' : 'Show scientific details'}
-          <span className="text-xs font-normal text-slate-500">
-            thermodynamics
-          </span>
+          <span className="text-xs font-normal text-slate-600">(thermodynamic parameters)</span>
         </button>
 
         {showDetails && (
           <>
             {/* ── Thermodynamics table (tabs) ── */}
             <div>
-              <h2 className="text-sm font-semibold text-slate-600 mb-2 uppercase tracking-wide">
-                Thermodynamic Parameters
+              <h2 className="text-sm font-semibold text-slate-800 mb-2">
+                Thermodynamic parameters
               </h2>
               <ThermoTable results={results} params={params} />
             </div>
@@ -186,9 +181,9 @@ export default function ResultsPage() {
             {/* ── LNA hints for difficult targets (Phase 5 §D) ── */}
             {lna_hints?.applicable && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-2">
-                <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">LNA Assist Suggestion</p>
+                <p className="text-xs font-semibold text-amber-800">LNA assist suggestion</p>
                 <p className="text-xs text-amber-800">{lna_hints.rationale}</p>
-                <div className="flex gap-2 text-xs text-amber-700">
+                <div className="flex gap-2 text-xs text-amber-800">
                   {lna_hints.sources?.map((s, i) => (
                     <a key={i} href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer"
                        className="underline hover:text-amber-900">
@@ -196,7 +191,7 @@ export default function ResultsPage() {
                     </a>
                   ))}
                 </div>
-                <p className="text-xs italic text-amber-600">{lna_hints.disclaimer}</p>
+                <p className="text-xs italic text-amber-800">{lna_hints.disclaimer}</p>
               </div>
             )}
           </>

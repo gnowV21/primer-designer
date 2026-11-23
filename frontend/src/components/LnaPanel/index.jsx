@@ -12,7 +12,7 @@ const DISCLAIMER = 'Informational only — confirm Tm with synthesis provider. N
 
 /**
  * @param {{
- *   sequence: string,          — primer sequence (DNA 5'→3')
+ *   sequence: string,          — primer sequence (DNA 5'→3′)
  *   role: "forward"|"reverse", — primer role
  *   params: object,            — ion conditions
  *   mode?: "tm"|"discrimination",
@@ -88,7 +88,7 @@ export default function LnaPanel({
 
   function renderSequence(seq, lnaPositions) {
     return (
-      <span className="font-mono text-sm tracking-widest">
+      <span className="font-mono text-sm">
         {seq.split('').map((base, i) => (
           <span
             key={i}
@@ -112,7 +112,7 @@ export default function LnaPanel({
       <div className="flex items-center justify-between">
         <div>
           <span className="font-semibold text-amber-800">LNA Tm Calculator</span>
-          <span className="ml-2 text-xs text-amber-600 uppercase tracking-wide">
+          <span className="ml-2 text-xs text-amber-700">
             {mode === 'discrimination' ? 'discrimination mode' : 'Tm mode'}
           </span>
         </div>
@@ -134,7 +134,7 @@ export default function LnaPanel({
       )}
       {mode === 'discrimination' && siblingMismatchPositions.length > 0 && (
         <div className="text-xs text-slate-600">
-          Mismatch positions vs HIGH-risk sibling: <strong>[{siblingMismatchPositions.join(', ')}]</strong> — LNA prioritised here.
+          Mismatch positions vs HIGH-risk sibling: <strong>[{siblingMismatchPositions.join(', ')}]</strong> : LNA is placed here first.
         </div>
       )}
 

@@ -13,9 +13,9 @@ export function StemLoopIcon({ className }) {
       {/* Base-pair dashes in stem region */}
       <line x1="7" y1="20" x2="13" y2="20" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1.5 2" opacity="0.45"/>
       <line x1="7" y1="24" x2="13" y2="24" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1.5 2" opacity="0.45"/>
-      {/* 3' overhang extending right */}
+      {/* 3′ overhang extending right */}
       <line x1="13" y1="28" x2="25" y2="28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-      {/* Arrowhead on 3' overhang */}
+      {/* Arrowhead on 3′ overhang */}
       <polyline points="22,25 25,28 22,31" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );

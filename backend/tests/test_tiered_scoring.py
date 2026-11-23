@@ -276,8 +276,9 @@ def test_export_carries_scoring_system_thresholds_and_v4_rules(monkeypatch):
     r = app.test_client().post("/api/export", json={"format": "csv", "results": d})
     text = r.get_data(as_text=True)
     assert r.status_code == 200
-    assert "scoring system tiered" in text and "tiered thresholds #" in text
-    assert "Required S " in text and "Standard primer rules not met: gc_out_of_range" in text
+    assert "Ranking system,tiered" in text and "Tiered thresholds hash," in text
+    # Rule codes stay in the machine column; the notes carry the readable label.
+    assert "Specificity S " in text and "Primer rules not met: GC content outside the GC window" in text
 
 
 # ── live BLAST ───────────────────────────────────────────────────

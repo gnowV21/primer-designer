@@ -1,9 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import Tooltip from './Tooltip.jsx';
 
+// Set by ParameterEditor on /design: every group starts open once "Parameters" is
+// open, so the form has one level of folding (UI review 2026-11-23).
+export const SectionsOpenByDefault = createContext(false);
+
 const ACCENTS = {
-  gray:   { border: 'border-slate-200',   text: 'text-slate-500' },
-  purple: { border: 'border-purple-200', text: 'text-slate-500' },
+  gray:   { border: 'border-slate-200',   text: 'text-slate-800' },
+  purple: { border: 'border-purple-200', text: 'text-slate-800' },
 };
 
 export default function CollapsibleSection({
@@ -18,7 +22,8 @@ export default function CollapsibleSection({
   openRequested = 0,
   children,
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const openByDefault = useContext(SectionsOpenByDefault);
+  const [open, setOpen] = useState(defaultOpen || openByDefault);
   const { border, text } = ACCENTS[accent] || ACCENTS.gray;
   const firedRef = useRef(false);
 
@@ -44,9 +49,9 @@ export default function CollapsibleSection({
           className="flex items-center gap-2.5 flex-1 text-left min-w-0"
           aria-expanded={open}
         >
-          {/* Arrow — larger, teal, bold */}
           <span
-            className={`text-teal-600 text-base font-bold shrink-0 leading-none transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+            aria-hidden
+            className={`text-teal-700 text-base font-bold shrink-0 leading-none transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
           >
             ▸
           </span>
@@ -56,13 +61,13 @@ export default function CollapsibleSection({
           {tooltip && <Tooltip text={tooltip} />}
           {!open && hasError && (
             <span
-              className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"
+              className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0"
               title="This section has an error"
             />
           )}
           {!open && !hasError && hasWarning && (
             <span
-              className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"
+              className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"
               title="This section has a warning"
             />
           )}

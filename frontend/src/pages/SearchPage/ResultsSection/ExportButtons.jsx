@@ -66,7 +66,6 @@ export default function ExportButtons({ set, stemloop, reverse }) {
   }
 
   const btns = [
-    { label: 'Copy forward',  key: 'forward', action: () => copy(set.sequence,  'forward') },
     { label: 'Copy as TSV',   key: 'tsv',     action: () => copy(tsvRow(),      'tsv')     },
     { label: 'Copy as FASTA', key: 'fasta',   action: () => copy(fastaBlock(),  'fasta')   },
   ];
@@ -78,13 +77,11 @@ export default function ExportButtons({ set, stemloop, reverse }) {
           key={key}
           type="button"
           onClick={action}
-          className={`text-xs px-3 py-1.5 rounded-lg border transition-all
-            ${copied === key
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${copied === key
               ? 'bg-teal-600 border-teal-600 text-white'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-teal-400 hover:text-teal-700'
-            }`}
+            : 'bg-white border-slate-300 text-slate-800 hover:border-teal-500 hover:text-teal-700'}`}
         >
-          {copied === key ? '✓ Copied' : label}
+          {copied === key ? 'Copied' : label}
         </button>
       ))}
     </div>

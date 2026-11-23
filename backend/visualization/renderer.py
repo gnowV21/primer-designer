@@ -294,6 +294,11 @@ def _arrow(node, x1, y, x2, *, label=None):
         node.text((x1 + x2) / 2, y - 9, label, size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="middle")
 
 
+
+def _rna(seq: str) -> str:
+    """A miRNA is RNA: draw it with U (display only; the model keeps DNA)."""
+    return seq.replace("T", "U")
+
 def _roles(node, y, items):
     """'Roles' block: a colour chip + bold name + what that molecule does in this step."""
     y += 4
@@ -313,7 +318,7 @@ def _roles(node, y, items):
 def _stage0(node, y, model, oscale):
     y = _title(node, y, "Stage 0 · Components")
     rows = [
-        (model.mirna_dna, "miRNA"),
+        (_rna(model.mirna_dna), "miRNA"),
         (model.stemloop_rt, "Stem-loop RT (S)"),
         (model.forward, "Forward (F)"),
         (model.universal_reverse, "Universal reverse (R)"),
@@ -338,11 +343,11 @@ def _stage0(node, y, model, oscale):
         y += VIZ_BAR_HEIGHT + 22
     y = _wrap_note(node, _M, y, model.stages[0].annotation_en, _CONTENT_W)
     return _roles(node, y, [
-        ("viz-mirna", "miRNA", "the target — the only sequence the assay is specific for."),
-        ("viz-hairpin-edge", "S", "hairpin RT primer: its single-stranded 3' overhang recognises the "
-                                  "miRNA 3' end; the stem-loop carries the universal site."),
-        ("viz-tail", "F", "forward primer: a copy of the miRNA 5' end plus a GC tail that raises Tm."),
-        ("viz-universal", "R", "universal reverse primer: binds the site inside the stem-loop, "
+        ("viz-mirna", "miRNA", "The target, the only sequence the assay is specific for."),
+        ("viz-hairpin-edge", "S", "Hairpin RT primer: its single-stranded 3′ overhang recognizes the "
+                                  "miRNA 3′ end; the stem-loop carries the universal site."),
+        ("viz-tail", "F", "Forward primer: a copy of the miRNA 5′ end plus a GC tail that raises Tm."),
+        ("viz-universal", "R", "Universal reverse primer: binds the site inside the stem-loop, "
                                "the same for every miRNA."),
     ])
 
@@ -356,13 +361,13 @@ def _duplex_rows(model, extra_left_cols=0):
 
 
 def _mirna_top_row(node, x0, y_top, m, p, mono, *, caption):
-    """miRNA in the TOP row, its 3' end stacked against the primer's arm A."""
-    _bar(node, x0, y_top, m, p, "5to3", fill="url(#g-surface)", mono_size=mono,
+    """miRNA in the TOP row, its 3' end stacked against the primer's arm A (drawn as RNA, U)."""
+    _bar(node, x0, y_top, _rna(m), p, "5to3", fill="url(#g-surface)", mono_size=mono,
          show_ends=False, pad_r=-2)
     lab = VIZ_BAR_HEIGHT / 2 + VIZ_LABEL_SIZE * 0.35
-    node.text(x0 - _TXT_PAD - 10, y_top + lab, "5'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+    node.text(x0 - _TXT_PAD - 10, y_top + lab, "5′", size=VIZ_LABEL_SIZE, fill=_MUTED,
               anchor="end", weight="600")
-    node.text(x0 + (len(m) - 0.5) * p, y_top - 9, "3'", size=VIZ_LABEL_SIZE, fill=_MUTED,
+    node.text(x0 + (len(m) - 0.5) * p, y_top - 9, "3′", size=VIZ_LABEL_SIZE, fill=_MUTED,
               anchor="middle", weight="600")
     node.text(x0, y_top - 9, caption, size=VIZ_LABEL_SIZE, fill=_MUTED)
 
@@ -381,12 +386,12 @@ def _stage1(node, y, model, oscale):
     _rungs(node, x_ov, o, p, y_top + VIZ_BAR_HEIGHT + frame + 1, y_bot)
     # RT will extend the primer 3' end leftward, in the empty lane under the miRNA
     _arrow(node, x_ov - _TXT_PAD - 36, y_bot + VIZ_BAR_HEIGHT / 2, x0 + 6,
-           label="RT extension (5'→3')")
+           label="RT extension (5′→3′)")
     y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 0) + 14
     y = _wrap_note(node, _M, y, model.stages[1].annotation_en, _CONTENT_W)
     return _roles(node, y, [
-        ("viz-mirna", "miRNA", "the RT template; its 3' end stacks against the primer stem."),
-        ("viz-hairpin-edge", "S", f"its {o}-nt 3' overhang pairs with the miRNA 3' end and primes "
+        ("viz-mirna", "miRNA", "The RT template; its 3′ end stacks against the primer stem."),
+        ("viz-hairpin-edge", "S", f"Its {o}-nt 3′ overhang pairs with the miRNA 3′ end and primes "
                                   "reverse transcription; the stem stays folded."),
     ])
 
@@ -398,21 +403,21 @@ def _stage2(node, y, model, oscale):
     ext = model.cdna[len(S):]
     p, mono, x0, x_ov = _duplex_rows(model)
     y_top = y + max(_hp_margin(mono), 18)
-    _mirna_top_row(node, x0, y_top, m, p, mono, caption="miRNA (RNA) — read 3'→5' by the RT")
+    _mirna_top_row(node, x0, y_top, m, p, mono, caption="miRNA (RNA), read 3′→5′ by the RT")
     _, y_bot = _stemloop(node, x_ov, y_top, S, o, p, mono, ext=ext,
                          a_round=False, a_label="above")
     _rungs(node, x0, len(m), p, y_top + VIZ_BAR_HEIGHT, y_bot)
     node.text(x0 + len(ext) * p / 2, y_bot + VIZ_BAR_HEIGHT + 16,
-              f"new cDNA ({len(ext)} nt) — RT copy of the miRNA",
+              f"New cDNA ({len(ext)} nt): RT copy of the miRNA",
               size=VIZ_LABEL_SIZE, fill=color("viz-cdna-edge"), anchor="middle", weight="700")
     y = y_bot + VIZ_BAR_HEIGHT + max(_hp_margin(mono), 22) + 12
     y = _wrap_note(node, _M, y, model.stages[2].annotation_en, _CONTENT_W)
     return _roles(node, y, [
-        ("viz-mirna", "miRNA", "was read end to end; still paired to the cDNA until the first "
+        ("viz-mirna", "miRNA", "Read end to end; still paired to the cDNA until the first "
                                "PCR denaturation."),
-        ("viz-hairpin-edge", "S", "is now the 5' part of the cDNA, so every cDNA carries the "
+        ("viz-hairpin-edge", "S", "Now the 5′ part of the cDNA, so every cDNA carries the "
                                   "stem-loop and its universal site."),
-        ("viz-cdna-edge", "cDNA", f"{len(S)} nt primer + {len(ext)} nt copied from the miRNA."),
+        ("viz-cdna-edge", "cDNA", f"The {len(S)}-nt primer plus {len(ext)} nt copied from the miRNA."),
     ])
 
 
@@ -631,7 +636,7 @@ def render_melting(melt, *, mirna_id="", amplicon_bp=None, gc_percent=None,
     svg.rect(x0, y0, x1 - x0, y1 - y0, rx=8, fill="url(#g-surface)", stroke=_BORDER, stroke_width=1)
 
     # header
-    svg.text(_M, 34, "Melting curve — simulated", size=19, fill=_FG, weight="700")
+    svg.text(_M, 34, "Simulated melting curve", size=19, fill=_FG, weight="700")
     svg.text(_M, 52, VIZ_SIMULATED_LABEL, size=VIZ_LABEL_SIZE, fill=_MUTED)
     sub = []
     if amplicon_bp is not None:
@@ -664,7 +669,12 @@ def render_melting(melt, *, mirna_id="", amplicon_bp=None, gc_percent=None,
     svg.raw(f'<text transform="rotate(90 {_fmt(_MELT_W - 22)} {_fmt((y0 + y1) / 2)})" '
             f'x="{_fmt(_MELT_W - 22)}" y="{_fmt((y0 + y1) / 2)}" '
             f'font-size="{VIZ_LABEL_SIZE + 1}" fill="{color("viz-derivative")}" '
-            f'text-anchor="middle" font-weight="600">−dF/dT</text>')
+            f'text-anchor="middle" font-weight="600">−dF/dT (relative)</text>')
+    # Y-right ticks (−dF/dT, relative to the peak)
+    for f in (0, 0.5, 1.0):
+        gy = yR(f * peak)
+        svg.line(x1, gy, x1 + 4, gy, stroke=_AXIS, stroke_width=1)
+        svg.text(x1 + 8, gy + 4, f"{f:g}", size=VIZ_LABEL_SIZE, fill=_MUTED, anchor="start")
 
     # curves
     f_pts = [(tx(t), yL(f)) for t, f in zip(melt.temperatures, melt.f_norm)]
@@ -681,19 +691,19 @@ def render_melting(melt, *, mirna_id="", amplicon_bp=None, gc_percent=None,
     # legend (two curves)
     lx, ly = x0 + 8, y0 + 14
     svg.line(lx, ly, lx + 22, ly, stroke=color("viz-curve"), stroke_width=1.5)
-    svg.text(lx + 28, ly + 4, "fluorescence", size=VIZ_LABEL_SIZE, fill=_FG)
+    svg.text(lx + 28, ly + 4, "Fluorescence", size=VIZ_LABEL_SIZE, fill=_FG)
     svg.line(lx, ly + 18, lx + 22, ly + 18, stroke=color("viz-derivative"), stroke_width=2.6)
     svg.text(lx + 28, ly + 22, "−dF/dT", size=VIZ_LABEL_SIZE, fill=_FG)
 
     # notes below the plot
     ny = y1 + 54
     if melt.dh_source == "approximate":
-        svg.text(_M, ny, "ΔH approximated — peak width is indicative only",
+        svg.text(_M, ny, "ΔH approximated: the peak width is indicative only.",
                  size=VIZ_LABEL_SIZE, fill=_MUTED)
         ny += 16
     if dimer_tm_warning:
         delta = dimer_tm_warning.get("delta_c", "?")
-        svg.text(_M, ny, f"Predicted dimer Tm is within {delta} °C of the product peak — "
+        svg.text(_M, ny, f"Predicted dimer Tm is within {delta} °C of the product peak: "
                          "a single melt peak may not confirm specificity.",
                  size=VIZ_LABEL_SIZE, fill=color("viz-warn"))
         ny += 16
@@ -730,7 +740,7 @@ def render_gel(gel, *, mirna_id="") -> str:
     svg.rect(0, 0, gel_w, gel_h, fill=_BG)
 
     # header
-    svg.text(_M, 34, "Agarose gel — simulated", size=19, fill=_FG, weight="700")
+    svg.text(_M, 34, "Simulated agarose gel", size=19, fill=_FG, weight="700")
     svg.text(_M, 52, VIZ_SIMULATED_LABEL, size=VIZ_LABEL_SIZE, fill=_MUTED)
 
     def _lane(x, title):
@@ -749,7 +759,7 @@ def render_gel(gel, *, mirna_id="") -> str:
                      stroke_width=1, dash="3 4")
 
     with svg.group(aria_label="Ladder lane") as g:
-        _lane(x_lad, "Ladder")
+        _lane(x_lad, "Ladder (bp)")
         for bp, y, is_ref in gel.ladder_bands:
             h = VIZ_GEL_BAND_HEIGHT + (3 if is_ref else 0)
             g.rect(x_lad + 8, y - h / 2, lane_w - 16, h, rx=3,
@@ -758,8 +768,6 @@ def render_gel(gel, *, mirna_id="") -> str:
             g.text(x_lad - 10, y + 4, f"{bp}", size=VIZ_LABEL_SIZE,
                    fill=_FG if is_ref else _MUTED, anchor="end",
                    weight="700" if is_ref else None)
-        g.text(x_lad - 10, gel.y_top + gel.lane_height + 22, "bp", size=VIZ_LABEL_SIZE,
-               fill=_MUTED, anchor="end")
 
     with svg.group(aria_label="Product lane") as g:
         _lane(x_prod, "Product")

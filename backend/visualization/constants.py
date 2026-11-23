@@ -61,7 +61,7 @@ VIZ_GEL_BAND_HEIGHT = 7       # px [SPEC §D.2]
 VIZ_GEL_Y_TOP       = 124
 
 # --- Honesty label (SPEC §0.4) — embedded in every panel, cannot be disabled ---
-VIZ_SIMULATED_LABEL = "Simulated from predicted values — not experimental data"
+VIZ_SIMULATED_LABEL = "Simulated from predicted values, not experimental data"
 
 # --- Theme colour tokens + hex fallbacks (SPEC §E.5) ---------------------------
 # The SVG fills with var(--token, #fallback); the frontend defines --viz-* per

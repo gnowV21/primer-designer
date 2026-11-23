@@ -271,3 +271,56 @@ def test_export_csv_v4_header_unchanged():
 def test_export_pdf_tiered_ok():
     r = _post("pdf", _tiered_results())
     assert r.status_code in (200, 503)   # 503 = reportlab missing
+
+
+# ── PDF presentation (UI/PDF review 2026-11-23) ───────────────────
+
+def _pdf_reader(data):
+    import io
+    import pytest
+    PdfReader = pytest.importorskip("pypdf").PdfReader   # test-only reader, not a dependency
+    return PdfReader(io.BytesIO(data))
+
+
+def test_pdf_embeds_dejavu_fonts_only_and_sets_metadata():
+    import copy
+    res = copy.deepcopy(_RESULTS)
+    r = app.test_client().post("/api/export", json={"format": "pdf", "results": res})
+    assert r.status_code == 200
+    rd = _pdf_reader(r.data)
+    fonts = set()
+    for pg in rd.pages:
+        for _k, f in (pg["/Resources"].get("/Font") or {}).items():
+            f = f.get_object()
+            fonts.add(str(f["/BaseFont"]))
+            desc = f["/DescendantFonts"][0].get_object()["/FontDescriptor"].get_object() \
+                if "/DescendantFonts" in f else f["/FontDescriptor"].get_object()
+            assert "/FontFile2" in desc, f"font not embedded: {f['/BaseFont']}"
+    assert fonts and all("DejaVu" in f for f in fonts), fonts
+    assert "hsa-miR-21-5p" in rd.metadata.title
+    assert rd.metadata.author
+    text = "\n".join(p.extract_text() for p in rd.pages)
+    n = len(rd.pages)
+    assert f"Page 1 of {n}" in text and f"Page {n} of {n}" in text
+    # no developer language
+    for bad in ("tie-break score 8", "Phase 3", "build_family_db", "byte-identical", "entr(ies)"):
+        assert bad not in text, bad
+
+
+def test_reference_equal_to_target_is_warned():
+    from routes.report_pdf import action_warnings, same_reference
+    assert same_reference("hsa-miR-16-5p", "miR-16")
+    assert same_reference("mmu-let-7a-5p", "let-7a")
+    assert not same_reference("hsa-miR-16-5p", "miR-161")
+    assert not same_reference("hsa-miR-21-5p", "U6")
+    res = {"metadata": {"mirna_id": "hsa-miR-16-5p", "design_settings": {"reference": "miR-16"}}}
+    assert any("reference" in m for _s, m in action_warnings(res))
+
+
+def test_report_text_conventions():
+    from utils.report_text import clean, fmt_dg, fmt_pct, fmt_tm, rule_labels
+    assert fmt_tm(60) == "60.0\u00a0°C"
+    assert fmt_pct(47.62) == "47.6%"
+    assert fmt_dg(-6.1) == "−6.10"
+    assert rule_labels(["gc_clamp_fail"]) == "3′ GC clamp missing"
+    assert clean("RT 3'-overhang, Mg2+ 81 %, -11.00") == "RT 3′-overhang, Mg²⁺ 81%, −11.00"

@@ -14,33 +14,12 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* ── Theme: Pink ─────────────────────────────────── */
-[data-theme="pink"] {
-  --brand-50:  #fdf2f8;
-  --brand-100: #fadcf5;
-  --brand-200: #f3c5e5;
-  --brand-300: #f9a8d4;
-  --brand-400: #f472b6;
-  --brand-500: #f091d0;
-  --brand-600: #d67bda;
-  --brand-700: #eb70c6;
-  --brand-800: #c46ab0;
-}
-
-/* ── Theme: Teal (original lab) ──────────────────── */
-[data-theme="teal"] {
-  --brand-50:  #E1F5EE;
-  --brand-100: #C3EBD9;
-  --brand-200: #5DCAA5;
-  --brand-300: #3DBCA0;
-  --brand-400: #25A888;
-  --brand-500: #178C6E;
-  --brand-600: #0F6E56;
-  --brand-700: #0d6150;
-  --brand-800: #085041;
-}
-
-/* ── Theme: Navy (#273E74 — HGLab brand) ─────────── */
+/* ── Brand palette: HG Lab navy (#273E74) ─────────────────────────────────
+   The only theme (UI review 2026-11-23: the pink and teal themes failed WCAG
+   contrast). Tailwind's teal-* utilities resolve to these variables
+   (tailwind.config.js), so another theme is one block here. The scale is
+   monotonic: each step is darker than the one before. */
+:root,
 [data-theme="navy"] {
   --brand-50:  #EFF3FB;
   --brand-100: #D8E1F4;
@@ -72,4 +51,38 @@ code, kbd, samp, pre {
   outline: 2px solid var(--brand-700);
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+/* ── Text wrapping ─────────────────────────────────────────────────────── */
+p, li, td, dd { text-wrap: pretty; }
+h1, h2, h3, h4 { text-wrap: balance; }
+
+@layer components {
+  /* A short sequence, miRNA name, accession or range: mono, never broken. */
+  .seq {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+  }
+  /* A long sequence (the 50-nt RT primer): one line that scrolls sideways
+     inside its own box instead of wrapping (SeqBlock adds a copy button). */
+  .seq-block {
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow-x: auto;
+    display: block;
+    max-width: 100%;
+  }
+  /* A table that holds sequences: scrolls sideways in its wrapper rather than
+     squeezing the columns until a sequence wraps. */
+  .table-scroll {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  /* Section eyebrow: sentence case, small, semibold (no all-caps). */
+  .eyebrow {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    font-weight: 600;
+    color: rgb(51 65 85);   /* slate-700 */
+  }
 }

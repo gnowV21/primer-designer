@@ -12,7 +12,7 @@ import Tooltip from './Tooltip.jsx';
  *              so existing handlers that do e.target.value continue to work
  */
 export default function NumInput({
-  id, label, tooltip, value, onChange,
+  id, label, tooltip, hint, value, onChange, ariaLabel,
   min, max, step, unit, error,
 }) {
   const [raw, setRaw] = useState(value !== undefined ? String(value) : '');
@@ -30,8 +30,8 @@ export default function NumInput({
   return (
     <div className="space-y-1">
       {label !== undefined && (
-        <div className="flex items-center gap-1.5">
-          <label htmlFor={id} className="text-sm font-medium text-slate-700 leading-snug">
+        <div className="flex items-center gap-1.5 h-6">
+          <label htmlFor={id} className="text-sm font-medium text-slate-700 leading-snug whitespace-nowrap">
             {label}
           </label>
           {tooltip && <Tooltip text={tooltip} />}
@@ -40,6 +40,7 @@ export default function NumInput({
       <div className="relative">
         <input
           id={id}
+          aria-label={ariaLabel}
           type="number"
           min={min}
           max={max}
@@ -55,12 +56,13 @@ export default function NumInput({
             }`}
         />
         {unit && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 pointer-events-none">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-600 pointer-events-none">
             {unit}
           </span>
         )}
       </div>
-      {error && <p className="text-xs text-red-600 mt-0.5">{error}</p>}
+      {hint && !error && <p className="text-xs text-slate-600">{hint}</p>}
+      {error && <p className="text-xs text-red-700 mt-0.5">{error}</p>}
     </div>
   );
 }

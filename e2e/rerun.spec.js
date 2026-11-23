@@ -18,7 +18,7 @@ async function designDefault(page) {
     const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === 'Search');
     if (b) b.click();
   });
-  const designBtn = page.getByRole('button', { name: 'Design Primers →' });
+  const designBtn = page.getByRole('button', { name: /^Design primers$/ });
   await expect(designBtn).toBeEnabled({ timeout: 8000 });
   await designBtn.click();
   await expect(page).toHaveURL('/results', { timeout: 30000 });
@@ -27,7 +27,7 @@ async function designDefault(page) {
 // The RT primer is shown once, in "Shared by all sets", as 5'–SEQ–3'.
 // "Parameters used" on /results is a vertical list: label left, value right.
 const paramValue = (page, label) => page.getByTestId('param-list').locator('div', { hasText: label }).locator('dd');
-const rtPrimer = (page, seq) => page.getByTestId('shared-primers').getByText(`5'–${seq}–3'`, { exact: true });
+const rtPrimer = (page, seq) => page.getByTestId('shared-primers').getByText(`5′-${seq}-3′`, { exact: true });
 
 test('Re-run is disabled until a parameter changes', async ({ page }) => {
   await designDefault(page);

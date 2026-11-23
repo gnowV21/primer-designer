@@ -111,7 +111,7 @@ export default function VisualizationPanel({ results, params }) {
 
   if (!ready) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
         Visualization needs the mature sequence and a designed primer set.
       </div>
     );
@@ -125,10 +125,10 @@ export default function VisualizationPanel({ results, params }) {
           {TABS.map(([key, label]) => (
             <button
               key={key}
+              type="button"
+              aria-pressed={tab === key}
               onClick={() => setTab(key)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
-                tab === key ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${tab === key ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
             >
               {label}
             </button>
@@ -139,7 +139,8 @@ export default function VisualizationPanel({ results, params }) {
             <select
               value={candIdx}
               onChange={(e) => setCandIdx(Number(e.target.value))}
-              className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 bg-white"
+              aria-label="Primer set to draw"
+              className="text-xs border border-slate-300 rounded-lg px-2 py-1.5 text-slate-800 bg-white"
             >
               {top3.map((c, i) => (
                 <option key={i} value={i}>
@@ -151,14 +152,16 @@ export default function VisualizationPanel({ results, params }) {
           <button
             onClick={downloadSVG}
             disabled={!svg}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 font-medium transition"
+            type="button"
+            className="text-xs px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-600 font-medium transition"
           >
             Download SVG
           </button>
           <button
             onClick={downloadPNG}
             disabled={!svg}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 font-medium transition"
+            type="button"
+            className="text-xs px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-600 font-medium transition"
           >
             PNG (300 dpi)
           </button>
@@ -168,32 +171,35 @@ export default function VisualizationPanel({ results, params }) {
       {/* viewport */}
       <div className="p-4 bg-slate-50/60 overflow-x-auto" style={VIZ_VARS}>
         {status === 'loading' && (
-          <p className="text-sm text-slate-500 py-8 text-center">Rendering…</p>
+          <p className="text-sm text-slate-700 py-8 text-center">Rendering…</p>
         )}
         {status === 'error' && (
-          <p className="text-sm text-red-600 py-8 text-center">Visualization failed: {error}</p>
+          <p className="text-sm text-red-700 py-8 text-center">Visualization failed: {error}</p>
         )}
         {status === 'ready' && svg && (
           // eslint-disable-next-line react/no-danger
-          <div className="mx-auto max-w-full [&_svg]:h-auto [&_svg]:max-w-full"
+          // Drawn at its own pixel size (text 12–15 px): a wide drawing scrolls sideways inside
+          // this box instead of being shrunk to unreadable text (UI review 2026-11-23).
+          <div className="w-max mx-auto [&_svg]:max-w-none" data-testid="viz-svg"
                dangerouslySetInnerHTML={{ __html: svg }} />
         )}
       </div>
 
+      {/* One line per panel: the "simulated" label is in each drawing's header, and the
+          ΔH note belongs to the melting curve only. */}
       {meta && (
-        <p className="px-4 py-2 text-xs text-slate-500 border-t border-slate-100">
-          Amplicon {meta.amplicon_length} bp · GC {meta.gc_percent}%
-          {meta.dh_source === 'approximate' && ' · ΔH approximated (peak width indicative)'}
-          {' · Simulated from predicted values — not experimental data'}
+        <p className="px-4 py-2 text-xs text-slate-700 border-t border-slate-100">
+          Amplicon {meta.amplicon_length}{'\u00a0'}bp · GC {meta.gc_percent}%
+          {tab === 'melting' && meta.dh_source === 'approximate' && ' · ΔH approximated, so the peak width is indicative'}
         </p>
       )}
       {/* Amplicon Tm depends strongly on Mg2+ (audit SCI-07) — show the span, not one number. */}
       {tab === 'melting' && cand?.predicted_amplicon_tm_mg_span && (
-        <p className="px-4 pb-2 text-xs text-slate-500">
-          Predicted melt peak {cand.predicted_amplicon_tm} °C at your Mg²⁺ setting ·{' '}
-          {cand.predicted_amplicon_tm_mg_span.tm_c[0]}–{cand.predicted_amplicon_tm_mg_span.tm_c[1]} °C
-          across {cand.predicted_amplicon_tm_mg_span.mg_mM[0]}–{cand.predicted_amplicon_tm_mg_span.mg_mM[1]} mM Mg²⁺.
-          Empirical formula — compare with your instrument&apos;s melt peak rather than expecting an exact match.
+        <p className="px-4 pb-2 text-xs text-slate-700">
+          Predicted melt peak <span className="whitespace-nowrap">{cand.predicted_amplicon_tm}{'\u00a0'}°C</span> at your Mg²⁺ setting,{' '}
+          <span className="whitespace-nowrap">{cand.predicted_amplicon_tm_mg_span.tm_c[0]}–{cand.predicted_amplicon_tm_mg_span.tm_c[1]}{'\u00a0'}°C</span>
+          {' '}across <span className="whitespace-nowrap">{cand.predicted_amplicon_tm_mg_span.mg_mM[0]}–{cand.predicted_amplicon_tm_mg_span.mg_mM[1]}{'\u00a0'}mM</span> Mg²⁺.
+          Empirical formula: compare with your instrument&apos;s melt peak rather than expecting an exact match.
         </p>
       )}
     </div>

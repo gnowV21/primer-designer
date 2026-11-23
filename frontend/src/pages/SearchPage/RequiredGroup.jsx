@@ -5,7 +5,7 @@
 import RangeSlider from '../../components/ui/RangeSlider.jsx';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
-import { LIMITS } from '../../constants/defaults.js';
+import { DEFAULTS, LIMITS } from '../../constants/defaults.js';
 import { WarnBox } from './paramUi.jsx';
 
 // Family-specific suggestion: which overhangs benefit from 7 nt for discrimination
@@ -44,6 +44,15 @@ export default function RequiredGroup({
       hasWarning={!!showFwdTmWarn}
       onFirstOpen={onFirstOpen}
       openRequested={openRequested}
+      actions={(thermoData.tmMin !== DEFAULTS.thermodynamic.tmMin || thermoData.tmMax !== DEFAULTS.thermodynamic.tmMax) ? (
+        <button
+          type="button"
+          onClick={() => { onThermoChange('tmMin', DEFAULTS.thermodynamic.tmMin); onThermoChange('tmMax', DEFAULTS.thermodynamic.tmMax); }}
+          className="text-xs font-medium px-2 py-0.5 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-100 shrink-0"
+        >
+          Reset Tm window
+        </button>
+      ) : null}
     >
       <RangeSlider
         label="Forward-primer Tm window"
@@ -57,7 +66,7 @@ export default function RequiredGroup({
         tooltip="Hard limit: forward primers with a Tm outside this window are not generated. 58–62 °C is the default (Ta 60 °C ± 2). The window does not follow Ta; set both."
       />
       {showFwdTmWarn && (
-        <WarnBox text={`Tm target may be difficult to achieve: the 12-nt miRNA binding region contributes only ~${seqAnalysis.fwdRegionTm}°C. Reaching ${thermoData.tmMin}°C requires the 5′ tail to add ~${fwdTmDeficit}°C. Consider lowering Tm min to ${thermoData.tmMin - 5}–${thermoData.tmMin - 3}°C.`} />
+        <WarnBox text={`The Tm window may be hard to reach: the 12-nt miRNA binding region contributes only about ${seqAnalysis.fwdRegionTm}\u00a0°C, so reaching ${thermoData.tmMin}\u00a0°C needs the 5′ tail to add about ${fwdTmDeficit}\u00a0°C. Consider lowering the Tm minimum to ${thermoData.tmMin - 5}–${thermoData.tmMin - 3}\u00a0°C.`} />
       )}
 
       <RangeSlider
@@ -67,7 +76,7 @@ export default function RequiredGroup({
         valueMin={qpcrData.ampliconMin}
         valueMax={qpcrData.ampliconMax}
         step={5}
-        unit=" bp"
+        unit="bp"
         onChange={(newMin, newMax) => {
           onQpcrChange('ampliconMin', newMin);
           onQpcrChange('ampliconMax', newMax);
@@ -78,7 +87,7 @@ export default function RequiredGroup({
       {/* 3′ Binding region — selectable 5 / 6 / 7 nt */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5">
-          <label className="text-sm font-medium text-slate-700">3′ Binding region (RT overhang)</label>
+          <label className="text-sm font-medium text-slate-700">3′ binding region (RT overhang)</label>
           <Tooltip text="Number of nucleotides at the 3′ overhang of the stem-loop RT primer that base-pair with the 3′ end of the mature miRNA. 6 nt is the validated standard (Chen et al. 2005). Use 7 nt for large miRNA families with highly similar 3′ sequences. Part of the assay structure; it also changes the specificity screen." />
         </div>
         <div className="flex gap-1.5 max-w-xs">
@@ -87,20 +96,19 @@ export default function RequiredGroup({
               key={nt}
               type="button"
               onClick={() => onConstraintChange('bindingRegion3prime', nt)}
-              className={`flex-1 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-150 active:scale-95 ${
-                constraints.bindingRegion3prime === nt
-                  ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:text-teal-700'
-              }`}
+              aria-pressed={constraints.bindingRegion3prime === nt}
+              className={`flex-1 py-1.5 rounded-lg text-sm font-semibold border-2 transition-all duration-150 active:scale-95 ${constraints.bindingRegion3prime === nt
+                ? 'bg-teal-50 text-teal-800 border-teal-600'
+                : 'bg-white text-slate-700 border-slate-200 hover:border-teal-300 hover:text-teal-700'}`}
             >
-              {nt} nt
+              {nt}{'\u00a0'}nt
             </button>
           ))}
         </div>
         {/* Off-label note — shown whenever binding length ≠ 6 nt */}
         {offLabelWarn && (
           <p className="text-xs text-amber-800 leading-snug">
-            <strong>Off-label ({constraints.bindingRegion3prime} nt)</strong> — not validated by Chen 2005.{' '}
+            <strong>Off-label ({constraints.bindingRegion3prime}{'\u00a0'}nt):</strong> not validated by Chen 2005.{' '}
             <button
               type="button"
               onClick={() => onConstraintChange('bindingRegion3prime', 6)}
@@ -112,7 +120,7 @@ export default function RequiredGroup({
         )}
         {/* Family-specific suggestion (informational, not a blocker) */}
         {familyHint && constraints.bindingRegion3prime !== familyHint.suggestNt && (
-          <p className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-700 bg-teal-50 border border-teal-100">
+          <p className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-800 bg-teal-50 border border-teal-100">
             {familyHint.text}
             <button
               type="button"

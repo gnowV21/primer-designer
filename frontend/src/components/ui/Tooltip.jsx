@@ -44,7 +44,7 @@ export default function Tooltip({ text }) {
         onFocus={handleShow}
         onBlur={handleHide}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setVisible(v => !v)}
-        className="w-4 h-4 rounded-full bg-slate-200 text-slate-500 text-xs font-bold flex items-center justify-center hover:bg-teal-100 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-colors cursor-default select-none"
+        className="w-4 h-4 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-teal-100 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-200 transition-colors cursor-default select-none"
         aria-label="More information"
       >
         ?

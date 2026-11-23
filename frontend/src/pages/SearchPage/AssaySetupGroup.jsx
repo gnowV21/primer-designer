@@ -1,9 +1,9 @@
-// AssaySetupGroup — Parameters the tiered ranking does not use (2026-11-22): primer length
-// (the engine uses 18–27 nt, constants.FORWARD_MIN/MAX_LENGTH), cycle number and the
-// efficiency acceptance range. They are recorded in the MIQE export. Detection and
+// AssaySetupGroup — Parameters the tiered ranking does not use (2026-11-22): cycle number
+// and the efficiency acceptance range. The primer-length control was removed (UI review
+// 2026-11-23): the engine always uses 18–27 nt, so it changed nothing; lengthMin/lengthMax
+// stay in the form state and the request body at their defaults. They are recorded in the MIQE export. Detection and
 // experimental context keep their own sections below this one. Field names and defaults
 // are unchanged (constants/defaults.js).
-import RangeSlider from '../../components/ui/RangeSlider.jsx';
 import NumInput from '../../components/ui/NumInput.jsx';
 import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
@@ -11,7 +11,7 @@ import { LIMITS } from '../../constants/defaults.js';
 import { WarnBox } from './paramUi.jsx';
 
 export default function AssaySetupGroup({
-  constraints, onConstraintChange, qpcrData, errors, onQpcrChange, onError, onFirstOpen, openRequested,
+  qpcrData, errors, onQpcrChange, onError, onFirstOpen, openRequested,
 }) {
   function handleCyclesChange(e) {
     const str = e.target.value;
@@ -74,24 +74,12 @@ export default function AssaySetupGroup({
       onFirstOpen={onFirstOpen}
       openRequested={openRequested}
     >
-      <RangeSlider
-        label="Primer length (nt) — not used by the ranking (engine uses 18–27 nt)"
-        min={LIMITS.primerConstraints.lengthMin}
-        max={LIMITS.primerConstraints.lengthMax}
-        valueMin={constraints.lengthMin}
-        valueMax={constraints.lengthMax}
-        step={1}
-        unit=" nt"
-        onChange={(lo, hi) => { onConstraintChange('lengthMin', lo); onConstraintChange('lengthMax', hi); }}
-        tooltip="Recorded in the MIQE export only. The engine generates forward primers of 18–27 nt (miRNA-specific region + 5′ tail) whatever is set here."
-      />
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
           <NumInput
             id="qpcr-cycles"
             label="Total cycles"
-            tooltip="Number of thermal cycles in the qPCR reaction. Ct values within 5 cycles of the total are generally unreliable. Reported in the MIQE export, not used by the ranking."
+            hint="Reported in the MIQE export."
             value={qpcrData.totalCycles}
             onChange={handleCyclesChange}
             min={LIMITS.qpcr.cyclesMin}
@@ -112,6 +100,7 @@ export default function AssaySetupGroup({
             <div className="flex-1">
               <NumInput
                 id="qpcr-eff-min"
+                ariaLabel="Minimum PCR efficiency, %"
                 value={qpcrData.pcrEfficiencyMin}
                 onChange={handleEffMinChange}
                 min={LIMITS.qpcr.efficiencyMin}
@@ -120,10 +109,11 @@ export default function AssaySetupGroup({
                 error={errors.pcrEfficiencyMin}
               />
             </div>
-            <span className="text-xs text-slate-500 shrink-0 self-start mt-2">→</span>
+            <span className="text-xs text-slate-700 shrink-0 self-start mt-2.5">to</span>
             <div className="flex-1">
               <NumInput
                 id="qpcr-eff-max"
+                ariaLabel="Maximum PCR efficiency, %"
                 value={qpcrData.pcrEfficiencyMax}
                 onChange={handleEffMaxChange}
                 min={100}

@@ -129,14 +129,11 @@ def check_family_crossreactivity(
     canonical = db_meta.get("canonical", False)
     if canonical:
         data_warning = (
-            f"Family grouping: miRBase canonical classification (miFam.dat, provenance={provenance}). "
-            "Re-run scripts/build_family_db.py after each miRBase release update."
+            f"Family grouping: miRBase canonical classification (miFam.dat, provenance={provenance})."
         )
     else:
-        data_warning = (
-            "Family grouping: seed-based classification (positions 2-8, not canonical miRBase miFam.dat). "
-            "Re-run scripts/build_family_db.py with FTP access for canonical data."
-        )
+        # User-facing text: no developer instructions (review 2026-11-23).
+        data_warning = "Family grouping is seed-based (approximate)."
 
     return {
         "family": family_name,

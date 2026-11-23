@@ -183,7 +183,7 @@ export default function QualitySummary({ results, onBlastResult }) {
       : 'No issues detected';
 
   return (
-    <CollapsibleCard title="Quality Summary" tone={headerTone} summary={headerSummary}>
+    <CollapsibleCard title="Quality summary" tone={headerTone} summary={headerSummary}>
     <div className="space-y-3">
       {/* Issues — shown only when there is a real problem to report */}
       {hasProblems && (
@@ -193,7 +193,7 @@ export default function QualitySummary({ results, onBlastResult }) {
             <span className="ml-2 font-normal text-slate-500">
               — {items.length} issue{items.length !== 1 ? 's' : ''}
               {critCount > 0 && <span className="ml-1 text-red-600">({critCount} critical)</span>}
-              {warnCount > 0 && <span className="ml-1 text-amber-600">({warnCount} warning{warnCount > 1 ? 's' : ''})</span>}
+              {warnCount > 0 && <span className="ml-1 text-amber-700">({warnCount} warning{warnCount > 1 ? 's' : ''})</span>}
             </span>
           </p>
 

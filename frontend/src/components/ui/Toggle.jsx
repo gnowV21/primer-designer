@@ -26,8 +26,8 @@ export default function Toggle({ checked, onChange, label, tooltip, disabled = f
       </button>
 
       {label && (
-        <span className={`text-xs font-medium ${checked ? 'text-teal-700' : 'text-slate-500'}`}>
-          {typeof label === 'string' ? label : (checked ? 'ON' : 'OFF')}
+        <span className="text-xs font-medium text-slate-800">
+          {typeof label === 'string' ? label : (checked ? 'On' : 'Off')}
         </span>
       )}
       {tooltip && <Tooltip text={tooltip} />}

@@ -43,7 +43,7 @@ export default function ScoreBreakdown({ scores, weights, explanations }) {
     <div className="space-y-2">
       {/* Header: what the list contains, before the user reads any row */}
       <div className="flex items-baseline gap-2 flex-wrap">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Score breakdown</p>
+        <p className="text-xs font-semibold text-slate-500">Score breakdown</p>
         <span className="text-xs text-slate-500">
           {allRows.length} criteria
           {belowKeys.length === 0

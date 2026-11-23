@@ -32,3 +32,16 @@ export const WARM_MIRNAS = [
   // most common 3′ isoform +3 nt (36 % pooled) vs 9 % with the miRBase end: dominant-isoform line
   { name: 'hsa-miR-222-3p', sequence: 'AGCUACAUCUGGCUACUGGGU' },
 ];
+
+/**
+ * Make sure a parameter group ("Required", "Flexible", "Assay setup", "Detection method",
+ * "Experimental context") is open. On /design every group starts open once Parameters is
+ * open (UI review 2026-11-23); in the re-run sidebar they start closed.
+ */
+export async function openGroup(page, title) {
+  const btn = page.locator('button[aria-expanded]').filter({ hasText: new RegExp(`^\\W*${title}`) }).first();
+  if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click();
+}
+
+/** The designer's submit button (no decorative arrow since 2026-11-23). */
+export const DESIGN_BUTTON = { name: /^Design primers$/ };

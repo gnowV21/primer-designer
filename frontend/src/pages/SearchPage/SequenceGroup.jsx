@@ -35,7 +35,7 @@ function SeqWithSeed({ seq }) {
   const seed = seq.slice(1, 8);   // nt 2–8  (seed region)
   const post = seq.slice(8);
   return (
-    <span className="font-mono font-bold tracking-wide break-all">
+    <span className="seq font-bold">
       <span className="text-teal-800">{pre}</span>
       <span className="bg-teal-100 text-teal-700 rounded px-0.5">{seed}</span>
       <span className="text-teal-800">{post}</span>
@@ -130,11 +130,8 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
   useEffect(() => {
     if (status === 'found' && result?.sequence) {
       onChangeRef.current('matureSequence', result.sequence);
-      // When looked up by name/accession, replace the search field with the resolved sequence
-      // so the input reflects the actual RNA used for design
-      if (!isSeqLookup) {
-        onChangeRef.current('searchQuery', result.sequence);
-      }
+      // The search box keeps what the user typed; the resolved sequence is shown in the
+      // result card below (UI review 2026-11-23).
       onChangeRef.current('mirnaName',      result.id        ?? '');
       onChangeRef.current('mirbaseId',      result.accession ?? '');
       onChangeRef.current('accession',      result.accession ?? '');
@@ -297,9 +294,11 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
       {/* ── Unified search ─────────────────────────────────── */}
       <div className="space-y-2">
         <div>
-          <label className="text-sm font-medium text-slate-700">Search miRNA</label>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Enter a miRNA name, miRBase ID, or paste the mature sequence (A/U/G/C)
+          <label htmlFor="mirna-search" className="text-sm font-medium text-slate-800">
+            miRNA name, accession or sequence
+          </label>
+          <p id="mirna-search-help" className="text-xs text-slate-600 mt-0.5">
+            For example hsa-miR-21-5p, MIMAT0000076, or the mature sequence (A/U/G/C).
           </p>
         </div>
 
@@ -307,6 +306,8 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
           <div className="relative flex-1">
             <input
               ref={inputRef}
+              id="mirna-search"
+              aria-describedby="mirna-search-help"
               type="text"
               value={data.searchQuery}
               onChange={handleQueryChange}
@@ -319,7 +320,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
               }}
               placeholder="hsa-miR-21-5p · MIMAT0000076 · UAGCUUAUCAGACUGAUGUUGA"
               disabled={status === 'loading'}
-              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
+              className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-teal-300 focus:ring-1 focus:ring-teal-100 disabled:bg-slate-50 disabled:text-slate-500"
             />
 
             {/* ── Suggestions dropdown — rendered via portal to escape overflow:hidden parents ── */}
@@ -337,7 +338,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  <span className="text-xs font-medium text-slate-500">
                     {isFetchingSugg ? 'Searching…' : `${suggestions.length} suggestion${suggestions.length !== 1 ? 's' : ''}`}
                   </span>
                   <span className="text-xs text-slate-500">↑↓ navigate · Enter select · Esc close</span>
@@ -375,14 +376,14 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                           }`}
                         >
                           {/* Icon */}
-                          <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-500' : 'text-slate-500'}`}
+                          <svg className={`w-3.5 h-3.5 shrink-0 ${idx === activeSuggIdx ? 'text-teal-600' : 'text-slate-500'}`}
                                viewBox="0 0 16 16" fill="none">
                             <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.6"/>
                             <line x1="9.8" y1="9.8" x2="13" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
                           </svg>
 
                           {/* Name with highlight */}
-                          <span className="font-mono text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
+                          <span className="text-sm text-slate-800 font-medium flex-1 min-w-0 truncate">
                             <Highlight text={item.name} query={data.searchQuery} />
                           </span>
 
@@ -396,7 +397,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
                           {/* Species badge */}
                           <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${
                             isHuman
-                              ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                              ? 'bg-teal-50 text-teal-700 border border-teal-100'
                               : 'bg-slate-100 text-slate-500'
                           }`}>
                             {speciesShort}
@@ -423,8 +424,7 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
             onClick={handleSearch}
             disabled={status === 'loading' || !data.searchQuery.trim()}
             aria-label="Search"
-            className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-teal-800 text-white text-sm font-semibold
-              shadow-sm hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+            className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-semibold shadow-sm hover:bg-teal-700 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-700 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-150"
           >
             <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0" aria-hidden="true">
               <circle cx="6.5" cy="6.5" r="4" stroke="currentColor" strokeWidth="1.7"/>
@@ -457,17 +457,17 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
           <div className="grid grid-cols-[5.5rem_1fr_auto] gap-x-3 gap-y-2.5 text-sm items-center">
 
             {/* Row 1 — miRNA Name + length */}
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">Name</span>
-            <span className="font-mono text-slate-900 font-semibold break-all">
+            <span className="text-slate-500 text-xs font-medium">Name</span>
+            <span className="text-slate-900 font-semibold whitespace-nowrap">
               {displayName || <span className="text-slate-500 font-normal italic font-sans">—</span>}
             </span>
             <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 font-semibold whitespace-nowrap tabular-nums">
-              {seqAnalysis.length} nt
+              {seqAnalysis.length}{' '}nt
             </span>
 
             {/* Row 2 — miRBase ID + overall GC */}
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">ID</span>
-            <span className="font-mono text-slate-700 break-all">
+            <span className="text-slate-500 text-xs font-medium">ID</span>
+            <span className="seq text-slate-700">
               {displayId || <span className="text-slate-500 font-normal italic font-sans">—</span>}
             </span>
             <span className="text-xs bg-white border border-teal-200 text-teal-700 rounded-md px-2 py-0.5 whitespace-nowrap tabular-nums">
@@ -475,14 +475,13 @@ export default function SequenceGroup({ data, errors, onChange, onError, seqAnal
             </span>
 
             {/* Row 3 — Sequence with seed highlighted + seed badge */}
-            <span className="text-slate-500 text-xs font-medium uppercase tracking-wide leading-tight">
-              Seq 5′→3′
+            <span className="text-slate-500 text-xs font-medium leading-tight">
+              Sequence 5′→3′
             </span>
             <SeqWithSeed seq={data.matureSequence} />
             <span className="inline-flex items-center gap-1 text-xs bg-teal-50 border border-teal-300 text-teal-700 rounded-md px-2 py-0.5 whitespace-nowrap">
               <Tooltip text="Seed region: nt 2–8 from the 5′ end. Determines target mRNA recognition and discrimination between members of the same miRNA family." />
-              Seed <span className="font-mono font-semibold">{seqAnalysis.seed7mer}</span>
-              <span className="text-teal-500 tabular-nums">· {seqAnalysis.gcSeed}%</span>
+              Seed <span className="seq font-semibold">{seqAnalysis.seed7mer}</span>
             </span>
           </div>
 

@@ -92,7 +92,7 @@ class TestCSVChecklist:
         # reference-gene, reproducibility, raw-fluorescence = 13
         assert len(rows) == 13, f"Expected 13 checklist rows, got {len(rows)}: {rows}"
         # New MIQE 2.0 items are present
-        for token in ("LOD", "geometric-mean", "RDML", "Reproducibility", "prediction intervals"):
+        for token in ("LOD", "geometric mean", "RDML", "Reproducibility", "prediction intervals"):
             assert token in checklist_block, f"missing MIQE 2.0 item: {token}"
 
     def test_csv_has_miqe_design_block(self, client, sample_results):
@@ -115,7 +115,7 @@ class TestCSVChecklist:
         assert resp.status_code == 200
         body = resp.data.decode("utf-8")
         assert "ASSAY DESIGN (MIQE 2.0" in body
-        assert "Design tool + version + settings" in body
+        assert "Design tool," in body
         assert "MIMAT0000076" in body          # accession surfaced
         assert "Homo sapiens" in body           # species surfaced
 
@@ -124,8 +124,8 @@ class TestCSVChecklist:
             "format": "csv", "results": sample_results, "include_checklist": True,
         })
         body = resp.data.decode("utf-8")
-        # Specificity row should mention LOW (worst risk from mock data)
-        assert "LOW" in body
+        # Specificity row reports the worst seed-group risk of the mock data (LOW), in words
+        assert "Seed group: low" in body
 
     def test_csv_checklist_omitted_when_false(self, client, sample_results):
         resp = client.post("/api/export", json={

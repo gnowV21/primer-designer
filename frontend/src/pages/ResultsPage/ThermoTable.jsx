@@ -7,13 +7,18 @@ import Tooltip from '../../components/ui/Tooltip.jsx';
 import LnaPanel from '../../components/LnaPanel/index.jsx';
 import useLnaEnabled from '../../hooks/useLnaEnabled.js';
 import { hasTiers } from '../../utils/tierRank.js';
+import { SeqBlock as SeqBlockLine } from '../../components/ui/Seq.jsx';
+import { signed } from '../../utils/format.js';
+import { v4RuleLabel } from '../../utils/v4Rules.js';
+
+const NB = '\u00a0';
 
 // ── Helpers ────────────────────────────────────────────────────────
 
 function fmt(v, digits = 1) {
   if (v === undefined || v === null || v === '') return '—';
-  if (typeof v === 'boolean') return v ? '✓' : '✗';
-  if (typeof v === 'number') return v.toFixed(digits);
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'number') return signed(v.toFixed(digits));
   return String(v);
 }
 
@@ -27,8 +32,9 @@ function fmtPct(v) {
 
 function fmtDg(v) {
   if (v === undefined || v === null) return '—';
-  return `${Number(v).toFixed(2)}`;
+  return signed(Number(v).toFixed(2));
 }
+const deg = (v, d = 1) => (v === undefined || v === null ? '—' : `${fmt(v, d)}${NB}°C`);
 
 // Full-structure dimer ΔG behind hard-filter rule 1: RNAcofold, DNA parameters,
 // 37 °C (Kang 2017), worst of forward self-dimer and forward × universal reverse.
@@ -83,61 +89,62 @@ const ROWS = [
     best: 'max',
   },
   {
-    label: 'Forward Tm (full)',
+    label: 'Forward Tm, full primer',
     extract: (s) => s?.tm_full,
-    format: (s) => fmt(s?.tm_full) + '°C',
+    format: (s) => deg(s?.tm_full),
     best: 'max',
   },
   {
-    label: 'Forward Tm (binding)',
+    label: 'Forward Tm, binding region',
     extract: (s) => s?.tm_binding,
-    format: (s) => s?.tm_binding !== undefined ? fmt(s.tm_binding) + '°C' : '—',
+    format: (s) => deg(s?.tm_binding),
     best: 'max',
   },
   {
-    label: 'GC% (forward)',
+    label: 'GC content (forward)',
     extract: (s) => s?.gc_percent,
-    format: (s) => fmt(s?.gc_percent) + '%',
+    format: (s) => `${fmt(s?.gc_percent)}%`,
     best: 'max',
   },
   {
     label: 'Amplicon',
     extract: (s) => s?.amplicon_size,
-    format: (s) => fmt(s?.amplicon_size, 0) + ' bp',
+    format: (s) => `${fmt(s?.amplicon_size, 0)}${NB}bp`,
     best: 'min_abs', // closer to default is best
   },
   {
-    label: 'Hairpin ΔG',
+    label: 'Hairpin ΔG (kcal/mol)',
     extract: (s) => get(s, 'structure_checks', 'hairpin', 'dg'),
     format: (s) => fmtDg(get(s, 'structure_checks', 'hairpin', 'dg')),
     best: 'min_abs',
   },
   {
-    label: 'Self-dimer ΔG',
+    label: 'Self-dimer ΔG (kcal/mol)',
     extract: (s) => get(s, 'structure_checks', 'self_dimer', 'dg_overall'),
     format: (s) => fmtDg(get(s, 'structure_checks', 'self_dimer', 'dg_overall')),
     best: 'min_abs',
   },
   {
-    label: 'Dimer ΔG (RNAcofold, 37 °C)',
+    label: `Dimer ΔG, RNAcofold at 37${NB}°C (kcal/mol)`,
     extract: (s) => cofoldDimerDg(s),
     format: (s) => fmtDg(cofoldDimerDg(s)),
     best: 'min_abs',
   },
   {
-    label: 'Hetero-dimer fwd×rev ΔG',
+    label: 'Forward × reverse dimer ΔG (kcal/mol)',
     extract: (s) => get(s, 'heterodimer_checks', 'heterodimer_fwd_reverse', 'dg'),
     format: (s) => fmtDg(get(s, 'heterodimer_checks', 'heterodimer_fwd_reverse', 'dg')),
     best: 'min_abs',
   },
   {
-    label: 'Hetero-dimer fwd×RT ΔG',
+    label: 'Forward × RT dimer ΔG (kcal/mol)',
     extract: (s) => get(s, 'heterodimer_checks', 'heterodimer_fwd_stemloop', 'dg'),
     format: (s) => fmtDg(get(s, 'heterodimer_checks', 'heterodimer_fwd_stemloop', 'dg')),
     best: 'min_abs',
   },
   {
-    label: "3′ end stability ΔG",
+    // Primer3 reports 3′-end stability as a positive −ΔG of the last 5 nt.
+    label: '3′-end stability, −ΔG (kcal/mol)',
     extract: (s) => get(s, 'structure_checks', 'end_stability', 'stability_kcal_mol'),
     format: (s) => {
       const v = get(s, 'structure_checks', 'end_stability', 'stability_kcal_mol');
@@ -148,7 +155,7 @@ const ROWS = [
   {
     // Informational (not scored, audit SCI-02): % of first-strand cDNA bound by
     // the specific region in PCR cycle 1 at Ta (mass action, AUDIT REV-24).
-    label: 'Cycle-1 occupancy (at Ta)',
+    label: 'Cycle-1 occupancy at Ta (% of primer bound)',
     extract: (s) => get(s, 'scores', 'bound_fraction_binding_pct'),
     format: (s) => {
       const v = get(s, 'scores', 'bound_fraction_binding_pct');
@@ -157,7 +164,7 @@ const ROWS = [
     best: 'max',
   },
   {
-    label: 'GC clamp',
+    label: 'GC clamp score (0–100)',
     extract: (s) => get(s, 'scores', 'gc_clamp'),
     format: (s) => {
       const v = get(s, 'scores', 'gc_clamp');
@@ -166,11 +173,11 @@ const ROWS = [
     best: 'max',
   },
   {
-    label: 'isoMiR flag',
+    label: 'isomiR co-amplification risk',
     extract: () => null, // not numeric
     format: (s) => {
       const risk = get(s, 'isomir_flag', 'isomir_discrimination_risk');
-      return risk === true ? '⚠ Yes' : risk === false ? '✓ No' : '—';
+      return risk === true ? 'Yes' : risk === false ? 'None' : '—';
     },
     best: null,
   },
@@ -179,18 +186,18 @@ const ROWS = [
 // Tiered sets (4.0.0): the V4 "Total score" row is replaced by the criteria groups, in
 // ranking-key order (Required, then Flexible 1 → 2 → 3; utils/criteriaGroups.js).
 // total_score is only the final tie-break there.
-const yesNo = (v) => (v ? 'Yes' : '—');
+const yesNo = (v) => (v ? 'Yes' : 'No');
 const TIER_ROWS = [
   { label: 'Grade', extract: () => null, format: (s) => s.grade ?? '—', best: null },
-  { label: 'Required · specificity (S)', extract: (s) => s.ranking.specificity.total,
+  { label: 'Specificity (S)', extract: (s) => s.ranking.specificity.total,
     format: (s) => `${s.ranking.specificity.total}/${s.ranking.specificity.max}`, best: 'max' },
-  { label: 'Flexible 1 · structure too strong', extract: () => null, format: (s) => yesNo(s.ranking.structure_veto), best: null },
-  { label: 'Flexible 1 · binding Tm < 39 °C', extract: () => null, format: (s) => yesNo(s.ranking.binding_floor_fail), best: null },
-  { label: 'Flexible 1 · standard primer rules not met', extract: () => null,
-    format: (s) => (s.v4_rule_violations || []).join(', ') || '—', best: null },
-  { label: 'Flexible 2 · PCR (P)', extract: (s) => s.ranking.pcr.total,
+  { label: 'Secondary structure too strong', extract: () => null, format: (s) => yesNo(s.ranking.structure_veto), best: null },
+  { label: `Binding-region Tm below 39${NB}°C`, extract: () => null, format: (s) => yesNo(s.ranking.binding_floor_fail), best: null },
+  { label: 'Standard primer rules not met', extract: () => null,
+    format: (s) => (s.v4_rule_violations || []).map(v4RuleLabel).join(', ') || 'None', best: null },
+  { label: 'PCR (P)', extract: (s) => s.ranking.pcr.total,
     format: (s) => `${s.ranking.pcr.total}/${s.ranking.pcr.max}`, best: 'max' },
-  { label: 'Flexible 3 · composition & structure (F)', extract: (s) => s.ranking.flexible.total,
+  { label: 'Composition and structure (F)', extract: (s) => s.ranking.flexible.total,
     format: (s) => `${s.ranking.flexible.total}/${s.ranking.flexible.max}`, best: 'max' },
   { label: 'Tie-break score', extract: (s) => s.ranking.detailed_score,
     format: (s) => fmt(s.ranking.detailed_score), best: 'max' },
@@ -205,13 +212,18 @@ function TabA({ top3 }) {
   const rows = comparisonRows(top3);
 
   return (
+    <div className="space-y-2">
     <div className="overflow-x-auto">
-      <table className="w-full text-xs border-collapse">
+      <table className="w-full min-w-[30rem] text-xs border-collapse table-fixed">
+        <colgroup>
+          <col className="w-[40%]" />
+          {top3.map((s) => <col key={s.rank} style={{ width: `${60 / top3.length}%` }} />)}
+        </colgroup>
         <thead>
           <tr className="bg-teal-600 text-white">
-            <th className="text-left px-3 py-2 font-semibold rounded-tl-lg w-48">Criterion</th>
+            <th className="text-left px-3 py-2 font-semibold rounded-tl-lg">Criterion</th>
             {top3.map((s) => (
-              <th key={s.rank} className="text-center px-3 py-2 font-semibold">
+              <th key={s.rank} className="text-right px-3 py-2 font-semibold">
                 Rank {s.rank}
               </th>
             ))}
@@ -225,15 +237,13 @@ function TabA({ top3 }) {
                 key={row.label}
                 className={ri % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
               >
-                <td className="px-3 py-1.5 font-medium text-slate-600 border-r border-slate-100">
+                <td className="px-3 py-1.5 font-medium text-slate-700 border-r border-slate-100">
                   {row.label}
                 </td>
                 {top3.map((s, si) => (
                   <td
                     key={s.rank}
-                    className={`px-3 py-1.5 text-center tabular-nums ${
-                      si === bIdx ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-slate-700'
-                    }`}
+                    className={`px-3 py-1.5 text-right tabular-nums ${si === bIdx ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-slate-800'}`}
                   >
                     {row.format(s)}
                   </td>
@@ -244,42 +254,28 @@ function TabA({ top3 }) {
         </tbody>
       </table>
     </div>
+    <p className="text-xs text-slate-700">
+      <span className="inline-block w-3 h-3 align-middle rounded-sm bg-teal-50 border border-teal-200 mr-1" aria-hidden />
+      Shaded: the best value of the row (no shading when the sets are equal).
+    </p>
+    </div>
   );
 }
 
 // ── Tab B — Per-primer detail ──────────────────────────────────────
 
 function SeqBlock({ label, sequence, tag }) {
-  const [copied, setCopied] = useState(false);
-
-  function copy() {
-    navigator.clipboard.writeText(sequence ?? '').then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }
-
   return (
     <div className="rounded-lg border border-slate-200 px-3 py-2.5 space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-semibold text-slate-700">{label}</span>
         {tag && (
           <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-2 py-0.5">
             {tag}
           </span>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-xs text-slate-800 break-all leading-relaxed flex-1">
-          5′–{sequence}–3′
-        </span>
-        <button
-          onClick={copy}
-          className="shrink-0 text-xs px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
-        >
-          {copied ? '✓' : 'Copy'}
-        </button>
-      </div>
+      <SeqBlockLine sequence={sequence} />
     </div>
   );
 }
@@ -288,8 +284,8 @@ function PropRow({ label, value }) {
   if (value === undefined || value === null || value === '—') return null;
   return (
     <div className="flex justify-between text-xs py-0.5">
-      <span className="text-slate-500">{label}</span>
-      <span className="text-slate-700 tabular-nums font-medium">{value}</span>
+      <span className="text-slate-700">{label}</span>
+      <span className="text-slate-900 tabular-nums font-medium text-right">{value}</span>
     </div>
   );
 }
@@ -315,46 +311,46 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <button
             key={s.rank}
             onClick={() => setSelRank(s.rank)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              s.rank === selRank
+            type="button"
+            aria-pressed={s.rank === selRank}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${s.rank === selRank
                 ? 'bg-teal-600 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
           >
             Rank {s.rank}
-            {s.grade && <span className="ml-1 opacity-70">· {s.grade}</span>}
+            {s.grade && <span className="ml-1">· {s.grade}</span>}
           </button>
         ))}
       </div>
 
       {/* Forward primer */}
       <div className="space-y-2">
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Forward Primer</p>
-        <SeqBlock label="Sequence" sequence={set.sequence} tag={`${set.length} nt`} />
+        <p className="text-xs font-bold text-slate-800">Forward primer</p>
+        <SeqBlock label="Sequence" sequence={set.sequence} tag={`${set.length}${NB}nt`} />
         <div className="grid grid-cols-2 gap-x-6 px-1">
-          <PropRow label="Tm (full)" value={set.tm_full !== undefined ? fmt(set.tm_full) + '°C' : undefined} />
-          <PropRow label="Tm (binding region)" value={set.tm_binding !== undefined ? fmt(set.tm_binding) + '°C' : undefined} />
-          <PropRow label="GC%" value={set.gc_percent !== undefined ? fmt(set.gc_percent) + '%' : undefined} />
-          <PropRow label="Amplicon" value={set.amplicon_size !== undefined ? fmt(set.amplicon_size, 0) + ' bp' : undefined} />
-          <PropRow label="Hairpin ΔG" value={fmtDg(get(set, 'structure_checks', 'hairpin', 'dg'))} />
-          <PropRow label="Self-dimer ΔG" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg_overall'))} />
-          <PropRow label="Dimer ΔG (RNAcofold, 37 °C)" value={fmtDg(cofoldDimerDg(set))} />
-          <PropRow label="3′ stability ΔG" value={fmtDg(get(set, 'structure_checks', 'end_stability', 'stability_kcal_mol'))} />
-          <PropRow label="Binding region" value={set.specific_length !== undefined ? `${set.specific_length} nt` : undefined} />
-          <PropRow label="Binding pos (1-based)" value={
+          <PropRow label="Tm, full primer" value={set.tm_full !== undefined ? deg(set.tm_full) : undefined} />
+          <PropRow label="Tm, binding region" value={set.tm_binding !== undefined ? deg(set.tm_binding) : undefined} />
+          <PropRow label="GC content" value={set.gc_percent !== undefined ? `${fmt(set.gc_percent)}%` : undefined} />
+          <PropRow label="Amplicon" value={set.amplicon_size !== undefined ? `${fmt(set.amplicon_size, 0)}${NB}bp` : undefined} />
+          <PropRow label="Hairpin ΔG (kcal/mol)" value={fmtDg(get(set, 'structure_checks', 'hairpin', 'dg'))} />
+          <PropRow label="Self-dimer ΔG (kcal/mol)" value={fmtDg(get(set, 'structure_checks', 'self_dimer', 'dg_overall'))} />
+          <PropRow label={`Dimer ΔG, RNAcofold at 37${NB}°C (kcal/mol)`} value={fmtDg(cofoldDimerDg(set))} />
+          <PropRow label="3′-end stability, −ΔG (kcal/mol)" value={fmtDg(get(set, 'structure_checks', 'end_stability', 'stability_kcal_mol'))} />
+          <PropRow label="miRNA-specific region" value={set.specific_length !== undefined ? `${set.specific_length}${NB}nt` : undefined} />
+          <PropRow label="Binding position on the miRNA (nt)" value={
             set.binding_start_1based !== undefined
               ? `${set.binding_start_1based}–${set.binding_end_1based}`
               : undefined
           } />
           {/* Cycle-1 occupancy: informational, evaluated at the user's Ta (audit SCI-02) */}
           <PropRow
-            label="Cycle-1 occupancy (Ta, not scored)"
+            label="Cycle-1 occupancy at Ta (not scored)"
             value={set.scores?.bound_fraction_binding_pct !== undefined
               ? fmtPct(set.scores.bound_fraction_binding_pct)
               : undefined}
           />
           <PropRow
-            label="Bound frac. (full, 55°C)"
+            label={`Bound fraction, full primer at 55${NB}°C`}
             value={set.scores?.bound_fraction_full_pct !== undefined
               ? `${fmt(set.scores.bound_fraction_full_pct)}%`
               : undefined}
@@ -362,7 +358,7 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           {hasTiers(set) ? (
             <>
               <PropRow label="Grade" value={set.grade} />
-              <PropRow label="Required S · PCR P · Composition F"
+              <PropRow label="Specificity · PCR · composition and structure"
                 value={`${set.ranking.specificity.total}/${set.ranking.specificity.max} · ${set.ranking.pcr.total}/${set.ranking.pcr.max} · ${set.ranking.flexible.total}/${set.ranking.flexible.max}`} />
               <PropRow label="Tie-break score" value={fmt(set.ranking.detailed_score)} />
             </>
@@ -379,9 +375,9 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
               <button
                 type="button"
                 onClick={() => setShowLna(true)}
-                className="text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
+                className="text-xs font-medium text-amber-800 border border-amber-200 bg-amber-50 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
               >
-                Suggest LNA (Tm) ↓
+                Suggest LNA (Tm)
               </button>
             ) : (
               <LnaPanel
@@ -401,30 +397,30 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
       {/* RT stem-loop primer */}
       {stemloopRt && (
         <div className="space-y-2">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">RT Stem-loop Primer (shared)</p>
-          <SeqBlock label="Sequence" sequence={stemloopRt.sequence} tag={`${stemloopRt.length} nt`} />
+          <p className="text-xs font-bold text-slate-800">RT stem-loop primer (shared)</p>
+          <SeqBlock label="Sequence" sequence={stemloopRt.sequence} tag={`${stemloopRt.length}${NB}nt`} />
           <div className="grid grid-cols-2 gap-x-6 px-1">
             {/* [RESEARCH_QUESTIONS_UX A2] Full-primer Tm: DNA:DNA NN (primer3, indicative).
                 Overhang hybrid Tm: DNA:RNA NN (Sugimoto 1995), if USE_HYBRID_TM enabled. */}
             <RtTmRow stemloopRt={stemloopRt} />
-            <PropRow label="GC%" value={stemloopRt.gc_percent !== undefined ? fmt(stemloopRt.gc_percent) + '%' : undefined} />
-            <PropRow label="MFE" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) + ' kcal/mol' : undefined} />
+            <PropRow label="GC content" value={stemloopRt.gc_percent !== undefined ? `${fmt(stemloopRt.gc_percent)}%` : undefined} />
+            <PropRow label="MFE (kcal/mol)" value={stemloopRt.mfe !== undefined ? fmt(stemloopRt.mfe, 2) : undefined} />
             <PropRow label="MFE method" value={stemloopRt.mfe_method} />
           </div>
           {/* 3′ isomiR share from isomiRdb (audit SCI-10) — warning when the canonical
               3′ form is a minority, plain note otherwise. */}
           {stemloopRt.three_prime_isomir?.three_prime_isomir_risk ? (
-            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+            <p className="text-xs text-amber-800 px-1 leading-relaxed">
               3′ isomiRs: {stemloopRt.three_prime_isomir.warning}{' '}
-              <span className="text-slate-500">Source: {stemloopRt.three_prime_isomir.source}.</span>
+              <span className="text-slate-700">Source: {stemloopRt.three_prime_isomir.source}.</span>
             </p>
           ) : stemloopRt.three_prime_isomir?.summary && (
-            <p className="text-xs text-slate-500 px-1 leading-relaxed">
+            <p className="text-xs text-slate-700 px-1 leading-relaxed">
               3′ isomiRs: {stemloopRt.three_prime_isomir.summary} Source: {stemloopRt.three_prime_isomir.source}.
             </p>
           )}
           {stemloopRt.three_prime_isomir?.fold_change_bias_risk && (
-            <p className="text-xs text-amber-700 px-1 leading-relaxed">
+            <p className="text-xs text-amber-800 px-1 leading-relaxed">
               {stemloopRt.three_prime_isomir.fold_change_bias_warning}
             </p>
           )}
@@ -434,13 +430,15 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
       {/* Universal reverse */}
       {universalReverse && (
         <div className="space-y-2">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Universal Reverse Primer (fixed)</p>
-          <SeqBlock label="Sequence" sequence={universalReverse.sequence} tag={`${universalReverse.length} nt`} />
+          <p className="text-xs font-bold text-slate-800">Universal reverse primer (fixed)</p>
+          <SeqBlock label="Sequence" sequence={universalReverse.sequence} tag={`${universalReverse.length}${NB}nt`} />
           <div className="grid grid-cols-2 gap-x-6 px-1">
-            <PropRow label="Tm" value={universalReverse.tm !== undefined ? fmt(universalReverse.tm) + '°C' : undefined} />
-            <PropRow label="GC%" value={universalReverse.gc_percent !== undefined ? fmt(universalReverse.gc_percent) + '%' : undefined} />
-            <PropRow label="Hairpin ΔG" value={fmtDg(get(universalReverse, 'self_structure_check', 'hairpin_dg'))} />
-            <PropRow label="Self-dimer ΔG" value={fmtDg(get(universalReverse, 'self_structure_check', 'self_dimer_dg'))} />
+            {/* Tm at the design conditions (ranking), as in "Shared by all sets"; the API's
+                universal_reverse.tm is a precomputed constant the engine does not use. */}
+            <PropRow label="Tm at the design conditions" value={deg(set?.ranking?.pcr?.tm_pair?.tm_reverse ?? universalReverse.tm)} />
+            <PropRow label="GC content" value={universalReverse.gc_percent !== undefined ? `${fmt(universalReverse.gc_percent)}%` : undefined} />
+            <PropRow label="Hairpin ΔG (kcal/mol)" value={fmtDg(get(universalReverse, 'self_structure_check', 'hairpin_dg'))} />
+            <PropRow label="Self-dimer ΔG (kcal/mol)" value={fmtDg(get(universalReverse, 'self_structure_check', 'self_dimer_dg'))} />
           </div>
         </div>
       )}
@@ -471,23 +469,23 @@ function RtTmRow({ stemloopRt }) {
   return (
     <>
       <div className="flex justify-between text-xs py-0.5">
-        <span className="text-slate-500 flex items-center gap-1">
-          Tm full (DNA:DNA NN)
+        <span className="text-slate-700 flex items-center gap-1">
+          Tm, full primer (DNA:DNA)
           <Tooltip text={fullTmTooltip} />
         </span>
         <span className="text-slate-700 tabular-nums font-medium">
-          {stemloopRt.tm_full !== undefined ? fmt(stemloopRt.tm_full) + '°C' : '—'}
-          <span className="text-slate-500 ml-1 text-xs font-normal">indicative</span>
+          {stemloopRt.tm_full !== undefined ? deg(stemloopRt.tm_full) : '—'}
+          <span className="text-slate-600 ml-1 text-xs font-normal">indicative</span>
         </span>
       </div>
       {hasHybrid && (
         <div className="flex justify-between text-xs py-0.5">
-          <span className="text-slate-500 flex items-center gap-1">
+          <span className="text-slate-700 flex items-center gap-1">
             Overhang Tm (DNA:RNA, Sugimoto 1995)
             <Tooltip text={hybridTooltip} />
           </span>
           <span className="text-slate-700 tabular-nums font-medium">
-            {stemloopRt.tm_hybrid_c}°C
+            {deg(stemloopRt.tm_hybrid_c)}
             <span className="text-slate-600 ml-1 text-xs font-normal">modeled</span>
           </span>
         </div>
@@ -495,15 +493,15 @@ function RtTmRow({ stemloopRt }) {
       {/* Week2 P4: <8 bp duplex → report ΔG37 + a band, never a point Tm. */}
       {!hasHybrid && stemloopRt?.dg37_kcal_mol != null && (
         <div className="flex justify-between text-xs py-0.5">
-          <span className="text-slate-500 flex items-center gap-1">
-            Overhang ΔG₃₇ (DNA:RNA)
+          <span className="text-slate-700 flex items-center gap-1">
+            Overhang ΔG at 37{NB}°C (DNA:RNA)
             <Tooltip text={hybridTooltip || (stemloopRt?.tm_note ?? '')} />
           </span>
           <span className="tabular-nums text-right">
-            <span className="text-slate-700 font-medium">{stemloopRt.dg37_kcal_mol} kcal/mol</span>
+            <span className="text-slate-900 font-medium whitespace-nowrap">{fmt(stemloopRt.dg37_kcal_mol, 2)}{NB}kcal/mol</span>
             {Array.isArray(stemloopRt.tm_hybrid_band_c) && (
-              <span className="text-slate-500 ml-1 text-xs font-normal">
-                Tm ≈ {stemloopRt.tm_hybrid_band_c[0]}–{stemloopRt.tm_hybrid_band_c[1]}°C (not reportable)
+              <span className="text-slate-600 ml-1 text-xs font-normal">
+                Tm ≈ {stemloopRt.tm_hybrid_band_c[0]}–{stemloopRt.tm_hybrid_band_c[1]}{NB}°C (no point value below 8{NB}bp)
               </span>
             )}
           </span>
@@ -511,8 +509,8 @@ function RtTmRow({ stemloopRt }) {
       )}
       {!hasHybrid && stemloopRt?.dg37_kcal_mol == null && (
         <div className="flex justify-between text-xs py-0.5">
-          <span className="text-slate-500">Overhang Tm (DNA:RNA)</span>
-          <span className="text-slate-500 tabular-nums text-xs">approx. — see note</span>
+          <span className="text-slate-700">Overhang Tm (DNA:RNA)</span>
+          <span className="text-slate-700 tabular-nums text-xs">approximate, see the note</span>
         </div>
       )}
     </>
@@ -528,26 +526,27 @@ export default function ThermoTable({ results, params }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
       {/* Tab bar */}
-      <div className="flex border-b border-slate-200 bg-slate-50">
+      <div role="tablist" aria-label="Thermodynamic parameters view" className="flex border-b border-slate-200 bg-slate-50">
         {[
-          { key: 'A', label: 'Comparison (3 sets)' },
-          { key: 'B', label: 'Per-primer detail' },
+          { key: 'A', label: 'Comparison' },
+          { key: 'B', label: 'Per primer' },
         ].map(({ key, label }) => (
           <button
             key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
             onClick={() => setTab(key)}
-            className={`px-4 py-2.5 text-xs font-semibold transition-colors border-b-2 -mb-px ${
-              tab === key
+            className={`px-4 py-2.5 text-xs font-semibold transition-colors border-b-2 -mb-px ${tab === key
                 ? 'text-teal-700 border-teal-600 bg-white'
-                : 'text-slate-500 border-transparent hover:text-slate-700 hover:bg-white'
-            }`}
+              : 'text-slate-700 border-transparent hover:text-slate-900 hover:bg-white'}`}
           >
-            Tab {key} — {label}
+            {label}
           </button>
         ))}
       </div>
 
-      <div className="p-4">
+      <div role="tabpanel" className="p-4">
         {tab === 'A' && <TabA top3={top3} />}
         {tab === 'B' && (
           <TabB top3={top3} stemloopRt={stemloop_rt} universalReverse={universal_reverse} params={params} />

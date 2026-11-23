@@ -128,7 +128,7 @@ def check_template_structure(
             f"(window MFE = {mfe:.2f} kcal/mol; {paired} of {specific_len} binding-region "
             f"bases are base-paired in predicted structure). "
             f"Stable hairpin at the binding site may reduce primer annealing efficiency. "
-            f"Consider a different specific_length or verify with melting-curve analysis. "
+            f"Consider a different forward-primer specific length or verify with melting-curve analysis. "
             f"Source: Fan 2019 (DOI 10.1080/07391102.2018.1498804)."
         )
 

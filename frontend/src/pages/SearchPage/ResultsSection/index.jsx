@@ -10,10 +10,13 @@ import FamilySpecificityMap from '../../../components/FamilySpecificityMap.jsx';
 import OverhangCollisionPanel from '../../../components/OverhangCollisionPanel.jsx';
 import CollapsibleCard from '../../../components/ui/CollapsibleCard.jsx';
 import TierBanners, { TIER_WARNING_FIELDS } from './TierBanners.jsx';
-import SetComparison from './SetComparison.jsx';
+import SetComparison, { sharedClosestOffTarget } from './SetComparison.jsx';
+import NoBreak from '../../../components/ui/NoBreak.jsx';
+import { levelWord } from '../../../utils/format.js';
 import IsoformTable from './IsoformTable.jsx';
 import { rankReason } from '../../../utils/rankReason.js';
 import { equivalentRanks } from '../../../utils/tierRank.js';
+import { SeqBlock } from '../../../components/ui/Seq.jsx';
 
 // Warnings shown in-context elsewhere (design-page slider / results-page note, or the
 // tiered banners) — not repeated in the generic list. Still in the exported report.
@@ -45,15 +48,12 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       {/* ── Header ── */}
       {!hideHeader && <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">Design Results</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-lg font-semibold text-slate-800">Design results</h2>
+          <p className="text-xs text-slate-600 mt-0.5">
             {metadata?.mirna_length}-nt miRNA · {top3?.length} primer set{top3?.length !== 1 ? 's' : ''} found
             {metadata?.elapsed_seconds !== undefined && ` · ${metadata.elapsed_seconds}s`}
           </p>
         </div>
-        <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 rounded-full px-3 py-1 font-medium">
-          Algorithm v{metadata?.algorithm_version}
-        </span>
       </div>}
 
       {/* ── Global warnings — suppressed when hideHeader=true (shown by QualitySummary in ResultsPage) ── */}
@@ -70,8 +70,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
                   : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}
             >
-              <span className="font-semibold mr-2">{w.severity === 'critical' ? 'Critical:' : 'Note:'}</span>
-              {w.message}
+              <span className="font-semibold mr-2">{w.severity === 'critical' ? 'Critical:' : 'Warning:'}</span>
+              <NoBreak>{w.message}</NoBreak>
             </div>
           ))}
         </div>
@@ -89,8 +89,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         .filter((w) => w.severity === 'critical' && !DEDICATED_WARNING_FIELDS.has(w.field)
           && !PANEL_WARNING_FIELDS.has(w.field))
         .map((w, i) => (
-          <div key={i} className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 break-words" data-testid="critical-warning">
-            {w.message}
+          <div key={i} className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" data-testid="critical-warning">
+            <span className="font-semibold mr-2">Critical:</span><NoBreak>{w.message}</NoBreak>
           </div>
         ))}
       {top3?.length > 1 && (
@@ -103,7 +103,8 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       {/* 3. RT primer + universal reverse: identical for every set, shown once */}
       {(stemloop_rt || universal_reverse) && (
         <SharedPrimers stemloopRt={stemloop_rt} reverse={universal_reverse}
-          tmReverse={top3?.[0]?.ranking?.pcr?.tm_pair?.tm_reverse} />
+          tmReverse={top3?.[0]?.ranking?.pcr?.tm_pair?.tm_reverse}
+          closest={sharedClosestOffTarget(top3)} />
       )}
 
       {/* 4. Per-set cards (#1 open) */}
@@ -136,17 +137,17 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
         const s = oc.summary || {};
         const nSame = (s.shifted_5p || 0) + (s.shifted_3p || 0) + (s.same_sequence || 0);
         const tone = label === 'CO-AMPLIFIED' ? 'danger' : label === 'PARTIAL' ? 'warn' : 'ok';
-        const parts = [label];
+        const parts = [levelWord(label)];
         if (s['CO-AMPLIFIED']) parts.push(`${s['CO-AMPLIFIED']} co-amplified`);
         if (s.PARTIAL) parts.push(`${s.PARTIAL} partial`);
         if (nSame) parts.push(`${nSame} same-molecule`);
         return (
           <CollapsibleCard
-            title="Assay Specificity"
+            title="Assay specificity"
             tone={tone}
             summary={parts.join(' · ')}
           >
-            <OverhangCollisionPanel overhangCollision={oc} />
+            <OverhangCollisionPanel overhangCollision={oc} hideTitle closest={top3?.[0]?.ranking?.specificity?.assay_dcq} />
           </CollapsibleCard>
         );
       })()}
@@ -154,14 +155,16 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
       {/* ── Seed family (biological context only): map + table toggle ── */}
       {specificity_warnings?.cross_reactivity && (() => {
         const cr = specificity_warnings.cross_reactivity;
-        const fam = cr.family || 'ungrouped';
+        // The API's family label is an auto-generated cluster ID ("miR-1" for the miR-15/16
+        // seed): the page names the group by its seed instead (UI review 2026-11-23).
+        const seed = (metadata?.mirna_sequence || '').slice(1, 8).toUpperCase();
         const nSib = (cr.cross_reactivity || []).length;
         return (
           <CollapsibleCard
-            title="Seed Family (biological context)"
-            summary={`${fam} · ${nSib} sibling${nSib !== 1 ? 's' : ''}`}
+            title="Seed family (biological context)"
+            summary={`Seed group ${seed} · ${nSib === 0 ? 'no close sibling' : `${nSib} close sibling${nSib !== 1 ? 's' : ''}`}`}
           >
-            <FamilySpecificityMap familyCrossReactivity={cr} />
+            <FamilySpecificityMap familyCrossReactivity={cr} seed={seed} hideTitle />
           </CollapsibleCard>
         );
       })()}
@@ -177,7 +180,7 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 
       {/* ── Source footnote ── */}
       {metadata?.sources && (
-        <p className="text-center text-xs text-slate-500 pt-2">
+        <p className="text-center text-xs text-slate-600 pt-2">
           {metadata.sources.join(' · ')}
         </p>
       )}
@@ -191,44 +194,50 @@ export default function ResultsSection({ results, error, hideHeader = false }) {
 // and the modelling caveats are one click away. The 3′-isomiR finding is one line with
 // its numbers; the explanation is one click away.
 
-const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)} %`);
+const pct = (x) => (x == null ? '—' : `${Math.round(100 * x)}%`);
+const NB = '\u00a0';
 
 /** tmReverse: Tm of the universal reverse primer at the design's conditions, as the
  *  ranking computed it (ranking.pcr.tm_pair.tm_reverse). universal_reverse.tm is a
  *  pre-calculated constant (60.4 °C) the engine does not use; it is shown only for
  *  sets without a ranking block. */
-function SharedPrimers({ stemloopRt: rt, reverse, tmReverse }) {
+function SharedPrimers({ stemloopRt: rt, reverse, tmReverse, closest }) {
   const tmR = tmReverse ?? reverse?.tm;
   const iso = rt?.three_prime_isomir;
   const isoShown = iso?.three_prime_isomir_risk || iso?.fold_change_bias_risk || iso?.dominant_isoform_risk;
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-3" data-testid="shared-primers">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Shared by all sets</p>
+      <h3 className="text-sm font-semibold text-slate-800">Shared by all sets</h3>
+      {closest && (
+        <p className="text-xs text-slate-700" data-testid="shared-closest">
+          Closest off-target for every set: <span className="whitespace-nowrap font-medium">{closest}</span>
+        </p>
+      )}
 
       {rt && (
         <div className="space-y-1.5">
-          <p className="text-xs font-medium text-slate-600">
-            Stem-loop RT primer <span className="text-slate-500 font-normal">· miRNA-specific</span>
+          <p className="text-xs font-medium text-slate-700">
+            Stem-loop RT primer <span className="text-slate-600 font-normal">(miRNA-specific)</span>
           </p>
-          <code className="block font-mono text-xs text-slate-800 break-all leading-relaxed">5'–{rt.sequence}–3'</code>
-          <p className="text-xs text-slate-600 tabular-nums">
-            Overhang <span className="font-mono">{rt.overhang_dna}</span> ({rt.binding_length} nt)
+          <SeqBlock sequence={rt.sequence} testId="rt-sequence" />
+          <p className="text-xs text-slate-700 tabular-nums">
+            Overhang <span className="seq">{rt.overhang_dna}</span> ({rt.binding_length}{NB}nt)
             {rt.tm_hybrid_c != null
-              ? <> · hybrid Tm <strong>{rt.tm_hybrid_c} °C</strong></>
-              : rt.dg37_kcal_mol != null && <> · ΔG37 <strong>{rt.dg37_kcal_mol} kcal/mol</strong> (DNA:RNA)</>}
-            {' · '}stem MFE {rt.mfe?.toFixed(1)} kcal/mol · {rt.length} nt
+              ? <> · hybrid Tm <strong className="whitespace-nowrap">{rt.tm_hybrid_c}{NB}°C</strong></>
+              : rt.dg37_kcal_mol != null && <> · <span className="whitespace-nowrap">ΔG at 37{NB}°C</span> <strong className="whitespace-nowrap">{String(rt.dg37_kcal_mol).replace('-', '\u2212')}{NB}kcal/mol</strong> (DNA:RNA)</>}
+            {' · '}stem MFE <span className="whitespace-nowrap">{rt.mfe?.toFixed(1).replace('-', '\u2212')}{NB}kcal/mol</span> · {rt.length}{NB}nt
           </p>
-          {rt.rt_primer_conc_note && <p className="text-xs text-slate-500">{rt.rt_primer_conc_note}</p>}
+          {rt.rt_primer_conc_note && <p className="text-xs text-slate-700"><NoBreak>{rt.rt_primer_conc_note}</NoBreak></p>}
           <details className="group">
-            <summary className="text-xs text-slate-500 cursor-pointer hover:text-teal-700 list-none marker:hidden">
-              <span className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
+            <summary className="text-xs text-teal-700 cursor-pointer hover:underline list-none marker:hidden">
+              <span aria-hidden className="inline-block transition-transform group-open:rotate-90">▸</span>{' '}
               Overhang Tm and model notes
             </summary>
-            <div className="text-xs text-slate-500 mt-1 space-y-1 leading-relaxed">
-              {rt.tm_note && <p>{rt.tm_note}</p>}
+            <div className="text-xs text-slate-700 mt-1 space-y-1 leading-relaxed">
+              {rt.tm_note && <p><NoBreak>{rt.tm_note}</NoBreak></p>}
               <p>
-                Full-primer Tm {rt.tm_full?.toFixed(1)} °C (primer3, DNA:DNA; informational, the RT step
-                anneals the overhang to RNA). Stem MFE: {rt.mfe_method}.
+                Full-primer Tm {rt.tm_full?.toFixed(1)}{NB}°C (primer3, DNA:DNA; for information only: the RT
+                step anneals the overhang to RNA). Stem MFE: {rt.mfe_method}.
               </p>
             </div>
           </details>
@@ -237,25 +246,25 @@ function SharedPrimers({ stemloopRt: rt, reverse, tmReverse }) {
             <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1" data-testid="isomir-note">
               {iso.dominant_isoform_risk ? (
                 <p data-testid="isomir-dominant">
-                  <span className="font-semibold">3′ isomiRs:</span> {iso.dominant_isoform_short}.
+                  <span className="font-semibold">3′ isomiRs:</span> <NoBreak>{iso.dominant_isoform_short}</NoBreak>.
                 </p>
               ) : (
                 <p>
                   <span className="font-semibold">3′ isomiRs:</span> {pct(iso.median_3prime_fraction)} of reads
                   {iso.iqr_3prime_fraction && <> (IQR {pct(iso.iqr_3prime_fraction[0])}–{pct(iso.iqr_3prime_fraction[1])} across samples)</>}
-                  {' '}— fold changes can mix isoform shifts with level changes.
+                  {'. '}Fold changes can mix isoform shifts with level changes.
                 </p>
               )}
               <details className="group">
-                <summary className="cursor-pointer text-amber-700 hover:text-amber-900 list-none marker:hidden">
-                  <span className="inline-block transition-transform group-open:rotate-90">▸</span> Why
+                <summary className="cursor-pointer text-amber-900 font-medium hover:underline list-none marker:hidden">
+                  <span aria-hidden className="inline-block transition-transform group-open:rotate-90">▸</span> Why
                 </summary>
                 <div className="mt-1 space-y-1 leading-relaxed">
                   <IsoformTable iso={iso} />
-                  {iso.three_prime_isomir_risk && iso.warning && <p>{iso.warning}</p>}
-                  {iso.fold_change_bias_risk && iso.fold_change_bias_warning && <p>{iso.fold_change_bias_warning}</p>}
-                  {iso.dominant_isoform_risk && iso.dominant_isoform_warning && <p>{iso.dominant_isoform_warning}</p>}
-                  {iso.source && <p className="text-amber-700">Source: {iso.source}.</p>}
+                  {iso.three_prime_isomir_risk && iso.warning && <p><NoBreak>{iso.warning}</NoBreak></p>}
+                  {iso.fold_change_bias_risk && iso.fold_change_bias_warning && <p><NoBreak>{iso.fold_change_bias_warning}</NoBreak></p>}
+                  {iso.dominant_isoform_risk && iso.dominant_isoform_warning && <p><NoBreak>{iso.dominant_isoform_warning}</NoBreak></p>}
+                  {iso.source && <p>Source: {iso.source}.</p>}
                 </div>
               </details>
             </div>
@@ -265,17 +274,18 @@ function SharedPrimers({ stemloopRt: rt, reverse, tmReverse }) {
 
       {reverse && (
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-slate-200 pt-2.5">
-          <p className="text-xs font-medium text-slate-600 shrink-0">
-            Universal reverse <span className="text-slate-500 font-normal">· fixed</span>
+          <p className="text-xs font-medium text-slate-700 shrink-0">
+            Universal reverse primer <span className="text-slate-600 font-normal">(fixed)</span>
           </p>
-          <code className="font-mono text-xs text-slate-800">5'–{reverse.sequence}–3'</code>
-          <span className="text-xs text-slate-500 tabular-nums">
-            GC {reverse.gc_percent}% · {reverse.length} nt
+          <SeqBlock sequence={reverse.sequence} className="basis-full sm:basis-auto" testId="reverse-sequence" />
+          <span className="text-xs text-slate-700 tabular-nums whitespace-nowrap">
+            GC {reverse.gc_percent}% · {reverse.length}{NB}nt
           </span>
           {tmR != null && (
-            <p className="basis-full text-xs text-slate-600 tabular-nums" data-testid="reverse-tm-note">
-              Tm_R {Number(tmR).toFixed(2)} °C. ΔTm F–R ≈ Tm_R − Ta: set by Ta and reaction conditions,
-              the same for every set.
+            <p className="basis-full text-xs text-slate-700 tabular-nums" data-testid="reverse-tm-note">
+              Tm (reverse) <span className="whitespace-nowrap">{Number(tmR).toFixed(1)}{NB}°C</span> at the design
+              conditions. The forward–reverse Tm difference is about Tm (reverse) − Ta: it is set by Ta and the
+              reaction conditions and is the same for every set.
             </p>
           )}
         </div>
@@ -302,10 +312,10 @@ function CrossReactivityPanel({ data }) {
     <div className={`rounded-xl border px-4 py-3 space-y-3 ${hasHighRisk ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-50'}`}>
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-          Family Cross-reactivity
+        <p className="text-xs font-semibold text-slate-600">
+          Family cross-reactivity
           {data.family && (
-            <span className="ml-2 font-normal normal-case text-slate-500">
+            <span className="ml-2 font-normal text-slate-500">
               ({data.family} family · {data.overhang_used}-nt overhang)
             </span>
           )}
@@ -380,16 +390,9 @@ function CrossReactivityPanel({ data }) {
 // ── Error panel ────────────────────────────────────────────────────
 
 function ErrorPanel({ error }) {
-  const icons = {
-    no_candidates: '⚠',
-    validation: '✕',
-    timeout: '⏱',
-    network: '⚡',
-  };
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-5 space-y-3">
       <div className="flex items-start gap-3">
-        <span className="text-red-400 text-xl">{icons[error.type] || '✕'}</span>
         <div className="space-y-1">
           <p className="font-semibold text-red-800 text-sm">{error.message}</p>
           {error.suggestion && (
@@ -399,12 +402,12 @@ function ErrorPanel({ error }) {
       </div>
       {error.rejection_summary && Object.keys(error.rejection_summary).length > 0 && (
         <div className="border-t border-red-200 pt-3">
-          <p className="text-xs font-semibold text-red-600 mb-2">Rejection reasons:</p>
+          <p className="text-xs font-semibold text-red-700 mb-2">Rejection reasons</p>
           <div className="space-y-1">
             {Object.entries(error.rejection_summary).map(([reason, count]) => (
               <div key={reason} className="flex justify-between text-xs text-red-700">
                 <span>{REJECTION_LABELS[reason] || reason}</span>
-                <span className="font-semibold tabular-nums">{count}×</span>
+                <span className="font-semibold tabular-nums">{count}</span>
               </div>
             ))}
           </div>
@@ -412,7 +415,7 @@ function ErrorPanel({ error }) {
       )}
       {error.edge_cases?.length > 0 && (
         <div className="border-t border-red-200 pt-3 space-y-1">
-          <p className="text-xs font-semibold text-red-600 mb-1">Sequence issues detected:</p>
+          <p className="text-xs font-semibold text-red-700 mb-1">Sequence issues</p>
           {error.edge_cases.map((ec, i) => (
             <p key={i} className="text-xs text-red-700">
               <span className="font-semibold">[{ec.code}]</span> {ec.message}
@@ -422,7 +425,7 @@ function ErrorPanel({ error }) {
       )}
       {error.global_warnings?.filter(w => w.severity === 'critical').length > 0 && (
         <div className="border-t border-red-200 pt-3 space-y-1">
-          <p className="text-xs font-semibold text-red-600 mb-1">Critical warnings:</p>
+          <p className="text-xs font-semibold text-red-700 mb-1">Critical warnings</p>
           {error.global_warnings.filter(w => w.severity === 'critical').map((w, i) => (
             <p key={i} className="text-xs text-red-700">{w.message}</p>
           ))}
@@ -435,11 +438,11 @@ function ErrorPanel({ error }) {
 const REJECTION_LABELS = {
   tm_out_of_range:       'Tm out of range',
   tm_binding_too_low:    'Binding-region Tm too low',
-  gc_out_of_range:       'GC% out of range',
+  gc_out_of_range:       'GC content out of range',
   too_short:             'Primer too short',
   too_long:              'Primer too long',
   homopolymer_run:       'Homopolymer run ≥ 5',
-  gc_clamp_fail:         'No G/C in last 3 nt (all-A/T 3′ end)',
-  gc_end_window_fail:    'Too many GC in 3\' window (> 5 in last 5 nt)',
+  gc_clamp_fail:         '3′ GC clamp missing (no G/C in the last 3 nt)',
+  gc_end_window_fail:    '3′ end too GC-rich (last 5 nt all G/C)',
   amplicon_out_of_range: 'Amplicon size out of range',
 };

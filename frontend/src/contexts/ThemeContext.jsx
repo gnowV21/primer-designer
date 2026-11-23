@@ -1,28 +1,19 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 
-export const THEMES = {
-  pink: { label: 'Pink',  swatch: '#d67bda' },
-  teal: { label: 'Teal',  swatch: '#0F6E56' },
-  navy: { label: 'Navy',  swatch: '#273E74' },
-};
+// One theme: HG Lab navy (#273E74). The palette lives in CSS variables (index.css,
+// --brand-*), so a future theme is one variable block; there is no theme switcher
+// (UI review 2026-11-23: the pink and teal themes failed WCAG contrast).
+export const THEME = 'navy';
 
-const ThemeContext = createContext(null);
+const ThemeContext = createContext({ theme: THEME });
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem('hglab-theme') || 'pink'
-  );
-
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('hglab-theme', theme);
-  }, [theme]);
+    document.documentElement.setAttribute('data-theme', THEME);
+    try { localStorage.removeItem('hglab-theme'); } catch { /* storage blocked */ }
+  }, []);
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme: THEME }}>{children}</ThemeContext.Provider>;
 }
 
 export const useTheme = () => useContext(ThemeContext);

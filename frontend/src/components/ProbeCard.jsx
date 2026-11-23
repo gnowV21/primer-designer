@@ -33,7 +33,7 @@ function SeqDisplay({ sequence, mode }) {
     const stemloopSide = sequence.slice(-4);
     const middle       = sequence.slice(7, -4);
     return (
-      <span className="font-mono text-sm tracking-wide">
+      <span className="font-mono text-sm">
         <span className="text-teal-700 font-semibold" title="miRNA-side (7 nt)">{mirnaSide}</span>
         <span className="text-slate-700">{middle}</span>
         <span className="text-violet-700 font-semibold" title="Stemloop-side (4 nt)">{stemloopSide}</span>
@@ -41,7 +41,7 @@ function SeqDisplay({ sequence, mode }) {
     );
   }
 
-  return <span className="font-mono text-sm tracking-wide text-slate-700">{sequence}</span>;
+  return <span className="font-mono text-sm text-slate-700">{sequence}</span>;
 }
 
 export default function ProbeCard({ probe, probeNote }) {
