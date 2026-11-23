@@ -57,6 +57,18 @@ value or a default, so it is listed instead of done).
 9. **Seed family "miR-1 · 1 sibling".** "miR-1" is an auto-generated label: `build_mirbase_data.py` names a seed group by the common prefix of its members (miR-15a, miR-16, miR-195 → "miR-1"); the real miR-1 group was renamed "miR-1_GGAAUGU" by the collision rule. The AGCAGCA group has 5 human siblings (miR-15a, 15b, 195, 424, 497); the API lists only those within 2 mismatches of the RT overhang (here miR-15a-5p). The page now says "Seed group AGCAGCA · 1 close sibling" and explains the list. **Needs decision:** renaming the labels in the data file changes the API `family` field; the grouping itself is correct.
 10. **Analyzer hybrid Tm for a 6-nt overhang.** Now hidden below 8 bp, the rule /results uses.
 
+## Decisions, 2026-11-23 (PR #31)
+
+The items marked **needs decision** above were decided after this PR merged. Details and
+the equivalence check are in `docs/THESIS_FREEZE_4.0.0.md` §8.
+
+| Item | Decision |
+|---|---|
+| 3. Advisor P1 | Fires only for SYBR **and** a HIGH/IDENTICAL family risk; recommendation reworded (3′-end discrimination comes mainly from the RT step). The PDF "matched on SYBR only" note is gone. |
+| 5. Reverse-primer Tm | `universal_reverse.tm` is the computed Tm (62.93 °C at the defaults); V4 reads `V4_REVERSE_TM_LEGACY = 60.4` so its scores do not change (thesis limitation). |
+| 7. Free Mg²⁺ | The 1.0 mM level is removed; one warning below 0.5 mM, stated as a project threshold. The 1.5 mM default is unchanged. |
+| 9. Family labels | Labels end at a name boundary (`seed_<seed>` otherwise), relabelled on the same groups. The backend substring lookup (`_find_family`), found during the equivalence check, is removed: miRNAs outside the family index have no family. The 7-nt hint matches the seed. |
+
 ## Changes to computed values
 
 None. Primers, ranking, grades and every number are unchanged. Text-only API changes:

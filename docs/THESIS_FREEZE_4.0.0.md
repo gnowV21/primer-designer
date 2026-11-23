@@ -140,6 +140,7 @@ Bước của khóa xếp hạng quyết định #1 đứng trên #2, tính trê
 
 **Hệ chấm điểm phân tầng**
 - Các ngưỡng ghi "own threshold" trong SPEC §3 chưa được hiệu chỉnh bằng wet-lab. Trọng số V4 cũng chưa hiệu chỉnh: cần N ≥ 20 assay, gồm cả bộ xếp hạng thấp.
+- **V4 chấm ΔTm F–R với Tm mồi reverse cố định 60,4 °C** (`V4_REVERSE_TM_LEGACY`, tiêu chí `tm_pair_match`, trọng số 0,01), không theo điều kiện phản ứng. primer3 không tái lập được 60,4 °C ở điều kiện nào đã thử; ở điều kiện mặc định Tm tính được là 62,93 °C. Hằng này được giữ để điểm V4 trùng 3.8.2; tiered dùng Tm tính được (P1), và từ 2026-11-23 API cũng trả Tm tính được ở `universal_reverse.tm` (§8).
 - **45 °C là mức sàn của Tm vùng bám, không phải đích.** Mức này rút từ giả thuyết chu kỳ 1 của khóa luận (let-7a 33,6 so với 46,2 °C). Ở 196/2472 thiết kế, nhóm đặc hiệu tốt nhất không có ứng viên nào đạt 39 °C.
 - **F2 chỉ đếm số G/C trong 5 nt cuối, không xét vị trí.** Ví dụ …GCAAT được 5 điểm, trong khi V4 loại vì 3 nt cuối không có G/C. Bước luật V4 (QĐ 34) xử lý phần lớn các ca cùng S.
 - **S3 xét mức trên biên Tm đã làm tròn 0,1 °C** (QĐ 39). Lệch tối đa 0,05 °C, nhỏ hơn nhiều so với sai số ±1–2 °C của Tm nearest-neighbour.
@@ -151,6 +152,7 @@ Bước của khóa xếp hạng quyết định #1 đứng trên #2, tính trê
 - **SCI-07:** Tm amplicon dùng tổ hợp công thức chưa được công bố. Giao diện hiện dải theo Mg²⁺ 1,5–3 mM (~3 °C), lớn hơn độ chính xác mà một con số duy nhất ngụ ý. Chưa có số đo để nói có sai số hệ thống.
 - **SCI-09:** khả năng phân biệt dạng trưởng thành với pre-miRNA mới được Chen 2005 chứng minh cho các miRNA đã thử. Việc tổng quát hóa, nhất là cho nhánh 3p, chưa được kiểm chứng.
 - Tm của mồi RT trên khuôn RNA là gần đúng (DNA:RNA). Overhang dùng Sugimoto 1995; cả mồi dùng nearest-neighbour DNA:DNA.
+- **Ngưỡng Mg²⁺ tự do 0,5 mM** (cảnh báo trên form) là ngưỡng tự đặt, không có nguồn công bố; chỉ nằm ở frontend, không vào phép tính nào. Mọi Tm tính ở Mg²⁺ 1,5 mM và dNTP 0,8 mM mặc định. Kit khác (master mix SYBR của PTN) thì Tm và mọi tiêu chí dựa trên Tm đổi theo, nên cần nhập theo datasheet.
 
 **Ngoài phạm vi 4.0.0, chỉ ghi lại:** UX-02 (song ngữ), UX-05 (mẫu đặt hàng), Docker, ML phản ứng chéo (D-1…D-4, D-13, D-14 giữ mặc định).
 
@@ -198,3 +200,25 @@ Nhánh `feat/isomir-variants`, 2026-11-21 (`docs/PROMPT_isomir_variants_4.0.0.md
   Bản tham chiếu `benchmark/logs/design_equivalence_ref_hsa200.jsonl` được thay bằng output mới; báo cáo từng đường dẫn ở `benchmark/logs/isomir_design_equivalence_fields.json`, ghi chú ở `design_equivalence_ref_hsa200.md`.
 - **Chạy tay thay vì `freeze_pipeline.py`:** working tree có một file người dùng chưa được git theo dõi, nên script dừng. Validation và benchmark được chạy bằng đúng các lệnh của script, với Flask mới và cache trống.
 - **Báo cáo kèm theo:** `docs/ISOMIR_VARIANTS_DRYRUN.md` (dry-run, luật đã duyệt), `docs/ISOMIR_CASE_CHECK.md` (9 ca đã công bố; báo cáo, không phải kiểm chứng pass/fail).
+
+## 8. Quyết định 2026-11-23 sau tag (đổi một số trường output, không đổi mồi hay thứ hạng)
+
+PR #31 (nhánh `decisions-2026-11`, merge `a120ce5`), xử lý các mục còn mở của PR #30 (`docs/REVIEW_ui_polish_2026-11.md`). `ALGORITHM_VERSION` vẫn là 4.0.0. Mồi, điểm, tầng và thứ hạng không đổi.
+
+- **Advisor P1** chỉ bật khi có cả SYBR và rủi ro họ HIGH/IDENTICAL, đúng định nghĩa trong `protocol_kb.json` (KB 1.3). Trước đây trọng số được cộng từng phần nên một điều kiện là đủ. Câu khuyến nghị bỏ ý "SYBR không phân biệt được biến thể lệch 1 nt ở đầu 3′": phân biệt đầu 3′ chủ yếu ở bước RT (Chen 2005).
+- **`universal_reverse.tm`** là Tm primer3 ở điều kiện của request, bằng `ranking.pcr.tm_pair.tm_reverse` (62,93 °C ở mặc định). V4 đọc thẳng `V4_REVERSE_TM_LEGACY = 60.4` (hạn chế ở §4).
+- **Mg²⁺ tự do:** bỏ mức cảnh báo 1,0 mM (công thức Taq chuẩn cho 0,70 mM nên luôn báo); còn một mức < 0,5 mM. Mặc định 1,5 mM không đổi.
+- **Nhãn họ:** 184/1049 nhãn là tiền tố bị cắt giữa số (miR-15a/16/195 → "miR-1"). Luật mới chỉ nhận tiền tố kết thúc ở ranh giới tên, không có thì `seed_<seed>`; gán lại trên đúng các nhóm cũ (`build_mirbase_data.py --relabel`): 1049 nhóm, thành viên không đổi, 192 nhãn đổi.
+- **Bỏ tra họ theo chuỗi con của nhãn** (`family_crossreactivity._find_family`, phát hiện khi kiểm tương đương; quyết định của chủ dự án): miRNA ngoài chỉ mục họ được gán họ nếu nhãn là chuỗi con của tên. Với nhãn cũ, cả 1233/2656 miRNA hsa ngoài chỉ mục bị gán một họ mà không thành viên nào cùng seed. Nay các miRNA này không có họ. BLAST chỉ so nhãn bằng phép so bằng nên S1 và grade không đổi.
+- **Gợi ý overhang 7 nt** trên form so theo seed của trình tự (let-7, miR-17, miR-29, miR-30), không dò chuỗi con của nhãn.
+- **Chứng minh** (cache BLAST trống; bản gốc là `6f672db`, master trước PR #31, để tách chữ của PR #30):
+
+  | Kiểm tra | Kết quả |
+  |---|---|
+  | 200 hsa, `design_equivalence.py fields` `6f672db` → `5c229ee` | 186/200 bản ghi khác, **chỉ** ở `universal_reverse.tm` (186), `protocol_advice` (11 bản ghi mất P1, đều là rủi ro họ HIGH không có SYBR; `kb_version` ở 175), `specificity_warnings.cross_reactivity.*` (99 nhãn `family`; 81 miRNA ngoài chỉ mục không còn họ, 2 trong số đó trước đây được khuyên "Extending to 7 nt resolves all HIGH risk cross-reactivity" theo họ sai) và 3 `global_warnings[field=cross_reactivity]`. Không đường dẫn nào dưới mồi, điểm, tầng hay thứ hạng lệch |
+  | Bộ #1 so với bản đóng băng | 200/200 trùng |
+  | Validation 201 mục (`freeze_pipeline.py --log-prefix decisions`, commit sạch `5c229ee`) | **2439/2439**; `validation/results.json` chỉ đổi ngày chạy (đã trả lại) |
+  | V4 (`--scoring-system v4`) | `benchmark/logs/freeze_v4/results.csv` không đổi dòng nào: **V4 vẫn trùng 3.8.2** |
+  | Test | backend 1046, crossreactivity 29, `check_tier_order` 2472/2472, `ui_default_check` exit 0, e2e 160/160 (gồm `decisions-2026-11.spec.js` 11/11) |
+
+  Bản tham chiếu `benchmark/logs/design_equivalence_ref_hsa200.jsonl` được thay bằng output mới; báo cáo từng đường dẫn ở `benchmark/logs/decisions_design_equivalence_fields.json`, provenance ở `benchmark/logs/decisions_run.json`.

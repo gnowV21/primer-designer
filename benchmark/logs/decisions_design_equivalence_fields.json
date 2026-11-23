@@ -1,0 +1,342 @@
+{
+ "records": [
+  200,
+  200
+ ],
+ "records_differing": 186,
+ "paths": [
+  {
+   "path": "response.global_warnings[field=cross_reactivity]",
+   "records": 3,
+   "kinds": [
+    "removed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.global_warnings[field=cross_reactivity].message",
+   "records": 1,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 1,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "Seed family miR-5 shares the mRNA-targeting seed (positions 2-8). This is NOT the primer specificity axis — see overhang_collision for RT/forward binding-site analysis.",
+     "new": "Seed family miR-519_UCUAGAG shares the mRNA-targeting seed (positions 2-8). This is NOT the primer specificity axis — see overhang_collision for RT/forward binding-site analysis.",
+     "records": 1
+    }
+   ]
+  },
+  {
+   "path": "response.protocol_advice[]",
+   "records": 11,
+   "kinds": [
+    "length"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.protocol_advice[].kb_updated",
+   "records": 175,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 1,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "2026-07-04",
+     "new": "2026-11-23",
+     "records": 183
+    }
+   ]
+  },
+  {
+   "path": "response.protocol_advice[].kb_version",
+   "records": 175,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 1,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "1.2",
+     "new": "1.3",
+     "records": 183
+    }
+   ]
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.cross_reactivity[]",
+   "records": 10,
+   "kinds": [
+    "length"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.cross_species_excluded",
+   "records": 81,
+   "kinds": [
+    "removed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.data_warning",
+   "records": 86,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 6,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "Family grouping is seed-based (approximate).",
+     "new": "This miRNA has no family siblings in the current dataset (may be unique or not covered by the current family DB). Re-run scripts/build_family_db.py to refresh.",
+     "records": 81
+    },
+    {
+     "old": "Family 'miR-7_GGGCUGA' has no hsa sibling in the current dataset — 4 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "new": "Family 'seed_GGGCUGA' has no hsa sibling in the current dataset — 4 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "records": 1
+    },
+    {
+     "old": "Family 'miR-6_GCCUGUG' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "new": "Family 'seed_GCCUGUG' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "records": 1
+    },
+    {
+     "old": "Family 'miR-6_CUCUCCU' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "new": "Family 'seed_CUCUCCU' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "records": 1
+    },
+    {
+     "old": "Family 'miR-6_UGGAGCU' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "new": "Family 'seed_UGGAGCU' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "records": 1
+    },
+    {
+     "old": "Family 'miR-7_UCCUCUC' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "new": "Family 'seed_UCCUCUC' has no hsa sibling in the current dataset — 1 same-family ortholog(s) in other species were excluded (not off-targets for a single-species sample).",
+     "records": 1
+    }
+   ]
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.family",
+   "records": 99,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 18,
+   "non_string_changes": 81,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "miR-1",
+     "new": "miR-15",
+     "records": 1
+    },
+    {
+     "old": "miR-3_UUGGGAC",
+     "new": "seed_UUGGGAC",
+     "records": 1
+    },
+    {
+     "old": "miR-46_CCAGGCA",
+     "new": "seed_CCAGGCA",
+     "records": 1
+    },
+    {
+     "old": "miR-7_GGGCUGA",
+     "new": "seed_GGGCUGA",
+     "records": 1
+    },
+    {
+     "old": "miR-4_CUGGGGA",
+     "new": "seed_CUGGGGA",
+     "records": 1
+    },
+    {
+     "old": "miR-4_CUCCCUU",
+     "new": "seed_CUCCCUU",
+     "records": 1
+    },
+    {
+     "old": "miR-5_UGCAAAG",
+     "new": "seed_UGCAAAG",
+     "records": 1
+    },
+    {
+     "old": "miR-52_AAGGCGC",
+     "new": "seed_AAGGCGC",
+     "records": 1
+    },
+    {
+     "old": "miR-5",
+     "new": "miR-519_UCUAGAG",
+     "records": 1
+    },
+    {
+     "old": "miR-61",
+     "new": "seed_GAGGGAG",
+     "records": 1
+    },
+    {
+     "old": "miR-4_AGGGCAG",
+     "new": "seed_AGGGCAG",
+     "records": 1
+    },
+    {
+     "old": "miR-6_GCCUGUG",
+     "new": "seed_GCCUGUG",
+     "records": 1
+    },
+    {
+     "old": "miR-6_AGGGGCU",
+     "new": "seed_AGGGGCU",
+     "records": 1
+    },
+    {
+     "old": "miR-6_CUCUCCU",
+     "new": "seed_CUCUCCU",
+     "records": 1
+    },
+    {
+     "old": "miR-684_GGGGGCU",
+     "new": "seed_GGGGGCU",
+     "records": 1
+    },
+    {
+     "old": "miR-6_CUCACCC",
+     "new": "seed_CUCACCC",
+     "records": 1
+    },
+    {
+     "old": "miR-6_UGGAGCU",
+     "new": "seed_UGGAGCU",
+     "records": 1
+    },
+    {
+     "old": "miR-7_UCCUCUC",
+     "new": "seed_UCCUCUC",
+     "records": 1
+    }
+   ]
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.recommendation.off_label_warning",
+   "records": 2,
+   "kinds": [
+    "removed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.recommendation.reason",
+   "records": 81,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 2,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": [
+    {
+     "old": "No HIGH risk siblings at current overhang length.",
+     "new": "No family data available for this miRNA. Cannot assess cross-reactivity.",
+     "records": 79
+    },
+    {
+     "old": "Extending to 7 nt resolves all HIGH risk cross-reactivity.",
+     "new": "No family data available for this miRNA. Cannot assess cross-reactivity.",
+     "records": 2
+    }
+   ]
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.recommendation.suggested_overhang_length",
+   "records": 2,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 2,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.species",
+   "records": 81,
+   "kinds": [
+    "removed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 0,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.specificity_warnings.cross_reactivity.target_overhang",
+   "records": 81,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 81,
+   "allowed": false,
+   "pairs": []
+  },
+  {
+   "path": "response.universal_reverse.tm",
+   "records": 186,
+   "kinds": [
+    "changed"
+   ],
+   "string_pairs": 0,
+   "non_string_changes": 186,
+   "allowed": false,
+   "pairs": []
+  }
+ ],
+ "outside_allowed": [
+  "response.global_warnings[field=cross_reactivity]",
+  "response.global_warnings[field=cross_reactivity].message",
+  "response.protocol_advice[]",
+  "response.protocol_advice[].kb_updated",
+  "response.protocol_advice[].kb_version",
+  "response.specificity_warnings.cross_reactivity.cross_reactivity[]",
+  "response.specificity_warnings.cross_reactivity.cross_species_excluded",
+  "response.specificity_warnings.cross_reactivity.data_warning",
+  "response.specificity_warnings.cross_reactivity.family",
+  "response.specificity_warnings.cross_reactivity.recommendation.off_label_warning",
+  "response.specificity_warnings.cross_reactivity.recommendation.reason",
+  "response.specificity_warnings.cross_reactivity.recommendation.suggested_overhang_length",
+  "response.specificity_warnings.cross_reactivity.species",
+  "response.specificity_warnings.cross_reactivity.target_overhang",
+  "response.universal_reverse.tm"
+ ]
+}
