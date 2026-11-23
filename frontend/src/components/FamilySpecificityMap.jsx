@@ -289,8 +289,8 @@ export default function FamilySpecificityMap({ familyCrossReactivity, seed = '',
       {/* Header row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          {/* The API family label is an auto-generated cluster ID ("miR-1" for the miR-15/16
-              seed AGCAGCA); the group is named by its seed instead. */}
+          {/* Named by its seed, which is what the grouping uses; the API family label is a
+              derived name ("miR-15" for seed AGCAGCA, "seed_…" when members share no name). */}
           <p className="text-xs font-semibold text-slate-700">
             {hideTitle ? '' : 'Seed family (biological context): '}
             {seed ? `Seed group ${seed}` : (family || 'Seed group')}

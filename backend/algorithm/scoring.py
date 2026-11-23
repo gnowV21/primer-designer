@@ -11,7 +11,7 @@ from .constants import (
     ASSAY_LABEL_SCORE,
     TM_FORWARD_TARGET, TM_FORWARD_TOLERANCE,
     TM_BINDING_TARGET, TM_BINDING_TOLERANCE,
-    TM_PAIR_DIFF_MAX, GC_MIN, GC_MAX, GC_OPTIMAL,
+    TM_PAIR_DIFF_MAX, V4_REVERSE_TM_LEGACY, GC_MIN, GC_MAX, GC_OPTIMAL,
     HAIRPIN_DG_MAX_INTERNAL, HAIRPIN_TM_HARD_MAX, SELF_DIMER_DG_3PRIME_MAX, END_STABILITY_MAX,
     AMPLICON_MIN_QPCR, AMPLICON_MAX_QPCR, AMPLICON_IDEAL,
     FORWARD_OPTIMAL_LENGTH, GC_SKEW_WARNING_THRESHOLD,
@@ -237,7 +237,9 @@ def score_candidate(
     )
 
     # ── 11. Tm pair match (0.05 V3 / 0.01 V4) ───────────────────
-    tm_rev       = reverse["tm"]
+    # V4 compares with the fixed legacy reverse Tm (60.4 °C), not universal_reverse.tm, so
+    # V4 scores stay identical to the frozen results (2026-11-23).
+    tm_rev       = V4_REVERSE_TM_LEGACY
     tm_pair_diff = abs(tm - tm_rev)
     if tm_pair_diff <= 1.0:               pair_score = 100
     elif tm_pair_diff <= TM_PAIR_DIFF_MAX: pair_score = 80

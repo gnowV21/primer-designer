@@ -433,8 +433,9 @@ function TabB({ top3, stemloopRt, universalReverse, params }) {
           <p className="text-xs font-bold text-slate-800">Universal reverse primer (fixed)</p>
           <SeqBlock label="Sequence" sequence={universalReverse.sequence} tag={`${universalReverse.length}${NB}nt`} />
           <div className="grid grid-cols-2 gap-x-6 px-1">
-            {/* Tm at the design conditions (ranking), as in "Shared by all sets"; the API's
-                universal_reverse.tm is a precomputed constant the engine does not use. */}
+            {/* Tm at the design conditions, as in "Shared by all sets". Since 2026-11-23 the
+                API's universal_reverse.tm is the same computed value; records saved earlier
+                carry the old fixed 60.4 °C there, so the ranking value comes first. */}
             <PropRow label="Tm at the design conditions" value={deg(set?.ranking?.pcr?.tm_pair?.tm_reverse ?? universalReverse.tm)} />
             <PropRow label="GC content" value={universalReverse.gc_percent !== undefined ? `${fmt(universalReverse.gc_percent)}%` : undefined} />
             <PropRow label="Hairpin ΔG (kcal/mol)" value={fmtDg(get(universalReverse, 'self_structure_check', 'hairpin_dg'))} />

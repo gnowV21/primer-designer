@@ -53,7 +53,7 @@ export default function ParameterEditor({
         qpcrData={params.qpcr}
         onQpcrChange={set('qpcr')}
         seqAnalysis={seqAnalysis}
-        mirnaFamily={params.sequence?.family}
+        matureSequence={params.sequence?.matureSequence}
         openRequested={openRequests.required || openRequests.constraints || 0}
       />
       <FlexibleGroup

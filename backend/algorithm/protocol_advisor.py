@@ -92,10 +92,11 @@ def advise_protocol(design_result: dict, form_params: dict) -> list[dict]:
         total_weight = sum(weights.values()) or 1.0
 
         if rid == "P1":
-            if signal_method == "sybr":
-                score += weights.get("signal_method_sybr", 0)
-            if family_risk_high:
-                score += weights.get("family_risk_high", 0)
+            # P1 is defined as SYBR AND a HIGH/IDENTICAL family risk (protocol_kb.json
+            # "when"), so it needs both: SYBR alone is covered by P3 (melting curve).
+            # P2, P5 and P7 match partially on purpose (2026-11-23).
+            if signal_method == "sybr" and family_risk_high:
+                score += weights.get("signal_method_sybr", 0) + weights.get("family_risk_high", 0)
 
         elif rid == "P2":
             if sample_type in _LOW_INPUT_SAMPLE_TYPES:

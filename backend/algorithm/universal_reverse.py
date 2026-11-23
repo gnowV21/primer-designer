@@ -6,12 +6,12 @@
 import algorithm.primer3_safe as primer3  # thread-safe wrapper (see primer3_safe.py)
 from functools import lru_cache
 from .constants import (
-    UNIVERSAL_REVERSE, UNIVERSAL_REVERSE_TM_PRECALC,
+    UNIVERSAL_REVERSE,
     UNIVERSAL_REVERSE_GC_PRECALC, UNIVERSAL_REVERSE_CHEN_2005,
     HAIRPIN_DG_MAX_INTERNAL, HAIRPIN_DG_MAX_3PRIME,
     SELF_DIMER_DG_MAX, SELF_DIMER_DG_3PRIME_MAX,
 )
-from .thermodynamics import _get_p3_params
+from .thermodynamics import _get_p3_params, calculate_tm_nn
 
 
 def get_universal_reverse(params: dict) -> dict:
@@ -26,7 +26,9 @@ def get_universal_reverse(params: dict) -> dict:
         "sequence": UNIVERSAL_REVERSE,
         "length": len(UNIVERSAL_REVERSE),
         "gc_percent": UNIVERSAL_REVERSE_GC_PRECALC,
-        "tm": UNIVERSAL_REVERSE_TM_PRECALC,
+        # primer3 Tm at the request conditions: the same value as ranking.pcr.tm_pair.tm_reverse
+        # (tiered_pipeline.rank). V4 keeps its fixed V4_REVERSE_TM_LEGACY (constants.py).
+        "tm": round(calculate_tm_nn(UNIVERSAL_REVERSE, params), 2),
         "self_structure_check": _check_self_structure(UNIVERSAL_REVERSE, params),
         "design_rationale": {
             "original_chen_2005": f"5'-{UNIVERSAL_REVERSE_CHEN_2005}-3' (16 nt)",

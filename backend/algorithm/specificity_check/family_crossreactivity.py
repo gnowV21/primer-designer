@@ -216,37 +216,24 @@ def _find_family(db: dict, mirna_name: str, mature_seq: str) -> tuple:
     """
     Look up miRNA family. Returns (family_name, {member: seq}).
 
-    Two strategies (tried in order):
-      1. _mirna_to_family index — O(1) direct lookup (new JSON format from
-         build_mirbase_data.py).  Handles families like mir-17 whose member
-         names (miR-17, miR-18a, …) don't share a common name prefix.
-      2. Name-substring fallback — O(n) scan for backward compatibility with
-         the old hand-curated PLACEHOLDER JSON (family key ⊂ miRNA name).
+    Only the `_mirna_to_family` index (build_mirbase_data.py): a miRNA that is not in
+    it shares its seed with no other miRNA in the data and has no family.
+
+    The name-substring fallback (family label ⊂ miRNA name, kept for the old
+    hand-curated JSON) was removed on 2026-11-23: on the generated JSON it gave every
+    one of the 1233 unindexed hsa miRNAs a family none of whose members shares its
+    seed (label "miR-6" matched hsa-miR-646, hsa-miR-662, …).
     """
-    # Strategy 1: direct index lookup (generated JSON has _mirna_to_family)
-    index = db.get("_mirna_to_family")
-    if index and mirna_name in index:
-        family_name = index[mirna_name]
-        members = db.get(family_name, {})
-        filtered = {
-            k: v for k, v in members.items()
-            if not k.startswith("_") and v != mature_seq
-        }
-        return family_name, filtered
-
-    # Strategy 2: substring match — backward compat with PLACEHOLDER JSON
-    name_lower = mirna_name.lower()
-    for family_key, members in db.items():
-        if family_key.startswith("_"):
-            continue
-        if family_key.lower() in name_lower or name_lower.startswith(f"hsa-{family_key}"):
-            filtered = {
-                k: v for k, v in members.items()
-                if not k.startswith("_") and v != mature_seq
-            }
-            return family_key, filtered
-
-    return None, {}
+    index = db.get("_mirna_to_family") or {}
+    if mirna_name not in index:
+        return None, {}
+    family_name = index[mirna_name]
+    members = db.get(family_name, {})
+    filtered = {
+        k: v for k, v in members.items()
+        if not k.startswith("_") and v != mature_seq
+    }
+    return family_name, filtered
 
 
 def _get_overhang(mature_seq: str, length: int) -> str:

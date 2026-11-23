@@ -93,9 +93,10 @@ _TEST_CASES = [
             "hsa-miR-106a-5p", "hsa-miR-93-5p",
         ],
         "notes": (
-            "Seed-based grouping uses the 7-nt seed (pos 2-8) so the family label will be "
-            "'miR-1_AAAGUGC' not 'mir-17' as in canonical miFam.dat. Membership is correct; "
-            "label divergence is an EXPECTED limitation of seed-based classification."
+            "Seed-based grouping uses the 7-nt seed (pos 2-8); the label is the most shared "
+            "name prefix of the group ('miR-20' since the 2026-11-23 label fix), not 'mir-17' "
+            "as in canonical miFam.dat. Membership is correct; label divergence is an EXPECTED "
+            "limitation of seed-based classification."
         ),
     },
 

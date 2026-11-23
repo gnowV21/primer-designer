@@ -150,7 +150,10 @@ REFOLDING_PROTOCOL = {
 
 UNIVERSAL_REVERSE = "CCAGTGCAGGGTCCGAGGTA"           # 20 nt — improved [K11]
 UNIVERSAL_REVERSE_CHEN_2005 = "GTGCAGGGTCCGAGGT"     # 16 nt original [C05]
-UNIVERSAL_REVERSE_TM_PRECALC = 60.4   # °C — pre-calculated
+# V4 only: the fixed reverse-primer Tm that V4 tm_pair_match (scoring.py) has always used.
+# Kept so V4 scores stay identical to the frozen 3.8.2 / 4.0.0 results; it does not follow
+# the reaction conditions. The API reports the computed Tm (universal_reverse.py).
+V4_REVERSE_TM_LEGACY = 60.4   # °C
 UNIVERSAL_REVERSE_GC_PRECALC = 65.0   # %
 
 
