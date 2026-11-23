@@ -61,8 +61,12 @@ In production there is one origin: Flask also serves the built `frontend/dist` (
 
 ### Tailwind custom colors
 Colors are defined under `theme.extend.colors` (not `theme.colors`) to preserve Tailwind's built-in palette:
-- `teal-50/200/600/800` — brand greens (`#E1F5EE / #5DCAA5 / #0F6E56 / #085041`)
-- `red-50/400/600` — error states
+- `teal-*` — the brand scale; it resolves to the `--brand-*` CSS variables in `index.css`, which hold the one theme, HG Lab navy `#273E74` (no theme switcher since 2026-11-23)
+- Status colours are never brand: Pass green-700 on green-50, Warning amber-700/800 on amber-50, Fail red-700 on red-50 (`utils/format.js` `STATUS_CLASSES`, Pass / Warning / Fail vocabulary)
+- Text contrast ≥ 4.5:1 (`e2e/ui-audit.spec.js` checks every page at 1366 and 375 px); sequences use `.seq` / `.seq-block` / `SeqBlock` and never break; API free text goes through `NoBreak`
+
+### PDF / CSV export
+`routes/report_pdf.py` builds the PDF (embedded DejaVu fonts from `backend/assets/fonts`, copied in `Dockerfile.vercel`); `routes/export.py` keeps the route, CSV and FASTA. Labels and number formats shared by both: `utils/report_text.py` (60.0 °C, 47.6%, −6.10, rule-code labels).
 
 ### RangeSlider implementation note
 Two `<input type="range">` elements are stacked with `position: absolute`. The filled track between thumbs is a CSS `linear-gradient` computed from `leftPct` and `rightPct` as inline styles. The constraint `minVal ≤ maxVal - step` must be enforced in `onMinChange`/`onMaxChange` handlers.
