@@ -154,6 +154,11 @@ def _derive_family_label(seed: str, member_names: list[str]) -> str:
         longest prefix covering miR-200a and miR-200b = "miR-200"  (2 of 3)
       miR-21 group (miR-21-5p, miR-590-5p):
         no common prefix longer than "miR-" -> seed fallback
+
+    A prefix must end at a name boundary (2026-11-23): the character after it in every
+    member it covers is not a digit. Otherwise a cut number became a label that is the
+    name of another family: miR-15a / miR-16 / miR-195 gave "miR-1", miR-17 / miR-20a
+    gave "miR-1_AAAGUGC", miR-371a gave "miR-29_CUCAAAC" (184 of 1049 labels).
     """
     stripped = []
     for n in member_names:
@@ -176,7 +181,8 @@ def _derive_family_label(seed: str, member_names: list[str]) -> str:
                 else:
                     break
             common = common.rstrip('-.')
-            if len(common) > 3:  # ignore trivially short prefixes
+            # ignore trivially short prefixes and prefixes that cut a number
+            if len(common) > 3 and _at_name_boundary(common, a) and _at_name_boundary(common, b):
                 prefix_votes[common] = prefix_votes.get(common, 0) + 1
 
     if not prefix_votes:
@@ -186,11 +192,51 @@ def _derive_family_label(seed: str, member_names: list[str]) -> str:
     best = max(prefix_votes, key=lambda p: (prefix_votes[p], len(p)))
 
     # Count how many members share this prefix (coverage check)
-    coverage = sum(1 for s in stripped if s.startswith(best))
+    coverage = sum(1 for s in stripped if _at_name_boundary(best, s))
     if coverage < 2:
         return f"seed_{seed}"
 
     return best
+
+
+def _at_name_boundary(prefix: str, name: str) -> bool:
+    """True if `name` starts with `prefix` and the prefix ends at a name boundary: the
+    next character is not a digit ("miR-15" for miR-15a, not "miR-1" for miR-15a)."""
+    if not name.startswith(prefix):
+        return False
+    return len(name) == len(prefix) or not name[len(prefix)].isdigit()
+
+
+def relabel_family_db(db: dict) -> dict:
+    """Recompute every family label of an existing family JSON with _derive_family_label,
+    keeping the groups, their members and their order (so the collision suffixes are
+    assigned as by build_family_db). Used when only the label rule changes: the JSON was
+    built from miRBase CURRENT (hsa, mmu, rno) and is not rebuilt from another release."""
+    groups = [(k, v) for k, v in db.items() if not k.startswith("_")]
+    family_members: dict[str, dict[str, str]] = {}
+    mirna_to_family: dict[str, str] = {}
+    for _, members in groups:
+        seeds = {s[SEED_START:SEED_END] for s in members.values()}
+        if len(seeds) != 1:
+            raise ValueError(f"group with more than one seed: {sorted(members)[:3]}")
+        seed = seeds.pop()
+        label = _derive_family_label(seed, list(members))
+        final_label = label
+        while final_label in family_members:
+            final_label = f"{label}_{seed}"
+        family_members[final_label] = members
+        for n in members:
+            mirna_to_family[n] = final_label
+    old_index = db.get("_mirna_to_family", {})
+    if len(family_members) != len(groups) or set(mirna_to_family) != set(old_index):
+        raise ValueError("relabel changed the groups")
+    meta = {**db["_metadata"], "label_rule": (
+        "Label = the most shared name prefix that ends at a name boundary (next character "
+        "not a digit), else seed_<seed>; a repeated label gets _<seed>. Relabelled "
+        "2026-11-23 on the same groups (scripts/build_mirbase_data.py --relabel).")}
+    return {"_metadata": meta,
+            "_mirna_to_family": {n: mirna_to_family[n] for n in old_index},
+            **family_members}
 
 
 # ── Family DB builder ─────────────────────────────────────────────
@@ -294,7 +340,21 @@ def main() -> None:
         "--force-download", action="store_true",
         help="Re-download even if cached file exists",
     )
+    parser.add_argument(
+        "--relabel", action="store_true",
+        help="Only recompute the family labels of the existing JSON (same groups, no download)",
+    )
     args = parser.parse_args()
+
+    if args.relabel:
+        with open(OUTPUT_PATH, encoding="utf-8") as f:
+            old = json.load(f)
+        new = relabel_family_db(old)
+        changed = sum(1 for n, lab in new["_mirna_to_family"].items() if old["_mirna_to_family"][n] != lab)
+        with open(OUTPUT_PATH, "w", encoding="utf-8", newline="\n") as f:
+            json.dump(new, f, indent=2, ensure_ascii=False)
+        print(f"Relabelled {OUTPUT_PATH}: {len(new) - 2} families, {changed} miRNAs with a new label")
+        return
 
     print("=" * 60)
     print("miRBase family data builder  (seed-based grouping)")

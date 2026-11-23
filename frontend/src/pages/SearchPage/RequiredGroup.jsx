@@ -7,21 +7,7 @@ import Tooltip from '../../components/ui/Tooltip.jsx';
 import CollapsibleSection from '../../components/ui/CollapsibleSection.jsx';
 import { DEFAULTS, LIMITS } from '../../constants/defaults.js';
 import { WarnBox } from './paramUi.jsx';
-
-// Family-specific suggestion: which overhangs benefit from 7 nt for discrimination
-function getFamilyHint(mirnaFamily) {
-  const fam = (mirnaFamily || '').toLowerCase();
-  if (fam.includes('let-7') || fam.includes('let7')) {
-    return { text: `let-7 family has 13 members with nearly identical 3′ sequences — 7 nt may help discriminate between family members.`, suggestNt: 7 };
-  }
-  if (fam.includes('mir-17') || fam.includes('mir17')) {
-    return { text: `miR-17 family members share highly conserved seed and 3′ sequences — 7 nt may improve specificity.`, suggestNt: 7 };
-  }
-  if (fam.includes('mir-29') || fam.includes('mir29') || fam.includes('mir-30') || fam.includes('mir30')) {
-    return { text: `${mirnaFamily} family has multiple members with similar 3′ ends — 7 nt may reduce cross-reactivity risk.`, suggestNt: 7 };
-  }
-  return null;
-}
+import { getFamilyHint } from '../../utils/familyHint.js';
 
 const OFF_LABEL_WARNINGS = {
   5: 'Off-label — not experimentally validated. Chen et al. 2005 only tested 6 nt. A 5-nt overhang reduces specificity against related family members and may lower RT efficiency. Use only if you have evidence that a shorter overlap is required for your specific template.',
@@ -30,9 +16,9 @@ const OFF_LABEL_WARNINGS = {
 
 export default function RequiredGroup({
   constraints, onConstraintChange, thermoData, onThermoChange, qpcrData, onQpcrChange,
-  seqAnalysis, mirnaFamily, onFirstOpen, openRequested,
+  seqAnalysis, matureSequence, onFirstOpen, openRequested,
 }) {
-  const familyHint = getFamilyHint(mirnaFamily);
+  const familyHint = getFamilyHint(matureSequence);
   const offLabelWarn = OFF_LABEL_WARNINGS[constraints.bindingRegion3prime] ?? null;
   const fwdTmDeficit = seqAnalysis ? thermoData.tmMin - seqAnalysis.fwdRegionTm : 0;
   const showFwdTmWarn = seqAnalysis && fwdTmDeficit > 33;
@@ -120,7 +106,7 @@ export default function RequiredGroup({
         )}
         {/* Family-specific suggestion (informational, not a blocker) */}
         {familyHint && constraints.bindingRegion3prime !== familyHint.suggestNt && (
-          <p className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-800 bg-teal-50 border border-teal-100">
+          <p data-testid="family-hint" className="text-xs leading-relaxed rounded-lg px-2.5 py-1.5 text-teal-800 bg-teal-50 border border-teal-100">
             {familyHint.text}
             <button
               type="button"
